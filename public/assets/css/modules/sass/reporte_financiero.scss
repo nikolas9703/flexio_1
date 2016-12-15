@@ -1,0 +1,169 @@
+$label-success: #5BB85C;
+$label-warning: #F8AC59;
+$label-danger: #ED5565;
+.bg-white{
+  background-color: #FFFFFF;
+  padding-bottom: 30px;
+}
+.errors{
+  color:red;
+}
+.underline{
+  text-decoration: underline;
+  text-transform: capitalize;
+}
+.header-ventas{
+    background-color: #D9D9D9;
+    padding: 6px 0;
+    div.text-header{
+        padding-top: 8px;
+        font-size: 14px;
+        font-weight: bolder;
+        color:#666666;
+    }
+}
+p.parrafo{
+  height: 3.0em;
+}
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}
+table.controller{
+  margin-top:15px;
+  table-layout:fixed;
+.label{
+  color:#000000;
+  font-size:14px;
+  background-color:transparent;
+}
+td.data{
+  text-align:left;
+  color:#000000;
+  font-size:14px;
+
+}
+tr{
+
+}
+}
+
+table.table-total{
+  table-layout:fixed;
+  margin-bottom: 30px;
+  .totalizador{
+    margin-left:30px;
+
+  }
+  tr{
+    border-bottom: 1px solid #000000;
+    td{
+      color:#000000;
+      font-size:14px;
+      font-weight: bold;
+      padding:0px 0;
+    }
+  }
+}
+.estado_total{
+  font-size: 22px;
+  color: #999999;
+  font-weight: bolder;
+}
+.balance_total{
+  font-size: 22px;
+  color: #000000;
+  font-weight: bolder;
+}
+table{
+tbody{
+.borde-tr{
+  border-top: #000000 1px solid !important;
+  border-bottom: #000000 1px solid !important;
+}
+}
+}
+
+/*Reporte cuenta antiguedad*/
+
+table.antiguedad{
+  thead{
+    tr{
+      background-color: #0070BA;
+      th{
+        color:#FFFFFF;
+        font-size: 16px;
+        border: 1px solid #FFFFFF;
+      }
+    }
+  }
+}
+
+/*reporte de impuestos */
+table.impuestos{
+  thead{
+    tr{
+      background-color: #0070BA;
+      th{
+        &:first-child{
+          padding-left: 15px !important;
+        }
+        &:nth-child(1){
+           width: 25%;
+        }
+        color:#FFFFFF;
+        font-size: 14px;
+        font-weight: bold;
+        border: 1px solid #FFFFFF !important;
+        padding-left: 15px !important;
+      }
+    }
+  }
+  tbody{
+    tr{
+      td{
+        &:first-child{
+          font-size: 14px;
+          font-weight: bold;
+          color:#000000;
+        }
+
+        color:#111111;
+      }
+    }
+  }
+  tfoot{
+    tr{
+      border-top: 2px double #000000 !important;
+      border-bottom: 2px double #000000 !important;
+      border-width: 2px 0;
+      border-style: double;
+      td{
+        &:first-child{
+          font-size: 14px;
+        }
+        font-weight: bold;
+        color:#000000;
+      }
+    }
+  }
+}
+div.space{
+  height: 50px;
+}
+table.table-total-impuesto{
+  tbody{
+    tr{
+      td{
+        &:nth-child(1){
+           width: 40%;
+        }
+          padding-left: 15px !important;
+      }
+    }
+  }
+}

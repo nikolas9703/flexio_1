@@ -1,0 +1,77 @@
+/* line 4, ../sass/cotizaciones.scss */
+.header-ventas {
+  background-color: #D9D9D9;
+  padding: 6px 0;
+}
+/* line 7, ../sass/cotizaciones.scss */
+.header-ventas div.text-header {
+  padding-top: 8px;
+  font-size: 14px;
+  font-weight: bolder;
+  color: #666666;
+}
+
+/* line 14, ../sass/cotizaciones.scss */
+a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 17, ../sass/cotizaciones.scss */
+a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* line 22, ../sass/cotizaciones.scss */
+.facturadas {
+  background-color: #FFB642;
+}
+
+/* line 25, ../sass/cotizaciones.scss */
+.chosen-container {
+  background-color: #FFF;
+}
+
+/* line 29, ../sass/cotizaciones.scss */
+form#form_crear_cotizacion .precio_total, form#form_crear_cotizacion .precio_unidad, form#form_crear_ordenventa .precio_total, form#form_crear_ordenventa .precio_unidad {
+  text-align: right;
+}
+/* line 32, ../sass/cotizaciones.scss */
+form#form_crear_cotizacion .totales, form#form_crear_cotizacion label.label-success-text, form#form_crear_cotizacion label.label-warning-text, form#form_crear_cotizacion label.label-danger-text, form#form_crear_ordenventa .totales, form#form_crear_ordenventa label.label-success-text, form#form_crear_ordenventa label.label-warning-text, form#form_crear_ordenventa label.label-danger-text {
+  width: 100%;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 42, ../sass/cotizaciones.scss */
+form#form_crear_cotizacion label.label-success-text, form#form_crear_ordenventa label.label-success-text {
+  border: #5BB85C solid 1px;
+  background-color: #5BB85C;
+}
+/* line 48, ../sass/cotizaciones.scss */
+form#form_crear_cotizacion label.label-warning-text, form#form_crear_ordenventa label.label-warning-text {
+  border: #F8AC59 solid 1px;
+  background-color: #F8AC59;
+}
+/* line 53, ../sass/cotizaciones.scss */
+form#form_crear_cotizacion label.label-danger-text, form#form_crear_ordenventa label.label-danger-text {
+  border: #ED5565 solid 1px;
+  background-color: #ED5565;
+}
+
+/* line 59, ../sass/cotizaciones.scss */
+tfoot {
+  font-weight: bolder;
+}
+/* line 61, ../sass/cotizaciones.scss */
+tfoot .sum-border {
+  border: #ddd 1px solid !important;
+}
+/* line 64, ../sass/cotizaciones.scss */
+tfoot .sum-total {
+  float: right;
+}

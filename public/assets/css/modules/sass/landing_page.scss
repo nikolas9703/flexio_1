@@ -1,0 +1,58 @@
+#content-landing{
+  .modulo-icono{
+    width:50px;
+    float: left;
+  }
+  .color-par{
+    background-color: #FFFFFF;
+  }
+  .color-impar{
+    background-color: #F3F3F3;
+  }
+  .titulo_enlace{
+    color:#666666;
+    font-weight: bolder;
+    padding-bottom: 15px;
+    font-size: 16px;
+    line-height: 4em;
+    &:hover{
+      color:#0070BA;
+    }
+  }
+  .filas{
+      zoom: 1;
+      height: 75px;
+    .date-content{
+      display:table-cell;
+      vertical-align: top;
+      .texto-hora{
+        color:#545050;
+        font-weight: 400;
+      }
+      .texto-tiempo{
+        color:#023859;
+        font-weight: bolder;
+      }
+    }
+    .comentario-content{
+      border-left:1px solid #DDDDDD;
+      height: inherit;
+      display:table-cell;
+      vertical-align: top;
+      zoom: 1;
+      .texto_nombre_usuario{
+        color:#27AAE2;
+        font-size: 14px;
+        font-weight: bolder;
+      }
+    }
+  }
+}
+
+.vue-paginador{
+  height: 26px;
+  background-color:#EFEFEF;
+  width:100%;
+  padding-top:5px;
+  border:1px solid #CCCCCC;
+}

@@ -1,0 +1,36 @@
+<?php
+
+use \Flexio\Migration\Migration;
+
+class AddNotaCreditoItemTotalImpuesto extends Migration
+{
+    /**
+     * Change Method.
+     *
+     * Write your reversible migrations using this method.
+     *
+     * More information on writing migrations is available here:
+     * http://docs.phinx.org/en/latest/migrations.html#the-abstractmigration-class
+     *
+     * The following commands can be used in this method and Phinx will
+     * automatically reverse them when rolling back:
+     *
+     *    createTable
+     *    renameTable
+     *    addColumn
+     *    renameColumn
+     *    addIndex
+     *    addForeignKey
+     *
+     * Remember to call "create()" or "update()" and NOT "save()" when working
+     * with the Table class.
+     */
+    public function change()
+    {
+        $tabla = $this->table('venta_nota_credito_items');
+        $tabla->addColumn('total_impuesto','decimal',array('scale' => 2, 'precision' => 15))
+              ->addColumn('impuesto_id','integer',array('limit' => 10))
+              ->addColumn('item_id','integer',array('limit' => 10))
+              ->update();
+    }
+}

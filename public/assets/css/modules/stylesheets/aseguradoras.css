@@ -1,0 +1,77 @@
+/* line 4, ../sass/clientes.scss */
+a.link {
+    color: blue;
+    text-decoration: underline;
+}
+/* line 7, ../sass/clientes.scss */
+a.link:visited {
+    color: blue;
+    text-decoration: underline;
+}
+
+/* line 13, ../sass/clientes.scss */
+table#AseguradorasGrid a {
+    color: blue;
+    text-decoration: underline;
+}
+#cb_AseguradorasGrid {
+    margin-left: 8px;
+}
+table#AseguradorasGrid .totales, table#AseguradorasGrid label.totales-success, table#AseguradorasGrid label.totales-warning, table#AseguradorasGrid label.totales-danger{
+    width: 100%;
+    background: transparent;
+    padding: 2px 7px;
+    text-align: center;
+    font-weight: bold;
+}
+    /* line 16, ../sass/clientes.scss */
+table#AseguradorasGrid a:visited {
+    color: blue;
+    text-decoration: underline;
+}
+
+                                                .nuevo > li.active{
+                                                    margin-top: 20px;
+                                                }
+                                                .nuevo > li.active > a,
+                                                .nuevo > li.active > a:hover,
+                                                .nuevo > li.active > a:focus {
+                                                  -moz-border-bottom-colors: none;
+                                                  -moz-border-left-colors: none;
+                                                  -moz-border-right-colors: none;
+                                                  -moz-border-top-colors: none;
+                                                  background: none;
+                                                  border-color: transparent;
+                                                  border-bottom: #f3f3f4;
+                                                  border-image: none;
+                                                  border-style: solid;
+                                                  border-width: 1px;
+                                                  color: #FFF;
+                                                  cursor: default;
+                                                  background-color: #5ab1c7;
+                                                  border-radius: 8px;
+                                                  height: 60px;
+                                                  width: 200px;
+                                                } 
+                                                .nuevo > li > a {
+                                                    color: #A7B1C2;
+                                                    font-weight: 600;
+                                                    padding: 10px 20px 10px 25px;
+                                                    text-align: center;
+                                                    background-color: #023859;
+                                                    height: 60px;
+                                                    color: #FFF;
+                                                    width: 200px;
+                                                    border-radius: 8px;
+                                                }
+                                                
+                                                .nuevo > li.active > a:before {
+                                                    content: "";
+                                                    position: absolute;
+                                                    top: 35px;
+                                                    width: 0;
+                                                    height: 0;
+                                                    border-left: 50px solid transparent;
+                                                    border-right: 50px solid transparent;
+                                                    border-top: 50px solid #5AB1C7;
+                                                }

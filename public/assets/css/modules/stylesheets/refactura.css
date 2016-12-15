@@ -1,0 +1,77 @@
+/* line 6, ../sass/refactura.scss */
+.no-left-padding {
+  padding-left: 0px !important;
+  padding-top: 20px;
+  padding-bottom: 5px;
+  padding-right: 0px !important;
+}
+
+/* line 12, ../sass/refactura.scss */
+.last-input {
+  padding-left: 30px;
+}
+
+/* line 15, ../sass/refactura.scss */
+.warning-color {
+  color: #EC971F;
+}
+
+/* line 19, ../sass/refactura.scss */
+form#form_crear_facturas .totales, form#form_crear_facturas label.label-success-text, form#form_crear_facturas label.label-info-text, form#form_crear_facturas label.label-warning-text, form#form_crear_facturas label.label-danger-text {
+  width: 100%;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 29, ../sass/refactura.scss */
+form#form_crear_facturas label.label-success-text {
+  border: #5cb85c solid 1px;
+  background-color: #5cb85c;
+}
+/* line 35, ../sass/refactura.scss */
+form#form_crear_facturas label.label-info-text {
+  border: #428BCA solid 1px;
+  background-color: #428BCA;
+}
+/* line 41, ../sass/refactura.scss */
+form#form_crear_facturas label.label-warning-text {
+  border: #EC971F solid 1px;
+  background-color: #EC971F;
+}
+/* line 46, ../sass/refactura.scss */
+form#form_crear_facturas label.label-danger-text {
+  border: #d9534f solid 1px;
+  background-color: #d9534f;
+}
+/* line 51, ../sass/refactura.scss */
+form#form_crear_facturas div.last-div {
+  padding-top: 10px;
+}
+
+/* line 56, ../sass/refactura.scss */
+table#componente-tabla {
+  margin-bottom: 50px;
+  border-bottom: #F3F3F4 solid 1px;
+}
+/* line 60, ../sass/refactura.scss */
+table#componente-tabla thead th {
+  background-color: #0076BE;
+  color: white;
+  border: 1px solid white;
+  font-weight: bold;
+  margin: 2px;
+}
+/* line 69, ../sass/refactura.scss */
+table#componente-tabla tbody td {
+  color: black;
+  font-weight: bold;
+}
+
+/* line 75, ../sass/refactura.scss */
+div.lists_opciones {
+  margin-bottom: 15px;
+}

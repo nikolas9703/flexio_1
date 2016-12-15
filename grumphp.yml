@@ -1,0 +1,11 @@
+parameters:
+    bin_dir: vendor/bin
+    tasks:
+       phpcs:
+       standard: Flexio
+       git_blacklist:
+          keywords:
+          - 'var_dump('
+          - 'print_r('
+          - 'die('
+          - ';;'

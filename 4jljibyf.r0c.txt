@@ -1,0 +1,10 @@
+﻿
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch fixVariosv51
+# Changes to be committed:
+#	modified:   application/modules/facturas/controllers/Facturas.php
+#	modified:   public/assets/js/modules/facturas/componentes/vue.datos_factura.js
+#	modified:   public/assets/js/modules/facturas/componentes/vue.items_alquiler.js
+#
+

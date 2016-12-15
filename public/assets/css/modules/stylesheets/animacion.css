@@ -1,0 +1,30 @@
+/* line 1, ../sass/animacion.scss */
+.item-listing.ng-enter,
+.item-listing.ng-leave {
+  -webkit-transition: 800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) all;
+  -moz-transition: 800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) all;
+  -ms-transition: 800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) all;
+  -o-transition: 800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) all;
+  transition: 800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) all;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+/* line 15, ../sass/animacion.scss */
+.item-listing.ng-leave.item-listing.ng-leave-active,
+.item-listing.ng-enter {
+  opacity: 0;
+  width: 0px;
+  height: 0px;
+}
+
+/* line 22, ../sass/animacion.scss */
+.item-listing.ng-enter.item-listing.ng-enter-active,
+.item-listing.ng-leave {
+  opacity: 1;
+  width: 150px;
+  height: 30px;
+}

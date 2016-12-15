@@ -1,0 +1,136 @@
+/* line 6, ../sass/cobros.scss */
+.header-ventas {
+  background-color: #D9D9D9;
+  padding: 6px 0;
+}
+/* line 9, ../sass/cobros.scss */
+.header-ventas div.text-header {
+  padding-top: 8px;
+  font-size: 14px;
+  font-weight: bolder;
+  color: #666666;
+}
+
+/* line 16, ../sass/cobros.scss */
+.no-left-padding {
+  padding-left: 0px !important;
+  padding-top: 20px;
+  padding-bottom: 5px;
+  padding-right: 0px !important;
+}
+
+/* line 22, ../sass/cobros.scss */
+.last-input {
+  padding-left: 30px;
+}
+
+/* line 26, ../sass/cobros.scss */
+form#form_crear_cobro .totales, form#form_crear_cobro label.label-success-text, form#form_crear_cobro label.label-info-text, form#form_crear_cobro label.label-warning-text, form#form_crear_cobro label.label-danger-text, form#form_crear_cobro table#tablaCobrosGrid label.totales-success, table#tablaCobrosGrid form#form_crear_cobro label.totales-success, form#form_crear_cobro table#tablaCobrosGrid label.totales-warning, table#tablaCobrosGrid form#form_crear_cobro label.totales-warning, form#form_crear_cobro table#tablaCobrosGrid label.totales-danger, table#tablaCobrosGrid form#form_crear_cobro label.totales-danger {
+  width: 100%;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 36, ../sass/cobros.scss */
+form#form_crear_cobro label.label-success-text {
+  border: #5cb85c solid 1px;
+  background-color: #5cb85c;
+}
+/* line 42, ../sass/cobros.scss */
+form#form_crear_cobro label.label-info-text {
+  border: #428BCA solid 1px;
+  background-color: #428BCA;
+}
+/* line 48, ../sass/cobros.scss */
+form#form_crear_cobro label.label-warning-text {
+  border: #EC971F solid 1px;
+  background-color: #EC971F;
+}
+/* line 53, ../sass/cobros.scss */
+form#form_crear_cobro label.label-danger-text {
+  border: #d9534f solid 1px;
+  background-color: #d9534f;
+}
+/* line 58, ../sass/cobros.scss */
+form#form_crear_cobro div.last-div {
+  padding-top: 100px;
+}
+
+/* line 63, ../sass/cobros.scss */
+table#facturaItems {
+  margin-bottom: 50px;
+  border-bottom: #F3F3F4 solid 1px;
+}
+/* line 67, ../sass/cobros.scss */
+table#facturaItems thead th {
+  background-color: #0076BE;
+  color: white;
+  border: 1px solid white;
+  font-weight: bold;
+}
+/* line 75, ../sass/cobros.scss */
+table#facturaItems tbody td {
+  color: black;
+  font-weight: bold;
+}
+
+/* line 81, ../sass/cobros.scss */
+div.lists_opciones {
+  margin-bottom: 15px;
+}
+
+/* line 85, ../sass/cobros.scss */
+table#optionPagos {
+  border-color: white;
+  margin-bottom: 100px;
+}
+/* line 88, ../sass/cobros.scss */
+table#optionPagos thead {
+  border-color: white;
+}
+/* line 90, ../sass/cobros.scss */
+table#optionPagos thead th {
+  border-bottom-color: white;
+}
+/* line 96, ../sass/cobros.scss */
+table#optionPagos tbody tr td {
+  border-top: white;
+}
+
+/* line 104, ../sass/cobros.scss */
+table#tablaCobrosGrid a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 107, ../sass/cobros.scss */
+table#tablaCobrosGrid a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 112, ../sass/cobros.scss */
+table#tablaCobrosGrid .totales, table#tablaCobrosGrid form#form_crear_cobro label.label-success-text, form#form_crear_cobro table#tablaCobrosGrid label.label-success-text, table#tablaCobrosGrid form#form_crear_cobro label.label-info-text, form#form_crear_cobro table#tablaCobrosGrid label.label-info-text, table#tablaCobrosGrid form#form_crear_cobro label.label-warning-text, form#form_crear_cobro table#tablaCobrosGrid label.label-warning-text, table#tablaCobrosGrid form#form_crear_cobro label.label-danger-text, form#form_crear_cobro table#tablaCobrosGrid label.label-danger-text, table#tablaCobrosGrid label.totales-success, table#tablaCobrosGrid label.totales-warning, table#tablaCobrosGrid label.totales-danger {
+  width: 100%;
+  background: transparent;
+  padding: 2px 7px;
+  text-align: center;
+  font-weight: bold;
+}
+/* line 119, ../sass/cobros.scss */
+table#tablaCobrosGrid label.totales-success {
+  border: #5cb85c solid 2px;
+  color: #5cb85c;
+}
+/* line 125, ../sass/cobros.scss */
+table#tablaCobrosGrid label.totales-warning {
+  border: #EC971F solid 1px;
+  color: #EC971F;
+}
+/* line 130, ../sass/cobros.scss */
+table#tablaCobrosGrid label.totales-danger {
+  border: #d9534f solid 2px;
+  color: #d9534f;
+}

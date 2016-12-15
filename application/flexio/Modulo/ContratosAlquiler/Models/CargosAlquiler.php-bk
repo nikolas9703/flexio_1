@@ -1,0 +1,99 @@
+<?php
+namespace Flexio\Modulo\ContratosAlquiler\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler;
+use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+
+class CargosAlquiler extends Model
+{
+    use RevisionableTrait;
+
+    //Propiedades de Revisiones
+    protected $revisionEnabled = true;
+    protected $revisionCreationsEnabled = true;
+    protected $keepRevisionOf = ['uuid_cargo', 'numero', 'empresa_id','cargoable_id','cargoable_type','contrato_id','item_id','serie','cantidad','tarifa','total_cargo','ciclo','ciclo_id','devuelto','fecha_cargo', 'fecha_devolucion','created_at','updated_at'];
+
+    protected $table    = 'car_cargos_alquiler';
+    protected $fillable = ['uuid_cargo', 'numero', 'empresa_id','cargoable_id','cargoable_type','contrato_id','item_id','serie','cantidad','tarifa','total_cargo','ciclo','ciclo_id','devuelto','cantidad_devuelta','fecha_cargo', 'fecha_devolucion', 'estado','created_at','updated_at'];
+    protected $guarded  = ['id'];
+
+    public function __construct(array $attributes = array()){
+        $this->setRawAttributes(array_merge($this->attributes, array('uuid_cargo' => Capsule::raw("ORDER_UUID(uuid())"))), true);
+        parent::__construct($attributes);
+    }
+    public static function boot() {
+        parent::boot();
+    }
+
+    public function cargoable(){
+    	return $this->morpTo();
+    }
+
+    public function entregas_alquiler(){
+    	return $this->belongsTo(EntregasAlquiler::class, 'cargoable_id');
+    }
+
+    public function item() {
+        return $this->belongsTo('Flexio\Modulo\Inventarios\Models\Items', 'item_id');
+    }
+
+    public function scopePorFacturar($query) {
+        return $query->where('estado', 'por_facturar');
+    }
+
+    public function scopeClauseFiltro($query, $clause) {
+      $item = !empty($clause["item"]) ? $clause["item"] : array();
+  		$contrato_codigo = !empty($clause["contrato"]) ? $clause["contrato"] : array();
+      $contrato_id = !empty($clause["contrato_id"]) ? $clause["contrato_id"] : array();
+
+  		//filtro item
+  		if(!empty($item)){
+  			$items = Items::where("nombre", "LIKE", "%$item%")->get(array("id"))->pluck('id')->toArray();
+  			$query->whereIn("item_id", $items);
+  		}
+
+      //Clause Contrato
+  		if(!empty($contrato_codigo) || !empty($contrato_id)){
+
+        $query_contrato = ContratosAlquiler::deEmpresa($clause);
+        if(!empty($contrato_codigo)){
+          $query_contrato->deCodigo($contrato_codigo);
+        }
+        if(!empty($contrato_id)){
+          $query_contrato->where("id", $contrato_id);
+          unset($clause["contrato_id"]);
+        }
+        $contratos = $query_contrato->get(array("id"))->pluck('id')->toArray();
+
+  			$query->whereIn("contrato_id", $contratos);
+  		}
+
+  		//Si existen variables de limite
+  		if($clause!=NULL && !empty($clause) && is_array($clause))
+  		{
+  			foreach($clause AS $field => $value)
+  			{
+  				if($field == "nombre_centro" || $field == "item" || $field == "contrato" || $field == "contrato_id"){
+  					continue;
+  				}
+
+  				//Verificar si el campo tiene el simbolo @ y removerselo.
+  				if(preg_match('/@/i', $field)){
+  					$field = str_replace("@", "", $field);
+  				}
+
+  				//verificar si valor es array
+  				if(is_array($value)){
+  					$query->where($field, $value[0], $value[1]);
+  				}else{
+  					$query->where($field, '=', $value);
+  				}
+  			}
+  		}
+      //dd($query);
+      return $query;
+    }
+}

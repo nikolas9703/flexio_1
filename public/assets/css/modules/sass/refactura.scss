@@ -1,0 +1,77 @@
+$label-primary: darken(#428bca, 6.5%); // #337ab7
+$label-success: #5cb85c;
+$label-info:    #428BCA;
+$label-warning: #EC971F;
+$label-danger:  #d9534f;
+.no-left-padding{
+  padding-left: 0px !important;
+  padding-top: 20px;
+  padding-bottom: 5px;
+  padding-right: 0px !important;
+}
+.last-input{
+  padding-left: 30px;
+}
+.warning-color{
+    color:$label-warning;
+}
+form#form_crear_facturas{
+  .totales{
+    width:100%;
+    color:#FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+  }
+  label.label-success-text{
+    @extend .totales;
+    border: $label-success solid 1px;
+    background-color:$label-success;
+  }
+
+  label.label-info-text{
+    @extend .totales;
+    border: $label-info solid 1px;
+    background-color:$label-info;
+  }
+
+  label.label-warning-text{
+    @extend .totales;
+    border: $label-warning solid 1px;
+    background-color:$label-warning;
+  }
+  label.label-danger-text{
+    @extend .totales;
+    border: $label-danger solid 1px;
+    background-color:$label-danger;
+  }
+  div.last-div{
+    padding-top: 10px;
+  }
+}
+
+table#componente-tabla{
+  margin-bottom: 50px;
+  border-bottom: #F3F3F4 solid 1px;
+  thead{
+    th{
+      background-color: #0076BE;
+      color:white;
+      border:1px solid white;
+      font-weight: bold;
+      margin: 2px;
+    }
+  }
+  tbody{
+    td{
+      color:black;
+      font-weight: bold;
+    }
+  }
+}
+div.lists_opciones{
+  margin-bottom: 15px;
+}

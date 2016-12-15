@@ -1,0 +1,3 @@
+"linter-phpcs": {
+  phpcsExecutablePath: "phpcs-cs-fixer.phar"
+}

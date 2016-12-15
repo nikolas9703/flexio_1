@@ -1,0 +1,28 @@
+﻿
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch fixVariosv2
+# Changes to be committed:
+#	modified:   application/flexio/Modulo/OrdenesVentas/Models/OrdenVenta.php
+#	modified:   application/flexio/Modulo/OrdenesVentas/Repository/OrdenVentaRepository.php
+#	new file:   application/modules/ordenes_alquiler/config/config.php
+#	new file:   application/modules/ordenes_alquiler/config/routes.php
+#	new file:   application/modules/ordenes_alquiler/config/subpanels.php
+#	new file:   application/modules/ordenes_alquiler/controllers/Ordenes_alquiler.php
+#	new file:   application/modules/ordenes_alquiler/views/comentarios.php
+#	new file:   application/modules/ordenes_alquiler/views/crear.php
+#	new file:   application/modules/ordenes_alquiler/views/formulario.php
+#	new file:   application/modules/ordenes_alquiler/views/formulario2.php
+#	new file:   application/modules/ordenes_alquiler/views/formulario_comentarios.php
+#	new file:   application/modules/ordenes_alquiler/views/formulario_editar.php
+#	new file:   application/modules/ordenes_alquiler/views/listar.php
+#	new file:   application/modules/ordenes_alquiler/views/tabla.php
+#	new file:   application/modules/ordenes_alquiler/views/ver.php
+#	modified:   application/modules/ordenes_ventas/config/config.php
+#	modified:   application/modules/ordenes_ventas/controllers/Ordenes_ventas.php
+#	new file:   migrations/20160810150809_edit_ordenes_venta.php
+#	new file:   migrations/20160810154407_edit_ordenes_venta2.php
+#	new file:   public/assets/js/modules/ordenes_alquiler/crear.controller.js
+#	new file:   public/assets/js/modules/ordenes_alquiler/tabla.js
+#
+

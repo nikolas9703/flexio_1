@@ -1,0 +1,178 @@
+/* line 4, ../sass/reporte_financiero.scss */
+.bg-white {
+  background-color: #FFFFFF;
+  padding-bottom: 30px;
+}
+
+/* line 8, ../sass/reporte_financiero.scss */
+.errors {
+  color: red;
+}
+
+/* line 11, ../sass/reporte_financiero.scss */
+.underline {
+  text-decoration: underline;
+  text-transform: capitalize;
+}
+
+/* line 15, ../sass/reporte_financiero.scss */
+.header-ventas {
+  background-color: #D9D9D9;
+  padding: 6px 0;
+}
+/* line 18, ../sass/reporte_financiero.scss */
+.header-ventas div.text-header {
+  padding-top: 8px;
+  font-size: 14px;
+  font-weight: bolder;
+  color: #666666;
+}
+
+/* line 25, ../sass/reporte_financiero.scss */
+p.parrafo {
+  height: 3.0em;
+}
+
+/* line 28, ../sass/reporte_financiero.scss */
+a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 31, ../sass/reporte_financiero.scss */
+a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* line 36, ../sass/reporte_financiero.scss */
+table.controller {
+  margin-top: 15px;
+  table-layout: fixed;
+}
+/* line 39, ../sass/reporte_financiero.scss */
+table.controller .label {
+  color: #000000;
+  font-size: 14px;
+  background-color: transparent;
+}
+/* line 44, ../sass/reporte_financiero.scss */
+table.controller td.data {
+  text-align: left;
+  color: #000000;
+  font-size: 14px;
+}
+
+/* line 55, ../sass/reporte_financiero.scss */
+table.table-total {
+  table-layout: fixed;
+  margin-bottom: 30px;
+}
+/* line 58, ../sass/reporte_financiero.scss */
+table.table-total .totalizador {
+  margin-left: 30px;
+}
+/* line 62, ../sass/reporte_financiero.scss */
+table.table-total tr {
+  border-bottom: 1px solid #000000;
+}
+/* line 64, ../sass/reporte_financiero.scss */
+table.table-total tr td {
+  color: #000000;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0px 0;
+}
+
+/* line 72, ../sass/reporte_financiero.scss */
+.estado_total {
+  font-size: 22px;
+  color: #999999;
+  font-weight: bolder;
+}
+
+/* line 77, ../sass/reporte_financiero.scss */
+.balance_total {
+  font-size: 22px;
+  color: #000000;
+  font-weight: bolder;
+}
+
+/* line 84, ../sass/reporte_financiero.scss */
+table tbody .borde-tr {
+  border-top: #000000 1px solid !important;
+  border-bottom: #000000 1px solid !important;
+}
+
+/*Reporte cuenta antiguedad*/
+/* line 95, ../sass/reporte_financiero.scss */
+table.antiguedad thead tr {
+  background-color: #0070BA;
+}
+/* line 97, ../sass/reporte_financiero.scss */
+table.antiguedad thead tr th {
+  color: #FFFFFF;
+  font-size: 16px;
+  border: 1px solid #FFFFFF;
+}
+
+/*reporte de impuestos */
+/* line 109, ../sass/reporte_financiero.scss */
+table.impuestos thead tr {
+  background-color: #0070BA;
+}
+/* line 111, ../sass/reporte_financiero.scss */
+table.impuestos thead tr th {
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: bold;
+  border: 1px solid #FFFFFF !important;
+  padding-left: 15px !important;
+}
+/* line 112, ../sass/reporte_financiero.scss */
+table.impuestos thead tr th:first-child {
+  padding-left: 15px !important;
+}
+/* line 115, ../sass/reporte_financiero.scss */
+table.impuestos thead tr th:nth-child(1) {
+  width: 25%;
+}
+/* line 128, ../sass/reporte_financiero.scss */
+table.impuestos tbody tr td {
+  color: #111111;
+}
+/* line 129, ../sass/reporte_financiero.scss */
+table.impuestos tbody tr td:first-child {
+  font-size: 14px;
+  font-weight: bold;
+  color: #000000;
+}
+/* line 140, ../sass/reporte_financiero.scss */
+table.impuestos tfoot tr {
+  border-top: 2px double #000000 !important;
+  border-bottom: 2px double #000000 !important;
+  border-width: 2px 0;
+  border-style: double;
+}
+/* line 145, ../sass/reporte_financiero.scss */
+table.impuestos tfoot tr td {
+  font-weight: bold;
+  color: #000000;
+}
+/* line 146, ../sass/reporte_financiero.scss */
+table.impuestos tfoot tr td:first-child {
+  font-size: 14px;
+}
+
+/* line 155, ../sass/reporte_financiero.scss */
+div.space {
+  height: 50px;
+}
+
+/* line 161, ../sass/reporte_financiero.scss */
+table.table-total-impuesto tbody tr td {
+  padding-left: 15px !important;
+}
+/* line 162, ../sass/reporte_financiero.scss */
+table.table-total-impuesto tbody tr td:nth-child(1) {
+  width: 40%;
+}

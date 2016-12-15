@@ -1,0 +1,79 @@
+/* line 2, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tr th[scope="colgroup"] {
+  background-color: #0076be !important;
+  color: #fff;
+  font-weight: 500;
+}
+/* line 7, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tr th[scope="mainheader"] {
+  color: #666;
+  font-weight: normal;
+}
+/* line 11, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tr table th {
+  background-color: transparent !important;
+  color: #494949;
+  font-weight: normal;
+}
+/* line 17, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tfoot td:nth-child(1) {
+  border-left: 1px #fff solid !important;
+  border-bottom: 1px #fff solid !important;
+}
+/* line 21, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tfoot td:last-child {
+  border-right: 1px #fff solid !important;
+  border-bottom: 1px #fff solid !important;
+}
+/* line 25, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tfoot .sum-border {
+  border-left: 1px #eee solid !important;
+  border-right: 1px #eee solid !important;
+  border-bottom: 1px #eee solid !important;
+}
+/* line 30, ../sass/ordenes_trabajo.scss */
+table.tabla-dinamica tfoot .sum-total {
+  float: right;
+}
+
+/* line 35, ../sass/ordenes_trabajo.scss */
+.label.label-por-agendar {
+  background-color: red;
+  color: #fff;
+}
+
+/* line 39, ../sass/ordenes_trabajo.scss */
+.label.label-agendada {
+  background-color: #6EC5E5;
+  color: #fff;
+}
+
+/* line 43, ../sass/ordenes_trabajo.scss */
+.label.label-en-ejecucion {
+  background-color: #6EC5E5;
+  color: #fff;
+}
+
+/* line 47, ../sass/ordenes_trabajo.scss */
+.label.label-por-facturar {
+  background-color: orange;
+  color: #fff;
+}
+
+/* line 51, ../sass/ordenes_trabajo.scss */
+.label.label-facturada {
+  background-color: #479B3E;
+  color: #fff;
+}
+
+/* line 55, ../sass/ordenes_trabajo.scss */
+.label.label-terminada {
+  background-color: #479B3E;
+  color: #fff;
+}
+
+/* line 59, ../sass/ordenes_trabajo.scss */
+.label.label-anulada {
+  background-color: #000;
+  color: #fff;
+}

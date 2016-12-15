@@ -1,0 +1,1061 @@
+@CHARSET "ISO-8859-1";
+
+ .nav>li>a:focus, .nav>li>a:hover{text-decoration:none;background-color:#074367; }
+
+/*Creado para el menu de arriba*/
+.nav > li > a.dropdown-toggle {
+  padding: 14px 20px 14px 12px;
+}
+.navtop-menu{
+	float: left;
+	height: 50px;
+	width:100%;
+	margin: 0;
+	margin-top: 5px;
+	z-index:9999;
+}
+.navtop-menu > li > a {
+ 	color: #fff !important;
+	font-weight: 600 !important;
+}
+.navtop-menu > li.active {
+ 	background-color:#074367 !important;
+	border: 0px !important;
+}
+.navtop-menu > li.active a{
+	color: #31a1eb !important;
+}
+
+/* Flowjs Drop Upload */
+.drop {
+    padding: 15px;
+    border: 2px #f1f1f1 dashed;
+    border-radius: 5px;
+    line-height: 34px;
+}
+.drop.drag-over {
+    background: #5CB85C;
+    color: #fff
+}
+.transfer-box {
+    margin-bottom: 5px;
+}
+
+a.navbar-minimalize:hover, a.navbar-minimalize.btn-primary{ background-color: #0076be !important; border: 1px solid #0076be !important; }
+
+body.fixed-sidebar.mini-navbar,
+body.fixed-sidebar.mini-navbar .navbar-default,
+body.fixed-sidebar.mini-navbar .navbar-default .nav > li > .nav-second-level,
+body.fixed-sidebar.mini-navbar .navbar-default .nav > li > .nav-second-level li,
+body.fixed-sidebar.mini-navbar .navbar-default .nav > li > .nav-second-level li a{
+  background-color: #fff !important;
+}
+body.fixed-sidebar.mini-navbar .navbar-default .nav > li > .nav-second-level li a:hover{
+  background-color: #eee !important;
+}
+body.mini-navbar #empresaMenu, body.mini-navbar #menu_dropdown{ display:none; }
+body.body-small.mini-navbar #empresaMenu, body.body-small.mini-navbar #menu_dropdown{ display:inline; }
+
+.navbar-minimalize {
+  border: none;
+  background: transparent !important;
+
+  &:hover {
+    background: transparent !important;
+  }
+
+  .fa-bar {
+    width: 22px;
+    transition: all 0.2s;
+  }
+  .top-bar {
+    transform: rotate(45deg);
+    transform-origin: 10% 10%;
+  }
+  .middle-bar {
+    opacity: 0;
+  }
+  .bottom-bar {
+    transform: rotate(-45deg);
+    transform-origin: 10% 90%;
+  }
+}
+.nav > li.tabdrop.open,
+.nav > li.tabdrop.open > a.dropdown-toggle{
+    color: #074367 !important;
+	border-top-right-radius: 2px;
+	border-top-left-radius: 2px;
+	background-color: #fff !important;
+}
+
+.nav > li.tabdrop.open > ul.dropdown-menu{
+	-webkit-box-shadow: 1px 3px 2px rgba(50, 50, 50, 0.28)  !important;
+	-moz-box-shadow:    1px 3px 2px rgba(50, 50, 50, 0.28)  !important;
+	box-shadow:         1px 3px 2px rgba(50, 50, 50, 0.28)  !important;
+}
+
+/* Para que no se oculte el menu superior
+en resoliciones mas pequenas. */
+@media (min-width: 250px)
+and (max-width: 640px) {
+  .navbar-nav {
+    float: left;
+    margin: 0;
+  }
+  .navbar-nav > li {
+    float: left;
+  }
+  .navbar-nav > li > a {
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+
+  .navbar-nav .open .dropdown-menu {
+    position: static;
+    float: none;
+    width: auto;
+    margin-top: -2px;
+    border: 0;
+  	background-color: #fff !important;
+    -webkit-box-shadow: none;
+	-moz-box-shadow:    none;
+	box-shadow:         none;
+  }
+  .navbar-nav .open .dropdown-menu > li > a,
+  .navbar-nav .open .dropdown-menu .dropdown-header {
+    padding: 5px 15px 5px 25px;
+  }
+  .navbar-nav .open .dropdown-menu > li > a {
+    line-height: 20px;
+  }
+  .navbar-nav .open .dropdown-menu > li > a:hover,
+  .navbar-nav .open .dropdown-menu > li > a:focus {
+    background-image: none;
+  }
+
+	body.body-small.mini-navbar #topSlideMenu, body.body-small.mini-navbar .tabdrop, body.mini-navbar #empresaMenu{ display:none; }
+	body.mini-navbar #empresaMenu, body.mini-navbar #menu_dropdown{ display:none; }
+	body.body-small.mini-navbar #empresaMenu, body.body-small.mini-navbar #menu_dropdown{ display:inline; }
+}
+.navbar-top-links li:last-child{
+	margin-right:0 !important;
+}
+
+nav.navmenu-fixed-left .nav > li:first-child{
+	padding: 8px;
+}
+nav.navmenu-fixed-left .nav > li a:hover{
+	background-color: #eee !important;
+}
+
+/* Menu Lateral */
+#side-menu > li > a{
+	font-weight: 500 !important;
+}
+#side-menu > li.active > a,
+#side-menu > li.active > ul > li.active > a,
+#side-menu > li.active > ul > li > ul > li.active > a{
+	font-weight: 600 !important;
+}
+#side-menu .arrow{
+	position: relative !important;
+}
+
+.row {
+    margin-right: -15px;
+    margin-left: 0px;
+}
+
+/*******************************/
+/* Colores - Inspinia - Flexio */
+/*******************************/
+body {
+    background-color: #ffffff !important;
+}
+.btn-default {
+    background-color: #999999 !important;
+    border-color: #999999 !important;
+    color: #ffffff !important;
+}
+.btn-white {
+    background: white none repeat scroll 0 0 !important;
+    color: inherit !important;
+	border:0 !important;
+}
+.btn-primary {
+    background-color: #0076be !important;
+    border-color: #0076be !important;
+    color: #ffffff !important;
+}
+.navbar-fixed-top, .navbar-static-top {
+    background: #023859 none repeat scroll 0 0 !important;
+}
+#page-wrapper {
+    padding: 0 !important;
+}
+.nav.navtop-menu > li > a {
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+.nav.navtop-menu > li.active {
+    background-color: #074367 !important;
+    border: 0 none !important;
+}
+.navbar-default .nav > li > a:hover,
+.navbar-default .nav > li > a:focus {
+  background-color: #f3f4f5 !important;
+  color: #293846 !important;
+}
+.nav.navbar-right > li > a {
+    color: #999c9e !important;
+}
+.nav > li.active {
+    background: #ffffff none repeat scroll 0 0 !important;
+    border-color: #b9c3cc !important;
+}
+.nav > li > a {
+    color: #023859 !important;
+	font-weight: 500 !important;
+}
+.nav > li.active > a {
+    color: #023859;
+}
+.panel-heading .nav.nav-tabs li a{
+	padding: 10px 20px 9px 25px !important;
+}
+.nav.nav-tabs li {
+  background: none;
+  border: none;
+}
+.panel-heading .nav-tabs > li:not(.active) > a:hover{
+  background-color: #e6e6e6 !important;
+  color: #676a6c !important;
+}
+.form-control:focus, .single-line:focus{
+	border-color: #0c4f84 !important;
+}
+/*******************************/
+/* END: Colores - Inspinia - Flexio */
+/*******************************/
+
+/* Formularios: campo readonly */
+.form-control[readonly]{
+	background-color: #fff !important;
+}
+
+/* Remover overflow de Tablas Dinamicas */
+.tabla-without-overflow{
+	overflow: hidden !important;
+}
+
+/*Se comenta esta regla porque hace que las tablas con muchos
+elementos se salgan del formulario*/
+ form div.table-responsive{
+    overflow: unset;
+}
+ form#roleForm div.table-responsive{
+    overflow: auto;
+}
+/*Haciendo pruebas para el trabajo de las tablas dinamicas*/
+#editarEntradasForm2 div.table-responsive
+{
+    /*debe comportarse como un row*/
+}
+
+#editarEntradasForm2 div.table-responsive table
+{
+    /*debe comportarse como un ROW*/
+    display: block !important;
+}
+
+#editarEntradasForm2 div.table-responsive table thead
+{
+    /*debe comportarse como un ROW*/
+    display: block !important;
+}
+
+#editarEntradasForm2 div.table-responsive table tbody
+{
+    /*debe comportarse como un ROW*/
+    display: block !important;
+}
+
+#editarEntradasForm2 div.table-responsive table tr
+{
+    /*debe comportarse como un ROW*/
+    display: block !important;
+}
+
+/* Dispositivos pequenos (tablets, anchura mayor o igual a 768px) */
+@media (max-width: 768px) {
+    #editarEntradasForm2 div.table-responsive table tr td
+    {
+        /*debe comportarse como un COL*/
+        width: 100%;
+        float: left;
+        position: relative;
+    }
+
+    #editarEntradasForm2 div.table-responsive table tr td:first-child
+    {
+        /*debe comportarse como un COL*/
+        clear: both;
+    }
+
+    #editarEntradasForm2 div.table-responsive table tr td:nth-of-type(1n+0)
+    {
+        /*debe comportarse como un COL*/
+        clear: both;
+        padding-left: 0px;
+    }
+}
+
+/* Dispositivos medianos (ordenadores, anchura mayor o igual a 992px) */
+@media (max-width: 992) {
+    #editarEntradasForm2 div.table-responsive table tr td
+    {
+        /*debe comportarse como un COL*/
+        width: 50%;
+        float: left;
+        position: relative;
+    }
+
+    #editarEntradasForm2 div.table-responsive table tr td:first-child
+    {
+        /*debe comportarse como un COL*/
+        clear: both;
+    }
+
+    #editarEntradasForm2 div.table-responsive table tr td:nth-of-type(3n+0)
+    {
+        /*debe comportarse como un COL*/
+        clear: both;
+        padding-left: 0px;
+    }
+}
+
+/* Dispositivos grandes (ordenadores, anchura mayor o igual a 1200px) */
+@media (min-width: 993px) {
+    #editarEntradasForm2 div.table-responsive table tr td
+    {
+        /*debe comportarse como un COL*/
+        width: 20%;
+        float: left;
+        position: relative;
+    }
+
+    #editarEntradasForm2 div.table-responsive table tr td:first-child
+    {
+        /*debe comportarse como un COL*/
+        clear: both;
+    }
+
+    #editarEntradasForm2 div.table-responsive table tr td:nth-of-type(6n+0)
+    {
+        /*debe comportarse como un COL*/
+        clear: both;
+        padding-left: 0px;
+    }
+}
+
+/*fin de pruebas pra el trabajo de las tablas dinamicas*/
+
+#datosEspecificosForm div.table-responsive{
+    padding-bottom: 40px !important;
+}
+
+form div.table-responsive th{
+    white-space: nowrap;
+}
+
+.table-responsive-chosen {
+    max-height: 150px !important;
+    overflow-y: auto;
+}
+/*fin de las modificaciones para mejorar la visualizacion de
+las tablas dinamicas*/
+
+/* Corregir z-index de menu lateral */
+body.fixed-sidebar .navbar-static-side, body.canvas-menu .navbar-static-side{
+	z-index: 100 !important;
+}
+
+a{ outline: 0 !important; }
+
+/* Para Panels */
+.tab-content > .panel-heading{
+	padding-bottom: 0 !important;
+    padding-top: 2px !important;
+	padding-left: 0 !important;
+}
+.panel-group .tab-content > .panel-heading{
+	 border-bottom: 2px solid #ececec !important;
+}
+.panel-group .tab-content .ibox-title{
+	border-top: none !important;
+}
+.tab-content > .panel-heading .nav-tabs > li.active > a, .tab-content > .panel-heading .nav-tabs > li.active > a:hover{
+	padding: 10px 20px 9px 25px !important;
+	position: relative !important;
+    top: 2.5px !important;
+}
+.ibox > .ibox-title.panel-heading .ibox-tools{
+	position: relative;
+    top: 6px;
+}
+.panel-white > .panel-heading {
+    background-color: #fff;
+    border-color: #555;
+    color: #444;
+}
+
+/* Para ibox-title con tabs */
+.ibox-title.panel-heading{
+	padding-top: 2px !important;
+}
+
+/* Ocultar los brackets de anguarjs */
+[ng\:cloak],[ng-cloak],.ng-cloak{display:none !important}
+
+/* jquery ui datepicker */
+.ui-datepicker-header{
+    background: transparent !important;
+}
+.ui-datepicker{
+	z-index: 9999 !important;
+}
+
+/* Seleccion de Tabs */
+.tabs-container .nav-tabs > li.active > a, .tabs-container .nav-tabs > li.active > a:hover, .tabs-container .nav-tabs > li.active > a:focus{
+	background-color: #fff !important;
+	color: #444 !important;
+}
+
+/*--------------------*/
+/*  BEGIN CUSTOM CSS  */
+/*--------------------*/
+.borde-top-grueso{
+	border-top:4px solid #e7eaec;
+}
+.form-signin{
+  /*background-color: #f5f5f5;*/
+  /*border: 1px solid #e3e3e3;*/
+  /*border-radius: 4px;*/
+  margin-bottom: 20px;
+  min-height: 20px;
+  padding: 19px;
+}
+.form-control[readonly]{
+  cursor: pointer !important;
+}
+form div.form-group, form[enctype="multipart/form-data"] div[class*="form-group"]{
+	height: 40px !important;
+	margin-bottom: 40px !important;
+}
+form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
+	height: auto !important;
+}
+form[enctype="multipart/form-data"] div.row:last-child{
+	/*height: 50px;*/
+}
+form[enctype="multipart/form-data"] div.fileimage{
+	float: left;
+    height: 170px !important;
+    position: relative;
+    top: 38px;
+}
+
+.no-margin-bottom{
+	margin-bottom: 6px !important;
+}
+
+.ibox-footer {
+	-moz-border-bottom-colors: none;
+	-moz-border-left-colors: none;
+	-moz-border-right-colors: none;
+	-moz-border-top-colors: none;
+	background-color: #ffffff;
+	border-color: #e7eaec;
+	border-image: none;
+	border-style: solid solid none;
+	border-width: 1px 0px 0;
+	color: inherit;
+	margin-bottom: 0;
+	min-height: 20px !important;
+	max-height: 28px !important;
+	height: 26px;
+}
+.ibox-footer-items{
+	padding: 4px 6px 0 6px;
+	vertical-align: middle;
+	height: inherit !important;
+}
+.ibox-footer-items-border-left{
+	border-left: 1px solid rgb(204, 204, 204);
+}
+.ibox-footer-items-border-right{
+	border-right: 1px solid rgb(204, 204, 204);
+}
+.ibox-footer-label{
+	margin:1px 0 0 4px;
+}
+.ibox-footer-label .label{
+	border-radius: 0;
+	padding:0.1em 0.6em 0.2em;
+}
+
+/* =================================== */
+/* Panel Blanco - Para Roles           */
+/* =================================== */
+.panel-blanco{
+	border-top:0px;
+}
+.panel-blanco .panel-blanco-heading{
+	border-top:4px solid #e7eaec;
+	border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+/* /END: PANEL BLANCO */
+
+/* =================================== */
+/* Collapse Panel icons state          */
+/* =================================== */
+.panel-heading a[data-toggle="collapse"][aria-expanded="true"]:after {
+    /* symbol for "opening" panels */
+    font-family: 'FontAwesome';
+    content: "\f077";
+    float: right !important;        /* adjust as needed */
+    color: grey;         /* adjust as needed */
+    /*margin-right: 10px;
+	font-size: 12px;*/
+	/*font-weight: lighter;*/
+}
+.panel-heading a.collapsed:after {
+	font-family: FontAwesome;
+    text-rendering: auto;
+	color: grey;
+    content: "\f078";  /* adjust as needed */
+	float: right !important;
+}
+@media (max-width: 350px) {
+	.panel-heading a:not([data-toggle="tab"]):after, .panel-heading a.collapsed:after {
+	   display:none;
+	}
+}
+/* =================================== */
+
+/* =================================== */
+/* CSS Custom Panel tabs       		   */
+/* =================================== */
+.panel-heading {
+  /*background:#fafafa;*/
+	border-bottom:2px solid #ececec;
+	position:relative;
+	/*border-top:4px solid #E7EAEC;*/
+	border-radius: 0;
+}
+.panel-heading .nav-tabs {
+  border-bottom-color:transparent;
+  bottom:-1px;
+  position:absolute;
+  left:9px;
+}
+.panel-heading .nav-tabs {
+  border-bottom-color:transparent;
+  bottom:-2px;
+  position:absolute;
+  right:9px;
+}
+.panel-heading .nav-tabs> li > a {
+  border-bottom-color:transparent;
+  -webkit-border-radius: 0 0 0 0;
+  border-radius: 4px 4px 0 0;
+  border-bottom: 0 none;
+  outline: none;
+}
+.panel-heading .nav-tabs>li>a:hover {
+	background-color: #999999;
+	color:#fff;
+}
+.panel-heading .nav-tabs li{
+	margin-bottom: 0.7px;
+}
+.panel-heading .nav-tabs > li.active > a,
+.panel-heading .nav-tabs > li.active > a:hover {
+  background-color: #fff;
+  -webkit-border-radius: 0 0 0 0;
+  border-bottom: 0 none;
+  outline: none;
+  line-height: 1.5;
+  color:#333;
+  padding: 9px 20px 9px 25px;
+}
+.sub-panel .tab-content > .active{
+	/*padding:10px;*/
+}
+/* =================================== */
+/* Custom Panel TabDrop Plugin		   */
+/* =================================== */
+.panel-heading .dropdown-menu{
+	border-top: 0 none;
+	box-shadow: 1px 10px 7px rgba(86, 96, 117, 0.7) !important;
+	right: 2px !important;
+	border-left: 1.2px solid #ddd;
+	border-right: 1.2px solid #ddd;
+	border-button: 1.2px solid #ddd;
+}
+
+.panel-heading .dropdown-menu > .active > a,
+.panel-heading .dropdown-menu > .active > a:focus,
+.panel-heading .dropdown-menu > .active > a:hover{
+	background-color: #343434 !important;
+}
+/* =================================== */
+
+/* Para tabla dinamica de formularios */
+.table-noline tr th:first-child, .table-noline tr td:first-child{
+	padding-left:0px !important;
+}
+.table-noline th{
+	font-weight:normal;
+}
+.table-noline,
+.table-noline tr,
+.table-noline th,
+.table-noline td{
+	border:0px !important;
+}
+.tabla-dinamica tr.highlight td{
+	background-color: #FFFFBC;
+}
+
+/* otras tabla */
+.table th[scope="row"] {
+    background-color: #f9f9f9;
+}
+.required, span.required, span[required=""], label.required, label.error{
+  color: red !important;
+}
+
+textarea {
+  resize: vertical; /* user can resize vertically, but width is fixed */
+}
+
+/* =================================== */
+/* Bootstrap Tags Input         	   */
+/* =================================== */
+.bootstrap-tagsinput{
+	padding: 0px !important;
+}
+.bootstrap-tagsinput input[type="text"]{
+	height:34px;
+}
+.bootstrap-tagsinput .label{
+	font-size:inherit !important;
+	font-weight:normal !important;
+	border-radius: 0.1em  !important;
+	line-height: 2.5;
+	margin-left: 2px;
+	margin-right: 0px !important;
+}
+
+/* =================================== */
+/* CSS Chosen Custom         		   */
+/* =================================== */
+.chosen-container-multi .chosen-choices {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #e5e6e7 !important;
+    border-radius: 1px !important;
+    cursor: text;
+    height: auto !important !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    padding: 3px 12px !important;
+    position: relative !important;
+    width: 100% !important;
+}
+.chosen-container-multi .chosen-choices li.search-choice {
+    background: none repeat scroll 0 0 #e5e5e5 !important;
+    border: 1px solid #e5e5e5 !important;
+    border-radius: 3px !important;
+    color: #333 !important;
+    cursor: default;
+    line-height: 13px;
+    margin: 3px 5px 3px 0;
+    max-width: 100%;
+    padding: 3px 20px 3px 5px;
+    position: relative;
+}
+.chosen-container-single a.chosen-single{
+	line-height: 26px !important;
+}
+.chosen-container-single .chosen-drop{
+	border-radius:0 !important;
+	border-left: 1px solid #e5e5e5 !important;
+	border-right: 1px solid #e5e5e5 !important;
+	border-button: 1px solid #e5e5e5 !important;
+}
+/* Termina CSS Chosen Custom */
+
+/* =================================== */
+/* Vista de grid         			   */
+/* =================================== */
+.vgrid-busqueda{
+	padding-top: 10px;
+	padding-bottom: 10px;
+	background:#fff;
+}
+.vgrid-item{
+	padding:0px;
+	background:#fff;
+}
+/* Termina CSS Vista de grid */
+
+/* =================================== */
+/* CSS Pace Custom         			   */
+/* =================================== */
+.pace {
+  -webkit-pointer-events: none;
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+.pace-inactive {
+  display: none;
+}
+.pace .pace-progress {
+  background: #343434;
+  position: fixed;
+  z-index: 2000;
+  top: 0;
+  right: 100%;
+  width: 100%;
+  height: 2px;
+}
+.pace .pace-progress-inner {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px #343434, 0 0 5px #343434;
+  opacity: 1.0;
+  -webkit-transform: rotate(3deg) translate(0px, -4px);
+  -moz-transform: rotate(3deg) translate(0px, -4px);
+  -ms-transform: rotate(3deg) translate(0px, -4px);
+  -o-transform: rotate(3deg) translate(0px, -4px);
+  transform: rotate(3deg) translate(0px, -4px);
+}
+.pace .pace-activity {
+  display: block;
+  position: fixed;
+  z-index: 2000;
+  top: 15px;
+  right: 15px;
+  width: 14px;
+  height: 14px;
+  border: solid 2px transparent;
+  border-top-color: #343434;
+  border-left-color: #343434;
+  border-radius: 10px;
+  -webkit-animation: pace-spinner 400ms linear infinite;
+  -moz-animation: pace-spinner 400ms linear infinite;
+  -ms-animation: pace-spinner 400ms linear infinite;
+  -o-animation: pace-spinner 400ms linear infinite;
+  animation: pace-spinner 400ms linear infinite;
+}
+@-webkit-keyframes pace-spinner {
+  0% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@-moz-keyframes pace-spinner {
+  0% { -moz-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -moz-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@-o-keyframes pace-spinner {
+  0% { -o-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -o-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@-ms-keyframes pace-spinner {
+  0% { -ms-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -ms-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@keyframes pace-spinner {
+  0% { transform: rotate(0deg); transform: rotate(0deg); }
+  100% { transform: rotate(360deg); transform: rotate(360deg); }
+}
+/* =================================== */
+
+.modal:nth-of-type(even) {
+    z-index: 2042 !important;
+}
+.modal-backdrop.in:nth-of-type(even) {
+    z-index: 1041 !important;
+}
+
+.cke_editable{ z-index: 10200 !important; border:1px solid red; }
+
+.btn-dropdown-color{
+    background-color: #fff;
+    border-color: #ccc;
+    color: #666;
+}
+.label-perfil{
+    color: #000000;
+	height:32px;
+	padding: 10px 8px;
+	font-size: 12px;
+	text-align: left;
+}
+.label-red{
+	color: #000000;
+	height:32px;
+	padding: 10px 8px;
+	font-size: 12px;
+	text-align: left;
+}
+
+/* =================================== */
+/* Responsive Breadcrumb, Modal        */
+/* =================================== */
+
+/* agregado icono separador para los breadcrumb */
+.breadcrumb > li + li::before {
+   	font-family: 'FontAwesome';
+	content: " \f105 ";
+	font-size: 14px;
+	color: #a6a6a6;
+}
+
+/* === For phones ==================== */
+@media (max-width: 767px)  {
+	ol.breadcrumb > *:nth-last-child(n-0) {
+        display:none;
+    }
+	ol.breadcrumb > *:nth-last-child(1) {
+        display:inline-block;
+    }
+	ol.breadcrumb > *:nth-last-child(1):before {
+		display:none;
+    }
+    ol.breadcrumb > * li {
+        max-width: 60px;
+    }
+    /* bootstrap modal */
+	.modal-body{
+	   max-height: 300px !important;
+	   overflow-y: scroll !important;
+	}
+}
+/* === For tablets ==================== */
+@media (min-width: 768px) and (max-width:991px) {
+    ol.breadcrumb > *:nth-last-child(-n+4) {
+        display:inline-block;
+    }
+    ol.breadcrumb > * li {
+        max-width: 100px;
+    }
+	/* bootstrap modal */
+	.modal-body{
+	   max-height: 440px !important;
+	   overflow-y: scroll !important;
+	}
+	.header-static-widget h1 {
+    	font-size: 14px;
+  	}
+  	.header-static-widget .ibox-title i{
+		font-size: 10px;
+  	}
+}
+/* === For desktops ==================== */
+@media (min-width: 992px) {
+    ol.breadcrumb > *:nth-last-child(-n+6) {
+        display:inline-block;
+    }
+    ol.breadcrumb > * li {
+        /*max-width: 170px;*/
+    }
+	/* bootstrap modal */
+	.modal-body{
+	   	max-height: 480px !important;
+		overflow-y: auto !important;
+	}
+	.header-static-widget h1 {
+    	font-size: 18px;
+  	}
+	.header-static-widget .ibox-title i{
+		font-size: 24px;
+  	}
+}
+/* =============================================== */
+/* Clase para usar con el plugin jQuery NailThumb  */
+/* =============================================== */
+.thumb-image-90 {
+	width: 90px;
+	height: 90px;
+	margin-bottom:5px;
+}
+/* ================================ */
+/* Clase para plugin jQuery Chosen  */
+/* ================================ */
+.chosen-container-single .chosen-single,
+.chosen-container-multi .chosen-choices{
+	background:none !important;
+	border: 1px solid #e5e6e7 !important;
+	box-shadow: none !important;
+	line-height: 20px !important;
+	border-radius: 0px !important;
+	padding: 3px 12px !important;
+}
+.chosen-container-single .chosen-single div b {
+    height: 50%;
+    margin-top: 5px;
+	cursor: default;
+}
+/* ================================ */
+/* Para las fechas  */
+/* ================================ */
+.day, .month, .year   {
+  background-color: #FFFFFF;
+  background-image: none;
+  border: 1px solid #e5e6e7;
+  border-radius: 1px;
+  color: inherit;
+  display: block;
+  padding: 6px 12px;
+  transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+
+	display: inline;
+}
+.combodate{
+	border: 0px;
+	padding-top: 0px;
+	padding-left: 0px;
+}
+.input-group-btn{
+	vertical-align: top;
+}
+
+/* =========================== */
+/* Pipeline de Oportunidadess  */
+/* =========================== */
+.d-columm{
+	height: 400px;
+}
+ /* =========================== */
+/* Pipeline de Actividades  */
+/* =========================== */
+.d-colummActividades{
+	  min-height: 400px;
+}
+.crm-widget{
+	cursor: pointer;
+	border-left: 1px solid #e7eaec;
+	border-right: 1px solid #e7eaec;
+	border-buttom: 1px solid #e7eaec;
+}
+.sortable-placeholder{
+    background: #eee;
+  border: 2px dotted #c5c5c5;
+    width: inherited;
+}
+/* nueva columna para pipeline oportunidades */
+.col-md-1-8{
+	width: 10.9667%;
+	float: left;
+	padding-left: 15px;
+    padding-right: 15px;
+    position: relative;
+}
+.crm-widget.unsortable{
+	cursor: not-allowed !important;
+}
+
+/* =========================== */
+/* Puntaje de Oportunidadess  */
+/* =========================== */
+.header-static-widget .ibox-title{
+	padding-top:8px !important;
+	overflow:hidden;
+}
+
+/*--------------------*/
+/*   fullcalendar     */
+/*--------------------*/
+.pasado{
+    background-color: red !important;
+    border-color: red !important;
+}
+.corriente{
+    background-color: #098a2a !important;
+    border-color: #000000 !important;
+}
+.futuro{
+    background-color: blue !important;
+    border-color: blue !important;
+}
+
+
+/*--------------------*/
+/*   END CUSTOM CSS   */
+/*--------------------*/
+#myList li{ display:none;
+}
+ul
+{
+    list-style-type: none;
+}
+#empresaMenu{
+  width: 100%;
+	border-bottom: 1px solid #DAD7D7;
+}
+#menu_dropdown{
+  width: 75%;
+}
+#crop-logo{
+  width: 25%;
+}
+
+#empresaMenu button.btn-white.btn{
+  text-align: left;
+  white-space: normal;
+  height: 60px;
+  width: 100%;
+ font-weight: bold;
+}
+#empresaMenu button.btn-white.btn span.caret{
+  float: right;
+  margin-top: 8px;
+}
+div.error{
+  color:red;
+  font-size: 13px;
+  font-weight: bold;
+}
+.ui-jqgrid .subgrid-data .ui-th-column { background: #a2c0da; }
+.ui-jqgrid .subgrid-data .scroll  { background: #a2c0da; }
+.ui-jqgrid .subgrid-data .ui-jqgrid-hbox  { background: #a2c0da; }
+
+.ui-jqgrid .subgrid-data .ui-state-highlight{
+    border:none!important;
+    background:none!important;
+}
+
+ table.tabla-dinamica thead th {
+        background-color: #0076BE;
+        color: white;
+        border: 1px solid white !important;
+        font-weight: bold;
+        padding-left: 7px !important;
+
+
+}
+
+/* menu de empresa*/
+
+div#empresaMenu div#menu_dropdown ul.dropdown-menu{
+  height: 500px;
+  overflow-y: auto;
+}

@@ -1,0 +1,16 @@
+/* line 1, ../sass/empresa.scss */
+div#crear-empresa {
+  margin: auto;
+}
+
+/* line 5, ../sass/empresa.scss */
+form#crearEmpresaForm div[class*="form-group"] {
+  height: 24px !important;
+  margin-bottom: 40px !important;
+}
+
+/* line 10, ../sass/empresa.scss */
+.margin-05 {
+  margin-bottom: 1.5em;
+  margin-left: -15px;
+}

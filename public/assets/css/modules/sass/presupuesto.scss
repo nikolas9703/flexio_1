@@ -1,0 +1,59 @@
+$label-success: #5BB85C;
+$label-warning: #F8AC59;
+$label-danger: #ED5565;
+
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}
+  table#presupuestoDinamicoGrid{
+
+    a.cog{
+      color:#0070BA !important;
+      background-color: transparent !important;
+      border: 1px solid #026bb1 !important;
+      .icono-funcion{
+        background: url("../stylesheets/images/funcion.png") no-repeat;
+        width: 21px;
+        height: 18px;
+      }
+    }
+  }
+  span.input-group-addon{
+    padding: 0 8px;
+    height: 10px;
+  }
+
+  .totales{
+    width:100%;
+    background: transparent;
+    padding: 2px 7px;
+  }
+  label.totales-success{
+    @extend .totales;
+    border: $label-success solid 1px;
+    color:$label-success;
+  }
+
+  label.totales-warning{
+    @extend .totales;
+    border: $label-warning solid 1px;
+    color:$label-warning;
+  }
+  label.totales-danger{
+    @extend .totales;
+    border: $label-danger solid 1px;
+    color:$label-danger;
+  }
+
+div#presupuestoFillTableModal{
+  div.form-group{
+    margin-bottom: 48px;
+    margin-top: 15px;
+    height: 4px;
+  }
+}

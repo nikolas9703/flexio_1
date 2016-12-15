@@ -1,0 +1,50 @@
+/* line 1, ../sass/entrada_manual_crear.scss */
+.chekbox-incluir {
+  margin-left: 0px !important;
+}
+
+/* line 4, ../sass/entrada_manual_crear.scss */
+label.checkbox {
+  margin-left: 30px;
+  padding-left: 0px;
+}
+
+/* line 8, ../sass/entrada_manual_crear.scss */
+#tareainput {
+  width: 10%;
+  margin-right: 5px;
+}
+
+/* line 12, ../sass/entrada_manual_crear.scss */
+div.input-group.form-inline {
+  width: 100%;
+}
+/* line 14, ../sass/entrada_manual_crear.scss */
+div.input-group.form-inline div.chosen-container {
+  width: 80% !important;
+}
+
+/* line 19, ../sass/entrada_manual_crear.scss */
+table td:nth-child(1) {
+  width: 25%;
+}
+/* line 20, ../sass/entrada_manual_crear.scss */
+table td:nth-child(3) {
+  width: 15%;
+}
+/* line 21, ../sass/entrada_manual_crear.scss */
+table td:nth-child(4) {
+  width: 10%;
+}
+/* line 22, ../sass/entrada_manual_crear.scss */
+table td:nth-child(5) {
+  width: 10%;
+}
+/* line 23, ../sass/entrada_manual_crear.scss */
+table td:nth-child(6) {
+  width: 10%;
+}
+/* line 24, ../sass/entrada_manual_crear.scss */
+table td:nth-child(7) {
+  width: 10%;
+}

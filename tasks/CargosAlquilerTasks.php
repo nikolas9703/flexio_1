@@ -1,0 +1,22 @@
+<?php
+if (isset($_SERVER['REMOTE_ADDR'])) die('Permission denied.');
+define('ROOTPATH', str_replace("/tasks", "", __DIR__));
+
+/**
+ * PHP Crunz
+ * Crunz is a framework-agnostic package to schedule periodic tasks (cron jobs) in PHP using a fluent API.
+ * Crunz is capable of executing console commands, shell scripts, PHP scripts, and closures.
+ *
+ * @see https://github.com/lavary/crunz
+ */
+
+require_once ROOTPATH . "/vendor/autoload.php";
+
+use Crunz\Schedule;
+
+$schedule = new Schedule();
+$schedule->run("/usr/bin/php ". ROOTPATH ."/index.php jobs cargos_alquiler")
+				->everyMinute()
+        ->description('cargos de alquiler de items')
+        ->appendOutputTo('/var/log/cron.log');
+return $schedule;

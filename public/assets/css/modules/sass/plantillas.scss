@@ -1,0 +1,19 @@
+.filtro-plantillas{
+	padding: 4px 0 6px 4px;
+	background-color: #e9e9e9;
+    border: 1px solid #d7d7d7;
+}
+.form-group-no-margin{
+	height: auto !important;
+}
+.form-inline .form-group-no-margin {
+    display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+.form-group-no-margin label {
+    display: inline-block;
+    font-weight: normal;
+    margin-bottom: 5px;
+    max-width: 100%;
+}

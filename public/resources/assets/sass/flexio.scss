@@ -1,0 +1,79 @@
+//@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
+$label-success: #5BB85C;
+$label-warning: #F8AC59;
+$label-danger: #ED5565;
+$label-info:#5BC0DE;
+$label-dark:#000000;
+
+.label-outline{
+  background-color: #FFFFFF;
+  display:inline-block;
+  border-radius: .25em;
+  width: 100%;
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px 7px;
+  font-weight: bold;
+}
+
+.outline-info{
+  @extend .label-outline;
+  border: 2px solid $label-info;
+  color:$label-info;
+}
+
+.outline-success{
+  @extend .label-outline;
+  border: 2px solid $label-success;
+  color:$label-success;
+}
+
+.outline-danger{
+  @extend .label-outline;
+  border: 2px solid $label-danger;
+  color:$label-danger;
+}
+
+.outline-warning{
+  @extend .label-outline;
+  border: 2px solid $label-warning;
+  color:$label-warning;
+}
+
+.outline-dark{
+  @extend .label-outline;
+  border: 2px solid $label-dark;
+  color:$label-dark;
+}
+
+.label-dark{
+  background-color: $label-dark;
+  color:#FFFFFF;
+}
+
+.totales{
+  width:100%;
+  color:#FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+label.label-success-text{
+  @extend .totales;
+  border: $label-success solid 1px;
+  background-color:$label-success;
+}
+
+label.label-warning-text{
+  @extend .totales;
+  border: $label-warning solid 1px;
+  background-color:$label-warning;
+}
+label.label-danger-text{
+  @extend .totales;
+  border: $label-danger solid 1px;
+  background-color:$label-danger;
+}

@@ -1,0 +1,67 @@
+$label-success: #5BB85C;
+$label-warning: #F8AC59;
+$label-danger: #ED5565;
+.header-ventas{
+    background-color: #D9D9D9;
+    padding: 6px 0;
+    div.text-header{
+        padding-top: 8px;
+        font-size: 14px;
+        font-weight: bolder;
+        color:#666666;
+    }
+}
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}
+.facturadas{
+  background-color: #FFB642;
+}
+.chosen-container{
+  background-color: #FFF;
+}
+form#form_crear_cotizacion,form#form_crear_ordenventa{
+  .precio_total, .precio_unidad{
+    text-align: right;
+  }
+  .totales{
+    width:100%;
+    color:#FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+  }
+  label.label-success-text{
+    @extend .totales;
+    border: $label-success solid 1px;
+    background-color:$label-success;
+  }
+
+  label.label-warning-text{
+    @extend .totales;
+    border: $label-warning solid 1px;
+    background-color:$label-warning;
+  }
+  label.label-danger-text{
+    @extend .totales;
+    border: $label-danger solid 1px;
+    background-color:$label-danger;
+  }
+}
+tfoot{
+  font-weight: bolder;
+ .sum-border{
+   border:#ddd 1px solid !important;
+   }
+   .sum-total{
+     float:right;
+   }
+}

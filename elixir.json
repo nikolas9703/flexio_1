@@ -1,0 +1,4 @@
+{
+  "assetsPath": "./public/resources/assets/",
+  "publicPath":  "/public/resources/compile/"
+}

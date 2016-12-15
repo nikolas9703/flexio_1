@@ -1,0 +1,100 @@
+{
+	"description": "Sistema ERP MultiEmpresas",
+	"name": "Pensanomica/BlueLeaf",
+	"type": "project",
+	"homepage": "http://pensanomica.com",
+	"license": "MIT",
+	"require": {
+		"php": ">=5.4.0",
+                "arielcr/numero-a-letras": "dev-master",
+		"illuminate/support":"5.2.45",
+		"illuminate/contracts": "5.2.45",
+		"illuminate/container": "5.2.45",
+		"illuminate/database": "5.2.45",
+		"illuminate/events":"5.2.45",
+		"illuminate/filesystem":"5.2.45",
+		"illuminate/redis": "5.2.45",
+		"illuminate/queue": "5.2.45",
+		"illuminate/console": "5.2.45",
+		"illuminate/config": "5.2.45",
+		"illuminate/cache": "5.2.45",
+		"illuminate/http": "5.2.45",
+		"illuminate/session": "5.2.45",
+		"illuminate/encryption": "5.2.45",
+		"illuminate/validation": "5.2.45",
+		"illuminate/pipeline": "5.2.45",
+		"illuminate/hashing": "5.2.45",
+		"illuminate/auth": "5.2.45",
+		"illuminate/bus": "5.2.45",
+		"illuminate/mail": "5.2.45",
+		"illuminate/log": "5.2.45",
+		"illuminate/cookie": "5.2.45",
+		"illuminate/broadcasting": "5.2.45",
+		"symfony/var-dumper":"v3.0.0",
+		"symfony/console":"v3.0.0",
+		"symfony/translation": "~2.6|~3.0",
+		"symfony/config": "dev-master",
+		"guzzlehttp/guzzle":"6.1.1",
+		"codegyre/robo":"0.7.2",
+		"itsgoingd/clockwork": "~1.9",
+		"phpfastcache/phpfastcache": "3.0.*",
+		"kenjis/ci-phpunit-test": "0.8.2",
+		"predis/predis" :"1.0.3",
+		"pimple/pimple":"v3.0.2",
+		"mockery/mockery": "^0.9.4",
+		"hiqdev/hidev-php-cs-fixer": "^0.1.1",
+		"league/csv": "8.0.0",
+		"flowjs/flow-php-server": "1.0.0",
+		"fzaninotto/faker": "^1.6",
+		"league/fractal": "0.13.0",
+		"robmorgan/phinx": "^0.5.3",
+		"vlucas/phpdotenv": "v2.2.0",
+		"robertboloc/robo-phinx": "1.1.*",
+		"dompdf/dompdf": "v0.7.0",
+		"jenssegers/date": "3.*",
+		"PHPOffice/PHPExcel": "1.8.*",
+		"monolog/monolog": "^1.19",
+		"cartalyst/sentinel": "2.0.*",
+		"doctrine/dbal":"v2.5.4",
+		 "pusher/pusher-php-server": "2.4.*",
+		"nikic/php-parser": "^2.1",
+		"mtdowling/cron-expression": "1.1.*",
+		"lavary/crunz": "v1.4.2",
+		"henrikbjorn/lurker": "dev-master",
+		"endroid/qrcode": "^1.7",
+		"league/statsd": "1.4.*"
+	},
+	"require-dev": {
+		"phpunit/phpunit":"~4.0",
+		"laracasts/testdummy": "~2.3.2",
+		"fbourigault/composer-mkdir": "^2.0",
+		"behat/behat": "~3.0",
+		"friendsofphp/php-cs-fixer": "1.11.*",
+		"phing/phing": "~2.0",
+		"codeception/codeception": "~2.1",
+		"squizlabs/php_codesniffer": "~2.3",
+		"phpspec/phpspec": "~2.1",
+		"slim/slim": "^3.0",
+		"psy/psysh": "@stable",
+		"maximebf/debugbar": "1.*"
+	},
+    "autoload": {
+        "psr-4": {
+         "Flexio\\": "application/flexio"
+     }
+	},
+	"scripts": {
+     	"post-update-cmd": [
+           "Fbourigault\\ComposerMkdir\\ScriptHandler::mkdirs",
+           "php -r \"copy('grumphp.custom.yml', 'grumphp.yml');\"",
+           "php -r \"copy('./vendor/lavary/crunz/crunz.yml', './crunz.yml');\"",
+           "php -r \"exec('./vendor/bin/robo create_upload_folder');\"",
+           "php -r \"chmod('./public/uploads/', 0777);\""
+       ]
+     },
+     "extra": {
+        "fbourigault-composer-mkdir": [
+            "vendor/squizlabs/php_codesniffer/CodeSniffer/Standards/Flexio"
+        ]
+    }
+}

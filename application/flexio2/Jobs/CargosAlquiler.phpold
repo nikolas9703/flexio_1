@@ -1,0 +1,701 @@
+<?php
+
+namespace Flexio\Jobs;
+
+use Carbon\Carbon;
+use Monolog\Logger;
+use Flexio\Library\Util\Utiles;
+use Monolog\Handler\StreamHandler,
+		Monolog\Formatter\LineFormatter;
+use Illuminate\Http\Request,
+		Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler;
+use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler;
+use Flexio\Modulo\ContratosAlquiler\Models\CargosAlquiler AS CargosAlquilerModel;
+use Flexio\Modulo\ContratosAlquiler\Transform\CargosAlquilerTransformer;
+use Flexio\Modulo\DevolucionesAlquiler\Models\DevolucionesAlquilerCatalogos;
+
+class CargosAlquiler {
+
+	protected static $periodo = array(
+		"por_hora" => array(
+			"lapso" => 1,
+			"func_difference" => "diffInHours",
+			"func_addition" => "addHours",
+		),
+		"diario" => array(
+			"lapso" => 1,
+			"func_difference" => "diffInDays",
+			"func_addition" => "addDays",
+		),
+		"semanal" => array(
+			"lapso" => 1,
+			"func_difference" => "diffInWeeks",
+			"func_addition" => "addWeeks",
+			"func_prorrateo" => "diffInDays",
+			"divisor_prorrateo" => 7
+		),
+		"mensual" => array(
+			"lapso" => 1,
+			"func_difference" => "diffInMonths",
+			"func_addition" => "addMonths",
+			"func_prorrateo" => "diffInDays",
+			"divisor_prorrateo" => 30
+		)
+	);
+
+	protected static $periodo_facturacion = array(
+		"diario" => array(
+			"lapso" => 1,
+			"func_difference" => "diffInDays",
+			"func_addition" => "addDays",
+		),
+		"mensual" => array(
+			"lapso" => 1,
+			"func_difference" => "diffInMonths",
+			"func_addition" => "addMonths",
+			"func_prorrateo" => "diffInDays",
+			"divisor_prorrateo" => 30
+		),
+		"periodo_de_dias" => array(
+			"lapso" => 0, //El lapso de tiempo va ser igual a valor del campo (Corte de facturacion) de formulario Contrato de Alquiler
+			"func_difference" => "diffInDays",
+			"func_addition" => "addDays",
+			"func_prorrateo" => "diffInDays",
+			"divisor_prorrateo" => 7
+		),
+	);
+
+	private static $fecha_entrega;
+	private static $fecha_ejecutar_cargo;
+
+	private static $logger;
+
+	public function __construct(array $attributes = array()) {
+		//Config Log
+		$output = "[%datetime%] %channel%.%level_name%: %message% %context%\r\n";
+		$formatter = new LineFormatter($output, "Y n j, g:i a");
+		$stream = new StreamHandler(FCPATH .'/public/logs/log-cargos.log', Logger::INFO);
+		$stream->setFormatter($formatter);
+
+		self::$logger = new Logger('cargos de alquiler');
+		self::$logger->pushHandler($stream);
+	}
+
+	public static function ejecutarCargos() {
+
+		//Listado de items entregados
+		$entregados = self::alquileresEntregados();
+		//dd($entregados);
+
+		if(empty($entregados)){
+			return false;
+		}
+
+		//Recorrer y verificar items entregados
+		foreach ($entregados AS $entrega){
+			//Entrega Info
+			self::$fecha_entrega 	= Carbon::parse($entrega["fecha_entrega"]);
+			$fecha_entrega 	= Carbon::parse($entrega["fecha_entrega"]);
+			$empresa_id 		= !empty($entrega["empresa_id"]) ? $entrega["empresa_id"] : "";
+			$entrega_id 		= !empty($entrega["entrega_id"]) ? $entrega["entrega_id"] : "";
+			$items 					= !empty($entrega["items"]) ? $entrega["items"] : array();
+			$facturar_contra_entrega = !empty($entrega["facturar_contra_entrega"]) ? $entrega["facturar_contra_entrega"] : "";
+			$corte_facturacion 	= !empty($entrega["corte_facturacion"]) ? str_replace("í","i",str_replace("í","i",str_replace(" ","_",strtolower($entrega["corte_facturacion"])))) : "";
+			$dia_corte = !empty($entrega["dia_corte"]) ? $entrega["dia_corte"] : "";
+
+			//verificar si la entrega
+			//tiene items
+			if(empty($items)){
+				continue;
+			}
+
+			//Verificar si el contrato debe
+			//ser facturado contra entrega.
+			if(preg_match("/si/i", $facturar_contra_entrega)){
+
+				//Calcular cantidad de cargos a generar
+				self::calcularCantidadCargosAnticipados($items, $fecha_entrega, $empresa_id, $entrega_id, $corte_facturacion, $dia_corte);
+
+			}else {
+
+				// Registrar Cargos a Items
+				self::registraCargoItems($items, $fecha_entrega, $empresa_id, $entrega_id);
+			}
+		}
+	}
+
+	/**
+	 * Registra los cargos a cada Item
+	 *
+	 * @param  array  $items Arreglo de items de la entrega
+	 * @return void
+	 */
+	private static function registraCargoItems($items=array(), $fecha_entrega=NULL, $empresa_id=NULL, $entrega_id=NULL) {
+
+		//Recorrer los items
+		$count=0;
+		$total_items=count($items);
+		foreach($items AS $item) {
+
+			$ciclo = !empty($item["ciclo"]) ? $item["ciclo"] : "";
+
+			//------------------------------------------
+			// Si no existe periodo, continuar
+			// siguiente iteracion
+			//------------------------------------------
+			if(empty(self::$periodo[$ciclo])){
+				continue;
+			}
+
+			$item_id 		= !empty($item["item_id"]) ? $item["item_id"] : "";
+			$cantidad 	= !empty($item["cantidad"]) ? $item["cantidad"] : "";
+			$series 		= !empty($item["series"]) ? $item["series"] : array();
+			$devoluciones	= !empty($item["devoluciones"]) ? $item["devoluciones"] : array();
+			unset($item["series"]);
+			unset($item["devoluciones"]);
+
+
+			$item["cargoable_id"] = $entrega_id;
+			$item["cargoable_type"] = "Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler";
+
+			//------------------------------------------
+			// Seleccionar el ultimo cargo realizado a el
+			// item de esta entrega.
+			//------------------------------------------
+			$ultimo_cargo = self::getUltimoCargoRealizado(array(
+				"cargoable_id" 		=> $entrega_id,
+				"item_id" 				=> $item_id,
+				"empresa_id" 			=> $empresa_id,
+				"cargoable_type" 	=> "Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler",
+			));
+
+			//------------------------------------------
+			// Si existe ultimo cargo
+			// seleccionar la fecha del siguiente cargo
+			// de lo contrario, empezar segun
+			// fecha de entrega.
+			//------------------------------------------
+			$fecha_ejecutar_cargo = !empty($ultimo_cargo) ? Carbon::parse($ultimo_cargo->fecha_cargo) : $fecha_entrega;
+
+			//Fecha actual
+			$fecha_actual = Carbon::now('America/Panama');
+
+			//Lapso de tiempo a calcular
+			$lapso_tiempo = self::$periodo[$ciclo]["lapso"];
+
+			//------------------------------------------
+			// Calcular el Tiempo Transcurrido entre
+			// Fecha a ejecultar VS fecha/hora actual
+			//------------------------------------------
+			$tiempo_transcurrido = $fecha_ejecutar_cargo->{self::$periodo[$ciclo]["func_difference"]}($fecha_actual);
+
+			$itemsdevueltos = array();
+
+			//------------------------------------------
+			// Verificar si Tiempo Transucrrido
+			// es IGUAL a Lapso de Tiempo
+			//------------------------------------------
+			if($tiempo_transcurrido >= $lapso_tiempo) {
+
+				//------------------------------------------
+				// Sumarle lapso a $fecha_ejecutar_cargo
+				// para obtener la fecha actual de cargo.
+				//------------------------------------------
+				$fecha_cargo = $fecha_ejecutar_cargo->{self::$periodo[$ciclo]["func_addition"]}($lapso_tiempo);
+
+				//------------------------------------------
+				// Armar array item
+				// para items no serializados/serializados
+				// con cantidad mayor a 1
+				//------------------------------------------
+				$item = self::armarCantidadItem($item, $cantidad, $series, $devoluciones, $empresa_id, $fecha_cargo);
+
+				/*echo "TIEMPO TRANSCURRIDO: ".$tiempo_transcurrido."<br>";
+				echo "CANTIDAD: ". $cantidad ."<br>";
+				echo "<pre>";
+				print_r($item);
+				echo "</pre>";*/
+
+				//------------------------------------------
+				// Guardar en DB cargo
+				//------------------------------------------
+				self::guardarCargo($entrega_id, $item, $item_id, $empresa_id);
+
+			}else {
+
+				$fecha_cargo = $fecha_ejecutar_cargo;
+				$items = self::armarCantidadItem($item, $cantidad, $series, $devoluciones, $empresa_id, $fecha_cargo, true);
+
+				//------------------------------------------
+				// Verificar si los items ya han
+				// sido devueltos y hay que hacerle
+				// el ultimo cargo con prorateo (Semanal/Mensual).
+				//------------------------------------------
+				$itemsdevueltos = array_values(collect($items)->filter(function ($item) {
+				    return preg_match("/mensual|semanal/im", $item["ciclo"]) && !empty($item["fecha_devolucion"]);
+				})->toArray());
+
+				if(!empty($itemsdevueltos)){
+					for ($i=0; $i<count($itemsdevueltos); $i++) {
+						if(empty($itemsdevueltos[$i])){
+							continue;
+						}
+
+						$fecha_devolucion = Carbon::parse($itemsdevueltos[$i]["fecha_devolucion"]);
+						// Para prorrateo Mensual:
+						// Calcular dias tiempo_transcurrido
+						// en base a la fecha de devolucion
+						$tiempo_transcurrido = $fecha_ejecutar_cargo->{self::$periodo[$ciclo]["func_prorrateo"]}($fecha_devolucion);
+						$itemsdevueltos[$i]["tarifa"] = (($itemsdevueltos[$i]["tarifa"]/self::$periodo[$ciclo]["divisor_prorrateo"])*$tiempo_transcurrido);
+					}
+
+					//------------------------------------------
+					// Guardar en DB cargos prorrateados a items devueltos
+					//------------------------------------------
+					self::guardarCargo($entrega_id, $itemsdevueltos, $item_id, $empresa_id);
+				}
+				/*echo "TIEMPO TRANSCURRIDO: ".$tiempo_transcurrido."<br>";
+				echo "<pre>";
+				print_r($itemsdevueltos);
+				echo "</pre>";*/
+			}
+
+			$count++;
+
+			//------------------------------------------
+			// Ejecutar Cargo Retroactivo
+			//------------------------------------------
+			// si el tiempo transcurrido es mayor
+			// que el lapso.
+			//------------------------------------------
+			if($count == $total_items && $tiempo_transcurrido > $lapso_tiempo && empty($itemsdevueltos)) {
+				self::registraCargoItems($items, $fecha_entrega, $empresa_id, $entrega_id);
+			}
+		}
+	}
+
+	/**
+	 * Esta funcion calcula y ejecuta la
+	 * cantidad de cargos que hay que generar
+	 * hasta la fecha de corte de facturacion.
+	 *
+	 * @param  array  $item [description]
+	 * @return [type]       [description]
+	 */
+	private static function calcularCantidadCargosAnticipados($items=array(), $fecha_entrega=NULL, $empresa_id=NULL, $entrega_id=NULL, $corte_facturacion=NULL, $dia_corte=NULL) {
+
+		//Fecha actual
+		$fecha_actual = Carbon::now('America/Panama');
+
+		//Verificar si existe el corte seleccionado
+		if(empty(self::$periodo_facturacion[$corte_facturacion])){
+			return false;
+		}
+
+		//Fecha de Corte de Facturacion
+		$lapso_tiempo_facturacion = self::$periodo_facturacion[$corte_facturacion]["lapso"];
+
+		//------------------------------------------
+		// Para Contrato de Alquiler con Corte de Facturacion
+		// igual a Periodo de Dias.
+		// ---
+		// El lapso de tiempo de facturacion va ser igual a valor del
+		// campo (Corte de facturacion) de formulario
+		// Contrato de Alquiler
+		//------------------------------------------
+		if(preg_match('/periodo/i', $corte_facturacion)){
+			$lapso_tiempo_facturacion = $dia_corte;
+		}
+
+		$fechaordenventa = $fecha_actual->{self::$periodo_facturacion[$corte_facturacion]["func_addition"]}($lapso_tiempo_facturacion);
+
+		if(preg_match('/mensual/i', $corte_facturacion)){
+			$fecha_orden_venta = Carbon::parse($fechaordenventa->format('Y-m')."-$dia_corte");
+		} else {
+			$fecha_orden_venta = Carbon::parse($fechaordenventa->format('Y-m-d'));
+		}
+
+		foreach($items AS $item) {
+
+			$item_id = !empty($item["item_id"]) ? $item["item_id"] : "";
+			$ciclo = !empty($item["ciclo"]) ? $item["ciclo"] : "";
+
+			//------------------------------------------
+			// Seleccionar el ultimo cargo realizado a el
+			// item de esta entrega.
+			//------------------------------------------
+			$ultimo_cargo = self::getUltimoCargoRealizado(array(
+				"cargoable_id" 		=> $entrega_id,
+				"item_id" 				=> $item_id,
+				"empresa_id" 			=> $empresa_id,
+				"cargoable_type" 	=> "Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler",
+			));
+
+
+			if(preg_match('/mensual/i', $ciclo)){
+				$fecha_ejecutar_cargo = !empty($ultimo_cargo) ? Carbon::parse($ultimo_cargo->fecha_cargo) : self::$fecha_entrega;
+			}else{
+				$fecha_ejecutar_cargo = !empty($ultimo_cargo) ? Carbon::parse($ultimo_cargo->fecha_cargo) : $fecha_entrega;
+			}
+
+			$cantidad_cargos = preg_match('/mensual/i', $ciclo) ? 1 : Carbon::parse(Carbon::now('America/Panama')->format('Y-m-d'))->{self::$periodo[$ciclo]["func_difference"]}($fecha_orden_venta);
+
+			/*echo "CICLO: ". $ciclo ."<br>";
+			echo "CANTIDAD CARGOS: ". $cantidad_cargos ."<br>";
+			echo "FECHA ACTUAL: ". Carbon::now('America/Panama')."<br>";
+			echo "FECHA OV: ". $fecha_orden_venta."<br><br>";*/
+
+			for ($i=0; $i<$cantidad_cargos; $i++) {
+				self::registrarCargoItemsAnticipados($item, self::$fecha_entrega, $fecha_ejecutar_cargo, $fechaordenventa, $empresa_id, $entrega_id, $corte_facturacion, $dia_corte, $ultimo_cargo);
+			}
+		}
+	}
+
+	public static function registrarCargoItemsAnticipados($item=array(), $fecha_entrega=NULL, $fecha_ejecutar_cargo=NULL, $fecha_orden_venta=NULL, $empresa_id=NULL, $entrega_id=NULL, $corte_facturacion=NULL, $dia_corte=NULL, $ultimo_cargo=NULL) {
+
+			$ciclo = !empty($item["ciclo"]) ? $item["ciclo"] : "";
+
+			//------------------------------------------
+			// Si no existe periodo, continuar
+			// siguiente iteracion
+			//------------------------------------------
+			if(empty(self::$periodo[$ciclo])){
+				continue;
+			}
+
+			$item_id 		= !empty($item["item_id"]) ? $item["item_id"] : "";
+			$cantidad 	= !empty($item["cantidad"]) ? $item["cantidad"] : "";
+			$series 		= !empty($item["series"]) ? $item["series"] : array();
+			$devoluciones	= !empty($item["devoluciones"]) ? $item["devoluciones"] : array();
+			unset($item["series"]);
+			unset($item["devoluciones"]);
+
+			$item["cargoable_id"] = $entrega_id;
+			$item["cargoable_type"] = "Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler";
+
+			//Fecha actual
+			$fecha_actual = Carbon::now('America/Panama');
+
+			//Lapso de tiempo a calcular
+			$lapso_tiempo = self::$periodo[$ciclo]["lapso"];
+			//$fecha_cargo = $fecha_ejecutar_cargo->{self::$periodo[$ciclo]["func_addition"]}($lapso_tiempo);
+
+			//------------------------------------------
+			// Fecha real de cargo
+			//------------------------------------------
+			if(preg_match('/mensual/i', $ciclo)){
+				if($ultimo_cargo != NULL && preg_match('/mensual/i', $ultimo_cargo->ciclo)){
+					$fecha_cargo = Carbon::parse($fecha_ejecutar_cargo)->{self::$periodo[$ciclo]["func_addition"]}($lapso_tiempo);
+				}else{
+					$fecha_cargo = Carbon::parse(self::$fecha_ejecutar_cargo)->{self::$periodo[$ciclo]["func_addition"]}($lapso_tiempo);
+				}
+
+			}else{
+				$fecha_cargo = $fecha_ejecutar_cargo->{self::$periodo[$ciclo]["func_addition"]}($lapso_tiempo);
+				$fecha_orden_venta = Carbon::parse($fecha_orden_venta->format('Y-m')."-$dia_corte");
+			}
+
+			/*echo "FECHA CARGO: ". Carbon::parse($fecha_cargo)->format('Y-m-d') ."<br>";
+			echo "FECHA ORDEN: ". Carbon::parse($fecha_orden_venta)->format('Y-m-d') ."<br>";
+			echo "CICLO: $ciclo<br>";
+			echo "MAYOR???: ". (string)(Carbon::parse(Carbon::parse($fecha_cargo)->format('Y-m-d'))->timestamp > Carbon::parse(Carbon::parse($fecha_orden_venta)->format('Y-m-d'))->timestamp) ."<br><br>";
+*/
+
+			//------------------------------------------
+			// Verificar si Tiempo Transucrrido
+			// es IGUAL a Lapso de Tiempo
+			//------------------------------------------
+			if(Carbon::parse(Carbon::parse($fecha_cargo)->format('Y-m-d'))->timestamp > Carbon::parse(Carbon::parse($fecha_orden_venta)->format('Y-m-d'))->timestamp) {
+				return false;
+			}
+
+			//------------------------------------------
+			// Armar array item
+			// para items no serializados/serializados
+			// con cantidad mayor a 1
+			//------------------------------------------
+			$item = self::armarCantidadItem($item, $cantidad, $series, $devoluciones, $empresa_id, $fecha_cargo);
+
+			//------------------------------------------
+			// Guardar en DB cargo
+			//------------------------------------------
+			self::guardarCargo($entrega_id, $item, $item_id, $empresa_id);
+	}
+
+	/**
+	* Duplica el array $item segun la cantidad.
+	* Si existe serie, se le adjunta serie a cada item.
+	* Si existe devoluciones se verifica el item serializado devuelto.
+	*
+	* @param  array $item         [description]
+	* @param  int $cantidad     	 [description]
+	* @param  array $series       [description]
+	* @param  array $devoluciones [description]
+	* @param  int $empresa_id   [description]
+	* @param  datetime $fecha_cargo  [description]
+	* @return array               [description]
+	*/
+	private static function armarCantidadItem($item, $cantidad, $series, $devoluciones, $empresa_id, $fecha_cargo, $devolucion_info=false) {
+
+		$item["empresa_id"] = $empresa_id;
+		$item["fecha_cargo"] = $fecha_cargo;
+
+		if($cantidad > 1) {
+			$itemsarr = array();
+			if(!empty($series) && count($series) > 0){
+
+				$item["cantidad"] = 1;
+				$item["total_cargo"] = $item["tarifa"];
+
+				for ($j=0; $j<count($series); $j++){
+					$serie = !empty($series[$j]) ? $series[$j] : 0;
+					$item["serie"] = $serie;
+
+					if($devolucion_info==false){
+						$itemsarr[] = $item;
+						continue;
+					}
+
+					//informacion sobre devolucion del item
+					$index = Utiles::multiarray_buscar_valor($serie, "serie", $devoluciones);
+					if(is_int($index)){
+						$item["devuelto"]						= 1;
+						$item["fecha_devolucion"] 	= is_int($index) ? Carbon::parse($devoluciones[$index]["fecha_devolucion"]) : ""; //->format('Y-m-d H:i:s')
+						$itemsarr[] = $item;
+					}
+				}
+			}else{
+
+					$fecha_devolucion = !empty($devoluciones[0]["fecha_devolucion"]) ? Carbon::parse($devoluciones[0]["fecha_devolucion"]) : "";
+					$fecha_devolucion_formato = !empty($devoluciones[0]["fecha_devolucion"]) ? Carbon::parse(Carbon::parse($devoluciones[0]["fecha_devolucion"])->format('Y-m-d')) : "";
+					$cantidad_devuelta = !empty($devoluciones[0]["cantidad"]) ? $devoluciones[0]["cantidad"] : 0;
+
+					//verificar si cantidad devuelta existe
+					//y la fecha de devolucion es igual a la fecha del cargo
+					if(!empty($cantidad_devuelta)){
+
+						//Verificar fecha de devolucion
+						if($fecha_devolucion_formato->eq(Carbon::parse(Carbon::parse($item["fecha_cargo"])->format('Y-m-d')))){
+							$item["devuelto"]	= 1;
+							$item["fecha_devolucion"] = $fecha_devolucion;
+							$item["cantidad"] = ((float)$cantidad - (float)$cantidad_devuelta);
+							$item["cantidad_devuelta"] = $cantidad_devuelta;
+
+						}else if(Carbon::parse(Carbon::parse($item["fecha_cargo"])->format('Y-m-d'))->gt($fecha_devolucion_formato)){
+
+							// Si la fecha de cargo es mayor que la ultima fecha de devolucion
+							// actualizar solo la cantidad y la cantidad devuelta
+							$item["cantidad"] = ((float)$cantidad - (float)$cantidad_devuelta);
+						}
+					}
+
+					//Calcular tarifa
+					$tarifa = number_format(($item["tarifa"] * $item["cantidad"]), 2, '.', '');
+					$item["total_cargo"] = $tarifa;
+
+					$itemsarr[] = $item;
+			}
+			$item = $itemsarr;
+		}else{
+
+			//Calcular tarifa
+			$tarifa = number_format(($item["tarifa"] * $item["cantidad"]), 2, '.', '');
+			$item["total_cargo"] = $tarifa;
+
+			$item = [$item];
+		}
+
+		return $item;
+	}
+
+	/**
+	 * Guardar el registro de cargo de cada item
+	 *
+	 * @param  integer $entrega_id [description]
+	 * @param  array   $item       [description]
+	 * @return void
+	 */
+	private static function guardarCargo($entrega_id=0, $item=array(), $item_id=0, $empresa_id=0) {
+
+			$year = Carbon::now()->format('y');
+
+			foreach ($item AS $itm){
+				//NUMERO DEL CARGO
+				$total = CargosAlquilerModel::where('empresa_id', $empresa_id)->count();
+				$itm["numero"] = Utiles::generar_codigo('CAR' . $year, $total + 1, 19);
+
+				if(!isset($itm['id'])) {
+					Capsule::beginTransaction();
+
+					try {
+						CargosAlquilerModel::create($itm);
+					} catch (ValidationException $e) {
+
+						// Rollback
+						Capsule::rollback();
+
+						self::$logger->addInfo("Error: cron " . __METHOD__ . ", Linea: " . __LINE__ . " --> " . $e->getMessage());
+					}
+					Capsule::commit();
+				}
+			}
+
+			//Guardar log
+			self::$logger->addInfo("success: se ha guardado el cargo satisfactoriamente.", array("empresa_id" => $empresa_id, "entrega_id" => $entrega_id, "item_id" => $item_id));
+	}
+
+	/**
+	 * Consultar el ultimo
+	 * cargo realizado.
+	 */
+	private static function getUltimoCargoRealizado($clause=NULL){
+		if($clause==NULL){
+			return;
+		}
+		return CargosAlquilerModel::clauseFiltro($clause)->get()->last();
+	}
+
+	/**
+	 * Retorna las entregas con estado "Entregado"
+	 * con su contrato de alquiler relacionado
+	 * y sus items que no hallan sido devuelto.
+	 *
+	 */
+	private static function alquileresEntregados() {
+
+		//Entregas
+		$ResultEntregas = EntregasAlquiler::with(array("contrato_alquiler.corte_facturacion","contrato_alquiler.facturar_contra_entrega","contrato_alquiler.contratos_items", "contrato_alquiler.contratos_items.ciclo", "contrato_alquiler.contratos_items.item"))->estadoEntregado()->whereHas('contrato_alquiler', function($contratos_items) {
+			$contratos_items->estadoValido();
+		})->get()->toArray();
+
+		$entregados = array();
+		if(!empty($ResultEntregas)){
+
+			$i=0;
+			foreach ($ResultEntregas AS $entrega) {
+
+				$entrega_id 			= !empty($entrega["id"]) ? $entrega["id"] : "";
+				$contratos_id 		= !empty($entrega["contrato_alquiler"]["id"]) ? $entrega["contrato_alquiler"]["id"] : "";
+				$contratos_items 	= !empty($entrega["contrato_alquiler"]["contratos_items"]) ? $entrega["contrato_alquiler"]["contratos_items"] : "";
+				$corte_facturacion = !empty($entrega["contrato_alquiler"]["corte_facturacion"]) ? $entrega["contrato_alquiler"]["corte_facturacion"]["valor"] : "";
+				$dia_corte = !empty($entrega["contrato_alquiler"]["dia_corte"]) ? $entrega["contrato_alquiler"]["dia_corte"] : "";
+				$facturar_contra_entrega = !empty($entrega["contrato_alquiler"]["facturar_contra_entrega"]) ? $entrega["contrato_alquiler"]["facturar_contra_entrega"]["valor"] : "";
+				$fecha_entrega 		= !empty($entrega["fecha_entrega"]) ? $entrega["fecha_entrega"] : "";
+				$empresa_id 			= !empty($entrega["empresa_id"]) ? $entrega["empresa_id"] : "";
+
+
+				// Info de Entrega
+				$entregados[$i]["entrega_id"] = $entrega_id;
+				$entregados[$i]["empresa_id"]	= $empresa_id;
+				$entregados[$i]["fecha_entrega"] 	= $fecha_entrega;
+				$entregados[$i]["dia_corte"] = $dia_corte;
+				$entregados[$i]["corte_facturacion"] 	= $corte_facturacion;
+				$entregados[$i]["facturar_contra_entrega"] 	= $facturar_contra_entrega;
+
+				//verificar que items de contrato
+				//no este vacio
+				if(empty($contratos_items)){
+					continue;
+				}
+
+				$j=0;
+				foreach ($contratos_items AS $item) {
+
+					$item_entrega_id = !empty($item["contratos_items_detalles_entregas"][0]["operacion_id"]) ? $item["contratos_items_detalles_entregas"][0]["operacion_id"] : "";
+
+					//Verificar el id de la entrega del item
+					//con la entrega actualizar_chosen
+					if($entrega_id != $item_entrega_id){
+						continue;
+					}
+
+					//Info de Items
+					$item_id 		= !empty($item["item_id"]) ? $item["item_id"] : "";
+					$cantidad 	= !empty($item["contratos_items_detalles_entregas"][0]["cantidad"]) ? $item["contratos_items_detalles_entregas"][0]["cantidad"] : "";
+					$tarifa 		= !empty($item["tarifa"]) ? $item["tarifa"] : "";
+					$ciclo 			= !empty($item["ciclo"]) ? $item["ciclo"]["valor"] : "";
+					$ciclo_id 	= !empty($item["ciclo"]) ? $item["ciclo"]["id"] : "";
+					$impuesto 	= !empty($item["impuesto"]) ? $item["impuesto"] : "";
+					$descuento 	= !empty($item["descuento"]) ? $item["descuento"] : "";
+
+					//Entregados
+					$entregados[$i]["items"][$j]["item_id"] 	= $item_id;
+					$entregados[$i]["items"][$j]["cantidad"] 	= $cantidad;
+					$entregados[$i]["items"][$j]["tarifa"] 		= $tarifa;
+					$entregados[$i]["items"][$j]["ciclo"] 		= $ciclo;
+					$entregados[$i]["items"][$j]["ciclo_id"] 	= $ciclo_id;
+					$entregados[$i]["items"][$j]["impuesto"] 	= $impuesto;
+					$entregados[$i]["items"][$j]["descuento"]	= $descuento;
+					$entregados[$i]["items"][$j]["contrato_id"]	= $contratos_id;
+
+					$itemsEntregados = !empty($item["contratos_items_detalles_entregas"]) ? $item["contratos_items_detalles_entregas"] : "";
+					$devolucionesArray = !empty($item["contratos_items_detalles_devoluciones"]) ? $item["contratos_items_detalles_devoluciones"] : "";
+
+					//Obtner la series de los items entregados
+					$series = collect($itemsEntregados)->pluck('serie')->reject(function ($name) { return empty($name); });
+
+					if(!empty($series->toArray()) && $series->count() > 0){
+
+						// Verificar series devueltas
+						$series_devueltas = CargosAlquilerModel::where("cargoable_id", $entrega_id)
+										->where("empresa_id", $empresa_id)
+										->where('devuelto', 1)
+										->where("item_id", $item_id)
+										->whereIn("serie", $series)
+										->get(array("serie"))
+										->pluck('serie');
+
+						// Si se han devuelto algunos items serializados
+						// obtener las series que no han sido devueltas.
+						if(!empty($series_devueltas)) {
+							$series = $series->diff($series_devueltas);
+						}
+
+						$entregados[$i]["items"][$j]["series"] = $series->toArray();
+
+					}else {
+
+						//Items devueltos no serializados
+						$devueltos = CargosAlquilerModel::where("cargoable_id", $entrega_id)
+								->where("empresa_id", $empresa_id)
+								->where('devuelto', 1)
+								->where("item_id", $item_id)
+								->get(array("serie"))
+								->count();
+
+							// si se han devueltos algunos items
+							// restar la cantidad devuelta
+							// a la cantidad tota de items.
+							if($devueltos > 0){
+								$entregados[$i]["items"][$j]["cantidad"] 	= $cantidad-$devueltos;
+							}
+					}
+
+					//Array items devueltos
+					$devoluciones = !empty($devolucionesArray) ? array_map(function($devolucionesArray) {
+						if(empty($devolucionesArray["operacion"]["estado_id"])){
+							continue;
+						}
+						$estadoINFO = DevolucionesAlquilerCatalogos::where('id', $devolucionesArray["operacion"]["estado_id"])->get(array('valor'))->toArray();
+						if(!empty($estadoINFO) && preg_match('/devuelto/', $estadoINFO[0]["valor"])){
+							return array(
+								"cantidad" => $devolucionesArray["cantidad"],
+								"serie" => $devolucionesArray["serie"],
+								"fecha_devolucion" => $devolucionesArray["operacion"]["fecha_devolucion"]
+							);
+						}
+					}, $devolucionesArray) : array();
+
+					//items devueltos
+					$entregados[$i]["items"][$j]["devoluciones"] = $devoluciones;
+
+					$j++;
+				}
+				$i++;
+			}
+		}
+
+		return collect($entregados);
+	}
+}

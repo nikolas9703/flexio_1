@@ -1,0 +1,6 @@
+\Flexio\Modulo\Usuario\Models\Usuario:
+  username: $string
+  email: $string@pensanomica.com
+  password: $string
+  created_at: $date
+  updated_at: $date

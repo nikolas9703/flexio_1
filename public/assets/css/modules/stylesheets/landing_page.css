@@ -1,0 +1,68 @@
+/* line 2, ../sass/landing_page.scss */
+#content-landing .modulo-icono {
+  width: 50px;
+  float: left;
+}
+/* line 6, ../sass/landing_page.scss */
+#content-landing .color-par {
+  background-color: #FFFFFF;
+}
+/* line 9, ../sass/landing_page.scss */
+#content-landing .color-impar {
+  background-color: #F3F3F3;
+}
+/* line 12, ../sass/landing_page.scss */
+#content-landing .titulo_enlace {
+  color: #666666;
+  font-weight: bolder;
+  padding-bottom: 15px;
+  font-size: 16px;
+  line-height: 4em;
+}
+/* line 18, ../sass/landing_page.scss */
+#content-landing .titulo_enlace:hover {
+  color: #0070BA;
+}
+/* line 22, ../sass/landing_page.scss */
+#content-landing .filas {
+  zoom: 1;
+  height: 75px;
+}
+/* line 25, ../sass/landing_page.scss */
+#content-landing .filas .date-content {
+  display: table-cell;
+  vertical-align: top;
+}
+/* line 28, ../sass/landing_page.scss */
+#content-landing .filas .date-content .texto-hora {
+  color: #545050;
+  font-weight: 400;
+}
+/* line 32, ../sass/landing_page.scss */
+#content-landing .filas .date-content .texto-tiempo {
+  color: #023859;
+  font-weight: bolder;
+}
+/* line 37, ../sass/landing_page.scss */
+#content-landing .filas .comentario-content {
+  border-left: 1px solid #DDDDDD;
+  height: inherit;
+  display: table-cell;
+  vertical-align: top;
+  zoom: 1;
+}
+/* line 43, ../sass/landing_page.scss */
+#content-landing .filas .comentario-content .texto_nombre_usuario {
+  color: #27AAE2;
+  font-size: 14px;
+  font-weight: bolder;
+}
+
+/* line 52, ../sass/landing_page.scss */
+.vue-paginador {
+  height: 26px;
+  background-color: #EFEFEF;
+  width: 100%;
+  padding-top: 5px;
+  border: 1px solid #CCCCCC;
+}

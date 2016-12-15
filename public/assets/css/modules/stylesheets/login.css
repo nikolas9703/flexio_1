@@ -1,0 +1,9 @@
+/* line 2, ../sass/login.scss */
+div .imagelogo {
+  height: 110px;
+}
+
+/* line 6, ../sass/login.scss */
+form#crearCuentaForm {
+  width: 280px;
+}

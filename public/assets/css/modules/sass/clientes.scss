@@ -1,0 +1,80 @@
+$label-success: #5BB85C;
+$label-warning: #F8AC59;
+$label-danger: #ED5565;
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}  
+table#tablaClientesGrid{
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}
+.totales{
+  width:100%;
+  background: transparent;
+  padding: 2px 7px;
+  text-align: center;
+  font-weight: bold;
+}
+label.totales-success{
+  @extend .totales;
+  border: $label-success solid 2px;
+  color:$label-success;
+}
+
+label.totales-warning{
+  @extend .totales;
+  border: $label-warning solid 1px;
+  color:$label-warning;
+}
+label.totales-danger{
+  @extend .totales;
+  border: $label-danger solid 2px;
+  color: $label-danger;
+}
+}
+form#formClienteCrear{
+
+  p.middle-text{
+    vertical-align: middle;
+    height: 100%;
+    line-height: 100%;
+    padding-top: 46px;
+    font-weight: bold;
+  }
+  .totales{
+    width:100%;
+    color:#FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+  }
+  label.label-success-text{
+    @extend .totales;
+    border: $label-success solid 1px;
+    background-color:$label-success;
+  }
+
+  label.label-warning-text{
+    @extend .totales;
+    border: $label-warning solid 1px;
+    background-color:$label-warning;
+  }
+  label.label-danger-text{
+    @extend .totales;
+    border: $label-danger solid 1px;
+    background-color:$label-danger;
+  }
+}

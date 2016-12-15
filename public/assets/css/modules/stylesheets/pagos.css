@@ -1,0 +1,133 @@
+/* line 6, ../sass/cobros.scss */
+.no-left-padding {
+  padding-left: 0px !important;
+  padding-top: 20px;
+  padding-bottom: 5px;
+  padding-right: 0px !important;
+}
+
+/* line 12, ../sass/cobros.scss */
+.last-input {
+  padding-left: 30px;
+}
+
+/* line 16, ../sass/cobros.scss */
+form#form_crear_pago .totales, form#form_crear_pago label.label-success-text, form#form_crear_pago label.label-info-text, form#form_crear_pago label.label-warning-text, form#form_crear_pago label.label-danger-text, form#form_crear_pago table#tablaPagosGrid label.totales-success, form#form_crear_pago table#tablaPagosGrid label.totales-inverse, table#tablaPagosGrid form#form_crear_pago label.totales-success,table#tablaPagosGrid form#form_crear_pago label.totales-inverse, form#form_crear_pago table#tablaPagosGrid label.totales-warning, table#tablaPagosGrid form#form_crear_pago label.totales-warning, form#form_crear_pago table#tablaPagosGrid label.totales-danger,form#form_crear_pago table#tablaPagosGrid label.totales-blue, table#tablaPagosGrid form#form_crear_pago label.totales-danger , table#tablaPagosGrid form#form_crear_pago label.totales-blue{
+  width: 100%;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 26, ../sass/cobros.scss */
+form#form_crear_pago label.label-success-text {
+  border: #5cb85c solid 1px;
+  background-color: #5cb85c;
+}
+/* line 32, ../sass/cobros.scss */
+form#form_crear_pago label.label-info-text {
+  border: #428BCA solid 1px;
+  background-color: #428BCA;
+}
+/* line 38, ../sass/cobros.scss */
+form#form_crear_pago label.label-warning-text {
+  border: #EC971F solid 1px;
+  background-color: #EC971F;
+}
+/* line 43, ../sass/cobros.scss */
+form#form_crear_pago label.label-danger-text {
+  border: #d9534f solid 1px;
+  background-color: #d9534f;
+}
+/* line 48, ../sass/cobros.scss */
+form#form_crear_pago div.last-div {
+  padding-top: 100px;
+}
+
+/* line 53, ../sass/cobros.scss */
+table#facturaItems {
+  margin-bottom: 50px;
+  border-bottom: #F3F3F4 solid 1px;
+}
+/* line 57, ../sass/cobros.scss */
+table#facturaItems thead th {
+  background-color: #0076BE;
+  color: white;
+  border: 1px solid white;
+  font-weight: bold;
+}
+/* line 65, ../sass/cobros.scss */
+table#facturaItems tbody td {
+  color: black;
+  font-weight: bold;
+}
+
+/* line 71, ../sass/cobros.scss */
+div.lists_opciones {
+  margin-bottom: 15px;
+}
+
+/* line 75, ../sass/cobros.scss */
+table#optionPagos {
+  border-color: white;
+  margin-bottom: 100px;
+}
+/* line 78, ../sass/cobros.scss */
+table#optionPagos thead {
+  border-color: white;
+}
+/* line 80, ../sass/cobros.scss */
+table#optionPagos thead th {
+  border-bottom-color: white;
+}
+/* line 86, ../sass/cobros.scss */
+table#optionPagos tbody tr td {
+  border-top: white;
+}
+
+/* line 94, ../sass/cobros.scss */
+table#tablaPagosGrid a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 97, ../sass/cobros.scss */
+table#tablaPagosGrid a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 102, ../sass/cobros.scss */
+table#tablaPagosGrid .totales, table#tablaPagosGrid form#form_crear_pago label.label-success-text, form#form_crear_pago table#tablaPagosGrid label.label-success-text, table#tablaPagosGrid form#form_crear_pago label.label-info-text, form#form_crear_pago table#tablaPagosGrid label.label-info-text, table#tablaPagosGrid form#form_crear_pago label.label-warning-text, form#form_crear_pago table#tablaPagosGrid label.label-warning-text, table#tablaPagosGrid form#form_crear_pago label.label-danger-text, form#form_crear_pago table#tablaPagosGrid label.label-danger-text, table#tablaPagosGrid label.totales-success, table#tablaPagosGrid label.totales-inverse, table#tablaPagosGrid label.totales-warning, table#tablaPagosGrid label.totales-danger , table#tablaPagosGrid label.totales-blue {
+  width: 100%;
+  background: transparent;
+  padding: 2px 7px;
+  text-align: center;
+  font-weight: bold;
+}
+/* line 109, ../sass/cobros.scss */
+table#tablaPagosGrid label.totales-inverse {
+  border: #000000 solid 2px;
+  color: #000000;
+}
+/* line 109, ../sass/cobros.scss */
+table#tablaPagosGrid label.totales-success {
+  border: #5cb85c solid 2px;
+  color: #5cb85c;
+}
+/* line 115, ../sass/cobros.scss */
+table#tablaPagosGrid label.totales-warning {
+  border: #EC971F solid 2px;
+  color: #EC971F;
+}
+/* line 120, ../sass/cobros.scss */
+table#tablaPagosGrid label.totales-danger {
+  border: #d9534f solid 2px;
+  color: #d9534f;
+}
+/* line 120, ../sass/cobros.scss */
+table#tablaPagosGrid label.totales-blue {
+  border: #1C84C6 solid 2px;
+  color: #1C84C6;
+}

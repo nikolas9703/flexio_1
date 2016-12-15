@@ -1,0 +1,62 @@
+table.tabla-dinamica{
+ 	tr th[scope="colgroup"]{
+	    background-color: #0076be !important;
+	    color:#fff;
+	    font-weight: 500;
+  	}
+  	tr th[scope="mainheader"]{
+	   color:#666;
+	   font-weight: normal;
+  	}
+  	tr table th {
+	     background-color: transparent !important;
+	     color: #494949;
+	     font-weight: normal;
+	}
+	tfoot {
+		td:nth-child(1){
+			border-left:1px #fff solid !important;
+			border-bottom:1px #fff solid !important;
+		}
+		td:last-child {
+			border-right:1px #fff solid !important;
+			border-bottom:1px #fff solid !important;
+		}
+		.sum-border{
+		   	border-left:1px #eee solid !important;
+			border-right:1px #eee solid !important;
+			border-bottom:1px #eee solid !important;
+		 }
+		.sum-total{
+			float:right;
+		}
+	}
+}
+.label.label-por-agendar{
+	background-color: red ;
+	color:#fff;
+}
+.label.label-agendada{
+	background-color: #6EC5E5;
+	color:#fff;
+}
+.label.label-en-ejecucion{
+	background-color: #6EC5E5;
+	color:#fff;
+}
+.label.label-por-facturar{
+	background-color: orange;
+	color:#fff;
+}
+.label.label-facturada{
+	background-color: #479B3E;
+	color:#fff;
+}
+.label.label-terminada{
+	background-color: #479B3E;
+	color:#fff;
+}
+.label.label-anulada{
+	background-color: #000;
+	color:#fff;
+}

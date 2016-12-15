@@ -1,0 +1,61 @@
+/* line 5, ../sass/presupuesto.scss */
+a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 8, ../sass/presupuesto.scss */
+a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* line 15, ../sass/presupuesto.scss */
+table#presupuestoDinamicoGrid a.cog {
+  color: #0070BA !important;
+  background-color: transparent !important;
+  border: 1px solid #026bb1 !important;
+}
+/* line 19, ../sass/presupuesto.scss */
+table#presupuestoDinamicoGrid a.cog .icono-funcion {
+  background: url("../stylesheets/images/funcion.png") no-repeat;
+  width: 21px;
+  height: 18px;
+}
+
+/* line 26, ../sass/presupuesto.scss */
+span.input-group-addon {
+  padding: 0 8px;
+  height: 10px;
+}
+
+/* line 31, ../sass/presupuesto.scss */
+.totales, label.totales-success, label.totales-warning, label.totales-danger {
+  width: 100%;
+  background: transparent;
+  padding: 2px 7px;
+}
+
+/* line 36, ../sass/presupuesto.scss */
+label.totales-success {
+  border: #5BB85C solid 1px;
+  color: #5BB85C;
+}
+
+/* line 42, ../sass/presupuesto.scss */
+label.totales-warning {
+  border: #F8AC59 solid 1px;
+  color: #F8AC59;
+}
+
+/* line 47, ../sass/presupuesto.scss */
+label.totales-danger {
+  border: #ED5565 solid 1px;
+  color: #ED5565;
+}
+
+/* line 54, ../sass/presupuesto.scss */
+div#presupuestoFillTableModal div.form-group {
+  margin-bottom: 48px;
+  margin-top: 15px;
+  height: 4px;
+}

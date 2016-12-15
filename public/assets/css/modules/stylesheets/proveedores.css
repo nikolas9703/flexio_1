@@ -1,0 +1,54 @@
+
+table#proveedoresGrid .totales, table#proveedoresGrid label.totales-success, table#proveedoresGrid label.totales-warning, table#proveedoresGrid label.totales-danger{
+    width: 100%;
+    background: transparent;
+    padding: 2px 7px;
+    text-align: center;
+    font-weight: bold;
+}
+ form#crearProveedoresForm label.label-success-text, form#crearProveedoresForm label.label-info-text, form#crearProveedoresForm label.label-warning-text, form#crearProveedoresForm label.label-danger-text {
+    width: 100%;
+    color: #FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+/* line 28, ../sass/clientes.scss */
+table#proveedoresGrid label.totales-success {
+    border: #5BB85C solid 2px;
+    color: #5BB85C;
+}
+/* line 34, ../sass/clientes.scss */
+table#proveedoresGrid label.totales-warning {
+    border: #F8AC59 solid 1px;
+    color: #F8AC59;
+}
+/* line 39, ../sass/clientes.scss */
+table#proveedoresGrid label.totales-danger {
+    border: #ED5565 solid 2px;
+    color: #ED5565;
+}
+
+/* line 64, ../sass/clientes.scss */
+form#crearProveedoresForm label.label-success-text {
+    border: #5BB85C solid 1px;
+    background-color: #5BB85C;
+}
+/* line 70, ../sass/clientes.scss */
+form#crearProveedoresForm label.label-warning-text {
+    border: #F8AC59 solid 1px;
+    background-color: #F8AC59;
+}
+/* line 75, ../sass/clientes.scss */
+form#crearProveedoresForm label.label-danger-text {
+    border: #ED5565 solid 1px;
+    background-color: #ED5565;
+}
+/* line 97, ../sass/cobros.scss */
+table#proveedoresGrid a.link{
+    color: blue;
+    text-decoration: underline;
+}

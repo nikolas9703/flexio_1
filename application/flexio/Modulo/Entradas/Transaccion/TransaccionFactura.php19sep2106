@@ -1,0 +1,173 @@
+<?php
+
+namespace Flexio\Modulo\Entradas\Transaccion;
+  
+use Flexio\Modulo\EntradaManuales\Models\AsientoContable as AsientoContable;
+use Flexio\Repository\SysTransaccion\SysTransaccionRepository as SysTransaccionRepository;
+use Illuminate\Database\Capsule\Manager as Capsule;
+ 
+class TransaccionFactura{
+    
+
+	public function __construct() {
+		$this->SysTransaccionRepository = new SysTransaccionRepository();
+  	}
+	
+	
+ 	public function hacerTransaccion( $registro )
+	{
+		//dd($registro->operacion->facturas->toArray());
+   		//$factura_compra = isset($registro->operacion->facturas[0])?$registro->operacion->facturas[0]:null;
+   		$factura_compra = $registro->operacion->facturas[0];
+    		
+    	if($factura_compra == null){
+    		
+    		$facturado = 0;
+   			$clause      = [
+   			"empresa_id"    => $registro->empresa_id,
+   			"nombre"        => 'TransaccionFacturaEntrada'.'-sf-'.$registro->id."-".$registro->empresa_id
+   			];
+   			$infoSysTransaccion     = array('codigo'=>'Sys','nombre'=>$clause["nombre"],'empresa_id'=>$registro->empresa_id,'linkable_id'=>0);
+    	}else{
+    		$facturado = 1;
+   			$clause      = [
+   			"empresa_id"    => $registro->empresa_id,
+   			"nombre"        => 'TransaccionFacturaEntrada'.'-'.$factura_compra->codigo.'-'.$registro->empresa_id
+   			];
+   			$infoSysTransaccion     = array('codigo'=>'Sys','nombre'=>$clause["nombre"],'empresa_id'=>$registro->empresa_id,'linkable_id'=>$factura_compra->id,'linkable_type'=> get_class($factura_compra));
+   		}
+    	
+   		$transaccion = $this->SysTransaccionRepository->findBy($clause);
+   		
+    		if(!count($transaccion))
+   		{
+   			$sysTransaccion         = new SysTransaccionRepository;
+   			$modeloSysTransaccion   = "";
+   		
+   			Capsule::transaction(function() use($sysTransaccion, $modeloSysTransaccion, $infoSysTransaccion, $factura_compra, $registro, $facturado){
+   				$modeloSysTransaccion =  $sysTransaccion->create($infoSysTransaccion);
+   				$asientos_array = $this->transaccionesItems($registro, $facturado);
+   				foreach($asientos_array as $asientos){
+   					$modeloSysTransaccion->transaccion()->saveMany($asientos);
+   				}
+   				if(is_null($modeloSysTransaccion)){throw new \Exception('No se pudo hacer la transacción');}
+   			});
+   		}
+   		else{
+   			return false;
+   		}
+ 	 
+  	}
+ 
+  	private function transaccionesItems($registro, $facturado = null){
+  
+  			$asiento = array();
+  			foreach ($registro->operacion->items as $item){
+  				
+  				  $item_id 	= $item->id; //Item de entrada
+	  			  if($facturado == 1){
+	  			  	if(!empty($registro->operacion->facturas->toArray())){
+	  			  		foreach( $registro->operacion->facturas as $factura){
+	  			  				
+	  			  			$_item = $factura->items2->find($item_id);
+	  			  				
+	  			  			if(!empty($_item)) //Existe este item en la factura
+	  			  			{
+	  			  				$asiento[] =   $this->transaccionesFacturado($registro, $_item);
+ 	  			  			}
+	  			  			else{  //No Existe este item en la factura
+	  			  				$asiento[] =   $this->transaccionesNoFacturado($registro,  $item->toArray());
+  	  			  			}
+	  			  				
+	  			  		}
+	  			  	}
+	  			  }else{
+	  			  	$asiento[] =   $this->transaccionesNoFacturado($registro,  $item->toArray());
+ 	  			  }
+  				
+  			}
+   	
+   		return $asiento; 
+  	}
+  
+
+  	public function transaccionesFacturado($registro, $_item)
+ 	{
+ 			//dd($this->_debito($registro, $_item),$this->_credito($registro, $_item));
+ 			
+    		return array_merge($this->_debito($registro, $_item),$this->_credito($registro, $_item));
+ 	}
+ 	
+ 	public function transaccionesNoFacturado($registro, $itemNoEncontrado)
+ 	{
+      	return array_merge( $this->_debito2($registro, $itemNoEncontrado),$this->_credito2($registro, $itemNoEncontrado));
+ 	}
+ 	//Casos en que si  hallan sido facturados los items
+ 	private function _debito($registro, $item)
+ 	{
+    		$asientos   = [];
+  		 foreach($registro->operacion->items->toArray()  as $items){
+  		 	 
+   		 	if($item->id == $items['id']){
+    		 		 
+  		 		$asientos[] = new AsientoContable([
+  		 				'codigo'        => $registro->operacion->facturas[0]->codigo,
+  		 				'nombre'        => $registro->id.'-'.$items['id'],
+  		 				'debito'        => $item['pivot']['cantidad']*$item['pivot']['precio_unidad'],
+   		 				'cuenta_id'   	=> $item->cuenta_activo->id,
+  		 				'empresa_id'    => $item->empresa_id
+  		 				]);
+   		 	}
+   		 }	
+       		return $asientos;
+ 	}
+   	
+ 	private function _credito($registro, $item){
+ 		 
+   		$asientos   = [];
+   		 
+ 		$asientos[] = new AsientoContable([
+ 				'codigo'        => $registro->operacion->facturas[0]->codigo,
+ 				'nombre'        =>  $registro->id.'-'.$item['id'],
+ 				'credito'       =>$item['pivot']['cantidad']*$item['pivot']['precio_unidad'],
+ 				'cuenta_id'     => $registro->empresa->cuenta_inventario_en_transito->first()->cuenta->id,
+ 				'empresa_id'    => $item->empresa_id
+ 		]);
+   		return $asientos;
+ 	}
+ 	
+ 	//Casos en que no hallan sido facturados los items
+ 	private function _debito2($registro, $itemNoEncontrado)
+ 	{
+  		
+  		 $item = $registro->operacion->items->find($itemNoEncontrado['id']);
+    		
+ 		$asientos   = [];
+ 		$asientos[] = new AsientoContable([
+ 				'codigo'        => $registro->operacion->facturas[0]->codigo,
+ 				'nombre'        =>$registro->id.'-'.$itemNoEncontrado['id'],
+ 				'debito'        => $itemNoEncontrado['pivot']['cantidad']*$itemNoEncontrado['pivot']['precio_unidad'],
+  				'cuenta_id'   	=> $item->cuenta_activo->id,
+ 				'empresa_id'    => $registro['empresa_id']
+ 				]);
+   		
+ 		return $asientos;
+ 	}
+ 	
+ 	private function _credito2($registro, $itemNoEncontrado){
+ 		
+    		
+ 		$asientos   = [];
+  		$asientos[] = new AsientoContable([
+ 				'codigo'        => $registro->operacion->facturas[0]->codigo,
+ 				'nombre'        =>$registro->id.'-'.$itemNoEncontrado['id'],
+ 				'credito'       => $itemNoEncontrado['pivot']['cantidad']*$itemNoEncontrado['pivot']['precio_unidad'],
+ 				'cuenta_id'     => $registro->empresa->cuenta_inventario_por_pagar->first()->cuenta->id,
+ 				'empresa_id'    => $registro['empresa_id']
+ 		]);
+  		
+  		return $asientos;
+ 	}
+  
+    
+}

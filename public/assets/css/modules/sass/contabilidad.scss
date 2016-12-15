@@ -1,0 +1,20 @@
+#addCuentaModal{
+  #plan_cuentas{
+  height: 300px;
+  overflow: auto;
+    ul.jstree-container-ul{
+      a.jstree-anchor{
+        color:#023859;
+      }
+    }
+  }
+}
+
+.nopadding {
+   padding: 0 !important;
+   margin: 0 !important;
+}
+
+ul#cuentas_tabs{
+  margin-bottom: 15px;
+}

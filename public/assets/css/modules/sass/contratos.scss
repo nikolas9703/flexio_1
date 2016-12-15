@@ -1,0 +1,10 @@
+table#tablaContratosGrid{
+  a.link{
+    color:blue;
+    text-decoration: underline;
+    &:visited{
+      color:blue;
+      text-decoration: underline;
+    }
+  }
+}

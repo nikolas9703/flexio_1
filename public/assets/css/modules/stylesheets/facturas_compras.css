@@ -1,0 +1,141 @@
+/* line 6, ../sass/facturas.scss */
+a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 9, ../sass/facturas.scss */
+a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* line 15, ../sass/facturas.scss */
+table#tablaFacturasComprasGrid a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 18, ../sass/facturas.scss */
+table#tablaFacturasComprasGrid a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 23, ../sass/facturas.scss */
+table#tablaFacturasComprasGrid .totales, table#tablaFacturasComprasGrid label.totales-success, table#tablaFacturasComprasGrid label.totales-warning, table#tablaFacturasComprasGrid label.totales-danger, table#tablaFacturasComprasGrid form#form_crear_facturas label.label-success-text, form#form_crear_facturas table#tablaFacturasComprasGrid label.label-success-text, table#tablaFacturasComprasGrid form#form_crear_facturas label.label-warning-text, form#form_crear_facturas table#tablaFacturasComprasGrid label.label-warning-text, table#tablaFacturasComprasGrid form#form_crear_facturas label.label-danger-text, form#form_crear_facturas table#tablaFacturasComprasGrid label.label-danger-text {
+  width: 100%;
+  background: transparent;
+  padding: 2px 7px;
+  text-align: center;
+  font-weight: bold;
+}
+/* line 30, ../sass/facturas.scss */
+table#tablaFacturasComprasGrid label.totales-success {
+  border: #5cb85c solid 2px;
+  color: #5cb85c;
+}
+/* line 36, ../sass/facturas.scss */
+table#tablaFacturasComprasGrid label.totales-warning {
+  border: #f0ad4e solid 1px;
+  color: #f0ad4e;
+}
+/* line 41, ../sass/facturas.scss */
+table#tablaFacturasComprasGrid label.totales-danger {
+  border: #d9534f solid 2px;
+  color: #d9534f;
+}
+
+/* line 48, ../sass/facturas.scss */
+form#form_crear_facturas .precio_total, form#form_crear_facturas .precio_unidad {
+  text-align: right;
+}
+/* line 51, ../sass/facturas.scss */
+form#form_crear_facturas .totales, form#form_crear_facturas table#tablaFacturasComprasGrid label.totales-success, table#tablaFacturasComprasGrid form#form_crear_facturas label.totales-success, form#form_crear_facturas table#tablaFacturasComprasGrid label.totales-warning, table#tablaFacturasComprasGrid form#form_crear_facturas label.totales-warning, form#form_crear_facturas table#tablaFacturasComprasGrid label.totales-danger, table#tablaFacturasComprasGrid form#form_crear_facturas label.totales-danger, form#form_crear_facturas label.label-success-text, form#form_crear_facturas label.label-warning-text, form#form_crear_facturas label.label-danger-text {
+  width: 100%;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 61, ../sass/facturas.scss */
+form#form_crear_facturas label.label-success-text {
+  border: #5cb85c solid 1px;
+  background-color: #5cb85c;
+}
+/* line 67, ../sass/facturas.scss */
+form#form_crear_facturas label.label-warning-text {
+  border: #f0ad4e solid 1px;
+  background-color: #f0ad4e;
+}
+/* line 72, ../sass/facturas.scss */
+form#form_crear_facturas label.label-danger-text {
+  border: #d9534f solid 1px;
+  background-color: #d9534f;
+}
+
+form#form_editar_facturas label.label-danger-text {
+    width: 100%;
+    color: #FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+
+form#form_editar_facturas label.label-success-text {
+    width: 100%;
+    color: #FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+
+/* line 48, ../sass/facturas.scss */
+form#form_editar_facturas .precio_total, form#form_crear_facturas .precio_unidad {
+  text-align: right;
+}
+/* line 51, ../sass/facturas.scss */
+form#form_editar_facturas .totales, form#form_crear_facturas table#tablaFacturasComprasGrid label.totales-success, table#tablaFacturasComprasGrid form#form_crear_facturas label.totales-success, form#form_crear_facturas table#tablaFacturasComprasGrid label.totales-warning, table#tablaFacturasComprasGrid form#form_crear_facturas label.totales-warning, form#form_crear_facturas table#tablaFacturasComprasGrid label.totales-danger, table#tablaFacturasComprasGrid form#form_crear_facturas label.totales-danger, form#form_crear_facturas label.label-success-text, form#form_crear_facturas label.label-warning-text, form#form_crear_facturas label.label-danger-text {
+  width: 100%;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 61, ../sass/facturas.scss */
+form#form_editar_facturas label.label-success-text {
+  border: #5cb85c solid 1px;
+  background-color: #5cb85c;
+}
+/* line 67, ../sass/facturas.scss */
+form#form_editar_facturas label.label-warning-text {
+  border: #f0ad4e solid 1px;
+  background-color: #f0ad4e;
+}
+/* line 72, ../sass/facturas.scss */
+form#form_editar_facturas label.label-danger-text {
+  border: #d9534f solid 1px;
+  background-color: #d9534f;
+}
+
+/* line 78, ../sass/facturas.scss */
+tfoot {
+  font-weight: bolder;
+}
+/* line 80, ../sass/facturas.scss */
+tfoot .sum-border {
+  border: #ddd 1px solid !important;
+}
+/* line 83, ../sass/facturas.scss */
+tfoot .sum-total {
+  float: right;
+}

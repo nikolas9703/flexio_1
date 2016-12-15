@@ -1,0 +1,115 @@
+/* line 4, ../sass/clientes.scss */
+a.link {
+    color: blue;
+    text-decoration: underline;
+}
+
+/* line 7, ../sass/clientes.scss */
+a.link:visited {
+    color: blue;
+    text-decoration: underline;
+}
+
+table#remesasGrid th {
+    background: #0070ba;
+    color: white;
+}
+
+/* line 13, ../sass/clientes.scss */
+table#remesasGrid a {
+    color: blue;
+    text-decoration: underline;
+}
+
+.btn-green {
+    color: #fff;
+    background-color: #2cb703;
+    border-color: #20a400
+}
+
+.btn-green.focus, .btn-green:focus {
+    color: #fff;
+    background-color: #289000;
+    border-color: #084000
+}
+
+.btn-green:hover {
+    color: #fff;
+    background-color: #1b9000;
+    border-color: #0f7400
+}
+
+.btn-green.active, .btn-green:active, .open > .dropdown-toggle.btn-green {
+    color: #fff;
+    background-color: #149000;
+    border-color: #107400
+}
+
+.btn-green.active.focus, .btn-green.active:focus, .btn-green.active:hover, .btn-green:active.focus, .btn-green:active:focus, .btn-green:active:hover, .open > .dropdown-toggle.btn-green.focus, .open > .dropdown-toggle.btn-green:focus, .open > .dropdown-toggle.btn-green:hover {
+    color: #fff;
+    background-color: #147400;
+    border-color: #064000
+}
+
+.btn-green.active, .btn-green:active, .open > .dropdown-toggle.btn-green {
+    background-image: none
+}
+
+.btn-green.disabled.focus, .btn-green.disabled:focus, .btn-green.disabled:hover, .btn-green[disabled].focus, .btn-green[disabled]:focus, .btn-green[disabled]:hover, fieldset[disabled] .btn-green.focus, fieldset[disabled] .btn-green:focus, fieldset[disabled] .btn-green:hover {
+    background-color: #31b700;
+    border-color: #1ca400
+}
+
+.btn-green
+    /* line 16, ../sass/clientes.scss */
+table#remesasGrid a:visited {
+    color: blue;
+    text-decoration: underline;
+}
+
+.nuevo > li.active {
+    margin-top: 20px;
+}
+
+.nuevo > li.active > a,
+.nuevo > li.active > a:hover,
+.nuevo > li.active > a:focus {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background: none;
+    border-color: transparent;
+    border-bottom: #f3f3f4;
+    border-image: none;
+    border-style: solid;
+    border-width: 1px;
+    color: #FFF;
+    cursor: default;
+    background-color: #5ab1c7;
+    border-radius: 8px;
+    height: 60px;
+    width: 200px;
+}
+
+.nuevo > li > a {
+    color: #A7B1C2;
+    font-weight: 600;
+    padding: 10px 20px 10px 25px;
+    background-color: #023859;
+    height: 60px;
+    color: #FFF;
+    width: 200px;
+    border-radius: 8px;
+}
+
+.nuevo > li.active > a:before {
+    content: "";
+    position: absolute;
+    top: 35px;
+    width: 0;
+    height: 0;
+    border-left: 50px solid transparent;
+    border-right: 50px solid transparent;
+    border-top: 50px solid #5AB1C7;
+}

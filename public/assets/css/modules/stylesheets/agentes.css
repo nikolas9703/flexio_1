@@ -1,0 +1,21 @@
+/* line 4, ../sass/clientes.scss */
+a.link {
+    color: blue;
+    text-decoration: underline;
+}
+/* line 7, ../sass/clientes.scss */
+a.link:visited {
+    color: blue;
+    text-decoration: underline;
+}
+
+/* line 13, ../sass/clientes.scss */
+table#AgentesGrid a {
+    color: blue;
+    text-decoration: underline;
+}
+/* line 16, ../sass/clientes.scss */
+table#AgentesGrid a:visited {
+    color: blue;
+    text-decoration: underline;
+}

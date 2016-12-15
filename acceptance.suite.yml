@@ -1,0 +1,10 @@
+class_name: WebGuy
+modules:
+    enabled:
+        - PhpBrowser
+        - WebHelper
+        - Filesystem
+        - TestHelper
+    config:
+        PhpBrowser:
+            url: 'http://localhost:88/erp/'

@@ -1,0 +1,102 @@
+$label-primary: darken(#428bca, 6.5%); // #337ab7
+$label-success: #5cb85c;
+$label-info:    #5bc0de;
+$label-warning: #f0ad4e;
+$label-danger:  #d9534f;
+.header-ventas{
+    background-color: #D9D9D9;
+    padding: 6px 0;
+    div.text-header{
+        padding-top: 8px;
+        font-size: 14px;
+        font-weight: bolder;
+        color:#666666;
+    }
+}
+.facturadas{
+  background-color: azure;
+}
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}
+table#tablaDevolucionesGrid{
+a.link{
+  color:blue;
+  text-decoration: underline;
+  &:visited{
+    color:blue;
+    text-decoration: underline;
+  }
+}
+.totales{
+  width:100%;
+  background: transparent;
+  padding: 2px 7px;
+  text-align: center;
+  font-weight: bold;
+}
+label.totales-success{
+  @extend .totales;
+  border: $label-success solid 2px;
+  color:$label-success;
+}
+
+label.totales-warning{
+  @extend .totales;
+  border: $label-warning solid 1px;
+  color:$label-warning;
+}
+label.totales-danger{
+  @extend .totales;
+  border: $label-danger solid 2px;
+  color: $label-danger;
+}
+}
+form#form_crear_devoluciones{
+    #tablaError{
+        color:red;
+    }
+  .precio_total, .precio_unidad{
+    text-align: right;
+  }
+  .totales{
+    width:100%;
+    color:#FFFFFF;
+    padding: 5px 7px;
+    margin-top: 5px;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+  }
+  label.label-success-text{
+    @extend .totales;
+    border: $label-success solid 1px;
+    background-color:$label-success;
+  }
+
+  label.label-warning-text{
+    @extend .totales;
+    border: $label-warning solid 1px;
+    background-color:$label-warning;
+  }
+  label.label-danger-text{
+    @extend .totales;
+    border: $label-danger solid 1px;
+    background-color:$label-danger;
+  }
+}
+tfoot{
+  font-weight: bolder;
+ .sum-border{
+   border:#ddd 1px solid !important;
+   }
+   .sum-total{
+     float:right;
+   }
+}

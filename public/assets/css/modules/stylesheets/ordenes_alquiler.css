@@ -1,0 +1,29 @@
+/* line 1, ../sass/ordenes_alquiler.scss */
+.label.label-por-aprobar {
+  background-color: orange;
+  color: #fff;
+}
+
+/* line 5, ../sass/ordenes_alquiler.scss */
+.label.label-por-facturar {
+  background-color: red;
+  color: #fff;
+}
+
+/* line 9, ../sass/ordenes_alquiler.scss */
+.label.label-facturado-parcial {
+  background-color: #6EC5E5;
+  color: #fff;
+}
+
+/* line 13, ../sass/ordenes_alquiler.scss */
+.label.label-facturado-completo {
+  background-color: #479B3E;
+  color: #fff;
+}
+
+/* line 17, ../sass/ordenes_alquiler.scss */
+.label.label-anulada {
+  background-color: #000;
+  color: #fff;
+}

@@ -1,0 +1,13 @@
+div#crear-empresa{
+  margin: auto;
+}
+form#crearEmpresaForm{
+  div[class*="form-group"]{
+    height: 24px !important;
+    margin-bottom: 40px !important;
+  }
+}
+.margin-05{
+  margin-bottom: 1.5em;
+  margin-left: -15px;
+}
