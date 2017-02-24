@@ -217,11 +217,12 @@ console.log("iniciando filtro inicial");
         if(typeof caja_id != "undefined"){
 	           cajaId = $.parseJSON(caja_id);
 		    }
+        var nombreProveedorPagos = (localStorage['ms-selected'] == "seguros") ? 'Pago a' : 'Proveedor' ; 
         gridObj.jqGrid({
         url: tablaUrl,
                 mtype: "POST",
                 datatype: "json",
-                colNames:['', 'No. Pago', 'Proveedor', 'Fecha de Pago', 'Monto Pagado', 'No. Documento',  'M&eacute;todo de Pago', 'Estado', 'estado_etiqueta','', ''],
+                colNames:['', 'No. Pago', nombreProveedorPagos, 'Fecha de Pago', 'Monto Pagado', 'No. Documento',  'M&eacute;todo de Pago', 'Estado', 'estado_etiqueta','', ''],
                 colModel:[
                 {name:'uuid', index:'uuid', width:30, hidedlg:true, hidden: true},
                 {name:'codigo', index:'codigo', width:55, sortable:true},
@@ -262,22 +263,6 @@ console.log("iniciando filtro inicial");
                         $(this).closest("div.ui-jqgrid-view").find("#tablaClientesGrid_cb, #jqgh_tablaClientesGrid_link").css("text-align", "center");
                 },
                 loadComplete: function (data, status, xhr) {
-
-                  if (localStorage['ms-selected'] == "seguros") {
-                    var CampoLabel = "Proveedores/Aseguradoras/Agentes";
-                    switch(tipoPagos()){
-                      case 1: // asegurado
-                        CampoLabel = "Aseguradoras";
-                      break;
-                      case 2: // proveedores
-                        CampoLabel = "Proveedores";
-                      break;
-                      case 3: // agentes
-                        CampoLabel = "Agentes";
-                      break;
-                      $("#tablaPagosGrid_Proveedor").html();
-                    }
-                  }
 
                 if (gridObj.getGridParam('records') === 0) {
                 $('#gbox_' + gridId).hide();
@@ -701,7 +686,7 @@ opcionesModal.on("click", "#confirmarAprobarPago", function(e){
                 var categoria_proveedor = $("#categoria").val();
                 //var banco = $("#banco").val();
                 var numeroDocumento = $("#numero_documento").val();
-                if (localStorage['ms-selected'] == "seguros")
+                /*if (localStorage['ms-selected'] == "seguros")
                 {
                   var tiposDeConsultas = $("#proveedor3").val().split("|");
                   switch(tiposDeConsultas[0]){
@@ -717,7 +702,7 @@ opcionesModal.on("click", "#confirmarAprobarPago", function(e){
                     break;
                   }
                   proveedor = parseInt(tiposDeConsultas[1]);
-                }
+                }*/
 
                 if (desde !== "" || hasta !== "" || proveedor !== "" || estado !== "" || montoMin !== "" || montoMax !== "" || formaPago !== "" || tipo !== "" || numeroDocumento !== "" || categoria_proveedor !== "") {
                 if (typeof(Storage) !== "undefined") {
@@ -816,9 +801,6 @@ $(function () {
                 processResults: function (data, params) {
 
                    var resultados = data.map(function(resp){
-                      if (localStorage['ms-selected'] == "seguros")
-                       return [{'id': resp.tipo+"|"+resp.proveedor_id,'text': resp.nombre}];
-                      else
                        return [{'id': resp.proveedor_id,'text': resp.nombre}];
                    }).reduce(function(a,b){
                        return a.concat(b);

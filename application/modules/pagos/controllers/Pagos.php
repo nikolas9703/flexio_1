@@ -263,7 +263,7 @@ class Pagos extends CRM_Controller
 
         $campo = $this->input->post('campo', true);
         // $subcontrato_id = $this->input->post('subcontrato_id',TRUE);
-        $categoria = $this->input->post('categoria_proveedor', true);
+        $categoria = $this->input->post('categoria_proveedor', true) != "undefined" ? $this->input->post('categoria_proveedor', true) : '' ;
         //subpanels
         $orden_compra_id = $this->input->post('orden_compra_id', true);
         if (!empty($orden_compra_id)) {
@@ -457,257 +457,9 @@ class Pagos extends CRM_Controller
             }
         }
 
-
-        $aseguradoras = new Aseguradoras_orm;
-
-        $aseguradoras = $aseguradoras->orderBy("nombre","asc")->get(
-            array("id","nombre", "ruc", "telefono", "email", "direccion", "estado"));
-
-        if (!empty($aseguradoras)) {
-            foreach ($aseguradoras as $row => $valores) {
-                $response->rows[$row]['cell'] =  array(               
-                    "uuid" => "uuid", 
-                    "codigo" => "codigo", 
-                    "Proveedor" => $valores[$row]['nombre '], 
-                    "fecha" => "fecha", 
-                    "monto" => "monto", 
-                    "tipo" => "tipo", 
-                    "forma_pago" => "forma_pago", 
-                    "banco" => "banco", 
-                    "estado" => "estado", 
-                    "estado_etiqueta" => "estado_etiqueta", 
-                    "options" => "options", 
-                    "link" => "link");
-            }   
-        }
-
-
-
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
                 ->set_output(json_encode($response))->_display();
         exit;
-    }
-
-    public function ajax_listar_aseguradora()
-    {
-        if (!$this->input->is_ajax_request()) {
-            return false;
-        }
-
-        $proveedor = new Proveedores_orm;
-        $agentes = new Agentes_orm;
-        $aseguradoras = new Aseguradoras_orm;
-
-        $this->AseguradorasRepository = new aseguradorasRep();
-
-         $clause = array(
-            "empresa_id" => $this->empresa_id
-        );
-        $nombre = $this->input->post('nombre', true);
-        $ruc = $this->input->post('ruc', true);
-        $telefono = $this->input->post('telefono', true);
-        $email = $this->input->post('email', true);
-        $direccion = $this->input->post('direccion', true);
-        $estado = $this->input->post('estado', true);
-
-        if (!empty($nombre)) {
-            $clause["nombre"] = array('LIKE', "%$nombre%");
-        }
-        if (!empty($ruc)) {
-            $clause["ruc"] = array('LIKE', "%$ruc%");
-        }
-        if (!empty($telefono)) {
-            $clause["telefono"] = array('LIKE', "%$telefono%");
-        }
-        if (!empty($email)) {
-            $clause["email"] = array('LIKE', "%$email%");
-        }
-        if (!empty($direccion)) {
-            $clause["direccion"] = array('LIKE', "%$direccion%");
-        }
-
-        if (!empty($estado)) {
-            $clause["estado"] = $estado;
-        }
-
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-
-        $count = $this->AseguradorasRepository->listar_aseguradoras($clause, NULL, NULL, NULL, NULL)->count();
-
-        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-
-        $rows = $this->AseguradorasRepository->listar_aseguradoras($clause, $sidx, $sord, $limit, $start);
-
-        //Constructing a JSON
-        $response = new stdClass();
-        $response->page = $page;
-        $response->total = $total_pages;
-        $response->records = $count;
-        $response->result = array();
-        $i = 0;
-
-        if (!empty($rows)) {
-            foreach ($rows AS $i => $row) {
-                $uuid_aseguradora = bin2hex($row->uuid_aseguradora);
-                $now = Carbon::now();
-                $hidden_options = "";
-                $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->id . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-
-                if ($this->auth->has_permission('acceso', 'aseguradoras/editar') || $this->auth->has_permission('acceso', 'aseguradoras/ver')) {
-                    $hidden_options .= '<a href="' . base_url('aseguradoras/editar/' . $uuid_aseguradora) . '" data-id="' . $row->id . '" class="btn btn-block btn-outline btn-success">Ver detalle</a>';
-                }
-
-                $hidden_options .= '<a href="' . base_url('aseguradoras/agregarcontacto/' . $uuid_aseguradora . '?opt=1') . '" data-id="' . $row->id . '" class="btn btn-block btn-outline btn-success">Agregar Contacto</a>';
-
-                $response->rows[$i]["id"] = $row->id;
-                $response->rows[$i]["cell"] = array(
-                    $row->id,
-                    '<a href="' . base_url('aseguradoras/editar/' . $uuid_aseguradora) . '" style="color:blue;">' . $row->nombre . '</a>',
-                    $row->ruc,
-                    $row->telefono,
-                    $row->email,
-                    $row->direccion,
-                    $row->present()->estado_label,
-                    $link_option,
-                    $hidden_options
-                );
-                $i++;
-            }
-        }
-        echo json_encode($response);
-        exit;
-    }
-    
-    public function ajax_listar_agentes()
-    {
-
-        //$uuid_usuario = $this->session->userdata('huuid_usuario');
-        //$usuario = AgentesModel::findByUuid($uuid_usuario);
-        /*$usuario_org = $usuario->organizacion;
-
-        $orgid = $usuario_org->map(function($org){
-            return $org->id;
-        });*/
-
-        $clause = array(
-            "nombre"    => $this->input->post("nombre"),
-            "apellido"  => $this->input->post("nombre"),
-            "telefono"  => $this->input->post("telefono"),
-            "correo"    => $this->input->post("correo"),
-            "identificacion"    => $this->input->post("identificacion"),
-            "porcentaje_participacion"    => $this->input->post("porcentaje_participacion"),
-            'id_empresa' => $this->id_empresa,
-        );
-
-
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-        $count = AgentesModel::listar($clause, NULL, NULL, NULL, NULL)->count();
-        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-        $rows = AgentesModel::listar($clause, $sidx, $sord, $limit, $start);
-
-
-        //Constructing a JSON
-        $response = new stdClass();
-        $response->page     = $page;
-        $response->total    = $total_pages;
-        $response->records  = $count;
-        $i=0;
-
-        if(!empty($rows->toArray())){
-            foreach ($rows->toArray() AS $i => $row){
-
-                $agtram = AgentesRamosModel::where('id_agente', $row['id'])->get();
-                $agtramos = $agtram->toArray();
-
-                $partramos="";
-                foreach ($agtramos as $ar) {
-                    $partramos.=$ar['participacion'].", ";
-                }
-                $partramos=trim($partramos,', ');
-
-                if($row['estado'] == 'Inactivo')
-                    $spanStyle='label label-danger';
-                else if($row['estado'] == 'Activo')
-                    $spanStyle='label label-successful';
-                else
-                    $spanStyle='label label-warning';
-                
-                if($row['principal']==1)
-                {
-                    $principal="<label class='label label-warning'>Principal</label>";
-                }
-                else{
-                    $principal="";
-                }
-
-                $hidden_options = "<a href=". base_url('agentes/ver/'.strtoupper($row['uuid_agente'])) ." class='btn btn-block btn-outline btn-success'>Ver Agente</a>";
-                $hidden_options .= '<a href="#" id="cambiarAgentePrincipal" class="btn btn-block btn-outline btn-success cambiarAgentePrincipal" data-id="'.$row['id'].'">Asignar como principal</a>';
-                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'.$row['id'].'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-                $response->rows[$i]["id"] = $row['id'];
-                $nombre_agente =  $row["nombre"] ." ".$row["apellido"];
-                $response->rows[$i]["cell"] = array(
-                    $row['id'],
-                    "<a href='" . base_url('agentes/ver/'.($row['uuid_agente'])) . "'>" . $nombre_agente  . "</a> ".$principal,
-                    $row['identificacion'],
-                    $row['telefono'],
-                    $row['correo'],
-                    //$row['porcentaje_participacion'].'%',
-                    $partramos.'%',
-                    "<label class='".$spanStyle." cambiarestadoseparado' data-id='".$row['id']."'>".$row['estado']."</label>",
-                    $link_option,
-                    $hidden_options
-                );
-            $i++;    
-            }
-        }
-
-        echo json_encode($response);
-        exit;
-
-
-        /*if (!$this->input->is_ajax_request()) {
-            return false;
-        }
-        $agentes = new Agentes_orm;
-
-        if ($this->input->post("proveedor")) { // proveedor en este campo se esta trayendo la informacion de la aseguradora 
-            $agentes = $agentes->where("id","=",$this->input->post("proveedor"));
-        } 
-
-        $agentes = $agentes->orderBy("nombre","asc")->get(array("id","nombre"));
-        $count = $agentes->count();
-
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-
-        list($total_pages, $page, $start) = Jqgrid::paginacion($count, 10, 1);
-
-        //Constructing a JSON
-        $response = new stdClass();
-        $response->page = $page;
-        $response->total = $total_pages;
-        $response->record = $count;
-
-        if (!empty($agentes)) {
-            foreach ($agentes as $row => $valores) {
-            $response->rows[$row]['cell'] =  array(               
-                "uuid" => '', 
-                "codigo" => $valores['id'], 
-                "Proveedor" => $valores['nombre'], 
-                "fecha" => $valores['created_at'], 
-                "monto" => $valores['id'], 
-                "tipo" => $valores['ruc'], 
-                "forma_pago" => $valores['id'], 
-                "banco" => $valores['id'], 
-                "estado" => $valores['id'], 
-                "estado_etiqueta" => $valores['id'], 
-                "options" => $valores['id'], 
-                "link" => $valores['id']);
-            }
-        }
-
-        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode($response))->_display();
-        exit;*/
     }
 
     public function ocultotabla($uuid_orden_venta = null)
@@ -1769,18 +1521,19 @@ class Pagos extends CRM_Controller
         if ($this->input->is_ajax_request()) {
             $this->id_empresa = 0;
             //Para aplicar filtros
-            $proveedor = new Proveedores_orm;
+
+            $proveedor = new Proveedores_orm;//id_empresa
             $agentes = new Agentes_orm;
-            $aseguradoras = new Aseguradoras_orm;
+            $aseguradoras = new Aseguradoras_orm;//id_empresa
 
             if (!empty($this->input->get("q",true))) {
                 $nombreBuscar = $this->input->get("q",true);
                 $proveedor = 
-                $proveedor->where("nombre","like","%".$nombreBuscar."%");
+                $proveedor->where("nombre","like","%".$nombreBuscar."%")->where("id_empresa","=",$this->empresa_id);
                 $agentes = 
                 $agentes->where("nombre","like","%".$nombreBuscar."%");
                 $aseguradoras = 
-                $aseguradoras->where("nombre","like","%".$nombreBuscar."%");
+                $aseguradoras->where("nombre","like","%".$nombreBuscar."%")->where("id_empresa","=",$this->empresa_id);
 
             }
 
