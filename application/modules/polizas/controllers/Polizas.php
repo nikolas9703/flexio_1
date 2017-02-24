@@ -54,6 +54,7 @@ use Flexio\Modulo\Politicas\Repository\PoliticasRepository as PoliticasRepositor
 use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
 use Flexio\Modulo\Ramos\Repository\RamoRepository as RamoRepository;
+use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
 
 class Polizas extends CRM_Controller {
 
@@ -381,12 +382,12 @@ class Polizas extends CRM_Controller {
         $rows = (object) $rows;
         if (!empty($rows)) {
             foreach ($rows AS $i => $row) {
-               $renovationUrl=  base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas)).'/renovar');
+             $renovationUrl=  base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas)).'/renovar');
 
-               $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
+             $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
 
-               $color_factura = "";
-               switch (strtoupper($row->frecuencia_facturacion)) {
+             $color_factura = "";
+             switch (strtoupper($row->frecuencia_facturacion)) {
                 case 'MENSUAL':
                         //Calculo ultima factura no mayor a un mes
                 $ultimaFactura = $row->ultima_factura;
@@ -648,149 +649,149 @@ function guardar() {
                     $poliza->estado = $campo["estado"];
                     $poliza->updated_at = date("Y-m-d H:i:s");
                     if(isset($prima)){
-                         $polizaPagos = new PolizasPrima ();
-                         $polizaPagos = $polizaPagos->where("id_poliza",$poliza->id)->first(); 
-                        $poliza->frecuencia_facturacion=$prima['frecuencia_pago'];
-                        $polizaPagos->frecuencia_pago = $prima['frecuencia_pago'];
-                        $polizaPagos->metodo_pago = $prima['metodo_pago'];
-                        $primerPago = new Carbon($prima['fecha_primer_pago']);    
-                        $polizaPagos->fecha_primer_pago =  $primerPago->format('Y/m/d/');
-                        $polizaPagos->cantidad_pagos = $prima['cantidad_pagos'];
-                        $polizaPagos->sitio_pago = $prima['sitio_pago'];
-                        $polizaPagos->centro_facturacion = $prima['centro_facturacion'];
-                        $polizaPagos->direccion_pago = $prima['direccion_pago'];    
-                        $polizaPagos->save();
+                       $polizaPagos = new PolizasPrima ();
+                       $polizaPagos = $polizaPagos->where("id_poliza",$poliza->id)->first(); 
+                       $poliza->frecuencia_facturacion=$prima['frecuencia_pago'];
+                       $polizaPagos->frecuencia_pago = $prima['frecuencia_pago'];
+                       $polizaPagos->metodo_pago = $prima['metodo_pago'];
+                       $primerPago = new Carbon($prima['fecha_primer_pago']);    
+                       $polizaPagos->fecha_primer_pago =  $primerPago->format('Y/m/d/');
+                       $polizaPagos->cantidad_pagos = $prima['cantidad_pagos'];
+                       $polizaPagos->sitio_pago = $prima['sitio_pago'];
+                       $polizaPagos->centro_facturacion = $prima['centro_facturacion'];
+                       $polizaPagos->direccion_pago = $prima['direccion_pago'];    
+                       $polizaPagos->save();
+                   }
+
+                   $poliza->save();
+
+                   $factura = FacturaSeguro::where(['id_poliza' => $poliza->id])->count();
+                   $fecha_creado = date('Y-m-d H:i:s');
+
+                   if ( ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'no' && $factura == 0) || ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'si') ) {
+
+
+                    $array_factura['uuid_factura'] = Capsule::raw("ORDER_UUID(uuid())");
+                    $array_factura['id_poliza'] = $poliza->id;
+
+                    $array_factura['centro_contable_id'] = $poliza->centro_contable == 0 ? 19 : $poliza->centro_contable;
+                    $array_factura['cliente_id'] = $poliza->cliente;
+                    $usuario = Usuarios::findByUuid($this->id_usuario);
+                    $array_factura['created_by'] = $usuario->id;
+                    $array_factura['empresa_id'] = $this->empresa_id;
+                    $array_factura['estado'] = "por_cobrar";
+                    $array_factura['termino_pago'] = $poliza->primafk->frecuencia_pago;
+                    $array_factura['formulario'] = "facturas_seguro";
+                    $array_factura['centro_facturacion_id'] = $poliza->primafk->centro_facturacion;
+                    $array_factura['bodega_id'] = 0;
+                    $array_factura['formulario'] = 'facturas_seguro';
+
+                    $prima_anual = $poliza->primafk->prima_anual;
+                    $otros = $poliza->primafk->otros;
+                    $valor_descuento = $poliza->primafk->descuentos;
+                    $cantidad_pagos = $poliza->primafk->cantidad_pagos;
+                    $impuesto_plan = Planes::where(['id' => $poliza->plan_id])->first();
+                    $impuesto_plan = $impuesto_plan->impuestofk->impuesto/100;
+                    $array_factura['porcentaje_impuesto'] = $impuesto_plan*100;
+
+                    $total_prima = $poliza->primafk->total;
+                    $total_impuesto = $poliza->primafk->impuesto;
+                    $total_otros = $poliza->primafk->otros;
+
+                    $prima_neta = $prima_anual ;
+                    $prima_bruta = $prima_neta / $cantidad_pagos;
+
+                    $array_factura['descuento'] = round(($valor_descuento / $cantidad_pagos), 2, PHP_ROUND_HALF_DOWN);
+                    if($otros != 0){
+                        $array_factura['otros'] = round( ($otros / $cantidad_pagos), 2, PHP_ROUND_HALF_DOWN);
+                    }else{
+                        $array_factura['otros'] = 0;
                     }
 
-                    $poliza->save();
+                    $fecha_inicio = new carbon($poliza->primafk->fecha_primer_pago);
+                    $frecuencia_pagos = $poliza->primafk->frecuencia_pago;
 
-                    $factura = FacturaSeguro::where(['id_poliza' => $poliza->id])->count();
-                    $fecha_creado = date('Y-m-d H:i:s');
+                    if($poliza->poliza_declarativa == 'si'){
+                        $cantidad_pagos = 1;
+                    }
 
-                    if ( ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'no' && $factura == 0) || ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'si') ) {
+                    for ($i = 1; $i <= $cantidad_pagos; $i++) {
 
+                        $codigo = $this->FacturaSeguroRepository->getLastCodigo(array('empresa_id' => $this->empresa_id));
+                        $array_factura['codigo'] = $codigo;
 
-                        $array_factura['uuid_factura'] = Capsule::raw("ORDER_UUID(uuid())");
-                        $array_factura['id_poliza'] = $poliza->id;
+                        $array_factura['subtotal'] = round($prima_bruta, 2,PHP_ROUND_HALF_DOWN);
+                        $array_factura['impuestos'] = round( ($prima_bruta + $array_factura['otros'] - $array_factura['descuento']) * $impuesto_plan, 2 ,PHP_ROUND_HALF_DOWN);
+                        $array_factura['total'] = round( $prima_bruta + $array_factura['otros'] + $array_factura['impuestos'] - $array_factura['descuento'] , 2 ,PHP_ROUND_HALF_DOWN);
 
-                        $array_factura['centro_contable_id'] = $poliza->centro_contable == 0 ? 19 : $poliza->centro_contable;
-                        $array_factura['cliente_id'] = $poliza->cliente;
-                        $usuario = Usuarios::findByUuid($this->id_usuario);
-                        $array_factura['created_by'] = $usuario->id;
-                        $array_factura['empresa_id'] = $this->empresa_id;
-                        $array_factura['estado'] = "por_cobrar";
-                        $array_factura['termino_pago'] = $poliza->primafk->frecuencia_pago;
-                        $array_factura['formulario'] = "facturas_seguro";
-                        $array_factura['centro_facturacion_id'] = $poliza->primafk->centro_facturacion;
-                        $array_factura['bodega_id'] = 0;
-                        $array_factura['formulario'] = 'facturas_seguro';
+                        if($poliza->poliza_declarativa == 'no'){
 
-                        $prima_anual = $poliza->primafk->prima_anual;
-                        $otros = $poliza->primafk->otros;
-                        $valor_descuento = $poliza->primafk->descuentos;
-                        $cantidad_pagos = $poliza->primafk->cantidad_pagos;
-                        $impuesto_plan = Planes::where(['id' => $poliza->plan_id])->first();
-                        $impuesto_plan = $impuesto_plan->impuestofk->impuesto/100;
-                        $array_factura['porcentaje_impuesto'] = $impuesto_plan*100;
+                            if ($i == $cantidad_pagos) {
 
-                        $total_prima = $poliza->primafk->total;
-                        $total_impuesto = $poliza->primafk->impuesto;
-                        $total_otros = $poliza->primafk->otros;
-
-                        $prima_neta = $prima_anual ;
-                        $prima_bruta = $prima_neta / $cantidad_pagos;
-
-                        $array_factura['descuento'] = round(($valor_descuento / $cantidad_pagos), 2, PHP_ROUND_HALF_DOWN);
-                        if($otros != 0){
-                            $array_factura['otros'] = round( ($otros / $cantidad_pagos), 2, PHP_ROUND_HALF_DOWN);
-                        }else{
-                            $array_factura['otros'] = 0;
-                        }
-
-                        $fecha_inicio = new carbon($poliza->primafk->fecha_primer_pago);
-                        $frecuencia_pagos = $poliza->primafk->frecuencia_pago;
-
-                        if($poliza->poliza_declarativa == 'si'){
-                            $cantidad_pagos = 1;
-                        }
-
-                        for ($i = 1; $i <= $cantidad_pagos; $i++) {
-
-                            $codigo = $this->FacturaSeguroRepository->getLastCodigo(array('empresa_id' => $this->empresa_id));
-                            $array_factura['codigo'] = $codigo;
-
-                            $array_factura['subtotal'] = round($prima_bruta, 2,PHP_ROUND_HALF_DOWN);
-                            $array_factura['impuestos'] = round( ($prima_bruta + $array_factura['otros'] - $array_factura['descuento']) * $impuesto_plan, 2 ,PHP_ROUND_HALF_DOWN);
-                            $array_factura['total'] = round( $prima_bruta + $array_factura['otros'] + $array_factura['impuestos'] - $array_factura['descuento'] , 2 ,PHP_ROUND_HALF_DOWN);
-
-                            if($poliza->poliza_declarativa == 'no'){
-
-                                if ($i == $cantidad_pagos) {
-
-                                    $valor = $array_factura['subtotal'] * $cantidad_pagos;
-                                    if ($valor < $prima_neta) {
-                                        $array_factura['subtotal'] = $array_factura['subtotal'] + ($prima_neta - $valor);
-                                    } elseif ($valor > $prima_neta) {
-                                        $array_factura['subtotal'] = $array_factura['subtotal'] - ($valor - $prima_neta);
-                                    } else {
-                                        $array_factura['subtotal'] = round($prima_bruta, 2,PHP_ROUND_HALF_DOWN);
-                                    }
-
-                                    $valor2 = $array_factura['total'] * $cantidad_pagos;
-                                    if($valor2 < $total_prima){
-                                        $array_factura['total'] = $array_factura['total'] + ($total_prima - $valor2);
-                                    }else{
-                                        $array_factura['total'] = $array_factura['total'] - ($valor2 - $total_prima);
-                                    }
-
-                                    $valor3 = $array_factura['impuestos'] * $cantidad_pagos;
-                                    if($valor3 < $total_impuesto){
-                                        $array_factura['impuestos'] = $array_factura['impuestos'] + ($total_impuesto - $valor3);
-                                    }else{
-                                        $array_factura['impuestos'] = $array_factura['impuestos'] - ($valor3 - $total_impuesto);
-                                    }
-
-                                    $valor4 = $array_factura['otros'] * $cantidad_pagos;
-                                    if($valor4 < $total_otros){
-                                        $array_factura['otros'] = $array_factura['otros'] + ($total_otros - $valor4);
-                                    }else{
-                                        $array_factura['otros'] = $array_factura['otros'] - ($valor4 - $total_otros);
-                                    }
-
-                                    $valor5 = $array_factura['descuento'] * $cantidad_pagos;
-                                    if($valor5 < $valor_descuento){
-                                        $array_factura['descuento'] = $array_factura['descuento'] + ($valor_descuento - $valor5);
-                                    }else{
-                                        $array_factura['descuento'] = $array_factura['descuento'] - ($valor5 - $valor_descuento);
-                                    }
-
+                                $valor = $array_factura['subtotal'] * $cantidad_pagos;
+                                if ($valor < $prima_neta) {
+                                    $array_factura['subtotal'] = $array_factura['subtotal'] + ($prima_neta - $valor);
+                                } elseif ($valor > $prima_neta) {
+                                    $array_factura['subtotal'] = $array_factura['subtotal'] - ($valor - $prima_neta);
+                                } else {
+                                    $array_factura['subtotal'] = round($prima_bruta, 2,PHP_ROUND_HALF_DOWN);
                                 }
-                            }
-                            $array_factura['saldo'] =  $array_factura['total'];
 
-                            if($i > 1){
-                                if($array_factura['total'] == 0){
-                                    $array_factura['estado'] = "cobrado_completo";
+                                $valor2 = $array_factura['total'] * $cantidad_pagos;
+                                if($valor2 < $total_prima){
+                                    $array_factura['total'] = $array_factura['total'] + ($total_prima - $valor2);
                                 }else{
-                                    $array_factura['estado'] = "por_aprobar";
+                                    $array_factura['total'] = $array_factura['total'] - ($valor2 - $total_prima);
                                 }
-                            }elseif($array_factura['total'] == 0) {
-                                $array_factura['estado'] = "cobrado_completo";
+
+                                $valor3 = $array_factura['impuestos'] * $cantidad_pagos;
+                                if($valor3 < $total_impuesto){
+                                    $array_factura['impuestos'] = $array_factura['impuestos'] + ($total_impuesto - $valor3);
+                                }else{
+                                    $array_factura['impuestos'] = $array_factura['impuestos'] - ($valor3 - $total_impuesto);
+                                }
+
+                                $valor4 = $array_factura['otros'] * $cantidad_pagos;
+                                if($valor4 < $total_otros){
+                                    $array_factura['otros'] = $array_factura['otros'] + ($total_otros - $valor4);
+                                }else{
+                                    $array_factura['otros'] = $array_factura['otros'] - ($valor4 - $total_otros);
+                                }
+
+                                $valor5 = $array_factura['descuento'] * $cantidad_pagos;
+                                if($valor5 < $valor_descuento){
+                                    $array_factura['descuento'] = $array_factura['descuento'] + ($valor_descuento - $valor5);
+                                }else{
+                                    $array_factura['descuento'] = $array_factura['descuento'] - ($valor5 - $valor_descuento);
+                                }
+
                             }
+                        }
+                        $array_factura['saldo'] =  $array_factura['total'];
 
-                            if ($frecuencia_pagos == "anual") {
+                        if($i > 1){
+                            if($array_factura['total'] == 0){
+                                $array_factura['estado'] = "cobrado_completo";
+                            }else{
+                                $array_factura['estado'] = "por_aprobar";
+                            }
+                        }elseif($array_factura['total'] == 0) {
+                            $array_factura['estado'] = "cobrado_completo";
+                        }
 
-                                $array_factura['fecha_desde'] = $fecha_inicio->format('d/m/Y');
-                                $fecha_final = $fecha_inicio->addYear(1)->subDay(1);
-                                $array_factura['fecha_hasta'] = $fecha_final->format('d/m/Y');
-                                $fecha_inicio = $fecha_inicio->addDay(1);
-                            } elseif ($frecuencia_pagos == "semestral") {
+                        if ($frecuencia_pagos == "anual") {
 
-                                $array_factura['fecha_desde'] = $fecha_inicio->format('d/m/Y');
-                                $fecha_final = $fecha_inicio->addMonth(6)->subDay(1);
-                                $array_factura['fecha_hasta'] = $fecha_final->format('d/m/Y');
-                                $fecha_inicio = $fecha_inicio->addDay(1);
-                            } elseif ($frecuencia_pagos == "trimestral") {
+                            $array_factura['fecha_desde'] = $fecha_inicio->format('d/m/Y');
+                            $fecha_final = $fecha_inicio->addYear(1)->subDay(1);
+                            $array_factura['fecha_hasta'] = $fecha_final->format('d/m/Y');
+                            $fecha_inicio = $fecha_inicio->addDay(1);
+                        } elseif ($frecuencia_pagos == "semestral") {
+
+                            $array_factura['fecha_desde'] = $fecha_inicio->format('d/m/Y');
+                            $fecha_final = $fecha_inicio->addMonth(6)->subDay(1);
+                            $array_factura['fecha_hasta'] = $fecha_final->format('d/m/Y');
+                            $fecha_inicio = $fecha_inicio->addDay(1);
+                        } elseif ($frecuencia_pagos == "trimestral") {
 
                                 /*$array_factura['fecha_desde'] = $fecha_inicio->format('d/m/Y');
                                 $fecha_final = $fecha_inicio->addDay(1);
@@ -836,175 +837,184 @@ function guardar() {
                 );
 
 
-		if ($response) {
-			$campo = $this->input->post("campo");
-			$this->session->set_userdata('updatedPoliza', $poliza->id);
+if ($response) {
+ $campo = $this->input->post("campo");
+ $this->session->set_userdata('updatedPoliza', $poliza->id);
 						//var_dump($campo["regreso_valor"]);exit();
-			if ($campo["regreso"] == 'ase')
-				redirect(base_url('aseguradoras/editar/' . $campo["regreso_valor"]));
-			else if ($campo["regreso"] == 'age')
-				redirect(base_url('agentes/ver/' . $campo["regreso_valor"]));
-			else
-				redirect(base_url('polizas/listar'));
-		}else {
+ if ($campo["regreso"] == 'ase')
+    redirect(base_url('aseguradoras/editar/' . $campo["regreso_valor"]));
+else if ($campo["regreso"] == 'age')
+    redirect(base_url('agentes/ver/' . $campo["regreso_valor"]));
+else
+    redirect(base_url('polizas/listar'));
+}else {
 						//Establecer el mensaje a mostrar
-			$data["mensaje"]["clase"] = "alert-danger";
-			$data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
+ $data["mensaje"]["clase"] = "alert-danger";
+ $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
 						//$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
-		}
-		}
+}
+}
 
 				//Introducir mensaje de error al arreglo
 				//para mostrarlo en caso de haber error
-		$data["message"] = $mensaje;
+$data["message"] = $mensaje;
 
-		$this->_css();
-		$this->_js();
+$this->_css();
+$this->_js();
 
-		$this->assets->agregar_js(array(
-			'public/assets/js/modules/polizas/crear.vue.js'
-		));
+$this->assets->agregar_js(array(
+ 'public/assets/js/modules/polizas/crear.vue.js'
+ ));
 
-		$estado = $this->SegCatalogoRepository->listar_catalogo('estado_p', 'orden');
-		$estado = $estado->whereIn('key', array('polizas_pf', 'polizas_f'));
+$estado = $this->SegCatalogoRepository->listar_catalogo('estado_p', 'orden');
+$estado = $estado->whereIn('key', array('polizas_pf', 'polizas_f'));
 
-		$estado_pol = $poliza->estado;
+$estado_pol = $poliza->estado;
 
-		$cliente = PolizasCliente::where(['id_poliza' => $poliza->id])->first();
-		if(count($cliente) == 0){
-			$cliente = '';
-		}
-		$aseguradora = Aseguradoras::where(['id' => $poliza->aseguradora_id])->get(array('id', 'nombre'));
-		if (count($aseguradora) == 0) {
-			$aseguradora = '';
-		}
-		$plan = Planes::where(['id' => $poliza->plan_id])->get(array('nombre'));
-		$coberturas = PolizasCobertura::where(['id_poliza' => $poliza->id])->get();
-		$deducciones = PolizasDeduccion::where(['id_poliza' => $poliza->id])->get();
+$cliente = PolizasCliente::where(['id_poliza' => $poliza->id])->first();
+if(count($cliente) == 0){
+ $cliente = '';
+}
+$aseguradora = Aseguradoras::where(['id' => $poliza->aseguradora_id])->get(array('id', 'nombre'));
+if (count($aseguradora) == 0) {
+ $aseguradora = '';
+}
+$plan = Planes::where(['id' => $poliza->plan_id])->get(array('nombre'));
+$coberturas = PolizasCobertura::where(['id_poliza' => $poliza->id])->get();
+$deducciones = PolizasDeduccion::where(['id_poliza' => $poliza->id])->get();
 
-		$comision = $poliza->comision;
-		$vigencia = PolizasVigencia::where(['id_poliza' => $poliza->id])->first();
-		if(count($vigencia) == 0){
-			$vigencia = '';
-		}
-		$prima = PolizasPrima::where(['id_poliza' => $poliza->id])->first();
-		$centroFacturacion = centroModel::where(['id' => $prima->centro_facturacion])->first();
-		if ($centroFacturacion == '') {
-			$centroFacturacion = '';
-		}
-		$participacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->get();
-		$totalParticipacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->sum('porcentaje_participacion');
-		if ($totalParticipacion == '') {
-			$totalParticipacion = '';
-		}
+$comision = $poliza->comision;
+$vigencia = PolizasVigencia::where(['id_poliza' => $poliza->id])->first();
+if(count($vigencia) == 0){
+ $vigencia = '';
+}
+$prima = PolizasPrima::where(['id_poliza' => $poliza->id])->first();
+$centroFacturacion = centroModel::where(['id' => $prima->centro_facturacion])->first();
+if ($centroFacturacion == '') {
+ $centroFacturacion = '';
+}
+$participacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->get();
+$totalParticipacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->sum('porcentaje_participacion');
+if ($totalParticipacion == '') {
+ $totalParticipacion = '';
+}
 
-		if($poliza->centros != null){
-			$id_centroContable = $poliza->centros->id;
-			$nombre_centroContable = $poliza->centros->nombre;
-		}else{
-			$id_centroContable = 0;
-			$nombre_centroContable = '';
-		}
-		$ver_renovacion = 0;
-		$permiso_comision = 0;
-		$permiso_agente = 0;
-		$permiso_participacion = 0;
+if($poliza->centros != null){
+ $id_centroContable = $poliza->centros->id;
+ $nombre_centroContable = $poliza->centros->nombre;
+}else{
+ $id_centroContable = 0;
+ $nombre_centroContable = '';
+}
+$ver_renovacion = 0;
+$permiso_comision = 0;
+$permiso_agente = 0;
+$permiso_participacion = 0;
 
-		if($this->auth->has_permission('acceso', 'polizas/crear renovación') == true){
-			$ver_renovacion = 1;
-		}
+if($this->auth->has_permission('acceso', 'polizas/crear renovación') == true){
+ $ver_renovacion = 1;
+}
 
-		if($this->auth->has_permission('acceso', 'polizas/editar comisión plan') == true){
-			$permiso_comision = 1;
-		}
+if($this->auth->has_permission('acceso', 'polizas/editar comisión plan') == true){
+ $permiso_comision = 1;
+}
 
-		if($this->auth->has_permission('acceso', 'polizas/editar agentes') == true){
-			$permiso_agente = 1;
-		}
+if($this->auth->has_permission('acceso', 'polizas/editar agentes') == true){
+ $permiso_agente = 1;
+}
 
-		if($this->auth->has_permission('acceso', 'polizas/editar participación') == true){
-			$permiso_participacion = 1;
-		}
-		$cantidad_pagos =    $this->SegInteresesAseguradosRepository->listar_catalogo('cantidad_pagos', 'orden');
-		$frecuencia_pagos = $this->SegInteresesAseguradosRepository->listar_catalogo('frecuencia_pagos', 'orden');
-		$metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_pago', 'orden');
-		$sitio_pago =$this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
-		$centrosFacturacion = centroModel:: where("cliente_id",$poliza->cliente)
-		->where("empresa_id",$this->empresa_id)
-		->get();
+if($this->auth->has_permission('acceso', 'polizas/editar participación') == true){
+ $permiso_participacion = 1;
+}
+$cantidad_pagos =    $this->SegInteresesAseguradosRepository->listar_catalogo('cantidad_pagos', 'orden');
+$frecuencia_pagos = $this->SegInteresesAseguradosRepository->listar_catalogo('frecuencia_pagos', 'orden');
+$metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_pago', 'orden');
+$sitio_pago =$this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
+$centrosFacturacion = centroModel:: where("cliente_id",$poliza->cliente)
+->where("empresa_id",$this->empresa_id)
+->get();
+$clause['cli_clientes.empresa_id'] = $this->empresa_id;
+$clause['cli_clientes.id'] = $poliza->cliente;
+$group = clienteModel::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_cliente', '=', 'cli_clientes.uuid_cliente')
+->join('grp_grupo', 'grp_grupo.id', '=', 'grp_grupo_clientes.grupo_id')
+->where($clause)
+->where('grp_grupo_clientes.deleted_at', '=', NULL)
+->select('grp_grupo.nombre')
+->get();
 
-			$agenteprincipaltotal=Agente::where('principal',1)->
-			where('id_empresa',$this->empresa_id)->count();
-			
-			if($agenteprincipaltotal>0)
-			{
-				$agenteprincipal=Agente::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
-				$agenteprincipalnombre=$agenteprincipal->nombre;
-				$totalparticipacion=PolizasParticipacion::where('id_poliza',$poliza->id)->sum('porcentaje_participacion');
-				$agtPrincipalporcentaje=number_format((100-$totalparticipacion),2);
-			}
-			else
-			{
-				$agenteprincipalnombre="";
-				$agtPrincipalporcentaje=0;
-			}
-					
-		$this->assets->agregar_var_js(array(
-			"vista" => 'editar',
-			"agtPrincipal"=>$agenteprincipalnombre,
-			"agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
-			"estado_solicitud" => $estado,
-			"estado_pol" => $estado_pol,
-			"poliza_id" => $poliza->id,
-			"cliente" => $cliente,
-			"aseguradora" => $aseguradora,
-			"plan" => $plan,
-			"coberturas" => $coberturas,
-			"deducciones" => $deducciones,
-			"comision" => $comision,
-			"vigencia" => $vigencia,
-			"prima" => $prima,
-			"centroFacturacion" => $centroFacturacion,
-			"participacion" => $participacion,
-			"totalParticipacion" => $totalParticipacion,
-			"id_tipo_int_asegurado" => $poliza->id_tipo_int_asegurado,
-			"nombre_ramo" => $poliza->ramo, 
-			"tipo_ramo" => $poliza->tipo_ramo,
-			"ramo" => $poliza->ramo,
-			"id_tipo_poliza" => $poliza->tipo_ramo == "colectivo" ? 2 : 1,
-			"desde" => "poliza",
-			"tablaTipo" => "vida",
-			"permiso_editar" => "undefined",
-			"validarenovacion" => $validarenovacion,
-			"id_centroContable" => $id_centroContable,
-			"nombre_centroContable" => $nombre_centroContable,
-			"permiso_comision" => $permiso_comision,
-			"permiso_agente"=>    $permiso_agente,
-			"permiso_participacion" => $permiso_participacion,
-			"cantidadPagos" => $cantidad_pagos,
-			"frecuenciaPagos" => $frecuencia_pagos,
-			"sitioPago" => $sitio_pago,
-			"metodoPago" => $metodo_pago,
-			"centrosFacturacion" =>$centrosFacturacion,
-            "poliza_declarativa" => $poliza->poliza_declarativa,
-			));
+$agenteprincipaltotal=Agente::where('principal',1)->
+where('id_empresa',$this->empresa_id)->count();
+$grupo = base_url("solicitudes/ajax_get_cliente");
+if($agenteprincipaltotal>0)
+{
+    $agenteprincipal=Agente::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
+    $agenteprincipalnombre=$agenteprincipal->nombre;
+    $totalparticipacion=PolizasParticipacion::where('id_poliza',$poliza->id)->sum('porcentaje_participacion');
+    $agtPrincipalporcentaje=number_format((100-$totalparticipacion),2);
+}
+else
+{
+    $agenteprincipalnombre="";
+    $agtPrincipalporcentaje=0;
+}
 
-		$isRenewal  = array('Expirada','Facturada');
-		$opciones   =array(
-							"polizas/bitacora/" . strtoupper(bin2hex($poliza->uuid_polizas)) => "Bitacora",
-							"#subir_documento" => "Subir Documento",
-							"#imprimir_poliza" => "Imprimir",
-							"#exportarPBtn" => "Exportar"
-							);
+$this->assets->agregar_var_js(array(
+ "vista" => 'editar',
+ "agtPrincipal"=>$agenteprincipalnombre,
+ "agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
+ "estado_solicitud" => $estado,
+ "estado_pol" => $estado_pol,
+ "poliza_id" => $poliza->id,
+ "cliente" => $cliente,
+ "aseguradora" => $aseguradora,
+ "plan" => $plan,
+ "coberturas" => $coberturas,
+ "deducciones" => $deducciones,
+ "comision" => $comision,
+ "vigencia" => $vigencia,
+ "prima" => $prima,
+ "centroFacturacion" => $centroFacturacion,
+ "participacion" => $participacion,
+ "totalParticipacion" => $totalParticipacion,
+ "id_tipo_int_asegurado" => $poliza->id_tipo_int_asegurado,
+ "nombre_ramo" => $poliza->ramo, 
+ "tipo_ramo" => $poliza->tipo_ramo,
+ "ramo" => $poliza->ramo,
+ "id_tipo_poliza" => $poliza->tipo_ramo == "colectivo" ? 2 : 1,
+ "desde" => "poliza",
+ "tablaTipo" => "vida",
+ "permiso_editar" => "undefined",
+ "validarenovacion" => $validarenovacion,
+ "id_centroContable" => $id_centroContable,
+ "nombre_centroContable" => $nombre_centroContable,
+ "permiso_comision" => $permiso_comision,
+ "permiso_agente"=>    $permiso_agente,
+ "permiso_participacion" => $permiso_participacion,
+ "cantidadPagos" => $cantidad_pagos,
+ "frecuenciaPagos" => $frecuencia_pagos,
+ "sitioPago" => $sitio_pago,
+ "metodoPago" => $metodo_pago,
+ "centrosFacturacion" =>$centrosFacturacion,
+ "poliza_declarativa" => $poliza->poliza_declarativa,
+ "grupo" => $group
+ ));
 
-		foreach ($isRenewal as $key => $value) {
-			 if($estado_pol ==$value){
-				$renewalUrl='polizas/editar/'.bin2hex($poliza->uuid_polizas).'/renovar';
-				$opciones[$renewalUrl] = "Renovar póliza";
-			 }
-		}
-		$breadcrumb = array(
-			"titulo" => '<i class="fa fa-book"></i> P&oacute;liza N° ' . $poliza->numero,
+$isRenewal  = array('Expirada','Facturada');
+$opciones   =array(
+ "polizas/bitacora/" . strtoupper(bin2hex($poliza->uuid_polizas)) => "Bitacora",
+ "#subir_documento" => "Subir Documento",
+ "#imprimir_poliza" => "Imprimir",
+ "#exportarPBtn" => "Exportar"
+ );
+
+foreach ($isRenewal as $key => $value) {
+    if($estado_pol ==$value){
+        $renewalUrl='polizas/editar/'.bin2hex($poliza->uuid_polizas).'/renovar';
+        $opciones[$renewalUrl] = "Renovar póliza";
+    }
+}
+$breadcrumb = array(
+ "titulo" => '<i class="fa fa-book"></i> P&oacute;liza N° ' . $poliza->numero,
 					"filtro" => false, //sin vista grid
 					"menu" => array(
 						'url' => 'javascipt:',
@@ -1015,29 +1025,29 @@ function guardar() {
 					);
 
 
-		$data['subpanels'] = [];
+$data['subpanels'] = [];
 
-		$data["data"] = array(
-			"campos" => array(
-				"created_at" => $poliza->created_at,
-				"uuid_polizas" => strtoupper(bin2hex($poliza->uuid_polizas)),
-				"numero" => $poliza->numero,
-				"empresa_id" => $poliza->empresa_id,
-				"cliente" => $poliza->cliente,
-				"ramo" => $poliza->ramo,
-				"estado" => $poliza->estado,
-				"inicio_vigencia" => $poliza->inicio_vigencia,
-				"fin_vigencia" => $poliza->fin_vigencia,
-				"politicas" => $this->politicas,
-				"politicas_general" => $this->politicas_general,
-				"validar_politicas" => $this->politicasgenerales
-				)
-			);
+$data["data"] = array(
+ "campos" => array(
+    "created_at" => $poliza->created_at,
+    "uuid_polizas" => strtoupper(bin2hex($poliza->uuid_polizas)),
+    "numero" => $poliza->numero,
+    "empresa_id" => $poliza->empresa_id,
+    "cliente" => $poliza->cliente,
+    "ramo" => $poliza->ramo,
+    "estado" => $poliza->estado,
+    "inicio_vigencia" => $poliza->inicio_vigencia,
+    "fin_vigencia" => $poliza->fin_vigencia,
+    "politicas" => $this->politicas,
+    "politicas_general" => $this->politicas_general,
+    "validar_politicas" => $this->politicasgenerales
+    )
+ );
 
-		$this->template->agregar_titulo_header('Polizas');
-		$this->template->agregar_breadcrumb($breadcrumb);
-		$this->template->agregar_contenido($data);
-		$this->template->visualizar();
+$this->template->agregar_titulo_header('Polizas');
+$this->template->agregar_breadcrumb($breadcrumb);
+$this->template->agregar_contenido($data);
+$this->template->visualizar();
 }
 
 public function ajax_clientes_ac() {
@@ -1828,13 +1838,13 @@ function tabladetalles($data = array()) {
 
         $this->assets->agregar_js(array(
             'public/assets/js/modules/polizas/tablaTabEndosos.js',
-        ));
+            ));
 
         $this->load->view('tablaEndosos');
 
     }
 
-      public function ajax_listar_intereses($grid = NULL) {
+    public function ajax_listar_intereses($grid = NULL) {
 
         $clause = array(
             "empresa_id" => $this->id_empresa
@@ -2924,25 +2934,25 @@ public function getRenovationData() {
         if($data->fecha_renovacion=="0000-00-00"){
           $response->comision = $data->comision;  
       }else{
-         $renewalDate = new Carbon ($data->fecha_renovacion);
-         $createdAt = new carbon ($data->created_at);
-         $comisionPerYear = $createdAt->diffInYears($renewalDate);
-         $response->diferenciaEnAnios= $comisionPerYear;
-         $response->permiso = $this->auth->has_permission('acceso', 'polizas/crear renovación');
-         $comisionesMatriz=PlanesComisiones::where("id_planes",$data->plan_id)
-         ->where("inicio",$comisionPerYear)
-         ->select('inicio','fin','comision')
-         ->first();
-         if(count($comisionesMatriz)){
-             $response->comision = $comisionesMatriz->comision; 
-         }else {
-            $response->comision = $data->comision;
-         }
+       $renewalDate = new Carbon ($data->fecha_renovacion);
+       $createdAt = new carbon ($data->created_at);
+       $comisionPerYear = $createdAt->diffInYears($renewalDate);
+       $response->diferenciaEnAnios= $comisionPerYear;
+       $response->permiso = $this->auth->has_permission('acceso', 'polizas/crear renovación');
+       $comisionesMatriz=PlanesComisiones::where("id_planes",$data->plan_id)
+       ->where("inicio",$comisionPerYear)
+       ->select('inicio','fin','comision')
+       ->first();
+       if(count($comisionesMatriz)){
+           $response->comision = $comisionesMatriz->comision; 
+       }else {
+        $response->comision = $data->comision;
+    }
 
-     }
+}
 
- }
- print json_encode($response);
+}
+print json_encode($response);
 }
 
 
@@ -2961,7 +2971,7 @@ public function policyRenewal() {
         $required = array("Número de Póliza"=>'numeroPoliza',"Id póliza"=>'idPolicy',"Inicio de vigencia"=>'fechaInicio',"Fin de vigencia"=>'fechaExpiracion',"Guardar"=>'renovarPoliza',"Comision"=>'comision');
         foreach ($required as $key => $field) {
             # code...
-           if (empty($_POST[$field])) {
+         if (empty($_POST[$field])) {
             $error = true;
             $inf['field'] = $key ." es requerido";
             break;
@@ -2969,67 +2979,67 @@ public function policyRenewal() {
     }
 
     if(!$error and $permisoRenovar){
-     $motivo = $campos['numeroPoliza'];
-     $solicitud =$campos['idPolicy'];
-     $fechaInicio = new Carbon($this->input->post('fechaInicio'));
-     $fechaExpiracion = new Carbon($this->input->post('fechaExpiracion'));
-     $comision = $campos['comision'];
+       $motivo = $campos['numeroPoliza'];
+       $solicitud =$campos['idPolicy'];
+       $fechaInicio = new Carbon($this->input->post('fechaInicio'));
+       $fechaExpiracion = new Carbon($this->input->post('fechaExpiracion'));
+       $comision = $campos['comision'];
 
 
-     $usuario = $this->usuario_id;
-     $exist = false;
-     $datosSolicitud = $this->polizasModel->where(['numero'=>$motivo])
-     ->groupBy('aseguradora_id')
-     ->select('aseguradora_id','solicitud')
-     ->get();
+       $usuario = $this->usuario_id;
+       $exist = false;
+       $datosSolicitud = $this->polizasModel->where(['numero'=>$motivo])
+       ->groupBy('aseguradora_id')
+       ->select('aseguradora_id','solicitud')
+       ->get();
 
-     if(count($datosSolicitud)){
-         $aseguradora = $this->polizasModel->where('id',$solicitud)
-         ->select('aseguradora_id','solicitud')
-         ->first();
-         foreach ($datosSolicitud as $key => $value) {
+       if(count($datosSolicitud)){
+           $aseguradora = $this->polizasModel->where('id',$solicitud)
+           ->select('aseguradora_id','solicitud')
+           ->first();
+           foreach ($datosSolicitud as $key => $value) {
 
-          if($value->aseguradora_id ==$aseguradora->aseguradora_id ){
-            if($value->solicitud !=$aseguradora->solicitud)
-                $exist =true;
-            $inf['field']= $motivo." ya se encuentra registrada con aseguradora ".$aseguradora->aseguradorafk->nombre;
-            
-        }
-    }  
-}
+              if($value->aseguradora_id ==$aseguradora->aseguradora_id ){
+                if($value->solicitud !=$aseguradora->solicitud)
+                    $exist =true;
+                $inf['field']= $motivo." ya se encuentra registrada con aseguradora ".$aseguradora->aseguradorafk->nombre;
 
-if (!$exist) {
+            }
+        }  
+    }
 
- $solicitudes = $this->polizasModel->where('id', $solicitud)->first()->toArray();
+    if (!$exist) {
 
- $sol = [
- 'numero' => $motivo,
- 'creado_por' => $usuario,
- 'empresa_id' => $this->empresa_id,
- 'cliente' => $solicitudes['cliente'],
- 'ramo_id' => $solicitudes['ramo_id'], 
- 'ramo' => $solicitudes['ramo'],
- 'tipo_ramo' => $solicitudes['tipo_ramo'],
- 'id_tipo_int_asegurado' => $solicitudes['id_tipo_int_asegurado'],
- 'usuario' => $solicitudes['usuario'],
- 'estado' => 'Por Facturar',
- 'inicio_vigencia' => $fechaInicio->format('Y/m/d/'),
- 'fin_vigencia' =>$fechaExpiracion->format('Y/m/d'),
- 'frecuencia_facturacion' => $solicitudes['frecuencia_facturacion'],
- 'ultima_factura' => $solicitudes['ultima_factura'],
- 'categoria' => '45',
- 'solicitud' => $solicitudes['solicitud'],
- 'aseguradora_id' => $solicitudes['aseguradora_id'],
- 'plan_id' => $solicitudes['plan_id'],
- 'comision' => $comision,
- 'porcentaje_sobre_comision' => $solicitudes['porcentaje_sobre_comision'],
- 'impuesto' => $solicitudes['impuesto'],
- 'poliza_declarativa' => $solicitudes['poliza_declarativa'],
- 'created_at' => $solicitudes['created_at'],
- 'renovacion_id' => $solicitud ,
- 'centro_contable' => $solicitudes['centro_contable']
+       $solicitudes = $this->polizasModel->where('id', $solicitud)->first()->toArray();
 
- ];
+       $sol = [
+       'numero' => $motivo,
+       'creado_por' => $usuario,
+       'empresa_id' => $this->empresa_id,
+       'cliente' => $solicitudes['cliente'],
+       'ramo_id' => $solicitudes['ramo_id'], 
+       'ramo' => $solicitudes['ramo'],
+       'tipo_ramo' => $solicitudes['tipo_ramo'],
+       'id_tipo_int_asegurado' => $solicitudes['id_tipo_int_asegurado'],
+       'usuario' => $solicitudes['usuario'],
+       'estado' => 'Por Facturar',
+       'inicio_vigencia' => $fechaInicio->format('Y/m/d/'),
+       'fin_vigencia' =>$fechaExpiracion->format('Y/m/d'),
+       'frecuencia_facturacion' => $solicitudes['frecuencia_facturacion'],
+       'ultima_factura' => $solicitudes['ultima_factura'],
+       'categoria' => '45',
+       'solicitud' => $solicitudes['solicitud'],
+       'aseguradora_id' => $solicitudes['aseguradora_id'],
+       'plan_id' => $solicitudes['plan_id'],
+       'comision' => $comision,
+       'porcentaje_sobre_comision' => $solicitudes['porcentaje_sobre_comision'],
+       'impuesto' => $solicitudes['impuesto'],
+       'poliza_declarativa' => $solicitudes['poliza_declarativa'],
+       'created_at' => $solicitudes['created_at'],
+       'renovacion_id' => $solicitud ,
+       'centro_contable' => $solicitudes['centro_contable']
+
+       ];
          /* $datos['dias_transcurridos'] = ($datosSolicitud->created_at->diff($now)->days < 1) ? '1' : $datosSolicitud->created_at->diff($now)->days;
          $this->polizasModel->where(['numero'=> $solicitud])->update($datos);*/
 
@@ -3038,120 +3048,120 @@ if (!$exist) {
          $poliza2 = new Flexio\Modulo\Polizas\Models\PolizasPrima;
          $prima = PolizasPrima::where('id_poliza',$solicitudes['id'])->first();
          if(!empty($prima)){
-           $solprima =[
-           'id_poliza' => $p->id,
-           'prima_anual' => $prima->prima_anual,
-           'impuesto' => $prima->impuesto,
-           'otros' => $prima->otros,
-           'descuentos' => $prima->descuentos,
-           'total' => $prima->total,
-           'frecuencia_pago' => $prima->frecuencia_pago,
-           'metodo_pago' => $prima->metodo_pago,
-           'fecha_primer_pago' => $prima->fecha_primer_pago,
-           'cantidad_pagos' => $prima->cantidad_pagos,
-           'sitio_pago' =>  $prima->sitio_pago,
-           'centro_facturacion' => $prima->centro_facturacion,
-           'direccion_pago' => $prima->direccion_pago
-           ];
-           $p2 = $poliza2->create($solprima);
-       }
-       $poliza3 = new Flexio\Modulo\Polizas\Models\PolizasVigencia;
-       $vigencia = PolizasVigencia::where('id_poliza',$solicitudes['id'])->first();
-       if(!empty($vigencia)){
-           $solvigencia = [
-           'id_poliza' => $p->id,
-           'vigencia_desde' => $vigencia->vigencia_desde,
-           'vigencia_hasta' => $vigencia->vigencia_hasta,
-           'suma_asegurada' => $vigencia->suma_asegurada,
-           'tipo_pagador' => $vigencia->tipo_pagador,
-           'pagador' => $vigencia->pagador,
-           ];
-           $p3 = $poliza3->create($solvigencia);
-       }
-       $poliza4 = new Flexio\Modulo\Polizas\Models\PolizasCobertura;
-       $coberturas = PolizasCobertura::where(['id_poliza' => $solicitudes['id']])->get();
-       foreach ($coberturas AS $value) {
-        $solCoberturas = [
-        'cobertura' => $value->cobertura,
-        'valor_cobertura' => $value->valor_cobertura,
-        'id_poliza' => $p->id
-        ];
-        $p4 = $poliza4->create($solCoberturas);
-    }
+             $solprima =[
+             'id_poliza' => $p->id,
+             'prima_anual' => $prima->prima_anual,
+             'impuesto' => $prima->impuesto,
+             'otros' => $prima->otros,
+             'descuentos' => $prima->descuentos,
+             'total' => $prima->total,
+             'frecuencia_pago' => $prima->frecuencia_pago,
+             'metodo_pago' => $prima->metodo_pago,
+             'fecha_primer_pago' => $prima->fecha_primer_pago,
+             'cantidad_pagos' => $prima->cantidad_pagos,
+             'sitio_pago' =>  $prima->sitio_pago,
+             'centro_facturacion' => $prima->centro_facturacion,
+             'direccion_pago' => $prima->direccion_pago
+             ];
+             $p2 = $poliza2->create($solprima);
+         }
+         $poliza3 = new Flexio\Modulo\Polizas\Models\PolizasVigencia;
+         $vigencia = PolizasVigencia::where('id_poliza',$solicitudes['id'])->first();
+         if(!empty($vigencia)){
+             $solvigencia = [
+             'id_poliza' => $p->id,
+             'vigencia_desde' => $vigencia->vigencia_desde,
+             'vigencia_hasta' => $vigencia->vigencia_hasta,
+             'suma_asegurada' => $vigencia->suma_asegurada,
+             'tipo_pagador' => $vigencia->tipo_pagador,
+             'pagador' => $vigencia->pagador,
+             ];
+             $p3 = $poliza3->create($solvigencia);
+         }
+         $poliza4 = new Flexio\Modulo\Polizas\Models\PolizasCobertura;
+         $coberturas = PolizasCobertura::where(['id_poliza' => $solicitudes['id']])->get();
+         foreach ($coberturas AS $value) {
+            $solCoberturas = [
+            'cobertura' => $value->cobertura,
+            'valor_cobertura' => $value->valor_cobertura,
+            'id_poliza' => $p->id
+            ];
+            $p4 = $poliza4->create($solCoberturas);
+        }
 
-    $poliza5 = new Flexio\Modulo\Polizas\Models\PolizasDeduccion;
-    $deducion = PolizasDeduccion::where(['id_poliza' => $solicitudes['id']])->get();
-    foreach ($deducion AS $value) {
-        $solDeducion = [
-        'deduccion' => $value->deduccion,
-        'valor_deduccion' => $value->valor_deduccion,
-        'id_poliza' => $p->id
-        ];
-        $p5 = $poliza5->create($solDeducion);
-    }
+        $poliza5 = new Flexio\Modulo\Polizas\Models\PolizasDeduccion;
+        $deducion = PolizasDeduccion::where(['id_poliza' => $solicitudes['id']])->get();
+        foreach ($deducion AS $value) {
+            $solDeducion = [
+            'deduccion' => $value->deduccion,
+            'valor_deduccion' => $value->valor_deduccion,
+            'id_poliza' => $p->id
+            ];
+            $p5 = $poliza5->create($solDeducion);
+        }
 
-    $poliza6 = new Flexio\Modulo\Polizas\Models\PolizasParticipacion;
+        $poliza6 = new Flexio\Modulo\Polizas\Models\PolizasParticipacion;
         //$participacion = PolizasParticipacion::where('id_poliza',$solicitudes['id']);
-    $porcentage = $this->input->post('participacion');
-    if(!empty($porcentage)){
-     for ($i=0; $i <count($porcentage['nombre']) ; $i++) { 
-         $solParticipacion = [
-         'id_poliza' => $p->id,
-         'agente' => $porcentage['nombre'][$i], 
-         'porcentaje_participacion' => $porcentage['valor'][$i]
-         ];
-         $p6 = $poliza6->create($solParticipacion);       
-     } 
- }
+        $porcentage = $this->input->post('participacion');
+        if(!empty($porcentage)){
+           for ($i=0; $i <count($porcentage['nombre']) ; $i++) { 
+               $solParticipacion = [
+               'id_poliza' => $p->id,
+               'agente' => $porcentage['nombre'][$i], 
+               'porcentaje_participacion' => $porcentage['valor'][$i]
+               ];
+               $p6 = $poliza6->create($solParticipacion);       
+           } 
+       }
 
 
- $poliza7 = new Flexio\Modulo\Polizas\Models\PolizasCliente;
- $cliente = PolizasCliente::where('id_poliza',$solicitudes['id'])->first();
- if(!empty($cliente)){
-     $solCliente = [
-     'id_poliza' => $p->id,
-     'nombre_cliente' => $cliente->nombre_cliente,
-     'identificacion' => $cliente->identificacion,
-     'n_identificacion' => $cliente->n_identificacion,
-     'grupo' => $cliente->grupo,
-     'telefono' => $cliente->telefono,
-     'correo_electronico' => $cliente->correo_electronico,
-     'direccion' => $cliente->direccion,
-     'exonerado_impuesto' => $cliente->exonerado_impuesto
-     ];
+       $poliza7 = new Flexio\Modulo\Polizas\Models\PolizasCliente;
+       $cliente = PolizasCliente::where('id_poliza',$solicitudes['id'])->first();
+       if(!empty($cliente)){
+           $solCliente = [
+           'id_poliza' => $p->id,
+           'nombre_cliente' => $cliente->nombre_cliente,
+           'identificacion' => $cliente->identificacion,
+           'n_identificacion' => $cliente->n_identificacion,
+           'grupo' => $cliente->grupo,
+           'telefono' => $cliente->telefono,
+           'correo_electronico' => $cliente->correo_electronico,
+           'direccion' => $cliente->direccion,
+           'exonerado_impuesto' => $cliente->exonerado_impuesto
+           ];
 
-     $p7 = $poliza7->create($solCliente);
- }
+           $p7 = $poliza7->create($solCliente);
+       }
 
- $policyType=$solicitudes['id_tipo_int_asegurado'];
- if($policyType == 1){
-    $datosArticulo = PolizasArticulo::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosArticulo)){
-       foreach ($datosArticulo as $key => $value) {
+       $policyType=$solicitudes['id_tipo_int_asegurado'];
+       if($policyType == 1){
+        $datosArticulo = PolizasArticulo::where(['id_poliza' => $solicitudes['id']])->get();
+        if(count($datosArticulo)){
+         foreach ($datosArticulo as $key => $value) {
                # code...
 
-        unset($value->id);
-        unset($value->updated_at);
-        unset($value->created_a);
-        $value->id_poliza = $p->id;
-        PolizasArticulo::create($value->toArray());
+            unset($value->id);
+            unset($value->updated_at);
+            unset($value->created_a);
+            $value->id_poliza = $p->id;
+            PolizasArticulo::create($value->toArray());
+        }
     }
-}
 }elseif($policyType == 2){
 
     $datoscarga = PolizasCarga::where(['id_poliza' => $solicitudes['id']])->get();
     if(count($datoscarga)){
         foreach ($datoscarga as $key => $value) {
-         unset($value->id);
-         unset($value->updated_at);
-         unset($value->created_a);
-         $value->id_poliza = $p->id;
+           unset($value->id);
+           unset($value->updated_at);
+           unset($value->created_a);
+           $value->id_poliza = $p->id;
 
-         PolizasCarga::create($value->toArray());
-     }
+           PolizasCarga::create($value->toArray());
+       }
 
 
- }
+   }
 }elseif($policyType == 3){
     $datosAereo = PolizasAereo::where(['id_poliza' => $solicitudes['id']])->get();
     if(count($datosAereo)){
@@ -3167,42 +3177,42 @@ if (!$exist) {
     $datosMaritimo = PolizasMaritimo::where(['id_poliza' => $solicitudes['id']])->get();
     if(count($datosMaritimo)){
       foreach ($datosMaritimo as $key => $value) {
-       unset($value->id);
-       unset($value->updated_at);
-       unset($value->created_a);
-       $value->id_poliza = $p->id;
-       PolizasMaritimo::create($value->toArray());
-   }
-}
+         unset($value->id);
+         unset($value->updated_at);
+         unset($value->created_a);
+         $value->id_poliza = $p->id;
+         PolizasMaritimo::create($value->toArray());
+     }
+ }
 
 
 }elseif($policyType == 5){
     $datosPersonas = PolizasPersonas::where(['id_poliza' => $solicitudes['id']])->get();
     if(count($datosPersonas)){
-     foreach ($datosPersonas as $key => $value) {
-         unset($value->id);
-         unset($value->updated_at);
-         unset($value->created_a);
-         $value->id_poliza = $p->id;
-         PolizasPersonas::create($value->toArray());
-     }
-
- }
-}elseif($policyType == 6){
-    $datosProyecto = PolizasProyecto::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosProyecto)){
-       foreach ($datosProyecto as $key => $value) {
+       foreach ($datosPersonas as $key => $value) {
            unset($value->id);
            unset($value->updated_at);
            unset($value->created_a);
            $value->id_poliza = $p->id;
-           PolizasProyecto::create($value->toArray());
+           PolizasPersonas::create($value->toArray());
        }
+
    }
+}elseif($policyType == 6){
+    $datosProyecto = PolizasProyecto::where(['id_poliza' => $solicitudes['id']])->get();
+    if(count($datosProyecto)){
+     foreach ($datosProyecto as $key => $value) {
+         unset($value->id);
+         unset($value->updated_at);
+         unset($value->created_a);
+         $value->id_poliza = $p->id;
+         PolizasProyecto::create($value->toArray());
+     }
+ }
 }elseif($policyType == 7){
     $datosUbicacion = PolizasUbicacion::where(['id_poliza' => $solicitudes['id']])->get();
     if(count($datosUbicacion)){
-       foreach ($datosUbicacion as $key => $value) {
+     foreach ($datosUbicacion as $key => $value) {
            # code...
         unset($value->id);
         unset($value->updated_at);
@@ -3215,15 +3225,15 @@ if (!$exist) {
 }elseif($policyType == 8){
     $datosVehiculo = PolizasVehiculo::where(['id_poliza' => $solicitudes['id']])->get();
     if(count($datosVehiculo)){
-       foreach ($datosVehiculo as $key => $value) {
-           unset($value->id);
-           unset($value->updated_at);
-           unset($value->created_a);
-           $value->id_poliza = $p->id;
-           PolizasVehiculo::create($value->toArray());
-       }
+     foreach ($datosVehiculo as $key => $value) {
+         unset($value->id);
+         unset($value->updated_at);
+         unset($value->created_a);
+         $value->id_poliza = $p->id;
+         PolizasVehiculo::create($value->toArray());
+     }
 
-   }
+ }
 }
 
 

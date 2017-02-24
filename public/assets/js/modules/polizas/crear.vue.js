@@ -1,5 +1,6 @@
 Vue.http.options.emulateJSON = true;
 var opcionesModal = $('#verCoberturas');
+var counterCoverage= 1;
 var formularioCrear = new Vue({
 	el: ".wrapper-content",
 	data:{
@@ -8,14 +9,13 @@ var formularioCrear = new Vue({
 		polizaCliente: cliente,
 		polizaAseguradora: aseguradora,
 		polizaPlan: plan,
-		polizaCoberturas: coberturas,
-		polizaDeducciones: deducciones,
 		polizaComision: comision,
 		polizaVigencia: vigencia,
 		polizaPrima: prima,
-		polizaCentroFacturacion: centroFacturacion,
-		polizaParticipacion: participacion,
-		polizaTotalParticipacion: agtPrincipal !== '' ? 100.00 : totalParticipacion,
+        polizaGrupo : grupo,
+        polizaCentroFacturacion: centroFacturacion,
+        polizaParticipacion: participacion,
+        polizaTotalParticipacion: agtPrincipal !== '' ? 100.00 : totalParticipacion,
         id_centroContable: id_centroContable,
         nombre_centroContable: nombre_centroContable,
         disabledfechaInicio: true,
@@ -29,7 +29,7 @@ var formularioCrear = new Vue({
         catalogoMetodoPago :metodoPago,
         catalogoFrecuenciaPagos :frecuenciaPagos,
         catalogoCentroFacturacion:centrosFacturacion
- 
+
     },
     methods: {
 		/*nombrePlan:function(){
@@ -43,10 +43,13 @@ var formularioCrear = new Vue({
             });
             //Cerrar modal de opciones        
             var pantalla = $('.div_coberturas');
+            var botones_coberturas = $('.botones_coberturas');
 
             pantalla.css('display', 'block');
+            botones_coberturas.css('display', 'block');
             opcionesModal.find('.modal-tile').empty();
             opcionesModal.find('.modal-body').empty().append(pantalla);
+            opcionesModal.find('.modal-footer').empty().append(botones_coberturas);
             opcionesModal.modal('show');
         },
         renovationModal: function (idPolicy) {
@@ -221,41 +224,41 @@ var formularioCrear = new Vue({
            /* var sum= this.addons.reduce((a, b) => parseInt(a) + parseInt(b));
 			console.log(sum);
             this.$set("polizaTotalParticipacion",sum);*/
-			
-			var valor_final=0;
-			var total=0;
-			$("input[name='participacion[]']").map(function (index,dato) {
-				if(isNaN(dato.value) || dato.value==='' || dato.value===null)
-					total=parseFloat(0);
-				else
-					total=parseFloat(dato.value);
+
+            var valor_final=0;
+            var total=0;
+            $("input[name='participacion[]']").map(function (index,dato) {
+                if(isNaN(dato.value) || dato.value==='' || dato.value===null)
+                   total=parseFloat(0);
+               else
+                   total=parseFloat(dato.value);
 				//console.log(dato.value);
 				valor_final+=parseFloat(total);
 			}).get();
-			
+
 			// console.log(valor_final);
 			
-			 if(agtPrincipal!="")
-			 {
-			 	$('#participacionTotal').val(parseFloat(100));
-			 }
-			 else
-			 {
-				 this.$set("polizaTotalParticipacion",valor_final);
+            if(agtPrincipal!="")
+            {
+               $('#participacionTotal').val(parseFloat(100));
+           }
+           else
+           {
+               this.$set("polizaTotalParticipacion",valor_final);
 				//$('#participacionTotal').val(parseFloat(valor_final));
-			 }
-			
-			 if(isNaN(valor_final))
-					$('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
-			 else
-				$('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(valor_final)).toFixed(2));	
-            
-        },
-        enablePayFields: function() {
+            }
 
-            this.$set("cambiarOpcionesPago",false);
-        },
-        getClienteDireccion: function () {
+            if(isNaN(valor_final))
+               $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
+           else
+            $('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(valor_final)).toFixed(2));	
+
+    },
+    enablePayFields: function() {
+
+        this.$set("cambiarOpcionesPago",false);
+    },
+    getClienteDireccion: function () {
             //polula el segundo select del header
             var self = this;
             var centro_id = $('#centro_facturacion').val();
@@ -484,7 +487,7 @@ var formularioCrear = new Vue({
                                     $("#asiento").val(splitIden[3]);
                                     $("#provincia").prop("disabled", false);
                                     $('#id_letras').val(splitIden[1]);
-                                   
+
                                 } else if(splitIden.length == 3) {
                                     if(isNaN(splitIden[0])){
 
@@ -494,7 +497,7 @@ var formularioCrear = new Vue({
                                         $("#tomo").val(splitIden[1]);
                                         $("#asiento").val(splitIden[2]);
                                     }else{
-                                        
+
                                         $("#provincia").prop("disabled", false);
                                         $("#provincia").val(splitIden[0]);   
                                         $("#letra").val("0");
@@ -502,7 +505,7 @@ var formularioCrear = new Vue({
                                         $("#asiento").val(splitIden[2]);
                                     }
                                 }
-                                 $('#id_letras').val(splitIden[0]);
+                                $('#id_letras').val(splitIden[0]);
 
                             } else {
                                 $("#identificacion").val("pasaporte");
@@ -561,8 +564,8 @@ var formularioCrear = new Vue({
                             $('#correoPersona').attr('disabled',true);
                             
                             if(response.data.inter.telefono_principal == 'Residencial'){
-                               $('#telefono_residencial_check').prop('checked',true);     
-                           }else if(response.data.inter.telefono_principal == 'Laboral'){
+                             $('#telefono_residencial_check').prop('checked',true);     
+                         }else if(response.data.inter.telefono_principal == 'Laboral'){
                             $('#telefono_oficina_check').prop('checked',true);
                         }
 
@@ -579,7 +582,7 @@ var formularioCrear = new Vue({
 
                         $('.relaciondetalle_persona_vida_otros').val(response.data.inter.detalle_relacion);
                         $('.relaciondetalle_persona_vida').val(response.data.inter.detalle_relacion);
-                         $('.relaciondetalle_persona_vida_otros').attr('disabled',true);
+                        $('.relaciondetalle_persona_vida_otros').attr('disabled',true);
                         $('.relaciondetalle_persona_vida').attr('disabled',true);
                         //$('#relaciondetalle_persona').val(response.data.inter.detalle_relacion);
                         //$('#relaciondetalle_persona').attr('disabled',true);
@@ -808,24 +811,24 @@ $(document).ready(function () {
     
     
     if(urlLastSegment==="renovar"){
-       var uuidPolicy = URL.pop();  
-       $('#formPolizasCrear').submit(function(e){
-            return false;
-        });
-       formularioCrear.renovationModal(uuidPolicy);
-    }else{
-        $(".renewal").remove();
-        $('.detail_endoso').remove();
-    }
+     var uuidPolicy = URL.pop();  
+     $('#formPolizasCrear').submit(function(e){
+        return false;
+    });
+     formularioCrear.renovationModal(uuidPolicy);
+ }else{
+    $(".renewal").remove();
+    $('.detail_endoso').remove();
+}
 if (estado_pol=="Por Facturar"){
     var estado=$("#estado_poliza").val();
     formularioCrear.enablePayFields();
 }
 $(".moneda").inputmask('currency',{
-      prefix: "",
-      autoUnmask : true,
-      removeMaskOnSubmit: true
-    }); 
+  prefix: "",
+  autoUnmask : true,
+  removeMaskOnSubmit: true
+}); 
 $('.datepicker').datepicker({
 
     maxDate: '+0d',
@@ -923,30 +926,53 @@ if(estado_pol == "Facturada"){
 
 
 
-    var stickyNavTop = $('.tab-principal').offset().top;
+var stickyNavTop = $('.tab-principal').offset().top;
 
-    var stickyNav = function(){
-        var scrollTop = $(window).scrollTop();
-        
-        if (scrollTop > stickyNavTop) { 
-          $('.tab-principal').addClass('sticky');
-      } else {
-          $('.tab-principal').removeClass('sticky'); 
-      }
-    };
+var stickyNav = function(){
+    var scrollTop = $(window).scrollTop();
 
+    if (scrollTop > stickyNavTop) { 
+      $('.tab-principal').addClass('sticky');
+  } else {
+      $('.tab-principal').removeClass('sticky'); 
+  }
+};
+
+stickyNav();
+
+$(window).scroll(function() {
     stickyNav();
 
-    $(window).scroll(function() {
-        stickyNav();
-
-        if(poliza_declarativa == 'no'){
-            $('#id_tab_endoso').addClass('hidden');
-        }
-
-
-    });
+    if(poliza_declarativa == 'no'){
+        $('#id_tab_endoso').addClass('hidden');
+    }
 
 
 });
 
+
+});
+
+
+function DrawCoverageInModal(id,btnAdd,stringId,del_row){
+
+ var wrapper = $("#"+id); 
+ $("#"+btnAdd).unbind().click(function(e){
+    e.preventDefault();
+    parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+    var text = '<div class="resetModal" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="'+stringId+'Name[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="'+stringId+'Value[]" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 '+del_row+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+    $(wrapper).append(text);
+    counterCoverage++;  
+});
+}
+
+function deleteFieldsInCoverageModal(id,del_row,idToRemove){
+    var wrapper = $("#"+id);
+    var removeStringClass = '.'+del_row+'';
+    $(wrapper).unbind().on("click",removeStringClass, function(e){ //user click on remove text
+        e.preventDefault();  
+        counterCoverage--; 
+        var stringId = "#"+ idToRemove+'_'+ counterCoverage;    
+        $(stringId).remove();
+    }); 
+}
