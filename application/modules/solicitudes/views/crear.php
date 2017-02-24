@@ -120,8 +120,9 @@
         </div>
     </div>
 </div>
+
 <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12 individual"  style="display:none;" id="indCoverageCtrl">
-<div class="row">
+    <div class="row">
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <label>Coberturas</label>    
         </div>
@@ -175,6 +176,7 @@ echo Modal::config(array(
     "id" => "IndCoberturas",
     "size" => "lg"
     ))->html();
+
 echo Modal::config(array(
     "id" => "optionsModal",
     "size" => "sm"

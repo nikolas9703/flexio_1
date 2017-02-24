@@ -40,7 +40,7 @@ class Pedidos_orm extends Model
      *
      * @var array
      */
-    protected $fillable = ['fecha', 'numero', 'referencia', 'uuid_centro', 'id_estado', 'id_empresa'];
+    protected $fillable = ['fecha', 'numero', 'referencia', 'uuid_centro', 'uuid_lugar', 'id_estado', 'id_empresa'];
 
 
     /**
@@ -65,6 +65,12 @@ class Pedidos_orm extends Model
         $this->Ci->load->model("pedidos/Pedidos_estados_orm");
         $this->Ci->load->model("facturas_compras/Facturas_compras_orm");
     }
+    public function scopeDeCategoria($query, $categorias) {
+
+              return $query->whereHas("items", function($items) use ($categorias){
+                  $items->whereIn("categoria_id", $categorias);
+              });
+  }
 
     public static function boot()
     {
@@ -112,6 +118,10 @@ class Pedidos_orm extends Model
     {
         $this->Ci->load->model("centros/Centros_orm");
         return $this->belongsTo('Centros_orm', 'uuid_centro', 'uuid_centro');
+    }
+
+    public function bodega(){
+        return $this->belongsTo('Flexio\Modulo\Bodegas\Models\Bodegas', 'uuid_lugar', 'uuid_bodega');
     }
 
     /**

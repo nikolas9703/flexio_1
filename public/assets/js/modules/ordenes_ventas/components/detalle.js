@@ -31,12 +31,11 @@ Vue.component('detalle',{
     watch:{
 
         'detalle.cliente_id':function(val, oldVal){
-
             var context = this;
             if(context.config.vista == 'editar' && val != ''){
                 console.log('entre');
                 //...no hace nada
-            }else if(val == '' || context.empezable.type == 'cliente_potencial' || !context.enableWatch){
+            }else if(val == '' || context.empezable.type == 'cliente_potencial'){
                 this.detalle.saldo_cliente = 0;
                 this.detalle.credito_cliente = 0;
                 return '';
@@ -44,6 +43,7 @@ Vue.component('detalle',{
 
             context.enableWatch = false;
             var datos = $.extend({erptkn: tkn},{cliente_id:val});
+            select_cliente = val;
             this.$http.post({
                 url: window.phost() + "clientes/ajax-get-montos",
                 method:'POST',
@@ -58,6 +58,14 @@ Vue.component('detalle',{
 
                     context.detalle.saldo_cliente = response.data.saldo;
                     context.detalle.credito_cliente = response.data.credito;
+                    if(response.data.exonerado_impuesto != null){
+                      $('#cliente_ID').val(response.data.cliente_id);
+                    }else{
+                      console.log("es null");
+                    setTimeout(function(){
+                      $('#cliente_ID').val('');
+                  },500);
+                    }
                     if(context.empezable.type == ''){
 
                         context.detalle.centros_facturacion = response.data.centros_facturacion;
@@ -65,7 +73,7 @@ Vue.component('detalle',{
                         console.log('asignar catalogo de centros de facturacion y el perteneciente al cliente');
 
                     }
-                    context.enableWatch = true;
+                    context.enableWatch = false;
 
                 }
             }).catch(function(err){
@@ -130,7 +138,7 @@ Vue.component('detalle',{
 
         return {
 
-            enableWatch:true
+            enableWatch: true
 
         };
 

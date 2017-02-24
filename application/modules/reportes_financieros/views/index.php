@@ -56,8 +56,37 @@
                          </div>
                       </div>
                       <!-- fin de estados financieros-->
+
+                      <!-- Reporte de transacciones por centro contable -->
+                      <div class="row">
+                         <h3>Reportes contables</h3>
+                         <div class="col-lg-4 col-md-4 col-sm-3 col-xs-3">
+                           <div class="ibox float-e-margins">
+                              <div class="ibox-title">
+                                  <h5><a id="balance_situacion" href="<?php echo base_url('reportes_financieros/reporte/transacciones_por_centro_contable');?>">Transacciones contables por centro contable</a></h5>
+                              </div>
+                              <div class="ibox-content">
+                                <p class="parrafo">Compendio de todas las transcciones contables que se han realizado en todas las cuentas para un centro contable y rango de fechas.</p>
+                              </div>
+                          </div>
+                         </div>
+                      </div>
+                      <!-- //Reporte de transacciones por centro contable -->
+
+
                       <div class="row">
                          <h3>Impuestos</h3>
+                         <div class="col-lg-4 col-md-4 col-sm-3 col-xs-3">
+                           <div class="ibox float-e-margins">
+                            <div class="ibox-title">
+                                <h5><a id="impuesto_sobre_itbms" href="<?php echo base_url('reportes_financieros/reporte/impuestos_sobre_itbms');?>">Reporte de retenci&oacute;n de I.T.B.M.S. por proveedor</a></h5>
+                            </div>
+                            <div class="ibox-content">
+                              <p class="parrafo">Vea los impuestos retenidos por proveedor.
+                              </p>
+                            </div>
+                        </div>
+                         </div>
                          <div class="col-lg-4 col-md-4 col-sm-3 col-xs-3">
                            <div class="ibox float-e-margins">
                             <div class="ibox-title">

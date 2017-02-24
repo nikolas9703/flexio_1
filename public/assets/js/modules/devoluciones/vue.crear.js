@@ -10,6 +10,7 @@ var devolucionFormulario = new Vue({
     listaTipo:[],
     devolucionHeader:{tipo:'',uuid:''},
     disableDevolucion:false,
+    disableFormulario:false,
     headerDisabled:false,
     botonDisabled:false,
     disableCliente:true,
@@ -26,13 +27,16 @@ var devolucionFormulario = new Vue({
       this.devolucionHeader.uuid =  devolucion.facturas.uuid_factura;
       this.datosDevolucion = devolucion;
       this.datosDevolucion.saldo = devolucion.facturas.cliente.saldo_pendiente;
-      console.log('pase');
-      this.datosDevolucion.credito = devolucion.facturas.cliente.credito;
+      console.log(devolucion.facturas.cliente);
+      this.datosDevolucion.credito = devolucion.facturas.cliente.credito_favor;
       this.articulos = devolucion.items;
       this.disableDevolucion = true;
       this.headerDisabled = true;
       if(this.datosDevolucion.estado !=='por_aprobar'){
         this.botonDisabled = true;
+      }
+      if(this.datosDevolucion.estado === 'aprobada'){
+        this.disableFormulario = true;
       }
     }
   },

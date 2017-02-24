@@ -12,14 +12,14 @@ use Flexio\Politicas\PoliticableTrait;
 class Anticipo extends Model
 {
 
-    use ScopableAnticipo, PoliticableTrait, Pagable;
+    use ScopableAnticipo, PoliticableTrait, Pagable, OrdenVentaAnticipable;
 
     protected $table = 'atc_anticipos';
     protected $politica = 'anticipo';
-    protected $fillable = ['codigo','empresa_id','fecha_anticipo','anticipable_id','anticipable_type','depositable_id','depositable_type','estado','monto','metodo_anticipo','referencia'];
+    protected $fillable = ['codigo','empresa_id','fecha_anticipo','anticipable_id','anticipable_type','depositable_id','depositable_type','estado','monto','metodo_anticipo','referencia', 'creado_por', 'centro_contable_id'];
 
     protected $guarded = ['id','uuid_anticipo'];
-    protected $casts =['referencia' => 'array'];
+    protected $casts =['referencia' => 'array','monto'=>'float'];
 
     protected $appends = ['icono','enlace'];
 
@@ -27,6 +27,8 @@ class Anticipo extends Model
     protected $modelDepositables = ['banco' => 'Flexio\\Modulo\\Contabilidad\\Models\\Cuentas',
                                     'caja' => 'Flexio\\Modulo\\Cajas\\Models\\Cajas'];
     protected $modelEmpezable = [];
+
+
     public static function boot() {
         parent::boot();
     }
@@ -35,7 +37,6 @@ class Anticipo extends Model
         $this->setRawAttributes(array_merge($this->attributes, array('uuid_anticipo' => Capsule::raw("ORDER_UUID(uuid())"))), true);
         parent::__construct($attributes);
     }
-
 
 
     public function getUuidAnticipoAttribute($value) {
@@ -51,6 +52,11 @@ class Anticipo extends Model
         return Carbon::createFromFormat('Y-m-d H:i:s', $date)->format('d/m/Y');
     }
 
+    public function getHasProveedorAttribute()
+    {
+        return $this->anticipable_type == 'Flexio\Modulo\Proveedores\Models\Proveedores';
+    }
+
     public function setFechaAnticipoAttribute($date){
 
         if (Carbon::createFromFormat('d/m/Y', $date, 'America/Panama') !== false) {
@@ -61,7 +67,7 @@ class Anticipo extends Model
 
     public function getEnlaceAttribute()
     {
-    	return base_url("anticipo/ver/".$this->uuid_anticipo);
+    	return base_url("anticipos/ver/".$this->uuid_anticipo);
     }
 
     public function getNumeroDocumentoAttribute(){
@@ -146,5 +152,30 @@ class Anticipo extends Model
    public function landing_comments(){
       return $this->morphMany('Flexio\Modulo\Comentario\Models\Comentario','comentable');
     }
+    function sistema_transaccion(){
+        return $this->morphMany('Flexio\Modulo\Transaccion\Models\SysTransaccion','linkable');
+    }
 
+    public function pagos()
+    {
+        return $this->morphToMany('Flexio\Modulo\Pagos\Models\Pagos', 'pagable', 'pag_pagos_pagables', '', "pago_id")
+        ->withPivot('monto_pagado','empresa_id')->withTimestamps()
+        ->where("pag_pagos.estado", "aplicado")
+        ->where('empezable_type','=','Flexio\\Modulo\\Anticipos\\Models\\Anticipo');
+    }
+
+    public function getSumaPagosAttribute() {
+        return $this->pagos()->sum("pag_pagos_pagables.monto_pagado");
+    }
+
+    public function getSaldoAttribute() {
+        $pagos = $this->suma_pagos;
+        return $this->monto - $pagos;
+    }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Anticipos\Services\AnticipoFilters;
+        return $queryFilter->apply($query, $campo);
+    }
 }

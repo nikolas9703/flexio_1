@@ -34,6 +34,8 @@ $config['modulo_config'] = array(
 	'prefijo'		=> 'cli',
     'permisos'		=> array(
 		'acceso' => 'Acceso',
+		'crear__validarDuplicado'          => 'Validar Duplicado',
+		'listar__convertirInteres' => 'Convertir a bien'
     	//'listar' => 'Clientes',
     	//'crear' => 'Crear'
 	)

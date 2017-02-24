@@ -26,6 +26,10 @@ use Carbon\Carbon as Carbon;
 use Flexio\Modulo\FacturasCompras\Models\FacturaCompra as FacturaCompra;
 use Flexio\FormularioDocumentos AS FormularioDocumentos;
 
+//utils
+use Flexio\Library\Util\FlexioSession;
+use Flexio\Library\Util\AuthUser;
+
 class Facturas_compras_contratos extends CRM_Controller {
 
     protected $facturaCompraRepository;
@@ -41,6 +45,9 @@ class Facturas_compras_contratos extends CRM_Controller {
     private $facturaCompra;
     protected $DocumentosRepository;
     protected $upload_folder = './public/uploads/';
+    
+    //utils
+    protected $FlexioSession;
 
     function __construct() {
         parent::__construct();
@@ -84,6 +91,9 @@ class Facturas_compras_contratos extends CRM_Controller {
         $this->proveedoresRep = new proveedoresRep();
         $this->subcontratosVal = new subcontratosVal();
         $this->facturaCompra = new FacturaCompra();
+        
+        //utils
+        $this->FlexioSession = new FlexioSession;
     }
 
     function index() {
@@ -229,8 +239,9 @@ class Facturas_compras_contratos extends CRM_Controller {
         if (!empty($monto2)) {
             $registros->deMontoMenorIgual($monto2);
         }
-
+        
         if (!empty($centro_contable)) {
+           
             $registros->deCentroContable($centro_contable);
         }
 
@@ -256,7 +267,13 @@ class Facturas_compras_contratos extends CRM_Controller {
         if (!empty($numero_factura)) {
             $registros = $registros->deFacturaProveedor($numero_factura);
         }
-
+        
+        //filtros de centros contables del usuario
+        $centros = $this->FlexioSession->usuarioCentrosContables();
+        if(!in_array('todos', $centros))
+        {
+            $registros->whereIn("faccom_facturas.centro_contable_id", $centros);
+        }
 
         // die();
         $count = $registros->count();

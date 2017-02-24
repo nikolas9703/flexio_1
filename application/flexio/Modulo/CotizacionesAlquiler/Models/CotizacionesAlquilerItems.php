@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 //use Carbon\Carbon;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\Atributos\Models\Atributos;
+use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerCatalogos;
 
 
 class CotizacionesAlquilerItems extends Model
@@ -14,10 +16,10 @@ class CotizacionesAlquilerItems extends Model
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['contratable_id','contratable_type','categoria_id','item_id','cantidad','ciclo_id','tarifa','en_alquiler','devuelto','entregado','impuesto_id','precio_unidad','precio_total','atributo_id','atributo_text','periodo_tarifario','impuesto_total','descuento_total','cuenta_id','comentario','descuento'];
+    protected $keepRevisionOf = ['contratable_id','contratable_type','categoria_id','item_id','cantidad','ciclo_id','tarifa','en_alquiler','devuelto','entregado','impuesto_id','precio_unidad','precio_total','atributo_id','atributo_text','periodo_tarifario','impuesto_total','descuento_total','cuenta_id','comentario','descuento','item_adicional','empresa_id','unidad_id'];
 
     protected $table    = 'contratos_items';
-    protected $fillable = ['contratable_id','contratable_type','categoria_id','item_id','cantidad','ciclo_id','tarifa','en_alquiler','devuelto','entregado','impuesto_id','precio_unidad','precio_total','atributo_id','atributo_text','periodo_tarifario','impuesto_total','descuento_total','cuenta_id','comentario','descuento'];
+    protected $fillable = ['contratable_id','contratable_type','categoria_id','item_id','cantidad','ciclo_id','tarifa','en_alquiler','devuelto','entregado','impuesto_id','precio_unidad','precio_total','atributo_id','atributo_text','periodo_tarifario','impuesto_total','descuento_total','cuenta_id','comentario','descuento','item_adicional','empresa_id','unidad_id'];
     protected $guarded  = ['id'];
     protected $appends  = ['por_entregar','cuentas'];
     public $timestamps = false;
@@ -94,6 +96,18 @@ class CotizacionesAlquilerItems extends Model
 
     function contratable() {
       return $this->morphTo();
+    }
+
+    public function getAttributes() {
+        return $this->hasMany(Atributos::class,'id', 'atributo_id');
+    }
+
+    public function categoria() {
+        return $this->belongsTo('Flexio\Modulo\Inventarios\Models\Categoria', 'categoria_id');
+    }
+
+    public function periodotarifario() {
+        return $this->hasOne(ContratosAlquilerCatalogos::class, 'valor', 'periodo_tarifario')->where('tipo', '=', 'tarifa');
     }
 
 }

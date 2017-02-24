@@ -30,4 +30,9 @@ class SysTransaccion extends Model
         // transaccionable es la funcion de Transaccion_orm
         return $this->morphMany(AsientoContable::class, 'transaccionable');
     }
+
+    public function linkable()
+    {
+       return $this->morphTo();
+    }
 }

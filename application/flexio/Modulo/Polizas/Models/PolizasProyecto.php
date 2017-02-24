@@ -50,6 +50,16 @@ class PolizasProyecto extends Model
         $proyecto = self::where("id_poliza", $id_poliza)->where(function($query) use($clause,$sidx,$sord,$limit,$start){     
         	if($limit!=NULL) $query->skip($start)->take($limit);           
         });
+
+        if (isset($clause['no_orden']) && $clause['no_orden'] != "" ) {
+            $proyecto->where("no_orden", "LIKE", "%".$clause['no_orden']."%");
+        }
+        if (isset($clause['nombre_proyecto']) && $clause['nombre_proyecto'] != "" ) {
+            $proyecto->where("nombre_proyecto", "LIKE", "%".$clause['nombre_proyecto']."%");
+        }
+        if (isset($clause['ubicacion']) && $clause['ubicacion'] != "" ) {
+            $proyecto->where("ubicacion", "LIKE", "%".$clause['ubicacion']."%");
+        }
         
         if($sidx!=NULL && $sord!=NULL){ $proyecto->orderBy($sidx, $sord); }
 

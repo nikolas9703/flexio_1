@@ -28,11 +28,11 @@ class FacturaSeguro extends Model
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['cotizacion_id', 'orden_venta_id', 'codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta'];
+    protected $keepRevisionOf = ['cotizacion_id', 'orden_venta_id', 'codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta' ];
 
     protected $table = 'fac_facturas';
 
-    protected $fillable = ['cotizacion_id', 'orden_venta_id','codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total' ,'descuento','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta','id_poliza','otros'];
+    protected $fillable = ['cotizacion_id', 'orden_venta_id','codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total' ,'descuento','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta','id_poliza','otros','remesa_saliente','remesa_entrante','saldo','porcentaje_impuesto'];
 
     protected $guarded = ['id','uuid_factura'];  
     protected $appends =['icono','enlace'];
@@ -382,4 +382,6 @@ class FacturaSeguro extends Model
            return $queryFilter->apply($query, $campo);
        }
 
+    
+    
 }

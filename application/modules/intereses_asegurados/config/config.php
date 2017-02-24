@@ -19,12 +19,13 @@ $config['modulo_config'] = array(
                         
         'nombre' =>'Intereses Asegurados' ,
         'url' => 'intereses_asegurados/listar',
-        'orden'=> 4
+        'orden'=> 5
                            
     ),
     'permisos'	=> array(
         'acceso'                                    => 'Acceso',
         'listar-usuarios__desactivarActivarUsuario' => 'Desactivar/Activar cuenta de Usuarios',
-        'editar__cambiarEstado' => 'Cambiar Estado'
+        'editar__cambiarEstado' => 'Cambiar Estado',
+		'listar__convertirCliente' => 'Convertir a cliente'
     )
 );

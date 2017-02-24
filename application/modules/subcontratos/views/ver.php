@@ -58,6 +58,8 @@
     	</div><!-- cierra .col-lg-12 -->
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
+<!-- formulario para exportar el reporte-->
+<?php echo modules::run('subcontratos/ocultoformularioExportarCuenta'); ?>
 <?php
 
 echo Modal::config(array(

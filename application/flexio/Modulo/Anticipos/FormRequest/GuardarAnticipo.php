@@ -33,12 +33,15 @@ class GuardarAnticipo{
         $this->tipo_deposito = ['banco'=>'Flexio\Modulo\Contabilidad\Models\Cuentas',
                                 'caja'=>'Flexio\Modulo\Cajas\Models\Cajas'];
         $this->tipo_anticipable = ['proveedor' => 'Flexio\Modulo\Proveedores\Models\Proveedores',
-                                   'cliente'=>'Flexio\Modulo\Cliente\Models\Cliente'];
+                                   'cliente'=>'Flexio\Modulo\Cliente\Models\Cliente',
+								   'polizas' => 'Flexio\Modulo\Polizas\Models\Polizas'];
         $this->disparador = new \Illuminate\Events\Dispatcher();
+		
         $this->empezable = ['orden_compra' => 'Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra',
         'subcontrato'=>'Flexio\Modulo\SubContratos\Models\SubContrato',
         'orden_venta'=>'Flexio\Modulo\OrdenesVentas\Models\OrdenVenta',
-        'contrato' => 'Flexio\Modulo\Contratos\Models\Contrato'];
+        'contrato' => 'Flexio\Modulo\Contratos\Models\Contrato',
+		'polizas' => 'Flexio\Modulo\Polizas\Models\Polizas'];
     }
 
     function guardar(){
@@ -55,28 +58,27 @@ class GuardarAnticipo{
               return $this->actualizar($anticipo);
           }
           $anticipo["empresa_id"] = $this->session->empresaId();
+          $anticipo["creado_por"] = $this->session->usuarioId();
           $anticipo['codigo'] = $this->getLastCodigo();
           $modelPolimorfico = $this->empezableType($empezable);
+		  
           return $this->crear($anticipo,$modelPolimorfico,$empezable);
     }
-
 
     function crear($campos,$cabezera,$post_empezable){
         return Capsule::transaction(function() use($campos, $cabezera,$post_empezable){
             $anticipo = Anticipo::create($campos);
-
             //insertar en empezable
             if(!is_null($cabezera)){
                 $relacion = $post_empezable['empezable_type'];
-                $anticipo->{$relacion}()->save($cabezera);
+				if(function_exists($anticipo->{$relacion})){
+					$anticipo->{$relacion}()->save($cabezera);
+				}
             }
-
             return $anticipo;
         });
-
-
-
     }
+	
     function actualizar($campos){
 
         return Capsule::transaction(function() use($campos){
@@ -118,7 +120,7 @@ class GuardarAnticipo{
 
     function eventoaprobado($anticipo){
         //listener handle
-        if($this->session->session()->userdata('modulo_padre')=='compras'){
+        if($this->session->session()->userdata('modulo_padre')=='compras' || $this->session->session()->userdata('modulo_padre')=='contratos'){
         $this->disparador->listen(
         [
             CrearRegistroPago::class

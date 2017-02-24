@@ -24,5 +24,11 @@ var moduloIntereses = (function () {
                 erptkn: tkn
             }, parametros));
         },
+        ajaxcambiarObtenerPoliticasGenerales: function () {
+            return $.ajax({
+                url: "intereses_asegurados/obtener_politicasgenerales",
+                dataType: "json",
+            });
+        }
     };
 })();

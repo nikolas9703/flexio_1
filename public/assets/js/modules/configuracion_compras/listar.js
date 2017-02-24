@@ -19,9 +19,12 @@ var tablasConfig = (function () {
              console.log('Exportar chequerasGrid');
              ids = $('#chequerasGrid').jqGrid('getGridParam', 'selarrrow');
              name = 'chequera';
-         }else {
+         }else if($('#chequerasGrid').is(':visible') == true){
              ids = $('#tiposGrid').jqGrid('getGridParam', 'selarrrow');
              name = 'tipos';
+         }else {
+             ids = $('#tiposDocGrid').jqGrid('getGridParam', 'selarrrow');
+             name = 'documento';
          }
 
 

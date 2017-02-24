@@ -20,7 +20,7 @@ class Contrato extends Model
 
 	protected $guarded = ['id','uuid_contrato'];
 
-    protected $appends      = ['icono','enlace'];
+  protected $appends      = ['icono','enlace'];
 
 
   public function __construct(array $attributes = array()){
@@ -83,6 +83,10 @@ class Contrato extends Model
  public function anticipos()
  {
      return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->where('estado','aprobado');
+ }
+ public function anticipos_no_anulados()
+ {
+     return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->whereIn('estado',['por_aprobar','aprobado']);
  }
 
  function facturas_habilitadas(){

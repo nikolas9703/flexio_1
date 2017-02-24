@@ -16,10 +16,10 @@ $(function(){
 		}
 	});
 	
-	$('input[name="campo[nombre]').rules(
+	/*$('input[name="campo[nombre]').rules(
 			 "add",{ required: true, 
 				 	regex:'^[a-zA-ZáéíóúñÁÉÍÓÚ ]+$',
-	});
+	});*/
 	
 	$('input[name="campo[cargo]').rules(
 			 "add",{ required: false, 

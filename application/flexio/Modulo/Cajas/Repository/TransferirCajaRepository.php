@@ -22,41 +22,53 @@ class TransferirCajaRepository{
 		})->get();
 	}
 	function create($created) {
-  		$array_pagos = [];
 
-	    $fieldset = array(
-	    	"empresa_id" => $created["empresa_id"],
-	    	"caja_id" => $created["caja_id"],
-	    	"cuenta_id" => $created["cuenta_id"],
-	    	"numero" => $created["numero"],
-	    	"monto" => $created["monto"],
-	    	"fecha" => $created["fecha"],
-	    	"creado_por" => $created["creado_por"],
-                "transferencia_desde" => isset($created["transferencia_desde"])?$created["transferencia_desde"]:0,
-                "tipo_transferencia_hasta" => isset($created["tipo_transferencia_hasta"])?$created["tipo_transferencia_hasta"]:''
-	    );
+		if(isset($created['id'])){ //editar
+ 			$transferencia = $this->find($created['id']);
+			$transferencia->estado = $created['estado'];
+ 			$transferencia->save();
+		 return $transferencia;
+		}else{ //Creacion
+			return $this->crear_transferencia($created);
+		}
 
 
- 	    $transferencia = Transferencias::create($fieldset);
-            $tipopagos = $created['tipospago'];
-
-	    foreach($tipopagos as $pago){
-	      $array_pagos[] = new TransferenciasPagos($pago);
-	    }
- 	    $transferencia->pagos()->saveMany($array_pagos);
-
-           /* if($created["transferencia_desde"] == 1 )//Crear cheques cuando es Transferencia desde
-            {
-                $this->createCheque($created);
-            }*/
-	    return $transferencia;
 	}
+	function crear_transferencia($created = array()){
+		$array_pagos = [];
+
+		$fieldset = array(
+			"empresa_id" => $created["empresa_id"],
+			"caja_id" => $created["caja_id"],
+			"cuenta_id" => $created["cuenta_id"],
+			"numero" => $created["numero"],
+			"monto" => $created["monto"],
+			"fecha" => $created["fecha"],
+			"creado_por" => $created["creado_por"],
+			"estado" => $created["estado"],
+							"transferencia_desde" => isset($created["transferencia_desde"])?$created["transferencia_desde"]:0,
+							"tipo_transferencia_hasta" => isset($created["tipo_transferencia_hasta"])?$created["tipo_transferencia_hasta"]:''
+		);
+
+
+		$transferencia = Transferencias::create($fieldset);
+					$tipopagos = $created['tipospago'];
+
+		foreach($tipopagos as $pago){
+			$array_pagos[] = new TransferenciasPagos($pago);
+		}
+		$transferencia->pagos()->saveMany($array_pagos);
+		return $transferencia;
+
+	}
+	
         function rebajaCaja($transferencia, $caja) {
              return $caja->saldo - $transferencia->monto;
         }
          function subiendoCaja($transferencia, $caja) {
              return $caja->saldo + $transferencia->monto;
         }
+
 	function update($update) {
 		return Transferencias::update($update);
 	}

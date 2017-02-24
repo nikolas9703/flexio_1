@@ -44,7 +44,7 @@ $route['entrada_manual/ajax-guardar-entada-manual'] = 'entrada_manual/ajax_guard
 $route['entrada_manual/ajax-getComentario'] = 'entrada_manual/ajax_getComentario';
 $route['entrada_manual/ajax-postComentario'] = 'entrada_manual/ajax_postComentario';
 $route['entrada_manual/ajax-listar-transacciones'] = 'entrada_manual/ajax_listar_transacciones';
-$route['entrada_manual/ver/(:any)'] = 'entrada_manual/crear/$1';
+$route['entrada_manual/ver/(:any)'] = 'entrada_manual/ver/$1';
 $route['entrada_manual/crear'] = 'entrada_manual/crear';
 
 

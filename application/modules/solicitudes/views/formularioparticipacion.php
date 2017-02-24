@@ -82,21 +82,24 @@ if (isset($campos['participacion']) && ($campos['participacion'] == 0)) {
     <input type="hidden" id="cantidad" name="campoparticipacion[cantidad]">
     <input type="hidden" id="agente" name="campoparticipacion[id_agente]">
     <input type="hidden" id="porcentaje" name="campoparticipacion[porcentajes]">
-	
-	<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 agentePrincipal ">
-        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-5">
-            <label id='nombreAgentePrincipal'></label>    
-        </div>
-        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-            <label id='porcAgentePrincipal'></label>    
-        </div>
+	<div class="col-xs-10 col-sm-10 col-md-10 col-lg-10 agentePrincipal ">
+		<div class="col-xs-12 col-sm-4 col-md-6 col-lg-6">
+			<div class="input-group">	
+				<span class="input-group-addon"><i class="fa fa-pie-chart"></i></span>
+				<select id='nombreAgentePrincipal' class="form-control" disabled>
+				</select>
+			</div>
+		</div>
+		<div class="col-xs-12 col-sm-4 col-md-6 col-lg-4">
+			 <input type="number" class="form-control" id="porcAgentePrincipal" disabled>  
+		</div><br>
     </div>
-    <div class="Totales col-xs-10 col-sm-10 col-md-10 col-lg-10">
-        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-6">
+    <div class="Totales col-xs-10 col-sm-10 col-md-10 col-lg-10" style=' margin-top: 5px !important;'>
+        <div class="col-xs-12 col-sm-4 col-md-3 col-lg-6">
             <label>Totales</label>    
         </div>
-        <div class="col-xs-12 col-sm-3 col-md-6 col-lg-4">
-            <input type="text" title="La suma de los porcentajes debe ser menor a 100." name="campoparticipacion[total]" class="form-control" v-model="participacionTotal" min="0" max="100" id="participacionTotal" readonly="readonly"/>
+        <div class="col-xs-12 col-sm-4 col-md-6 col-lg-4">
+            <input type="number" title="La suma de los porcentajes debe ser menor a 100." name="campoparticipacion[total]" class="form-control" v-model="participacionTotal" min="0" max="100" id="participacionTotal" readonly="readonly"/>
         </div>
     </div>
 </div>

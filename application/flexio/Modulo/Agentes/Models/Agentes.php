@@ -7,19 +7,20 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 //use Flexio\Politicas\PoliticableTrait;
 use Flexio\Library\Util\FormRequest;
 use Flexio\Library\Util\FlexioSession;
+
 class Agentes extends Model
 {
 
     //use PoliticableTrait;
 
     protected $table = 'agt_agentes';
-    protected $fillable = ['uuid_agente','nombre', 'apellido', 'letra','identificacion', 'telefono', 'correo', 'porcentaje_participacion', 'estado', 'id_empresa'];
+    protected $fillable = ['uuid_agente','nombre', 'apellido', 'letra','identificacion', 'telefono', 'correo', 'porcentaje_participacion', 'estado', 'id_empresa', 'tipo_identificacion'];
     protected $guarded = ['id'];
 
     public function __construct(array $attributes = array()) {
         $this->setRawAttributes(array_merge($this->attributes, array(
             'uuid_agente' => Capsule::raw("ORDER_UUID(uuid())")
-            )), true);
+        )), true);
         parent::__construct($attributes);
     }
 
@@ -40,7 +41,7 @@ class Agentes extends Model
             if($limit!=NULL) $query->skip($start)->take($limit);            
         });
         if($sidx!=NULL && $sord!=NULL){
-            $agentes->orderBy($sidx, $sord);
+                $agentes->orderBy($sidx, $sord);
         }
 
         return $agentes->get();
@@ -53,7 +54,7 @@ class Agentes extends Model
             if($limit!=NULL) $query->skip($start)->take($limit);            
         });
         if($sidx!=NULL && $sord!=NULL){
-            $agentes->orderBy($sidx, $sord);
+                $agentes->orderBy($sidx, $sord);
         }
 
         return $agentes->get();
@@ -74,6 +75,4 @@ class Agentes extends Model
     function present(){
         return new \Flexio\Modulo\Agentes\AgentesPresenter($this);
     }
-
-
 }

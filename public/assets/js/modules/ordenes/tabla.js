@@ -1,4 +1,5 @@
 // Definimos la variable tabs la cual contendrá todo nuestro modulo.
+var multiselect = window.location.pathname.match(/ordenes/g) ? true : false;
 var tablaOrdenes = (function(){
 
     // Objeto al cual establecemos valores que vamos a usar mas adelante en este ambito.
@@ -15,12 +16,12 @@ var tablaOrdenes = (function(){
         estado: "#estado",
         //referencia: "#referencia",
         numero: "#numero",
-        proveedor: "#proveedor",
+        proveedor: "#proveedor3",
         montos_de: "#montos_de",
         montos_a: "#montos_a",
         creado_por: "#creado_por",
         categoria_id: "#categoria_id",
-        inputsSearch: "#fecha_desde, #fecha_hasta, #centro, #estado, #numero, #proveedor, #montos_de, #montos_a, #creado_por,#categoria_id"
+        inputsSearch: "#fecha_desde, #fecha_hasta, #centro, #estado, #numero, #proveedor3, #montos_de, #montos_a, #creado_por,#categoria_id"
     };
 
     // Objeto vacío que guardará elementos que se manejan por HTML.
@@ -45,6 +46,87 @@ var tablaOrdenes = (function(){
         dom.creado_por = $(st.creado_por);
         dom.categoria_id = $(st.categoria_id);
         dom.inputsSearch = $(st.inputsSearch);
+    };
+
+    //Mostrar en los campos de busqueda los valores guardados
+    //en localStorage
+    var setBusquedaDeLocalStorage = function(){
+      if (!fordenes().m.canUseLocalStorage()) {
+          return false;
+      }
+
+
+        if(multiselect)return false;
+      if (typeof(Storage) == "undefined") {
+          return false;
+      }
+      var haybusqueda = 0;
+      if(typeof localStorage.oc_fecha_desde != "undefined" && localStorage.oc_fecha_desde != ''){
+        dom.fecha_desde.val(localStorage.oc_fecha_desde);
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_fecha_hasta != "undefined" && localStorage.oc_fecha_hasta != ''){
+        dom.fecha_hasta.val(localStorage.oc_fecha_hasta);
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_centro != "undefined" && localStorage.oc_centro != ''){
+        dom.centro.find('option[value="'+ localStorage.oc_centro +'"]').attr("selected", "selected");
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_estado != "undefined" && localStorage.oc_estado != ''){
+        //verificar si hay varios estados seleccionados
+        if(localStorage.oc_estado.match(/,/gi)){
+          $.each(localStorage.oc_estado.split(","), function(i, estado){
+            dom.estado.find('option[value="'+ estado +'"]').attr("selected", "selected");
+          });
+
+        }else{
+          dom.estado.find('option[value="'+ localStorage.oc_estado +'"]').attr("selected", "selected");
+        }
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_numero != "undefined" && localStorage.oc_numero != ''){
+        dom.numero.val(localStorage.oc_numero);
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_proveedor != "undefined" && localStorage.oc_proveedor != ''){
+        $("#proveedor3").append('<option value="'+ localStorage.oc_proveedor +'" selected="selected">'+ localStorage.oc_proveedor_nombre +'</option>');
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_montos_de != "undefined" && localStorage.oc_montos_de != ''){
+        dom.montos_de.val(localStorage.oc_montos_de);
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_montos_a != "undefined" && localStorage.oc_montos_a != ''){
+        dom.montos_a.val(localStorage.oc_montos_a);
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_creado_por != "undefined" && localStorage.oc_creado_por != ''){
+        dom.creado_por.find('option[value="'+ localStorage.oc_creado_por +'"]').attr("selected", "selected");
+        haybusqueda += 1;
+      }
+      if(typeof localStorage.oc_categoria_id != "undefined" && localStorage.oc_categoria_id != ''){
+        //verificar si hay varios estados seleccionados
+        if(localStorage.oc_categoria_id.match(/,/gi)){
+          $.each(localStorage.oc_categoria_id.split(","), function(i, estado){
+            dom.categoria_id.find('option[value="'+ estado +'"]').attr("selected", "selected");
+          });
+
+        }else{
+          dom.categoria_id.find('option[value="'+ localStorage.oc_categoria_id +'"]').attr("selected", "selected");
+        }
+        haybusqueda += 1;
+      }
+
+      //si existe parametros en localStorage
+      //mostrar el panel de busqueda abierto.
+      if(haybusqueda > 0){
+        dom.numero.closest('.ibox-content').removeAttr("style");
+      }
+
+      //actualizar chosen
+      $("select").trigger("chosen:updated");
+      $("#proveedor3").trigger('change');
     };
 
     // Función donde establecemos los eventos que tendrán cada elemento.
@@ -81,17 +163,18 @@ var tablaOrdenes = (function(){
         eSearchBtnHlr: function (e) {
 
             e.preventDefault();
+            var scope = this;
+
             //actualizar chosens...
-            //console.log(listarOrdenes.dom.chosens);
             dom.searchBtn.unbind('click', events.eSearchBtnHlr);
-console.log(dom);
+
             var fecha_desde = dom.fecha_desde.val();
             var fecha_hasta = dom.fecha_hasta.val();
             var centro = dom.centro.val();
             var estado = dom.estado.val();
             //var referencia = dom.referencia.val();
             var numero = dom.numero.val();
-            var proveedor = dom.proveedor.val();
+            var proveedor = proveedor3.value;
             var montos_de = dom.montos_de.val();
             var montos_a = dom.montos_a.val();
             var creado_por = dom.creado_por.val();
@@ -99,6 +182,11 @@ console.log(dom);
 
             if(fecha_desde != "" || fecha_hasta != "" || centro != "" || estado != ""  || creado_por != "" || numero != "" || proveedor != "" || montos_de != "" || montos_a != "" || categoria_id != "")
             {
+              if (typeof(Storage) !== "undefined") {
+                  guardarBusquedaLocalStorage(dom);
+              }
+
+                dom.jqGrid.setGridParam({postData:null});
                 dom.jqGrid.setGridParam({
                     url: phost() + 'ordenes/ajax-listar',
                     datatype: "json",
@@ -146,16 +234,111 @@ console.log(dom);
             //Reset Fields
             dom.inputsSearch.val('');
 
+            //limpiar localStorage
+            limpiarBusquedaLocalStorage();
+
             //Reset Chosens
               $('.ibox').find('select[id="categoria_id"]').find('option').removeAttr("selected");
               //dom.inputsSearch.categoria_id.find('option').removeAttr("selected");
-
-            dom.inputsSearch.trigger("chosen:updated");
+              $("#proveedor3").val(null).trigger("change");
+              dom.inputsSearch.trigger("chosen:updated");
 	}
     };
 
-    var muestra_tabla = function(){
+    var guardarBusquedaLocalStorage = function(dom) {
+      localStorage.setItem("oc_fecha_desde", dom.fecha_desde.val());
+      localStorage.setItem("oc_fecha_hasta", dom.fecha_hasta.val());
+      localStorage.setItem("oc_oc_centro", dom.centro.val());
+      localStorage.setItem("oc_estado", dom.estado.val());
+      localStorage.setItem("oc_numero", dom.numero.val());
+      localStorage.setItem("oc_proveedor", proveedor3.value);
+      localStorage.setItem("oc_proveedor_nombre", $("#proveedor3").find('option:selected').text());
+      localStorage.setItem("oc_montos_de", dom.montos_de.val());
+      localStorage.setItem("oc_montos_a", dom.montos_a.val());
+      localStorage.setItem("oc_creado_por", dom.creado_por.val());
+      localStorage.setItem("oc_categoria_id", dom.categoria_id.val());
+    };
 
+    var limpiarBusquedaLocalStorage = function() {
+      if (typeof(Storage) == "undefined") {
+          return false;
+      }
+      localStorage.removeItem("oc_oc_fecha_desde");
+      localStorage.removeItem("oc_fecha_hasta");
+      localStorage.removeItem("oc_centro");
+      localStorage.removeItem("oc_estado");
+      localStorage.removeItem("oc_numero");
+      localStorage.removeItem("oc_proveedor");
+      localStorage.removeItem("oc_proveedor_nombre");
+      localStorage.removeItem("oc_montos_de");
+      localStorage.removeItem("oc_montos_a");
+      localStorage.removeItem("oc_creado_por");
+      localStorage.removeItem("oc_categoria_id");
+    };
+
+    var getParametrosFiltroInicial = function(){
+      //Parametros default
+      var data = {
+        erptkn: tkn,
+        proveedor: uuid_proveedor,
+        pedido_id: (typeof window.sp_pedido_id !== 'undefined') ? window.sp_pedido_id : '',//from subpanels ver pedido
+        factura_compra_id: (typeof factura_compra_id !== 'undefined') ? factura_compra_id : ''
+      };
+
+      //Parametros guardados en localStorage
+      if(!fordenes().m.canUseLocalStorage()){
+          limpiarBusquedaLocalStorage();
+      }
+    if (fordenes().m.canUseLocalStorage()) {
+      if (typeof(Storage) !== "undefined") {
+        if(typeof localStorage.oc_fecha_desde != "undefined" && localStorage.oc_fecha_desde != "null" && localStorage.oc_fecha_desde !=""){
+          data.fecha_desde = localStorage.oc_fecha_desde;
+        }
+        if(typeof localStorage.oc_fecha_hasta != "undefined" && localStorage.oc_fecha_hasta != "null" && localStorage.oc_fecha_hasta != ""){
+          data.fecha_hasta = localStorage.oc_fecha_hasta;
+        }
+        if(typeof localStorage.oc_centro != "undefined" && localStorage.oc_centro != "null" && localStorage.oc_centro != ""){
+          data.centro = localStorage.oc_centro;
+        }
+        if(typeof localStorage.oc_estado != "undefined" && localStorage.oc_estado != '' && localStorage.oc_estado != "null"){
+          if(localStorage.oc_estado.match(/,/gi)){
+            data.estado = [];
+            $.each(localStorage.oc_estado.split(","), function(i, estado){
+              if(estado==''||estado==null){
+                return;
+              }
+              data.estado[i] = estado;
+            });
+
+          }else{
+            data.estado = localStorage.oc_estado;
+          }
+        }
+        if(typeof localStorage.oc_numero != "undefined" && localStorage.oc_numero != "null" && localStorage.oc_numero != ""){
+          data.numero = localStorage.oc_numero;
+        }
+        if(typeof localStorage.oc_proveedor != "undefined" && localStorage.oc_proveedor != "null" && localStorage.oc_proveedor != ""){
+          data.proveedor = localStorage.oc_proveedor;
+        }
+        if(typeof localStorage.oc_montos_de != "undefined" && localStorage.oc_montos_de != "null" && localStorage.oc_montos_de !=""){
+          data.montos_de = localStorage.oc_montos_de;
+        }
+        if(typeof localStorage.oc_montos_a != "undefined" && localStorage.oc_montos_a != "null" && localStorage.oc_montos_a != ""){
+          data.montos_a = localStorage.oc_montos_a;
+        }
+        if(typeof localStorage.oc_creado_por != "undefined" && localStorage.oc_creado_por != "null" && localStorage.oc_creado_por != ""){
+          data.creado_por = localStorage.oc_creado_por;
+        }
+        if(typeof localStorage.oc_categoria_id != "undefined" && localStorage.oc_categoria_id != '' && localStorage.oc_categoria_id != "null"){
+          data.categoria_id = localStorage.oc_categoria_id;
+        }
+      }
+
+    }
+      return data;
+    };
+
+    var muestra_tabla = function(){
         dom.jqGrid.jqGrid({
             url: phost() + 'ordenes/ajax-listar',
             datatype: "json",
@@ -173,21 +356,16 @@ console.log(dom);
             colModel:[
                 {name:'Numero', index:'numero', width:60,  sortable:true},
                 {name:'Fecha', index:'fecha_creacion', width:60},
-                {name:'Proveedor', index:'proveedor', width:80,  sortable:false},
-                {name:'Monto', index:'monto', width: 50,sortable:false, align:'right'},
-                {name:'Centro Contable', index:'cen_centros.nombre', width: 80, sortable:false, align:'left'},
-                {name:'Creado por', index:'creado_por', width:70,  sortable:false},
-                {name:'Estado', index:'etiqueta', width: 50,sortable:false, align:'center'},
-                {name:'link', index:'link', width:60, align:"center", sortable:false, resizable:false, hidedlg:true},
+                {name:'Proveedor', index:'uuid_proveedor', width:80,  sortable:true},
+                {name:'Monto', index:'monto', width: 50,sortable:true, align:'right'},
+                {name:'Centro Contable', index:'uuid_centro', width: 80, sortable:true, align:'left'},
+                {name:'Creado por', index:'creado_por', width:70,  sortable:true},
+                {name:'Estado', index:'id_estado', width: 50,sortable:true, align:'center'},
+                {name:'link', index:'link', width:60, align:"center", sortable:true, resizable:false, hidedlg:true},
                 {name:'options', index:'options', hidedlg:true, hidden: true},
             ],
             mtype: "POST",
-            postData: {
-                erptkn: tkn,
-                proveedor: uuid_proveedor,
-                pedido_id: (typeof window.sp_pedido_id !== 'undefined') ? window.sp_pedido_id : '',//from subpanels ver pedido
-                factura_compra_id: (typeof factura_compra_id !== 'undefined') ? factura_compra_id : ''
-            },
+            postData: getParametrosFiltroInicial(),
             height: "auto",
             autowidth: true,
             rowList: [10,20,50,100],
@@ -401,6 +579,7 @@ console.log(dom);
     // Función que inicializará los funciones decritas anteriormente.
     var initialize = function(){
         catchDom();
+        setBusquedaDeLocalStorage();
         suscribeEvents();
         muestra_tabla();
     };

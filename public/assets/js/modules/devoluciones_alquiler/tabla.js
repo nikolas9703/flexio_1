@@ -6,7 +6,7 @@ var tablaDevolucionesAlquiler = (function(){
     var tablaUrl = phost() + 'devoluciones_alquiler/ajax-listar';
     var gridId = "tablaDevolucionesAlquilerGrid";
     var gridObj = $("#" + gridId);
-    var opcionesModal = $('#optionsModal');
+    var opcionesModal = $('#optionsModal, #opcionesModal');
     var formularioBuscar = $('#buscarDevolucionesAlquilerForm');
 
     var botones = {
@@ -35,9 +35,10 @@ var tablaDevolucionesAlquiler = (function(){
             ],
             postData: {
                 erptkn: tkn,
-                contrato_alquiler_id:(typeof contrato_alquiler_id === 'undefined') ? '' : contrato_alquiler_id,
-                entrega_alquiler_id:(typeof window.sp_entrega_alquiler_id === 'undefined') ? '' : window.sp_entrega_alquiler_id,
-                item_id: typeof window.sp_item_id !== 'undefined' ? window.sp_item_id : ''
+                contrato_alquiler_id:(typeof contrato_alquiler_id === 'undefined' || _.toString(window.contrato_alquiler_id) == "[object HTMLInputElement]") ? '' : contrato_alquiler_id,
+                entrega_alquiler_id:(typeof window.sp_entrega_alquiler_id === 'undefined' || _.toString(window.sp_entrega_alquiler_id) == "[object HTMLInputElement]") ? '' : window.sp_entrega_alquiler_id,
+                item_id: typeof window.sp_item_id !== 'undefined' ? window.sp_item_id : '',
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,

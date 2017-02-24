@@ -1,5 +1,22 @@
 var moduloConfiguracionContabilidad = (function() {
 	return {
+                eliminarCuentaContrato: function(element) {
+                    return $.post(phost() + 'configuracion_contabilidad/ajax-eliminar-cuenta-contratos', $.extend({
+				erptkn: tkn
+			}, element));
+                },
+                getCuentaContrato: function (element) {
+                    return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuentas-contrato', $.extend({
+				erptkn: tkn
+			}, element));
+                },
+                guardarContratos: function(element) {
+
+			return $.post(phost() + 'configuracion_contabilidad/ajax-guardar-cuenta-contratos', $.extend({
+				erptkn: tkn
+			}, element));
+
+                },
 		guardarImpuesto:function(element){
 			var parametros = $(element).serialize();
 			return $.post(phost() + 'contabilidad/ajax-guardar-impuesto', parametros);

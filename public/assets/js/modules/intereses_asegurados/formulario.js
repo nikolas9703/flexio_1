@@ -532,6 +532,7 @@ $(function(){
     }); 
 
     $(".campodesde").val(desde);
+	$(".indcolec").val(indcolec);
     
     var counter = 2;
     //$('#del_file_vehiculo').hide();
@@ -595,7 +596,6 @@ $(function(){
 
 
 $(document).ready(function () {
-
     $('#crearSolicitudLnk').click(function(e){
         
         var opcionesModal = $('#optionsModal');

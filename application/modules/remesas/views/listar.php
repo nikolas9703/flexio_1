@@ -77,6 +77,8 @@
                                             <select class="form-control chosen-select" id="estado" multiple="" data-placeholder="Seleccione">
                                                 <option value="En Proceso">En Proceso</option>
                                                 <option value="Pagada">Pagada</option>
+                                                <option value="Anulado">Anulado</option>
+                                                <option value="Por pagar">Por pagar</option>
                                             </select>
                                         </div>
                                     </div>
@@ -124,10 +126,14 @@ echo Modal::config(array(
     "size" => "sm"
     ))->html();
 
-    ?>
-    <?php
     $formAttr = array('method' => 'POST', 'id' => 'exportarRemesas','autocomplete'  => 'off');
     echo form_open(base_url('remesas/exportar'), $formAttr);
-    ?>
-    <input type="hidden" name="ids" id="ids" value="" />
-    <?php echo form_close(); ?>
+?>
+<input type="hidden" name="ids" id="ids" value="" />
+<?php echo form_close(); 
+
+$formAttr = array('method' => 'POST', 'id' => 'descargarRemesas','autocomplete'  => 'off');
+    echo form_open(base_url('remesas/descargarRemesa'), $formAttr);
+?>
+<input type="hidden" name="id" id="id" value="" />
+<?php echo form_close(); ?>

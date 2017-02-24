@@ -41,6 +41,19 @@ class ChequesRepository implements ChequesInterface{
             }
 
             $cheque->estado_id = '3';//Anulada
+
+            /**
+             * Ubicamos el metodo de pago relacionado al pago y se inicializa los valores
+             */
+            $metodo_pago=$cheque->pago->metodo_pago()->first();
+            if(!empty($metodo_pago)){
+                $metodo_pago->referencia=[
+                    "numero_cheque" => "",
+                    "nombre_banco_cheque" => ""
+                    ];
+                $metodo_pago->update();
+            }
+
             $cheque->save();
 
 
@@ -120,14 +133,10 @@ class ChequesRepository implements ChequesInterface{
         }
         return $cheque;
     }
-    public function editar($edicion)
-    {
-
-        if(!empty($edicion['id'])){
-          $cheque = Cheques::find($edicion['id']);
-          $cheque->update($edicion);
-        }
-        return $cheque;
+    public function editar($edicion) {
+      /*echo "EDITANDO....";
+      dd($edicion);*/
+        return Cheques::where("id", $edicion['id'])->update($edicion);
     }
   function update($uuid=null,$campos=null){
 

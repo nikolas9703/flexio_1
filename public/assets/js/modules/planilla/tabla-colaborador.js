@@ -5,19 +5,16 @@ $(function(){
 	});
 });
 
-
   var tablaPlanillaDetallesColaboradores = (function(){
-
 	var formulario = '#crearPlanilla';
 	var formularioComentario = '#formularioComentario';
 	var vacacionModal = '#vacacionModal';
 	var planillaRegularModal = $('#planillaRegularModal');
-
 	var url = 'planilla/ajax-listar-planilla-colaboradores';
 	var url_seleccionando_gastos = 'planilla/ajax-seleccionar-cuenta-gastos';
 	var url_horas = 'planilla/ajax-seleccionar-ingreso-horas';
 	var url_horas_eliminar = 'planilla/ajax-eliminar-ingreso-horas';
-	var url_horas_editar = 'planilla/ajax-guardar-entrar-horas11';
+	var url_horas_editar = 'planilla/ajax-guardar-entrar-horas';
 	var url_creandoColumnas = 'planilla/ajax-seleccionar-informacion-columnas';
 	var grid_id = "tablaPlanillaDetallesColaboradoresGrid";
 	var grid_obj = $("#tablaPlanillaDetallesColaboradoresGrid");
@@ -28,7 +25,6 @@ $(function(){
 
 		opciones: ".viewOptions",
  		cancelar: "#cancelarBtnPlanilla",
- 		guardar: "#guardarBtnPlanilla",
  		cerrarPlanillaModal: "#pagarPlanilla",
  		confirmarPagar: "#confimrarPagar",
 		agregarColaborador: "#agregarColaborador",
@@ -37,7 +33,6 @@ $(function(){
  	};
 
 	var tabla = function(){
-
 
  		var lastsel_2;
    		grid_obj.jqGrid({
@@ -60,15 +55,15 @@ $(function(){
 				{name:'Centro Contable', index:'centro_contable', width: 60 },
 				{name:'C&eacute;dula', index:'cedula', width:40},
 				{name:'Tipo salario', index:'tipo_salario', width: 60 },
-		   		{name:'Estado', index:'estado', width: 40},
- 		   		{name:'Total horas', index:'total_horas', width: 40, hidden: (tipo_planilla_id==79)?false:true},
+		   		{name:'Estado', index:'estado_id', width: 40,  sortable:false},
+ 		   		{name:'Total horas', sortable:false,  index:'total_horas', width: 40, hidden: (tipo_planilla_id==79)?false:true},
  				{name:'link', index:'link', width:50, sortable:false, resizable:false, hidedlg:true, align:"center"},
 				{name:'options', index:'options', hidedlg:true, hidden: true},
 		   	],
 			mtype: "POST",
 		   	postData: {
 		   		planilla_id: planilla_id,
-		   		cantidad_semanas:cantidad_semanas,
+		   	//	cantidad_semanas:cantidad_semanas,
 		   		tipo_planilla: tipo_planilla_id,
  		   		erptkn: tkn
 		   	},
@@ -165,7 +160,7 @@ $(function(){
 					       {
 
 									 	  var button_estado = (result.estado == 3)?false:true; //Si esta validado que deshabilte todo (Add, edit y del)
-					            colD = result.colData;
+ 					            colD = result.colData;
 					            colN = result.colNombres;
 					            colM = result.colModel;
 
@@ -181,7 +176,7 @@ $(function(){
 											 width: "150px",
 					            	editoptions:
 						            {
-						            	value: selectCentroContable(row_id),
+						            	value: selectCentroContable(),
 													dataInit: function (elem) {
 														  select2Apply(elem);
 													}
@@ -204,7 +199,8 @@ $(function(){
 													dataInit: function (elem) {
 															select2Apply(elem);
 													}
-				            		}
+				            		},
+												editrules:{required:true}
 				            	});
 					            ColModel1.push({name:"Beneficio",index:"unit",width:140,editable: true,edittype:"select",editoptions:
 					            	{
@@ -220,17 +216,23 @@ $(function(){
 					            		    	   var v = parseInt($(e.target).val(), 10);
 
 					            		    	   if(isNaN(v)) {
-					            		    		   var row = $(e.target).closest("tr.jqgrow");
+					            		    		   			 var row = $(e.target).closest("tr.jqgrow");
 				            		                   var rowId = row.attr("id");
 				            		                   $("select#" + rowId + "_CuentaGasto").val("");
 				            		                   $("select#" + rowId + "_CuentaGasto").empty();
 				            		                   $("select#" + rowId + "_CuentaGasto").append('<option value="">Seleccione</option>').removeAttr('disabled');
+																					 $("select#" + rowId + "_CuentaGasto").select2();
+																					 $(".select2-container").width(374);
  					            		    	   }else{
 
  					            		    		  var pasivos = $("#cuenta_costo_id").html();
- 					            		    		   var row = $(e.target).closest("tr.jqgrow");
-				            		                   var rowId = row.attr("id");
-				            		                   $("select#" + rowId + "_CuentaGasto", row[0]).html(pasivos);
+ 					            		    		  var row = $(e.target).closest("tr.jqgrow");
+				            		            var rowId = row.attr("id");
+ 				            		            $("select#" + rowId + "_CuentaGasto", row[0]).html(pasivos);
+																		$("select#" + rowId + "_CuentaGasto  option:eq(1)").attr('selected', 'selected');
+																		$("select#" + rowId + "_CuentaGasto  option:eq(0)").remove();
+																		$("select#" + rowId + "_CuentaGasto").select2();
+
  					            		    	   }
  					            		     }
 					            		  }]
@@ -238,11 +240,11 @@ $(function(){
 					            });
 					            ColModel1.push({name:"CuentaGasto",index:"gasto",width:160,editable: true,edittype:"select",editoptions:
 				            	{
-				            		 value:selectCuentaCosto(),
+				            			value:selectCuentaCosto(),
 												 dataInit: function (elem) {
 														 select2Apply(elem);
-												 }
-				            	}
+												 },
+				            	},
 				            });
  					            $.each(colM, function(i,name) {
  					            	 ColModel1.push({name:name+i,index:'WEEK'+i, align:'center', width:60, editable: true,
@@ -296,25 +298,28 @@ $(function(){
 								   height: "auto",
  				 				   footerrow: false,
 
-   				 			 	 editurl: phost() + "planilla/ajax-guardar-entrar-horas",
+   				 			 	 editurl: phost() + url_horas_editar,
 	   				   			 loadBeforeSend: function () {//propiedadesGrid_cb
   				 					    $(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
 				 				    	$(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable").css("background-color", "#a2c0da");
 				 				    	$(this).closest("div.ui-jqgrid-view").find(grid_id+"_cb, #jqgh_"+grid_id+"_link").css("text-align", "center");
    				 		 		    },
-   				 		 		 loadComplete: function(data){
+                            loadComplete: function (data) {
 
- 	  								//check if isset data
- 	  								if( data['total'] == 0 ){
- 	  									$('#gbox_'+ pager_id).hide();
- 	  									$('#'+ pager_id +'NoRecords').empty().append('No se encontraron horas.').css({"color":"#868686","padding":"30px 0 0"}).show();
- 	  								}
- 	  								 else{
- 	  									$('#'+ pager_id +'NoRecords').hide();
- 	  									$('#gbox_'+ pager_id).show();
- 	  								}
-    				 		 		 },
-   				 				});
+                                //check if isset data
+                                if (data['total'] == 0) {
+                                    $('#gbox_' + pager_id).hide();
+                                    $('#' + pager_id + 'NoRecords').empty().append('No se encontraron horas.').css({
+                                        "color": "#868686",
+                                        "padding": "30px 0 0"
+                                    }).show();
+                                }
+                                else {
+                                    $('#' + pager_id + 'NoRecords').hide();
+                                    $('#gbox_' + pager_id).show();
+                                }
+                            },
+                        });
 
 
  					            jQuery("#"+subgrid_table_id).jqGrid(
@@ -348,21 +353,17 @@ $(function(){
 																		  at: "center center",
 																		 of: jQuery("#"+subgrid_table_id).closest('div.ui-jqgrid')
 																 });
-																 /*	var dialog = $form.closest('div.ui-jqdialog'),
-                              	  selRowId = jQuery("#"+subgrid_table_id).jqGrid('getGridParam', 'selrow'),
-                              		selRowCoordinates = $('#'+selRowId).offset();
 
-																	console.log(selRowId);
-                          			  dialog.offset(selRowCoordinates);*/
-
-															}
-  					            		}
+															},
+   					            		}
       					        ),
+
    								jQuery("#"+subgrid_table_id).jqGrid("inlineNav","#"+pager_id,
    										{
-   											edit: button_estado, //(estado_planilla != 'abierta')?false:true,
+
+   											edit: button_estado,
    											editicon: "ui-icon-pencil",
-   											add:  button_estado, //(estado_planilla != 'abierta')?false:true,
+   											add:  button_estado,
    										 	addicon:"ui-icon-plus",
     										addParams:{
     												position: "last",
@@ -456,23 +457,29 @@ $(function(){
 		 output = output.slice(0,-1)
  		 return  output;
 	};
-	var selectCentroContable = function(colaborador_id){
-   		var dataFromTheRow = jQuery('#tablaPlanillaDetallesColaboradoresGrid').jqGrid ('getRowData', colaborador_id, 'Nombre');
-
+	var selectCentroContable = function(){
  		var output = '';
- 		output +=0 + ': ' +dataFromTheRow['Centro Contable'];
+		$("#centro_contable_id option").each(function(){
+			output +=$(this).attr('value') + ': ' + $(this).text() +';';
+		});
+		output = output.slice(0,-1)
 		return output;
 
 	};
-	var select2Apply = function(elem){
-				$(elem).select2();
-					 setTimeout(function() {
-						 $(".select2-container").width(150);
-				 }, 0);
- 	};
+	var select2Apply = function (elem) {
+          var select = $(elem).select2();
+          var centrocontable = $("#centro_contable_id").val();
+          if (centrocontable != null && centrocontable.length > 0) {
+              select.val(centrocontable[0]).trigger("change");
+          }
+
+          setTimeout(function () {
+              $(".select2-container").width(374);
+          }, 0);
+    };
 
 	var campos = function(){
-		//var estado_planilla = estado_planilla;
+
 		var fecha1 = $(formulario).find('#rango_fecha1');
 		var fecha2 = $(formulario).find('#rango_fecha2');
 
@@ -512,34 +519,26 @@ $(function(){
 	          }
 	      });
 
-
-
-		$.each(JSON.parse(acumulados), function(i,acumulado) {
-  			 $(formulario).find('select[name="acumulados[acumulados][]"] option[value="'+acumulado.acumulado_id +'"]') .prop('selected', 'selected');
-		});
-  			$.each(JSON.parse(deducciones), function(i,deduccion) {
-				 $(formulario).find('select[name="deducciones[deducciones][]"] option[value="'+deduccion.deduccion_id +'"]') .prop('selected', 'selected');
-		    });
-
-
-
 		$(formulario).find('#tipo_id').attr( "disabled", true );
-	//	$(formulario).find('#ciclo_id, #pasivo_id,select[name="deducciones[deducciones][]"], select[name="acumulados[acumulados][]"]').chosen({width: '100%'}).trigger('chosen:updated');
 
- 		if(permiso_editar == 0 )
-		{
-		    	$(formulario).find('select, input, button, textarea').prop("disabled", "disabled");
-		    //	$(formulario).find('select[name="pasivo_id"], select[name="ciclo_id"], select[name="deducciones[deducciones][]"], select[name="acumulados[acumulados][]"]').chosen({width: '100%'}).trigger('chosen:updated');
-		}
+
 
  		if(tipo_planilla_id==80) //VACACIONES
  		{
- 			$(fecha1).prop("disabled", "disabled");
- 			$(fecha2).prop("disabled", "disabled");
- 			$(formulario).find('select[name="tipo_id"], select[name="ciclo_id"]').prop("disabled", "disabled");
+ 				$(fecha1).prop("disabled", "disabled");
+ 				$(fecha2).prop("disabled", "disabled");
+ 				$(formulario).find('select[name="tipo_id"], select[name="ciclo_id"]').prop("disabled", "disabled");
 	    	 $(formulario).find('select[name="tipo_id"], select[name="ciclo_id"]').chosen({width: '100%'}).trigger('chosen:updated');
 
  		}
+		$(formulario).find('select, input, button, textarea').attr("disabled",true);
+ 	 if(permiso_editar == 1 && estado_planilla == 'abierta'  || permiso_editar == 1 && estado_planilla == 'validada')
+		{
+				$(formulario).find('select, input, button, textarea').attr("disabled", false);
+				if(estado_planilla == 'validada'){
+						$(formulario).find('select[name="tipo_id"], select[name="ciclo_id"], #centro_contable_id, #area_negocio_id').prop("disabled", "disabled");
+				}
+		}
 	};
 
 
@@ -719,13 +718,12 @@ $(function(){
 		guardarComentario();
 	});
 
-	$(botones.guardar).on("click", function(e){
+	/*$(botones.guardar).on("click", function(e){
 		e.preventDefault();
 		e.returnValue=false;
 		e.stopPropagation();
-
-		editarPlanilla();
-	});
+ 		editarPlanilla();
+	});*/
 
 	$(botones.cerrarPlanillaModal).on("click", function(e){
 		e.preventDefault();
@@ -738,7 +736,7 @@ $(function(){
               url: phost() + 'planilla/ajax-detalles-pago',
               data: {
             	  	planilla_id: planilla_id,
-            	  	cantidad_semanas:cantidad_semanas,
+            	  	//cantidad_semanas:cantidad_semanas,
 					erptkn: tkn,
 	 			},
               type: "POST",
@@ -856,7 +854,7 @@ var total_horas = 0;
               });
  	};
 	//Reload al jQgrid
-	var editarPlanilla = function(){
+	/*var editarPlanilla = function(){
 		$(formulario).find('input, select').attr( "disabled", false );
 
   		 if ( $(formulario).valid() != false) {
@@ -868,14 +866,11 @@ var total_horas = 0;
                  cache: false,
              }).done(function(json) {
                  //Check Session
-
-                  if( $.isEmptyObject(json.session) == false){
+                   if( $.isEmptyObject(json.session) == false){
                      window.location = phost() + "login?expired";
                  }
-
-                 if(json.response == true){
-                     //toastr.success(json.mensaje);
-                     window.location.href = host+'planilla/listar';
+                  if(json.response == true){
+                      window.location.href = phost() + 'planilla/listar';
 
                  }else{
                      toastr.error(json.mensaje);
@@ -883,7 +878,7 @@ var total_horas = 0;
                  }
              });
          }
-	};
+	};*/
 
 	//Reload al jQgrid
 	 var guardarComentario = function(){
@@ -920,7 +915,7 @@ var total_horas = 0;
 			datatype: "json",
 			postData: {
 				planilla_id: planilla_id,
-				cantidad_semanas:cantidad_semanas,
+				//cantidad_semanas:cantidad_semanas,
 				tipo_planilla: tipo_planilla_id,
 				erptkn: tkn
 			}

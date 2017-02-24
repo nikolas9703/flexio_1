@@ -18,5 +18,9 @@ $(document).ready(function(e){
           $("#fecha_inicio").datepicker( "option", "maxDate", selectedDate );
           }
       });
+      $(".select2").select2({
+        theme: "bootstrap",
+        width: "100%"
+    });
 
 });

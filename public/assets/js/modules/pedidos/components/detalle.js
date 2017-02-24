@@ -142,7 +142,7 @@ Vue.component('detalle',{
               setTimeout(function(){
               $('[name=typeahead]').attr('disabled', false);
             }, 400);
-            } 
+            }
             if(this.config.vista != 'crear' && politicas.length == 0 && this.detalle.estado == 1){
                 toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");
                 return true;

@@ -86,7 +86,7 @@ class PagosComisiones {
              if(($pago->monto_neto ) > 0){
               $asientos[] = new AsientoContable([
                   'codigo'        => $pagoextra->numero,
-                  'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo,
+                  'nombre'        => $pagoextra->numero. ' - Salario neto - '.$pago->colaborador->codigo,
                   'debito'        => $pago->monto_neto,
                   'cuenta_id'     => $cuenta_id,
                   'empresa_id'    => $pagoextra->empresa_id,
@@ -101,7 +101,7 @@ class PagosComisiones {
 
                   $asientos[] = new AsientoContable([
                       'codigo'        => $pagoextra->numero,
-                      'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - '.$deduccion->deduccion_dependiente[0]->deduccion_info->nombre,
+                      'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - Deduccion - '.$deduccion->deduccion_dependiente[0]->deduccion_info->nombre,
                       'debito'        => $deduccion->monto,
                       'cuenta_id'     => $deduccion->deduccion_dependiente[0]->deduccion_info->cuenta_pasivo_id,
                       'empresa_id'    => $pagoextra->empresa_id,
@@ -118,7 +118,7 @@ class PagosComisiones {
                if( $acumulado->monto > 0){
                  $asientos[] = new AsientoContable([
                      'codigo'        => $pagoextra->numero,
-                     'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - '.$acumulado->acumulado_dependiente[0]->acumulado_info->nombre,
+                     'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - Acumulado - '.$acumulado->acumulado_dependiente[0]->acumulado_info->nombre,
                      'debito'        => $acumulado->monto,
                      'cuenta_id'     => $deduccion->acumulado_dependiente[0]->acumulado_info->cuenta_pasivo_id,
                      'empresa_id'    => $pagoextra->empresa_id,
@@ -144,7 +144,7 @@ class PagosComisiones {
            if(($pago->monto_neto ) > 0){
             $asientos[] = new AsientoContable([
                 'codigo'        => $pagoextra->numero,
-                'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo,
+                'nombre'        => $pagoextra->numero. ' - Monto neto - '.$pago->colaborador->codigo,
                 'credito'        => $pago->monto_neto,
                 'cuenta_id'     => $cuenta_id,
                 'empresa_id'    => $pagoextra->empresa_id,
@@ -159,7 +159,7 @@ class PagosComisiones {
 
                 $asientos[] = new AsientoContable([
                     'codigo'        => $pagoextra->numero,
-                    'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - '.$deduccion->deduccion_dependiente[0]->deduccion_info->nombre,
+                    'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - Deduccion - '.$deduccion->deduccion_dependiente[0]->deduccion_info->nombre,
                     'credito'        => $deduccion->monto,
                     'cuenta_id'     => $cuenta_id,
                     'empresa_id'    => $pagoextra->empresa_id,
@@ -176,7 +176,7 @@ class PagosComisiones {
              if( $acumulado->monto > 0){
                $asientos[] = new AsientoContable([
                    'codigo'        => $pagoextra->numero,
-                   'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - '.$acumulado->acumulado_dependiente[0]->acumulado_info->nombre,
+                   'nombre'        => $pagoextra->numero. ' - '.$pago->colaborador->codigo.' - Acumulado - '.$acumulado->acumulado_dependiente[0]->acumulado_info->nombre,
                    'credito'        => $acumulado->monto,
                    'cuenta_id'     => $cuenta_id,
                    'empresa_id'    => $pagoextra->empresa_id,

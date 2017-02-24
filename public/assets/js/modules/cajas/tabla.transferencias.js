@@ -32,6 +32,7 @@ var tablaTransferencias = (function () {
                 'Cuenta de Origen',
                 'Monto',
                 'Metodo de pago',
+                'Estado',
                 'Opciones',
                 ''
             ],
@@ -41,6 +42,7 @@ var tablaTransferencias = (function () {
                 {name: 'Cuenta de Origen', index: 'cuenta', width: 60, sortable: false, align: 'left'},
                 {name: 'Monto', index: 'monto', width: 40, sortable: false, align: 'left'},
                 {name: 'Metodo de pago', index: 'metodo', width: 40, sortable: false, align: 'left'},
+                {name: 'Estado', index: 'estado', width: 40, sortable: false, align: 'left'},
                 {name: 'options', index: 'options', width: 20},
                 {name: 'link', index: 'link', width: 50, align: "center", sortable: false, resizable: false, hidden: true, hidedlg: true},
             ],
@@ -62,7 +64,7 @@ var tablaTransferencias = (function () {
             gridview: true,
             multiselect: false,
             sortname: 'numero',
-            sortorder: "ASC",
+            sortorder: "DESC",
             beforeProcessing: function (data, status, xhr) {
                 //Check Session
                 if ($.isEmptyObject(data.session) == false) {

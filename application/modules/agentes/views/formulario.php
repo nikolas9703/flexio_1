@@ -181,7 +181,7 @@ if ($info['guardar'] == 0)
                             <label for="campo[correo]" generated="true" class="error"></label>
                         </div>
 
-
+                        
                         <div class="form-group col-xs-12 col-sm-8 col-md-6 col-lg-6 ">
                             <table  id="tabla_ramos_parti" style="width: 100%;">
                                 <thead>
@@ -197,12 +197,16 @@ if ($info['guardar'] == 0)
                                     <?php
                                     if (isset($info['agente']['countramos']) && $info['agente']['countramos'] > 0) {
                                         $contador = 1;
-                                        foreach ($info['agente']['ramos'] as $val) {
+                                        $antes="";
+
+
+                                        foreach ($info['agente']['ramosgroup'] as $key => $val) {
+
                                             ?>
-                                            <tr>
+                                            <tr class="bodyramo">
                                                 <td style="margin-right: 5px">
-                                                    <select  data-placeholder="Seleccione una opción" name="ramos[]" id="campo[ramo]" class="form-control chosen-select" multiple>
-                                                        <option value="">Seleccione</option>
+                                                    <select style="margin-bottom: 19px;" data-placeholder="Seleccione una opción" name="ramos[]" id="campo[ramo]" class="form-control chosen-select-width ramotabla" multiple="multiple" >
+                                                        <!--<option value="">Seleccione</option>-->
                                                         <?php
                                                         $cont = 0;
                                                         foreach ($info['menu_crear'] AS $menu) {
@@ -216,25 +220,31 @@ if ($info['guardar'] == 0)
                                                                 if ($menu['estado'] == 1) {
                                                                     ?>
 
-                                                                    <option value="<?php echo $menu['id'] ?>" <?php
-                                                                    if ($val['id_ramo'] == $menu['id']) {
-                                                                        echo " selected";
-                                                                    }
-                                                                    ?> ><?php echo $menu['nombre'] ?></option>
-                                                                        <?php } else { ?>
-                                                                    <option style="color: red;" value="<?php echo $menu['id'] ?>" <?php
-                                                                    if ($val['id_ramo'] == $menu['id']) {
-                                                                        echo " selected";
-                                                                    }
-                                                                    ?> ><?php echo $menu['nombre'] ?></option>
-                                                                            <?php
+                                                                    <option value="<?php echo $menu['id'] ?>" 
+                                                                        <?php
+                                                                        //if ($val['id_ramo'] == $menu['id']) {
+                                                                        if (in_array($menu['id'], $info['agente']['ramosp'][$val['participacion']]) ) {
+                                                                            echo " selected";
                                                                         }
-                                                                    }
-                                                                    $cont = 0;
+                                                                        ?> ><?php echo $menu['nombre'] ?>
+                                                                    </option>
+                                                                        <?php 
+                                                                } else { ?>
+                                                                    <option style="color: red;" value="<?php echo $menu['id'] ?>" <?php
+                                                                            //if ($val['id_ramo'] == $menu['id']) {
+                                                                            if (in_array($menu['id'], $info['agente']['ramosp'][$val['participacion']]) ) {
+                                                                                echo " selected";
+                                                                            }
+                                                                            ?> ><?php echo $menu['nombre'] ?>
+                                                                    </option>
+                                                                <?php
                                                                 }
-                                                                ?>
+                                                            }
+                                                            $cont = 0;
+                                                        }
+                                                        ?>
                                                     </select>
-                                                    <label for="campo[ramo]" generated="true" class="error"></label>
+                                                    <!--<label for="campo[ramo]" generated="true" class="error"></label>-->
                                                 </td>
                                                 <td></td>
                                                 <td style="margin-right: 5px">
@@ -260,13 +270,62 @@ if ($info['guardar'] == 0)
                                             <?php
                                             $contador++;
                                         }
+
+                                            ?>
+                                            <tr class="bodyramo">
+                                                <td style="margin-right: 5px">
+                                                    <select style="margin-bottom: 19px;" data-placeholder="Seleccione una opción" name="ramos[]" id="campo[ramo]" class="form-control chosen-select-width ramotabla" multiple="multiple" >
+                                                        <!--<option value="">Seleccione</option>-->
+                                                        <?php
+                                                        $conta=0;
+                                                        $cont = 0;
+                                                        foreach ($info['menu_crear'] AS $menu) {
+                                                            foreach ($info['menu_crear'] AS $value) {
+                                                                if ($menu['id'] == $value['padre_id']) {
+                                                                    $cont++;
+                                                                }
+                                                            }
+                                                            if ($cont == 0 && $menu['padre_id'] != 0) {
+                                                                if ($menu['estado'] == 1) {
+                                                                    echo '<option value="' . $menu['id'] . '" data-index="'.$conta.'">' . $menu['nombre'] . '</option>';
+                                                                } else {
+                                                                    echo '<option style="color: red;" value="' . $menu['id'] . '" data-index="'.$conta.'">' . $menu['nombre'] . '</option>';
+                                                                }
+                                                                $conta++;
+                                                            }
+                                                            $cont = 0;
+                                                            
+                                                        }
+                                                        ?>
+                                                    </select>
+    <!--                                                <label for="campo[ramo]" generated="true" class="error"></label>-->
+                                                </td>
+                                                <td></td>
+                                                <td style="margin-right: 5px">
+                                                    <div class="input-group">
+                                                        <input type="input-left-addon" name="porcentaje_participacion[]" value="" class="form-control" data-inputmask="'mask': '9{1,15}.99', 'greedy':true" id="porcentaje_participacion">
+                                                        <span class="input-group-addon">%</span>
+                                                    </div>
+                                                    <label for="campo[porcentaje_participacion]" generated="true" class="error"></label>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-bottom: 0px !important;" >
+                                                        <a onclick="eliminarfila(this);" class="btn btn-default" id="eliminarbtn" style="margin-top: -20px;"><i class="fa fa-trash fa-1"></i></a>
+
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+                                        <?php
+
                                     } else {
                                         ?>
-                                        <tr>
+                                        <tr class="bodyramo">
                                             <td style="margin-right: 5px">
-                                                <select  data-placeholder="Seleccione una opción" name="ramos[]" id="campo[ramo]" class="form-control chosen-select" multiple >
-                                                    <option value="">Seleccione</option>
+                                                <select style="margin-bottom: 19px;" data-placeholder="Seleccione una opción" name="ramos[]" id="campo[ramo]" class="form-control chosen-select-width ramotabla" multiple="multiple" >
+                                                    <!--<option value="">Seleccione</option>-->
                                                     <?php
+                                                    $conta=0;
                                                     $cont = 0;
                                                     foreach ($info['menu_crear'] AS $menu) {
                                                         foreach ($info['menu_crear'] AS $value) {
@@ -276,16 +335,18 @@ if ($info['guardar'] == 0)
                                                         }
                                                         if ($cont == 0 && $menu['padre_id'] != 0) {
                                                             if ($menu['estado'] == 1) {
-                                                                echo '<option value="' . $menu['id'] . '">' . $menu['nombre'] . '</option>';
+                                                                echo '<option value="' . $menu['id'] . '" data-index="'.$conta.'">' . $menu['nombre'] . '</option>';
                                                             } else {
-                                                                echo '<option style="color: red;" value="' . $menu['id'] . '">' . $menu['nombre'] . '</option>';
+                                                                echo '<option style="color: red;" value="' . $menu['id'] . '" data-index="'.$conta.'">' . $menu['nombre'] . '</option>';
                                                             }
+                                                            $conta++;
                                                         }
                                                         $cont = 0;
+                                                        
                                                     }
                                                     ?>
                                                 </select>
-                                                <label for="campo[ramo]" generated="true" class="error"></label>
+<!--                                                <label for="campo[ramo]" generated="true" class="error"></label>-->
                                             </td>
                                             <td></td>
                                             <td style="margin-right: 5px">
@@ -315,8 +376,9 @@ if ($info['guardar'] == 0)
                     </div>
                     <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-bottom: 0px !important;" >
                         <a onclick="agregarfila(this, 'tabla_ramos_parti');" class="btn btn-default" id="agregarbtn" style="margin-top: -170px; margin-left: 100%;"><i class="fa fa-plus fa-1"></i></a>
-
                     </div>
+
+                    <input type="hidden" name="camporamo" id="camporamo">
 
 
                     <?php if (!isset($info['estadoAgente']) OR $info['estadoAgente'] != 0) { ?>
@@ -327,9 +389,10 @@ if ($info['guardar'] == 0)
                                 <select data-rule-required="true" class="form-control estado" name="campo[estado]">
                                     <?php
                                     if ($info['politicas_general'] > 0) {
-                                        if ((in_array(16, $info['politicas']) || in_array(17, $info['politicas']) || in_array(18, $info['politicas']))) {
+//                                        if ((in_array(16, $info['politicas']) || in_array(17, $info['politicas']) || in_array(18, $info['politicas']))) {
                                             if ($info['agente']['estado'] == "Por Aprobar") {
-                                                if (in_array(16, $info['politicas'])) {
+//                                                if (in_array(16, $info['politicas'])) {
+                                                     if (((in_array(16, $info['politicas'])===false)&&(in_array(16, $info['politicas_generales'])===false))|| (in_array(16, $info['politicas'])===true)) {
                                                     foreach ($info['estado'] as $estado) {
                                                         if ($estado->etiqueta != "Inactivo") {
                                                             ?>
@@ -347,7 +410,8 @@ if ($info['guardar'] == 0)
                                                     <?php
                                                 }
                                             } else if ($info['agente']['estado'] == "Activo") {
-                                                if (in_array(17, $info['politicas'])) {
+//                                                if (in_array(17, $info['politicas'])) {
+                                                    if (((in_array(17, $info['politicas'])===false)&&(in_array(17, $info['politicas_generales'])===false))|| (in_array(17, $info['politicas'])===true)) {
                                                     foreach ($info['estado'] as $estado) {
                                                         if ($estado->etiqueta != "Por Aprobar") {
                                                             ?>
@@ -365,7 +429,8 @@ if ($info['guardar'] == 0)
                                                     <?php
                                                 }
                                             } else if ($info['agente']['estado'] == "Inactivo") {
-                                                if (in_array(18, $info['politicas'])) {
+//                                                if (in_array(18, $info['politicas'])) {
+                                                    if (((in_array(18, $info['politicas'])===false)&&(in_array(18, $info['politicas_generales'])===false))|| (in_array(18, $info['politicas'])===true)) {
                                                     foreach ($info['estado'] as $estado) {
                                                         if ($estado->etiqueta != "Por Aprobar") {
                                                             ?>
@@ -393,11 +458,11 @@ if ($info['guardar'] == 0)
                                                         <?php
                                                     }
                                                 }
-                                            } else {
+//                                            } else {
                                                 ?>
-                                            <option value='<?php echo $info['agente']['estado']; ?>'><?php echo $info['agente']['estado']; ?></option>
+                                            <!--<option value='<?php // echo $info['agente']['estado']; ?>'><?php // echo $info['agente']['estado']; ?></option>-->
                                             <?php
-                                        }
+//                                        }
                                     } else {
                                         foreach ($info['estado'] as $estado) {
                                             if (isset($info['agente']['estado'])) {
@@ -434,6 +499,7 @@ if ($info['guardar'] == 0)
                     </div>
                 </div>
             </div>
+
             <?php echo form_close(); ?>
         </div>
     </div>

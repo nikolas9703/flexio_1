@@ -16,11 +16,11 @@ class NotaCredito extends Model{
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['codigo','cliente_id','empresa_id','estado','creado_por','total','centro_contable_id','centro_facturacion_id','factura_id','narracion','tipo','fecha','subtotal','impuesto'];
+    protected $keepRevisionOf = ['observaciones', 'codigo','cliente_id','empresa_id','estado','creado_por','total','centro_contable_id','centro_facturacion_id','factura_id','narracion','tipo','fecha','subtotal','impuesto'];
 
     protected $table = 'venta_nota_creditos';
 
-  protected $fillable = ['codigo','cliente_id','empresa_id','estado','creado_por','total','centro_contable_id','centro_facturacion_id','factura_id','narracion','tipo','fecha','subtotal','impuesto'];
+  protected $fillable = ['observaciones', 'codigo','cliente_id','empresa_id','estado','creado_por','total','centro_contable_id','centro_facturacion_id','factura_id','narracion','tipo','fecha','subtotal','impuesto'];
 
   protected $guarded = ['id','uuid_nota_credito'];
   protected $appends = ['icono','enlace'];
@@ -34,6 +34,20 @@ class NotaCredito extends Model{
       parent::boot();
         self::updating(function($nota_credito) {
           $cambio = $nota_credito->getDirty();
+          if(isset($cambio['estado']) && $cambio['estado'] == 'aprobado'){
+
+               $nota_credito->load('factura');
+               if(count($nota_credito->factura))
+               {
+                 $nota_credito->factura->estado = ($nota_credito->total < $nota_credito->factura->total) ? 'cobrado_parcial' : 'cobrado_completo';
+                 $nota_credito->factura->save();
+                 //pagada_parcial  15 | //16 pagada_completa
+               }else{
+                 //aumenta el credito del ciente
+                 //falta desarrollo
+               }
+
+          }
           if(isset($cambio['estado']) && $cambio['estado'] =='anulado'){
             $transaccion = new AnularTransaccion;
             $transaccion->anular($nota_credito->fresh(), new AnularTransaccionNotaCredito);

@@ -7,7 +7,8 @@ var tablaAccionPersonal = (function(){
 	var opcionesModal = $('#opcionesModal');
 	var formulario = $('#buscarOrdenForm');
 	var formularioExportar = $('#exportarOrdenesForm');
-	
+	var documentosModal = $('#documentosModal');
+
 	var botones = {
 		opciones: ".viewOptions",
 		detalle: ".verDetalle",
@@ -15,16 +16,17 @@ var tablaAccionPersonal = (function(){
 		limpiar: "#clearOrdenBtn",
 		descargar: ".descargarAdjuntoBtn",
 		exportar: "#exportarLnk",
+		subirArchivo: ".subirArchivoBtn"
 	};
-	
+
 	var equipoid = "";
-	
+
 	if(typeof equipoID != "undefined"){
 		equipoid = equipoID;
 	}
-	
+
 	var tabla = function(){
-		
+
 		//inicializar jqgrid
 		grid_obj.jqGrid({
 		   	url: phost() + url,
@@ -72,10 +74,10 @@ var tablaAccionPersonal = (function(){
 					window.location = phost() + "login?expired";
 				}
 		    },
-		    loadBeforeSend: function () {}, 
+		    loadBeforeSend: function () {},
 		    beforeRequest: function(data, status, xhr){},
 			loadComplete: function(data){
-				
+
 				//check if isset data
 				if( data['total'] == 0 ){
 					$('#gbox_'+ grid_id).hide();
@@ -90,133 +92,157 @@ var tablaAccionPersonal = (function(){
 				$(this).find('tr#'+ id).removeClass('ui-state-highlight');
 			},
 		});
-		
+
 		//Al redimensionar ventana
 		$(window).resizeEnd(function() {
 			tablaAccionPersonal.redimensionar();
 		});
 	};
-	
+
 	//Inicializar Eventos de Botones
 	var eventos = function(){
-		
+
 		//Boton de Opciones
 		grid_obj.on("click", botones.opciones, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-			
+
 			var id = $(this).attr("data-id");
-			
+
 			var rowINFO = grid_obj.getRowData(id);
 		    var options = rowINFO["options"];
 		    options = options.replace(/0000/gi, id);
-		    
+
 	 	    //Init Modal
 		    opcionesModal.find('.modal-title').empty().append('Opciones');
 		    opcionesModal.find('.modal-body').empty().append(options);
 		    opcionesModal.find('.modal-footer').empty();
 		    opcionesModal.modal('show');
 		});
-		
+
 		//Ver Detalle
 		grid_obj.on("click", botones.detalle, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-			
+
 			//Cerrar modal de opciones
 			opcionesModal.modal('hide');
-			
+
 			var formulario = $(this).attr("data-formulario");
 			var accion_id = $(this).attr("data-accion-id");
 			var modulo_name_id = formulario.replace(/(es|s)$/g, '') + '_id';
-			
+
 			//Before using local storage, check browser support for localStorage and sessionStorage
 			if(typeof(Storage) !== "undefined") {
-				
+
 				//Grabar id de la accion
 				localStorage.setItem(modulo_name_id, accion_id);
 			}
-			
+
 			//Verificar si existe o no variable
 			//colaborador_id
 			if(typeof colaborador_id != 'undefined'){
-				
+
 				//Verificar si el formulario esta siendo usado desde
 				//Ver Detalle de Colaborador
 				if(window.location.href.match(/(colaboradores)/g)){
-				
+
 					var scope = angular.element('[ng-controller="'+ ucFirst(formulario) +'Controller"]').scope();
 					scope.popularFormulario();
 				}
-				
+
 			}else{
 				window.location = phost() + 'accion_personal/crear/' + formulario;
 			}
 		});
-		
+
+		//Documentos Modal
+		$(opcionesModal).on("click", botones.subirArchivo, function(e){
+			e.preventDefault();
+			e.returnValue=false;
+			e.stopPropagation();
+
+			//Cerrar modal de opciones
+			opcionesModal.modal('hide');
+
+			var ordenes_trabajo_id = $(this).attr("data-id");
+
+			//Inicializar opciones del Modal
+			documentosModal.modal({
+				backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+				show: false
+			});
+
+			var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
+		    scope.safeApply(function(){
+		    	scope.campos.ordenes_trabajo_id = ordenes_trabajo_id;
+		    });
+			documentosModal.modal('show');
+		});
+
 		//Ver Detalle
 		$(opcionesModal).on("click", botones.detalle, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-			
+
 			//Cerrar modal de opciones
 			opcionesModal.modal('hide');
-			
+
 			var formulario = $(this).attr("data-formulario");
 			var accion_id = $(this).attr("data-accion-id");
 			var modulo_name_id = formulario.replace(/(es|s)$/g, '') + '_id';
-			
+
 			//Before using local storage, check browser support for localStorage and sessionStorage
 			if(typeof(Storage) !== "undefined") {
-				
+
 				//Grabar id de la accion
 				localStorage.setItem(modulo_name_id, accion_id);
 			}
-			
+
 			//Verificar si existe o no variable
 			//colaborador_id
 			if(typeof colaborador_id != 'undefined'){
-				
+
 				//Verificar si el formulario esta siendo usado desde
 				//Ver Detalle de Colaborador
 				if(window.location.href.match(/(colaboradores)/g)){
-				
+
 					var scope = angular.element('[ng-controller="'+ ucFirst(formulario) +'Controller"]').scope();
 					scope.popularFormulario();
-				
+
 					//Activar Tab
 					//$('#moduloOpciones').find('ul').find("a:contains('"+ formulario.replace(/(es|s)$/g, '') +"')").trigger('click');
 					$('#moduloOpciones').find('ul').find('a[href*="'+ formulario.replace(/(es|s)$/g, '') +'"]').trigger('click');
 					//console.log( formulario.replace(/(es|s)$/g, '') );
 				}
-				
+
 			}else{
 				window.location = phost() + 'accion_personal/crear/' + formulario;
 			}
 		});
-		
+
 		//Boton de Buscar
 		formulario.on("click", botones.buscar, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-			
+
 			buscar();
 		});
-		
+
 		//Boton de Reiniciar jQgrid
 		formulario.on("click", botones.limpiar, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-			
+
 			recargar();
 			limpiarCampos();
 		});
-		
+
 		//Boton de Exportar Colaborador
 		$(botones.exportar).on("click", function(e){
 			e.preventDefault();
@@ -226,10 +252,10 @@ var tablaAccionPersonal = (function(){
 			//Exportar Seleccionados del jQgrid
 			var ids = [];
 				ids = grid_obj.jqGrid('getGridParam','selarrrow');
-			
+
 			//Verificar si hay seleccionados
 			if(ids.length > 0){
-				
+
 				$('#ids').val(ids);
 				formularioExportar.submit();
 		        $('body').trigger('click');
@@ -239,7 +265,7 @@ var tablaAccionPersonal = (function(){
 
 	//Reload al jQgrid
 	var recargar = function(){
-		
+
 		//Reload Grid
 		grid_obj.setGridParam({
 			url: phost() + url,
@@ -255,16 +281,16 @@ var tablaAccionPersonal = (function(){
 			}
 		}).trigger('reloadGrid');
 	};
-	
+
 	//Buscar cargo en jQgrid
 	var buscar = function(){
-		
+
 		var no_orden 	= formulario.find('#no_orden').val();
 		var cliente 	= formulario.find('#cliente').val();
 		var fecha_desde = formulario.find('#fecha_desde').val();
 		var fecha_hasta = formulario.find('#fecha_hasta').val();
 		var estado_id 	= formulario.find('#estado_id').val();
-		
+
 		if(no_orden != "" || cliente  != "" || fecha_desde != "" || fecha_hasta != "" || estado_id != "")
 		{
 			//Reload Grid
@@ -282,22 +308,22 @@ var tablaAccionPersonal = (function(){
 			}).trigger('reloadGrid');
 		}
 	};
-	
+
 	//Limpiar campos de busqueda
 	var limpiarCampos = function(){
 		formulario.find('input[type="text"]').prop("value", "");
 		formulario.find('select').find('option:eq(0)').prop("selected", "selected");
 		actualizar_chosen();
 	};
-	
+
 	var actualizar_chosen = function() {
 		//refresh chosen
 		setTimeout(function(){
 			formulario.find('select.chosen-select').trigger('chosen:updated');
 		}, 50);
 	};
-	
-	return{	    
+
+	return{
 		init: function() {
 			tabla();
 			eventos();

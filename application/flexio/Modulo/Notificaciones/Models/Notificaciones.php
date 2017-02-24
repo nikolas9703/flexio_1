@@ -59,8 +59,7 @@ class Notificaciones extends Model
     public function transacciones(){
 
         return $this->belongsTo('Flexio\Modulo\Pedidos\Models\PedidosCat', 'transaccion', 'id_cat');
-
-    }
+    } 
     public function categorias(){
         return $this->belongsTo('Flexio\Modulo\Inventarios\Models\Categoria', 'categoria_items', 'id');
     }

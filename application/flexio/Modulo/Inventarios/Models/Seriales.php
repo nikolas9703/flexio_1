@@ -41,16 +41,42 @@ class Seriales extends Model
         return strtoupper(bin2hex($value));
     }
 
+    public function getSerialLineaLastAttribute()
+    {
+        return $this->seriales_lineas->sortBy('line_id')->last();
+    }
+
+    public function getSerialLineaFirstAttribute()
+    {
+        return $this->seriales_lineas->sortBy('line_id')->first();
+    }
+
+    public function getLineItemLastAttribute()
+    {
+        //dd(count($this->serial_linea_last), get_class($this->serial_linea_last));
+        return (!count($this->serial_linea_last) || !count($this->serial_linea_last->line_item)) ? [] : $this->serial_linea_last->line_item;
+    }
+
+    public function getLineItemFirstAttribute()
+    {
+        return (!count($this->serial_linea_first) || !count($this->serial_linea_first->line_item)) ? [] : $this->serial_linea_first->line_item;
+    }
+
+    public function getEmptyTipoableAttribute()
+    {
+        return (object) ['enlace' => '', 'codigo' => '', 'numero_documento_enlace' => '' , 'ubicacion' => []];
+    }
+
     public function getUltimoMovimientoAttribute()
     {
         //ultimo movimiento
-        return $this->seriales_lineas->sortBy('line_id')->last()->line_item->tipoable;
+        return count($this->line_item_last) && count($this->line_item_last->tipoable) ? $this->line_item_last->tipoable : $this->empty_tipoable;
     }
 
     public function getPrimerMovimientoAttribute()
     {
-        //ultimo movimiento
-        return $this->seriales_lineas->sortBy('line_id')->first()->line_item->tipoable;
+        //primer movimiento
+        return count($this->line_item_first) && count($this->line_item_first->tipoable) ? $this->line_item_first->tipoable : $this->empty_tipoable;
     }
 
     public function getUltimoMovimientoNumeroDocumentoAttribute()
@@ -63,6 +89,11 @@ class Seriales extends Model
         return $this->ultimo_movimiento->numero_documento_enlace;
     }
 
+    public function documentos()
+    {
+       return $this->morphMany('Flexio\Modulo\Documentos\Models\Documentos', 'documentable');
+    }
+
 
     public function getHiddenOptionsAttribute()
     {
@@ -71,6 +102,7 @@ class Seriales extends Model
         $html .= '<a href="' . base_url('series/ver/' . $this->uuid_serial) . '" class="btn btn-block btn-outline btn-success">Ver serie</a>';
         $html .= '<a href="' . base_url('inventarios/trazabilidad/' . $this->uuid_serial) . '" class="btn btn-block btn-outline btn-success">Ver bit&aacute;cora</a>';
         $html .= '<a href="' . $this->ultimo_movimiento->enlace . '" class="btn btn-block btn-outline btn-success">Ver &uacute;ltimo movimiento</a>';
+        $html .= '<a href="javascript:" data-id="'. $this->uuid_serial .'" class="btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documentos</a>';
 
         return $html;
     }
@@ -160,6 +192,11 @@ class Seriales extends Model
         return $this->belongsTo('Flexio\Modulo\Catalogos\Models\Catalogo','estado','etiqueta')->where('tipo','=','estado')->where('modulo', 'series');
     }
 
+    public function bodega()
+    {
+        return $this->belongsTo('Flexio\Modulo\Bodegas\Models\Bodegas','bodega_id');
+    }
+
     public function getOtrosCostosAttribute()
     {
         return 0;
@@ -212,8 +249,9 @@ class Seriales extends Model
     }
 
     public static function serial_items($clause){
+        
       return Seriales::with('items.lines_items')->whereHas('items.categoria',function($query) use($clause){
-         $query->where('tipo_id', 8);
+         $query->where('tipo_id', $clause['tipo_item']);
          $query->where('estado',  1);
          $query->where('empresa_id',$clause['empresa_id']);
          $query->where('id_categoria',$clause['categoria_id']);
@@ -237,4 +275,15 @@ class Seriales extends Model
      {
          return new \Flexio\Modulo\Series\Presenter\SeriePresenter($this);
      }
+
+     public function serialesByContratoAlquilerId() {
+         return $this->belongsToMany('Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerItems', 'contratos_items_detalles', 'serie', 'relacion_id');
+
+     }
+
+     public function scopeDeFiltro($query, $campo)
+       {
+           $queryFilter = new \Flexio\Modulo\Inventarios\Services\SerialesFilters;
+           return $queryFilter->apply($query, $campo);
+       }
 }

@@ -46,6 +46,7 @@ use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 use Flexio\Modulo\FacturasVentas\Catalogo\FacturaVentaEmpezable;
+use Flexio\Modulo\CentroFacturable\Models\CentroFacturable;
 
 @include_once ('Refactory.php'); //similacion de trait porque CI no permite hacerlo de otra manera
 class Facturas extends CRM_Controller
@@ -139,7 +140,7 @@ class Facturas extends CRM_Controller
             ),
             "menu" => array(
                 "nombre" => "Crear",
-                "url" => "facturas/crear",
+                "url" => "facturas/creando",
                 "opciones" => array()
             )
         );
@@ -227,7 +228,9 @@ class Facturas extends CRM_Controller
         }
         if (!empty($ms_selected) && preg_match("/alquiler/i", $ms_selected)){
             $clause['formulario'] = "contrato_alquiler";
-        }
+        }else{
+			$clause['formulario'] = array("!=","contrato_alquiler");
+		}
 
         if(!empty($orden_alquiler_id)){
       		$clause["orden_alquiler_id"] = $orden_alquiler_id;
@@ -257,7 +260,8 @@ class Facturas extends CRM_Controller
                 }
                 $hidden_options .= '<a href="' . $url . '" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Ver Factura</a>';
                 $hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success subirArchivoBtn" data-id="' . $row->id . '" data-codigo="' . $row->codigo. '" >Subir documento</a>';
-
+				$hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success imprimirFactura" data-id="' . $row->id . '" data-codigo="' . $row->codigo. '" >Imprimir</a>';
+				
                 if ($row->estado == 'por_cobrar' || $row->estado == 'cobrado_parcial') $hidden_options .= '<a href="' . base_url('cobros/crear?factura=' . $row->uuid_factura) . '" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Registrar Pago</a>';
 
 
@@ -613,7 +617,6 @@ class Facturas extends CRM_Controller
     }
 
     function editar_factura($uuid) {
-
     	$data 			= array();
     	$mensaje 		= array();
     	$breadcrumb 	= array();
@@ -1195,7 +1198,7 @@ class Facturas extends CRM_Controller
 
     }
 
-    public function imprimir($uuid = null) {
+    /*public function imprimir($uuid = null) {
         if ($uuid == null) {
             return false;
         }
@@ -1213,7 +1216,30 @@ class Facturas extends CRM_Controller
         $dompdf->render();
         $dompdf->stream($facturaVenta->codigo . ' - ' . $facturaVenta->cliente->nombre);
 
+    }*/
+	
+	public function imprimirFactura($id_factura = null) {
+		
+        if ($id_factura == null) {
+            return false;
+        }
+		
+        $factura = FacturaVenta::where(['id' => $id_factura])->first();
+		
+        $nombre = $factura->codigo;
+        $formulario = "formularioFactura";
+		
+        $data = [ 'datos' => $factura ];
+		
+        $dompdf = new Dompdf();
+        $html = $this->load->view('pdf/' . $formulario, $data, true);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream($nombre, array("Attachment" => false));
+        exit(0);
     }
+	
 
     function ocultoformulario($facturas = array()) {
 
@@ -1823,7 +1849,7 @@ class Facturas extends CRM_Controller
     function ajax_factura_info() {
         $uuid = $this->input->post('uuid');
         $factura = $this->facturaVentaRepository->findByUuid($uuid);
-        //$factura->load('items','cobros');
+        $factura->load('items','cobros');
         $api = new \Flexio\Modulo\FacturasVentas\Api\FacturaVentaDetalle;
         $detalle_factura = $api->transform($factura);
 
@@ -1949,7 +1975,8 @@ class Facturas extends CRM_Controller
             'public/assets/js/plugins/bootstrap/select2/es.js',
             'public/assets/js/plugins/jquery/jquery.webui-popover.js',
             'public/assets/js/modules/facturas/directives/item_comentario.js',
-            'public/assets/js/default/vue/directives/inputmask.js'
+            'public/assets/js/default/vue/directives/inputmask.js',
+            'public/resources/assets/js/plugins/numero.decimal.js'
         ));
     }
 
@@ -2034,9 +2061,25 @@ class Facturas extends CRM_Controller
 
             $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
                     ->set_output(json_encode($clientes->toArray()))->_display();
-
-
-
             exit;
         }
+
+    public function catalogo_lista_precios(){
+        $clause = array('empresa_id' => $this->empresa_id);
+        $clause_lista_precios = array_merge($clause, ["estado" => 1, "tipo_precio" => 'venta']);
+        $preciosQuery=Precios_orm::query();
+
+        if(isset($_POST['id'])){
+            $preciosQuery->where("id", "=",$_POST['id'] );
+        }else if(isset($_POST['q'])){
+            $preciosQuery->where("id", "like","%".$_POST['q']."%" );
+        }
+
+        $precios = $preciosQuery->get(array('id', 'uuid_precio', 'nombre'))->toArray();
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($precios))->_display();
+        exit;
+
+    }
 }

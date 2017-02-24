@@ -16,6 +16,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon as Carbon;
 use Flexio\Modulo\ContratosAlquiler\Repository\ContratosAlquilerRepository;
 use Flexio\Modulo\Cotizaciones\Repository\LineItemRepository as LineItemRepository;
+use Flexio\Modulo\OrdenesAlquiler\Models\OrdenVentaAlquiler;
 use Flexio\Modulo\OrdenesAlquiler\Repository\OrdenVentaAlquilerRepository as OrdenVentaAlquilerRepository;
 use Flexio\Modulo\OrdenesAlquiler\Repository\OrdenVentaCatalogoRepository as OrdenVentaCatalogoRepository;
 use Flexio\Modulo\FacturasVentas\Repository\FacturaVentaRepository as FacturaVentaRepository;
@@ -556,10 +557,11 @@ class Ordenes_alquiler extends CRM_Controller {
             Capsule::beginTransaction();
             try {
                 if (empty($orden_alquiler['id'])) {
-                    $total = $this->OrdenVentaAlquilerRepository->lista_totales(['empresa_id' => $this->empresa_id]);
+                    /*$total = $this->OrdenVentaAlquilerRepository->lista_totales(['empresa_id' => $this->empresa_id]);
                     $year = Carbon::now()->format('y');
                     $codigo = Util::generar_codigo('SOA' . $year, $total + 1);
-                    $orden_alquiler['codigo'] = $codigo;
+                    $orden_alquiler['codigo'] = $codigo;*/
+                    $orden_alquiler['codigo'] = $this->getLastCodigo();
                 }
 
                 $data = array('ordenalquiler' => $orden_alquiler, 'lineitem' => $lineitems);
@@ -602,6 +604,15 @@ class Ordenes_alquiler extends CRM_Controller {
             $this->session->set_flashdata('mensaje', $mensaje);
             redirect(base_url('ordenes_alquiler/listar'));
         }
+    }
+
+    function getLastCodigo(){
+        $clause = ['empresa_id' => $this->empresa_id];
+        $year = Carbon::now()->format('y');
+        $ovalquiler = OrdenVentaAlquiler::where($clause)->get()->last();
+        $codigo_actual = is_null($ovalquiler)? 0: $ovalquiler->codigo;
+        $codigo = (int)str_replace('SOA'.$year, "", $codigo_actual);
+        return $codigo + 1;
     }
 
     //desde modal de opciones...

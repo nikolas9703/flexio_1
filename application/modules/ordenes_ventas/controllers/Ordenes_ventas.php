@@ -239,7 +239,7 @@ class Ordenes_ventas extends CRM_Controller {
 
         $this->assets->agregar_var_js(array(
             'bodegas' => $this->BodegasRepository->getCollectionBodegas($this->BodegasRepository->get($clause)),
-            'cotizaciones' => $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause)),
+            'cotizaciones' => $cotizaciones,
             'usuario_id' => $this->usuario_id,
             'clientes' => $this->ClienteRepository->getCollectionClientes($this->ClienteRepository->getClientesEstadoActivo($clause)->get()),
             'terminos_pago' => $this->FacturaVentaCatalogoRepository->getTerminoPago(),
@@ -590,15 +590,17 @@ class Ordenes_ventas extends CRM_Controller {
         exit;
     }
 
-    public function ocultotabla($uuid = NULL, $modulo = NULL) {
-        //If ajax request
-//echo "ocultotabla";
-
+    public function ocultotabla($uuid = NULL, $modulo = NULL)
+    {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/ordenes_ventas/tabla.js'
         ));
 
-        if (!empty($uuid) && !is_null($modulo)) {
+        if(is_array($uuid) && !empty($uuid)){
+            $this->assets->agregar_var_js(array(
+                "campo" => $uuid
+            ));
+        }else if(!empty($uuid) && !is_null($modulo)) {
             $this->_planel_variable($modulo, $uuid);
         }
 

@@ -6,6 +6,8 @@ var interesesAsegurados = (function(){
   $('#persona').validate({
     submitHandler: function(form) {
       angular.element('#campo[guardar]').attr('disabled', true);
+	  $('input:text,input:hidden, select:hidden, textarea, select').removeAttr('disabled');
+		
       form.submit();
     }
   });
@@ -75,13 +77,17 @@ var interesesAsegurados = (function(){
         $('.PAS').hide();
         $('.pasaporte').val('');
         $('.noPAS').show();
-        //if(desde == "solicitudes"){
-          //console.log(vista);
+        if(desde == "solicitudes"){
+          
           $('.letra').val($('#id_letras').val());
           $('#provincia').val($('#id_provincia').val());
-        //}
+        }
         //$('.letra').val('');
-        $(".provincia").prop("disabled", false);
+         $(".provincia").prop("disabled", false);
+        if($("#provincia").data("disabled")===true){
+          $(".provincia").prop("disabled", true);
+        }
+       
       }
       else if(letra === 'pasaporte'){
         $('.PAS').show();
@@ -139,7 +145,7 @@ var interesesAsegurados = (function(){
       submitHandler: function(form) {         
             //Habilitar campos ocultos
             $('input:hidden, select:hidden, textarea').removeAttr('disabled');
-
+			$('input:text,input:hidden, select:hidden, textarea, select').removeAttr('disabled');
             //Enviar el formulario
             form.submit();                        
           }
@@ -233,7 +239,63 @@ var interesesAsegurados = (function(){
       });             
     }
     $(document).ready(function(){
-     
+		if(cliente==='si')
+		{
+			register_user_persona(datos_cliente.identificacion);
+			
+			$('#nombrePersona').val(datos_cliente.nombre);
+			$('#nombrePersona').attr('disabled', 'disabled');
+			$('#formulario').attr('disabled', 'disabled');
+			$('#telefono_residencial').val(telefono_cliente_residencial);
+			$('#telefono_oficina').val(telefono_cliente_oficina);
+			$('#correoPersona').val(correo_cliente);
+			$('#direccion').val(direccion_residencial_cliente);
+			$('#direccion_laboral').val(direccion_laboral_cliente);
+			
+			if(datos_cliente.tipo_identificacion==='pasaporte')
+			{
+				$('#identificacion').val('pasaporte');
+				$('#pasaporte').val(datos_cliente.identificacion);
+				$('#identificacion').attr('disabled', 'disabled');
+				$('#pasaporte').attr('disabled', 'disabled');
+			}
+			else
+			{
+				$('#provincia').trigger('click');
+				
+				$('#identificacion').val('cedula');
+				$('#provincia').val(datos_cliente.detalle_identificacion.provincia);
+				$('#letra').val(datos_cliente.detalle_identificacion.letra);
+				$('#tomo').val(datos_cliente.detalle_identificacion.tomo);
+				$('#asiento').val(datos_cliente.detalle_identificacion.asiento);
+				
+				$('#identificacion').attr('disabled', 'disabled');
+				$('#provincia').attr('disabled', 'disabled');
+				$('.provincia').attr('disabled', 'disabled');
+				$('#letra').attr('disabled', 'disabled');
+				$('#tomo').attr('disabled', 'disabled');
+				$('#asiento').attr('disabled', 'disabled');
+			}
+			
+			$('#identificacion').trigger('click');
+		}
+	
+      $('.estadoPersona').attr('disabled', 'disabled');
+      var counter = 2;
+      $('#del_file_persona').hide();
+      $('#add_file_persona').click(function(){
+
+        $('#file_tools_persona').before('<div class="file_upload_persona row" id="fpersona'+counter+'"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
+        $('#del_file_persona').fadeIn(0);
+        counter++;
+      });
+      $('#del_file_persona').click(function(){
+        if(counter==3){
+          $('#del_file_persona').hide();
+        }   
+        counter--;
+        $('#fpersona'+counter).remove();
+      });  
       $(".telefono_residencial").inputmask("mask", {"mask": "999-9999"});
       $(".telefono_oficina").inputmask("mask", {"mask": "999-9999"});
 

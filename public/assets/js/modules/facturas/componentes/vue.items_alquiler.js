@@ -49,7 +49,7 @@ Vue.component('items_alquiler', {
             if (typeof items === 'undefined' || items.length === 0) {
                 this.resetItems();
                 return false;
-            }            
+            }
             var data = [];
             $.each(items, function (index, item) {
 
@@ -69,7 +69,7 @@ Vue.component('items_alquiler', {
 
                 //Lista unidades
                 var unidadesList = !_.isEmpty(iteminfo) && iteminfo.unidades.length > 0 ? iteminfo.unidades : [];
-               
+
                 data.push({
                     id: item.item.id,
                     nombre: item.item.nombre,

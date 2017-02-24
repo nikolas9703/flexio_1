@@ -12,9 +12,15 @@ class TransferenciasPagos extends Model
 
 
 
-     public function pago_info()
+    /* public function pago_info()
     {
-        return $this->hasMany(PagosMetodos::Class, 'id', 'tipo_pago_id');
+      ***
+        return $this->hasOne(PagosMetodos::Class, 'id', 'tipo_pago_id');
+    }*/
+
+    public function pago_info()
+    {
+        return $this->hasOne('Flexio\Modulo\Catalogos\Models\Catalogo', 'id', 'tipo_pago_id');
     }
 
 }

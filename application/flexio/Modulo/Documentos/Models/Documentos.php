@@ -3,6 +3,7 @@ namespace Flexio\Modulo\Documentos\Models;
 
 use \Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\Colaboradores\Models\Colaboradores as Colaboradores;
+use Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros;
 use Flexio\Modulo\Pedidos\Models\Pedidos as Pedido;
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra as OrdenesCompra;
 use Flexio\Modulo\OrdenesVentas\Models\OrdenVenta as OrdenVenta;
@@ -33,10 +34,14 @@ use Flexio\Modulo\Catalogos\Models\Catalogo;
 use Flexio\Modulo\Solicitudes\Models\Solicitudes;
 use Flexio\Modulo\Polizas\Models\Polizas;
 use Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Flexio\Modulo\Endosos\Models\Endoso;
+use Flexio\Modulo\Reclamos\Models\Reclamos;
 
 class Documentos extends Model
 {
     use RevisionableTrait;
+    use SoftDeletes;
 
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
@@ -46,26 +51,27 @@ class Documentos extends Model
 	protected $table = 'doc_documentos';
 	protected $fillable = ['id', 'modulo_id', 'empresa_id', 'documentable_id', 'documentable_type', 'archivo_ruta', 'archivo_nombre', 'extra_datos','subido_por','nombre_documento', 'centro_contable_id', 'fecha_documento', 'tipo_id', 'etapa', 'padre_id', 'archivado', 'uuid_documento'];
 	protected $guarded = ['id', 'uuid_documento'];
-    
+    protected $dates = ['deleted_at'];
+
     public function __construct(array $attributes = array()) {
         $this->setRawAttributes(array_merge($this->attributes, array(
             'uuid_documento' => Capsule::raw("ORDER_UUID(uuid())")
                 )), true);
         parent::__construct($attributes);
-    }    
+    }
      public static function boot() {
         parent::boot();
-        
-        static::updating(function($documentos) {          
+
+        static::updating(function($documentos) {
             $cambio = $documentos->getDirty();
             $original = $documentos->getOriginal();
             if(isset($cambio['etapa'])){
             $catalogo_anterior = Catalogo::where("etiqueta","=",$original['etapa'])->get();
-            $catalogo_actual = Catalogo::where("etiqueta","=",$cambio['etapa'])->get();      
+            $catalogo_actual = Catalogo::where("etiqueta","=",$cambio['etapa'])->get();
             $descripcion = "<b style='color:#0080FF; font-size:15px;'>Cambio de estado en el documento</b></br></br>";
             $descripcion .= "Estado actual: ".$catalogo_actual[0]->valor.'</br></br>';
             $descripcion .= "Estado anterior: ".$catalogo_anterior[0]->valor;
-              
+
                 $create = [
                     'codigo' => 'ninguno',
                     'usuario_id' => $documentos->subido_por,
@@ -73,18 +79,18 @@ class Documentos extends Model
                     'documento_id'=> $documentos->id,
                     'tipo'   => "actualizado",
                     'descripcion' => $descripcion
-                ];               
+                ];
                 DocumentosHistorial::create($create);
                 return $documentos;
             }
 
         });
         static::created(function($documentos){
-        
+
         if($documentos->padre_id != 0){
-            $relacionado_a = json_decode($documentos->extra_datos);            
-            $descripcion = "<b style='color:#0080FF; font-size:15px;'>Actualiz&oacute; documento: " . $documentos->archivo_nombre . "</b></br></br>";            
-            $descripcion .= "Factura de compra: " . $relacionado_a->campo->relacionado_a . "<br /><br /><div><a target='_blank' href='". base_url($documentos->archivo_ruta . '/' . $documentos->archivo_nombre) ."' class='btn btn-sm btn-success'> Descargar documento </a></div>";  
+            $relacionado_a = json_decode($documentos->extra_datos);
+            $descripcion = "<b style='color:#0080FF; font-size:15px;'>Actualiz&oacute; documento: " . $documentos->archivo_nombre . "</b></br></br>";
+            $descripcion .= "Factura de compra: " . $relacionado_a->campo->relacionado_a . "<br /><br /><div><a target='_blank' href='". base_url($documentos->archivo_ruta . '/' . $documentos->archivo_nombre) ."' class='btn btn-sm btn-success'> Descargar documento </a></div>";
                 $create = [
                     'codigo' => 'ninguno',
                     'usuario_id' => $documentos->subido_por,
@@ -92,10 +98,10 @@ class Documentos extends Model
                     'documento_id'=> $documentos->padre_id,
                     'tipo'   => "documento",
                     'descripcion' => $descripcion
-                ];               
-          
+                ];
+
         }else{
-        $catalogo_actual = Catalogo::where("etiqueta","=",$documentos->etapa)->get();        
+        $catalogo_actual = Catalogo::where("etiqueta","=",$documentos->etapa)->get();
         $catalogo_name = !empty($catalogo_actual[0]) ? $catalogo_actual[0]->valor : '';
 
         $create = [
@@ -106,14 +112,14 @@ class Documentos extends Model
                 'tipo'   => "creado",
                 'descripcion' => "<b style='color:#0080FF; font-size:15px;'>Se creó un documento</b></br></br>Estado: " . $catalogo_name . "<br /><br /><div><a target='_blank' href='". base_url(!empty($documentos->archivo_ruta) ? $documentos->archivo_ruta : '' . '/' . !empty($documentos->archivo_nombre) ? $documentos->archivo_nombre : '') ."' class='btn btn-sm btn-success'> Descargar documento </a></div>"
             ];
-            
-        }    
-       
+
+        }
+
             DocumentosHistorial::create($create);
             return $documentos;
         });
-    }   
-        
+    }
+
 	public function documentable()
     {
         return $this->morphTo();
@@ -127,14 +133,18 @@ class Documentos extends Model
             return $value;
 
         }
-        
+
         public function getUuidDocumentoAttribute($value)
         {
         return strtoupper(bin2hex($value));
-        }   
+        }
 
 	public function colaboradores() {
 		return $this->belongsTo(Colaboradores::class, 'documentable_id');
+	}
+
+    public function movimientos_retiros() {
+		return $this->belongsTo(MovimientosRetiros::class, 'documentable_id');
 	}
 
 	public function pedidos() {
@@ -231,9 +241,15 @@ class Documentos extends Model
 		public function fac_facturas() {
             return $this->belongsTo(FacturaSeguro::class, 'documentable_id');
         }
+        public function endosos(){
+            return $this->belongsTo(Endoso::class, 'documentable_id');
+        }
+        public function reclamos(){
+            return $this->belongsTo(Reclamos::class, 'documentable_id');
+        }
 
 		public function scopeDeFiltro($query, $campo)
-	    {           
+	    {
 			$queryFilter = new \Flexio\Modulo\Documentos\Services\DocumentoFilters;
 	        return $queryFilter->apply($query, array_filter($campo));
 	    }
@@ -262,7 +278,7 @@ class Documentos extends Model
         }
         public function getEnlaceBitacoraAttribute() {
         return base_url('documentos/historial/'.$this->uuid_documento);
-        }       
+        }
         public function documentos(){
         return $this->belongsTo(Documentos::class, 'padre_id');
         }

@@ -7,8 +7,12 @@ use Flexio\Modulo\Inventarios\Models\Categoria as Categorias;
 class CategoriasRepository{
 
 
-	function getAll($clause) {
-		return Categorias::deEmpresa($clause["empresa_id"])->get();
+	function getAll($clause, $columns=['*']) {
+		$categoria = Categorias::deEmpresa($clause["empresa_id"]);
+        if(!in_array('*', $columns)) {
+            $categoria->select($columns);
+        }
+        return  $categoria->get();
 	}
 
 	private function _filtros($categorias, $clause)

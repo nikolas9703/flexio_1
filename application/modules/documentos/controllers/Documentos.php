@@ -15,6 +15,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use League\Csv\Writer as Writer;
 use Flexio\Modulo\Documentos\Repository\DocumentosRepository as DocumentosRepository;
 use Flexio\Modulo\Documentos\Models\Documentos as DocumentosModel;
+use Flexio\Modulo\Solicitudes\Models\Solicitudes as SolicitudesModel;
 use Flexio\Modulo\Documentos\Repository\TipoDocumentoRepository;
 use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
@@ -97,6 +98,7 @@ class Documentos extends CRM_Controller
 
         //repositories
         $this->DocumentosRepository = new DocumentosRepository();
+        $this->SolicitudesModel = new SolicitudesModel();
         $this->TipoDocumentoRepository = new TipoDocumentoRepository;
         $this->CentrosContablesRepository = new CentrosContablesRepository;
         $this->UsuariosRepository = new UsuariosRepository;
@@ -157,7 +159,9 @@ class Documentos extends CRM_Controller
 
     	$this->load->view('tabla');
     }
-	
+
+    
+
 		public function ocultotabla($modulo_id=NULL) {
     	$this->assets->agregar_js(array(
     		'public/assets/js/modules/documentos/listar.js',
@@ -433,6 +437,11 @@ class Documentos extends CRM_Controller
                     }
                     $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success cambiarEstadoDocumentos">Cambiar estado</a>';
 
+                    if($this->auth->has_permission('acceso','documentos/document_deleting'))
+                    {
+                        $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success documentos/document-deleting">Borrar documento</a>';
+                    }
+
     			}
 
     			$response->rows[$i]["id"] =  $row->id;
@@ -469,6 +478,7 @@ class Documentos extends CRM_Controller
     	);
 
     	$factura_id 		= $this->input->post('factura_id', true);
+        
         $intereses_asegurados_id_persona = $this->input->post('intereses_asegurados_id_persona', true);
         $intereses_asegurados_id_vehiculo = $this->input->post('intereses_asegurados_id_vehiculo', true);
         $intereses_asegurados_id_casco_maritimo = $this->input->post('intereses_asegurados_id_casco_maritimo', true);
@@ -479,29 +489,31 @@ class Documentos extends CRM_Controller
         $intereses_asegurados_id_ubicacion = $this->input->post('intereses_asegurados_id_ubicacion', true);
         $clientes = $this->input->post('id_cliente', true);
         $cotizaciones = $this->input->post('cotizacion_id', true);
-		$pedido_id 		= $this->input->post('pedido_id', true);
-		$facturacompra_id 	= $this->input->post('facturacompra_id', true);
-		$ordencompra_id 	= $this->input->post('ordencompra_id', true);
-		$equipo_id 		= $this->input->post('equipo_id', true);
-		$nombre_colaborador = $this->input->post('nombre_colaborador', true);
-		$no_colaborador 	= $this->input->post('no_colaborador', true);
-		$cedula 		= $this->input->post('cedula', true);
-		$centro_id 		= $this->input->post('centro_id', true);
-		$cargo_id 		= $this->input->post('cargo_id', true);
-		$tipo_accion 		= $this->input->post('tipo_accion', true);
-		$colaborador_id 	= $this->input->post('colaborador_id', true);
-		$estado			= $this->input->post('estado', true);
-		$fecha_desde 		= $this->input->post('fecha_desde', true);
-		$fecha_hasta 		= $this->input->post('fecha_hasta', true);
-		$contrato_id 		= $this->input->post('contrato_id', true);
-		$ordenes_ventas_id 	= $this->input->post('ordenes_ventas_id', true);
-		$proveedores_id 	= $this->input->post('proveedores_id', true);
-		$items_id        	= $this->input->post('item_id', true);
-		$caja_id        	= $this->input->post('caja_id', true);
-		$orden_alquiler_id = $this->input->post('orden_alquiler_id', true);
-		$solicitud_id = $this->input->post('solicitud_id', true);
-		$poliza_id = $this->input->post('poliza_id', true);
-		$intereses_asegurados = false;
+	    	$pedido_id 		= $this->input->post('pedido_id', true);
+	    	$facturacompra_id 	= $this->input->post('facturacompra_id', true);
+	    	$ordencompra_id 	= $this->input->post('ordencompra_id', true);
+	    	$equipo_id 		= $this->input->post('equipo_id', true);
+	    	$nombre_colaborador = $this->input->post('nombre_colaborador', true);
+	    	$no_colaborador 	= $this->input->post('no_colaborador', true);
+	    	$cedula 		= $this->input->post('cedula', true);
+	    	$centro_id 		= $this->input->post('centro_id', true);
+	    	$cargo_id 		= $this->input->post('cargo_id', true);
+	    	$tipo_accion 		= $this->input->post('tipo_accion', true);
+	    	$colaborador_id 	= $this->input->post('colaborador_id', true);
+	    	$estado			= $this->input->post('estado', true);
+	    	$fecha_desde 		= $this->input->post('fecha_desde', true);
+	    	$fecha_hasta 		= $this->input->post('fecha_hasta', true);
+	    	$contrato_id 		= $this->input->post('contrato_id', true);
+	    	$ordenes_ventas_id 	= $this->input->post('ordenes_ventas_id', true);
+	    	$proveedores_id 	= $this->input->post('proveedores_id', true);
+	    	$items_id        	= $this->input->post('item_id', true);
+	    	$caja_id        	= $this->input->post('caja_id', true);
+        $solicitud_id = $this->input->post('solicitud_id', true);
+        $endoso_id = $this->input->post('endoso_id', true);
+				$orden_alquiler_id = $this->input->post('orden_alquiler_id', true);
+        $intereses_asegurados = false;
+		$retiro_id = $this->input->post('retiro_id', true);
+
 
     	if(!empty($nombre_colaborador)){
     		$clause["nombre_completo"] = array("LIKE", "%$nombre_colaborador%");
@@ -598,12 +610,20 @@ class Documentos extends CRM_Controller
         if(!empty($caja_id)){
     		$clause["caja_id"] = $caja_id;
     	}
+
 		if(!empty($solicitud_id)){
     		$clause["documentable_id"] = $solicitud_id;
     	}
         if(!empty($poliza_id)){
             $clause["documentable_id"] = $poliza_id;
         }
+        if(!empty($endoso_id)){
+            $clause["endoso_id"] = $endoso_id;
+        }
+
+		if(!empty($retiro_id)){
+    		$clause["retiro_id"] = $retiro_id;
+      }
     	if(!empty($estado)){
     		$clause["estado"] = array('LIKE', "%$estado%");
     	}
@@ -656,6 +676,11 @@ class Documentos extends CRM_Controller
                                 $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success descargarAdjuntoBtn">Guardar documento</a>';
     			}
 
+                if($this->auth->has_permission('acceso','documentos/document_deleting'))
+                {
+                    $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success documentDeleting">Borrar documento</a>';
+                }
+
     			$response->rows[$i]["id"] =  $row['id'];
     			$response->rows[$i]["cell"] = array(
     				'<a href="'. base_url($archivo_ruta .'/'. $archivo_nombre) .'" target="blank" data-id="'. $row['id'] .'" class="verDetalle" style="color:blue;">'. $row['nombre_documento'] .'</a>',
@@ -675,14 +700,14 @@ class Documentos extends CRM_Controller
     	echo json_encode($response);
     	exit;
     }
-	
+
 public function ajax_listar_seguros($grid=NULL) {
     	Capsule::enableQueryLog();
 
     	$clause = array(
     		"empresa_id" =>  $this->empresa_id
     	);
-		
+
 		$clause2=array();
 
     	$factura_id 		= $this->input->post('factura_id', true);
@@ -723,8 +748,10 @@ public function ajax_listar_seguros($grid=NULL) {
 		$solicitud_id = $this->input->post('solicitud_id', true);
         $poliza_id = $this->input->post('poliza_id', true);
 		$factura_seguro_id = $this->input->post('factura_seguro', true);
+        $endoso_id = $this->input->post('endoso_id', true);
+        $reclamo_id = $this->input->post('reclamo_id', true);
         $intereses_asegurados = false;
-		
+
 		if(!empty($no_accion)){
     		$clause2["nombre_documento"] = array("LIKE", "%$no_accion%");
     	}
@@ -835,7 +862,7 @@ public function ajax_listar_seguros($grid=NULL) {
         if(!empty($caja_id)){
     		$clause["caja_id"] = $caja_id;
     	}
-		
+
 		if(!empty($solicitud_id)){
     		$clause["solicitud_id"] = $solicitud_id;
     	}
@@ -844,6 +871,12 @@ public function ajax_listar_seguros($grid=NULL) {
         }
 		if(!empty($factura_seguro_id)){
             $clause["factura_seguros_id"] = $factura_seguro_id;
+        }
+        if(!empty($endoso_id)){
+            $clause['endoso_id'] = $endoso_id;
+        }
+        if(!empty($reclamo_id)){
+            $clause['reclamo_id'] = $reclamo_id;
         }
     	if(!empty($estado)){
     		$clause["estado"] = array('LIKE', "%$estado%");
@@ -889,7 +922,7 @@ public function ajax_listar_seguros($grid=NULL) {
 				{
 					$info1 = new SplFileInfo($row['archivo_nombre']);
 					$info=$info1->getExtension();
-					
+
 					if($info=="png" || $info=="jpg" || $info=="gif" || $info=="jpeg" || $info=="bmp" || $info=="ai" || $info=="crd" || $info=="dwg" || $info=="svg")
 					{
 						$tipo="Imagen";
@@ -924,7 +957,7 @@ public function ajax_listar_seguros($grid=NULL) {
 				else{
 					$tipo="";
 				}
-				
+
     			$hidden_options = "";
     			$link_option = '<button data-id="'. $row['id'] .'" class="viewOptions btn btn-success btn-sm" type="button" ><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
@@ -1029,59 +1062,107 @@ public function ajax_listar_seguros($grid=NULL) {
 		}
 
 		$documentos = array();
+        $documentoscopia = array();
 		$nombre_docu = array();
                 $nombre_doc = !empty($_POST['nombre_documento']) ? $_POST['nombre_documento'] : '';
                 if(is_array($nombre_doc)){
-                foreach($nombre_doc AS $value){
-                    $nombre_docu = $value;
-                }
+                    foreach($nombre_doc AS $value){
+                        $nombre_docu = $value;
+                    }
                 }else{
-		$nombre_docu = !empty($_POST['nombre_documento']) ? $_POST['nombre_documento'] : '';
-				}
+                  $nombre_docu = !empty($_POST['nombre_documento']) ? $_POST['nombre_documento'] : '';
+              }
 
-		foreach($_FILES AS $field => $_FILE)
-		{
-			$j=0;
-			$i=0;
-			foreach($_FILE AS $file)
-			{
-				if(empty($_FILE["name"][$j])){
-					continue;
-				}
-				//$secuencial = $this->DocumentosRepository->listar(NULL, NULL, NULL, NULL, NULL)->count();
-				$filename 	= $_FILE["name"][$j];
 
-        $not_allowed = ["#"];
-        $allowed = [""];
-        $filename = str_replace($not_allowed, $allowed, $filename);
- 				$type 		= $_FILE["type"][$j];
-				$tmp_name 	= $_FILE["tmp_name"][$j];
 
-				$extension = pathinfo($filename, PATHINFO_EXTENSION);
-				$file_name = preg_replace('/[^A-Za-z0-9\-.]/', '', $filename);
-				if(move_uploaded_file($tmp_name, $empresa_folder . '/' . $file_name)) {
+		$secuencial = $this->DocumentosRepository->listar(NULL, NULL, NULL, NULL, NULL)->count();
+        foreach($_FILES AS $field => $_FILE)
+        {
 
-					$documentos[$i]["archivo_ruta"] = $archivo_ruta;
-					$documentos[$i]["archivo_nombre"] =  $file_name;
-					$documentos[$i]["nombre_documento"] = !empty($nombre_docu) ? $nombre_docu : '';
+            $j=0;
+            $i=0;
+            foreach($_FILE AS $file)
+            {              
+                if(empty($_FILE["name"][$j])){                    
+                    continue;
+                }   
+                //$secuencial = $this->DocumentosRepository->listar(NULL, NULL, NULL, NULL, NULL)->count();
+                
+                $filename 	= $_FILE["name"][$j];
+                $type 		= $_FILE["type"][$j];
+                $tmp_name 	= $_FILE["tmp_name"][$j];
 
-					$documentos[$i] = array_merge($documentos[$i], $fieldset);
+                //if (is_array($ndoc)) { $nodoc = $ndoc[$j]; }else{ $nodoc=""; }                
 
-				} else{
-					log_message("error", "MODULO: ". __METHOD__ .", Linea: ". __LINE__ ." --> No se pudo subir el $field.\r\n");
-				}
+                $extension = pathinfo($filename, PATHINFO_EXTENSION);
+                $file_name = preg_replace('/[^A-Za-z0-9\-.]/', '', $filename);
 
-				$j++;
-				$i++;
-			}
-		}
+                if(move_uploaded_file($tmp_name, $empresa_folder . '/' . $secuencial . "-" . $file_name)) {
+                   
+                   $documentos[$i]["archivo_ruta"] = $archivo_ruta;
+                   $documentos[$i]["archivo_nombre"] = $secuencial . "-" . $file_name;
+                   //$documentos[$i]["nombre_documento"] = !empty($nombre_docu) ? $nombre_docu : '';
+                   $documentos[$i]["nombre_documento"] = $_POST['nombre_documento'][$j];
+                   //   $documentos[$i]["nombre_documento"] = $nodoc;
+                   
+                   $documentos[$i] = array_merge($documentos[$i], $fieldset);
+
+                   if (!empty($_POST['campomodulo'])) {
+                       
+                        if ($_POST['campomodulo'][$j] != "Solicitud") {
+                            $documentoscopia[$i]["archivo_ruta"] = $archivo_ruta;
+                            $documentoscopia[$i]["archivo_nombre"] = $secuencial . "-" . $file_name;
+                            $documentoscopia[$i]["nombre_documento"] = $_POST['nombre_documento'][$j];
+                           
+                            if ($_POST['campomodulo'][$j] == "Cliente") {
+                                $documentoscopia[$i]['documentable_id'] = $_POST['campoidcliente'][$j];
+                                $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\Cliente\Models\Cliente";
+                            }else if($_POST['campomodulo'][$j] == "Intereses asegurado"){
+                                $id_intereses2 = $_POST['campoidinteres'][$j];
+                                $documentoscopia[$i]['documentable_id'] =  $_POST['campoidinteresunico'][$j];;
+                                if ($id_intereses2 == "1") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\ArticuloAsegurados";
+                                } elseif ($id_intereses2 == "2") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\CargaAsegurados";
+                                } elseif ($id_intereses2 == "3") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\AereoAsegurados";
+                                } elseif ($id_intereses2 == "4") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\MaritimoAsegurados";
+                                } elseif ($id_intereses2 == "5") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\PersonasAsegurados";
+                                } elseif ($id_intereses2 == "6") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\ProyectoAsegurados";
+                                } elseif ($id_intereses2 == "7") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\UbicacionAsegurados";
+                                } elseif ($id_intereses2 == "8") {
+                                    $documentoscopia[$i]['documentable_type'] = "Flexio\Modulo\InteresesAsegurados\Models\VehiculoAsegurados";
+                                }
+                            }
+                            $documentoscopia[$i] = array_merge($documentoscopia[$i], $fieldset);
+                        }                     
+
+                   }
+                   
+               } else{
+                   log_message("error", "MODULO: ". __METHOD__ .", Linea: ". __LINE__ ." --> No se pudo subir el $field.\r\n");
+               }
+               $j++;
+               $i++;
+               $secuencial++;
+            }
+        }
+
 
 		Capsule::beginTransaction();
 		try{
-			//dd($documentos);
-
-			$response = $this->DocumentosRepository->create($modeloInstancia, $documentos);
+            		
+            $response = $this->DocumentosRepository->create($modeloInstancia, $documentos);
 			Capsule::commit();
+            if (!empty($documentoscopia)) {
+               $response2 = $this->SolicitudesModel->guardarcopiadocumentos($documentoscopia);
+            }   
+            
+            
 
 		}catch(Illuminate\Database\QueryException $e){
 			log_message('error', __METHOD__." -> Linea: ". __LINE__ ." --> ". $e->getMessage()."\r\n");
@@ -1119,6 +1200,26 @@ public function ajax_listar_seguros($grid=NULL) {
             $mensaje = array('estado' => 200, 'mensaje' =>'<b>¡&Eacute;xito!</b> Se ha guardado correctamente');
 
         }else{
+            $mensaje = array('estado' => 500, 'mensaje' =>'<strong>¡Error!</strong> Su solicitud no fue procesada');
+        }
+        echo json_encode($mensaje);
+    }
+
+    public function document_deleting()
+    {
+        if(empty($_POST)){
+            return false;
+    	}
+
+        $document_id = $this->input->post('document_id');
+        $document = $this->DocumentosRepository->find($document_id);
+
+        if(count($document) && $document->delete())
+        {
+            $mensaje = array('estado' => 200, 'mensaje' =>'<b>¡&Eacute;xito!</b> Se ha eliminado el documento');
+        }
+        else
+        {
             $mensaje = array('estado' => 500, 'mensaje' =>'<strong>¡Error!</strong> Su solicitud no fue procesada');
         }
         echo json_encode($mensaje);
@@ -1341,8 +1442,7 @@ public function ajax_listar_seguros($grid=NULL) {
 			$fieldset['etapa'] = 'por_enviar'; //autot: Cachi
 			$extra_datos[$campo] = $valor;
 		}
-
-		$factura =$this->facturaCompraRepository->find($extra_datos['campo']['factura_id']);
+        $factura =$this->facturaCompraRepository->find($extra_datos['campo']['factura_id']);
 		$fieldset["centro_contable_id"] = $factura->centro_contable_id;
 
 		$extra_datos['campo']['relacionado_a'] = $factura->codigo.' - '.$factura->proveedor->nombre;
@@ -1694,7 +1794,7 @@ public function ajax_listar_seguros($grid=NULL) {
 	echo json_encode($file_url);
     exit;
     }
-	
+
 	public function exportarDocumentos() {
     	if (empty($_POST)) {
     		exit();

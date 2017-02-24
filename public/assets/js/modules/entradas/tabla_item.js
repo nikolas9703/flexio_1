@@ -168,14 +168,15 @@ var tablaEntradas = (function(){
                 erptkn: tkn,
                 factura_compra_id: (typeof factura_compra_id !== 'undefined') ? factura_compra_id : '',
                 item_id: (typeof window.sp_item_id !== 'undefined') ? window.sp_item_id : '',
-                serie_id: (typeof window.sp_serie_id !== 'undefined') ? window.sp_serie_id : ''
+                serie_id: (typeof window.sp_serie_id !== 'undefined') ? window.sp_serie_id : '',
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,
             rowList: [10,20,50,100],
             rowNum: 10,
             page: 1,
-            pager: "#pager",
+            pager: "#pagerTablaItem",
             loadtext: '<p>Cargando...',
             pgtext : "Página {0} de {1}",
             hoverrows: false,

@@ -16,7 +16,16 @@ var depreciacionFormulario = new Vue({
     acceso: acceso === 1? true : false,
     vista: vista,
     tablaError:'',
-    datos:{centro_contable_id:'',categoria_id:''},
+    tiposdeitem : window.tiposdeitem,
+    datos:{ centro_contable_id:'',
+            categoria_id:'',
+            porcentaje:'',
+            cuenta_id_debito: '',
+            cuenta_id_credito: '',
+            tipo_item: '',
+            referencia: ''
+           },
+    catalogo_cuentas_transaccionales: window.catalogo_cuentas_transaccionales,
     articulos:[],
     mensaje:"",
     disableDevolucion:false,
@@ -27,7 +36,14 @@ var depreciacionFormulario = new Vue({
   },
   ready:function(){
     if(this.vista==='ver'){
-      this.datos = depreciacion;
+      
+      this.datos.centro_contable_id = depreciacion.centro_contable_id;
+      this.datos.categoria_id = depreciacion.categoria_id;
+      this.datos.cuenta_id_credito = depreciacion.cuenta_id_credito;
+      this.datos.cuenta_id_debito = depreciacion.cuenta_id_debito;
+      this.datos.tipo_item = depreciacion.tipo_item;
+      this.datos.referencia = depreciacion.referencia;
+      this.datos.porcentaje = depreciacion.porcentaje;
       depreciacion.items.forEach(function(items){
         items.descripcion = items.items_activo_fijo.descripcion;
         items.nombre = items.items_activo_fijo.nombre;
@@ -36,7 +52,6 @@ var depreciacionFormulario = new Vue({
         items.categoria_id = depreciacion.categoria_item.id;
       });
       this.articulos = depreciacion.items;
-
     }
   },
   methods:{
@@ -48,16 +63,23 @@ var depreciacionFormulario = new Vue({
         data:params
       }).then(function(response){
         if(!_.isEmpty(response.data)){
-        response.data.forEach(function(items){
-          var monto_depreciado = parseFloat(items.valor_inicial) * (parseFloat(self.datos.porcentaje) / 100);
+            var articulos =
+            _.filter(response.data, function(o){
+                return parseFloat(o.valor_inicial2) >= 0;
+            });
+          articulos.forEach(function(items){
+          var monto_depreciado = parseFloat(items.valor_inicial) * (parseFloat(parseFloat(porcentaje.value)) / 100);
           items.categoria = params.categoria;
           items.categoria_id = params.categoria_id;
-          items.porcentaje = self.datos.porcentaje;
+          items.porcentaje = parseFloat(porcentaje.value);
           items.monto_depreciado = monto_depreciado;
-          items.valor_actual =  (items.valor_inicial2 > 0) ? parseFloat(items.valor_inicial2) - monto_depreciado : parseFloat(items.valor_inicial) - monto_depreciado;
+          //items.valor_actual =  (items.valor_inicial2 > 0) ? parseFloat(items.valor_inicial2) - monto_depreciado : parseFloat(items.valor_inicial) - monto_depreciado;
+          //case #989 cuando el item no tiene depreciacion valor actual debe ser igual al valor inicial
+          items.valor_actual = (items.valor_inicial2 > 0) ? items.valor_inicial2 : items.valor_inicial;
         });
          self.tablaError="";
-         self.$set('articulos',response.data);
+         self.articulos = articulos;
+         //self.$set('articulos',articulos);
        }else{
          self.tablaError="La categoria no tiene items con seriales";
        }
@@ -73,13 +95,32 @@ var depreciacionFormulario = new Vue({
         return false;
       }
     //  $("#categoria_id").trigger('change');
-      var categoria_id = $("#categoria_id").val();
+    //  using vue method
+      //var categoria_id = $("#categoria_id").val();
       //$("#categoria_id").val(categoria_id);
-      var categoria = $("#categoria_id").select2('data')[0].text;
+      //var categoria = $("#categoria_id").select2('data')[0].text;
       //var categoria = $('#categoria_id option:selected').text();
-      var params = {categoria_id: categoria_id, erptkn:tkn, categoria:categoria};
+      var params = 
+          {
+          categoria_id: categoria_id.value,
+          tipo_item: tipo_item.value,
+          erptkn:tkn, 
+          categoria: categoria_id[categoria_id.selectedIndex].innerText
+          };
       this.getItemsActivosFijos(params);
   }
 
+  },
+  watch:{
+      'datos.categoria_id': function(val, oldVal) {
+          var context = this;
+          if(categoria_id[categoria_id.selectedIndex].getAttribute('porcentaje')!=0){
+                porcentaje.value = categoria_id[categoria_id.selectedIndex].getAttribute('porcentaje');
+            }
+          if(categoria_id[categoria_id.selectedIndex].getAttribute('cuenta_id')!=0){
+              context.datos.cuenta_id_debito = categoria_id[categoria_id.selectedIndex].getAttribute('cuenta_id');
+          }
+      }
   }
+ 
 });

@@ -93,7 +93,7 @@ class Departamentos_orm extends Model
 	 */
 	public static function departamento_centro( $centro_id = NULL, $empresa_id = NULL){
 		return Capsule::table('dep_departamentos_centros AS dc')
-		//->leftJoin('dep_departamentos AS d', 'd.id', '=', 'dc.departamento_id')
+		->leftJoin('dep_departamentos AS d', 'd.id', '=', 'dc.departamento_id')
 		->where('dc.empresa_id', '=', $empresa_id)
 		->where('dc.centro_id', '=', $centro_id)
 		->where('d.estado', '=', 1)

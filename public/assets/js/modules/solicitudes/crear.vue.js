@@ -1,6 +1,6 @@
 Vue.http.options.emulateJSON = true;
 var conta = 0;
-var indCoverageArray=[];
+var hasInteres;
 var planesCoberturasDeducibles = [];
 var arrayauxiliar=[];
 for (var i =0; i< documentacionesgbd.length; i++) {
@@ -276,7 +276,6 @@ var formularioCrear = new Vue({
                 }
                 if (!_.isEmpty(response.data)) {
                     coberturasForm.$set('coberturasInfo', response.data);
-                    indCoverageArray = response.data;
                     self.$set('disabledCoberturas', false);
                     self.$set('disabledSubmit', false);
                 }
@@ -384,6 +383,7 @@ var formularioCrear = new Vue({
             console.log(interes);
             var tipointeres = $('#formulario').val();
             if (interes != "") {
+                hasInteres = true;
                 this.$http.post({
                     url: phost() + 'solicitudes/ajax_get_intereses',
                     async: false,
@@ -516,7 +516,7 @@ var formularioCrear = new Vue({
                                     $("#asiento").val(splitIden[3]);
                                     $("#provincia").prop("disabled", false);
                                     $('#id_letras').val(splitIden[1]);
-
+                                   
                                 } else if(splitIden.length == 3) {
                                     if(isNaN(splitIden[0])){
 
@@ -526,7 +526,7 @@ var formularioCrear = new Vue({
                                         $("#tomo").val(splitIden[1]);
                                         $("#asiento").val(splitIden[2]);
                                     }else{
-
+                                        
                                         $("#provincia").prop("disabled", false);
                                         $("#provincia").val(splitIden[0]);   
                                         $("#letra").val("0");
@@ -534,7 +534,7 @@ var formularioCrear = new Vue({
                                         $("#asiento").val(splitIden[2]);
                                     }
                                 }
-                                $('#id_letras').val(splitIden[0]);
+                                 $('#id_letras').val(splitIden[0]);
 
                             } else {
                                 $("#identificacion").val("pasaporte");
@@ -1064,53 +1064,53 @@ sumatotal: function () {
                     porcentaje = porcentaje + "," + $('#agentes_participacion_' + i).val();
                 }
             }
-
-            if(agtPrincipal!="")
-            {
-                $('#participacionTotal').val(parseFloat(100));
-            }
-            else
-            {
-                $('#participacionTotal').val(parseFloat(suma));
-            }
-
+			
+			if(agtPrincipal!="")
+			{
+				$('#participacionTotal').val(parseFloat(100));
+			}
+			else
+			{
+				$('#participacionTotal').val(parseFloat(suma));
+			}
+			
             $('#agente').val(agente);
             $('#porcentaje').val(porcentaje);
-
-
-            if(isNaN(suma))
-             $('#porcAgentePrincipal').html(parseFloat(100));
-         else
-            $('#porcAgentePrincipal').html(parseFloat(100)-parseFloat(suma));	
-
-    },
-    limpiarDetalle: function () {
-        $(" #sumaaseguradadetalle_articulo, #primadetalle_articulo, #certificadodetalle_articulo, #deducibledetalle_articulo, #sumaaseguradadetalle_carga, #primadetalle_carga, #certificadodetalle_carga, #deducibledetalle_carga, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #certificadodetalle_aereo, #deducibledetalle_aereo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #certificadodetalle_maritimo, #deducibledetalle_maritimo, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #certificadodetalle_proyecto, #deducibledetalle_proyecto, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #certificadodetalle_ubicacion, #deducibledetalle_ubicacion, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #certificadodetalle_vehiculo, #deducibledetalle_vehiculo").val("");
-    },
-    setPrimaNeta: function () {
-        if (id_tipo_int_asegurado == 1) {
-            this.getPrimaNeta("primadetalle_articulo");
-        } else if (id_tipo_int_asegurado == 2) {
-            this.getPrimaNeta("primadetalle_carga");
-        } else if (id_tipo_int_asegurado == 3) {
-            this.getPrimaNeta("primadetalle_aereo");
-        } else if (id_tipo_int_asegurado == 4) {
-            this.getPrimaNeta("primadetalle_maritimo");
-        } else if (id_tipo_int_asegurado == 5) {
-            this.getPrimaNeta("primadetalle_persona");
-        } else if (id_tipo_int_asegurado == 6) {
-            this.getPrimaNeta("primadetalle_proyecto");
-        } else if (id_tipo_int_asegurado == 7) {
-            this.getPrimaNeta("primadetalle_ubicacion");
-        } else if (id_tipo_int_asegurado == 8) {
-            this.getPrimaNeta("primadetalle_vehiculo");
+			
+			
+			if(isNaN(suma))
+					$('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
+			else
+				$('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(suma)).toFixed(2));	
+			
+        },
+        limpiarDetalle: function () {
+            $(" #sumaaseguradadetalle_articulo, #primadetalle_articulo, #certificadodetalle_articulo, #deducibledetalle_articulo, #sumaaseguradadetalle_carga, #primadetalle_carga, #certificadodetalle_carga, #deducibledetalle_carga, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #certificadodetalle_aereo, #deducibledetalle_aereo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #certificadodetalle_maritimo, #deducibledetalle_maritimo, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #certificadodetalle_proyecto, #deducibledetalle_proyecto, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #certificadodetalle_ubicacion, #deducibledetalle_ubicacion, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #certificadodetalle_vehiculo, #deducibledetalle_vehiculo").val("");
+        },
+        setPrimaNeta: function () {
+            if (id_tipo_int_asegurado == 1) {
+                this.getPrimaNeta("primadetalle_articulo");
+            } else if (id_tipo_int_asegurado == 2) {
+                this.getPrimaNeta("primadetalle_carga");
+            } else if (id_tipo_int_asegurado == 3) {
+                this.getPrimaNeta("primadetalle_aereo");
+            } else if (id_tipo_int_asegurado == 4) {
+                this.getPrimaNeta("primadetalle_maritimo");
+            } else if (id_tipo_int_asegurado == 5) {
+                this.getPrimaNeta("primadetalle_persona");
+            } else if (id_tipo_int_asegurado == 6) {
+                this.getPrimaNeta("primadetalle_proyecto");
+            } else if (id_tipo_int_asegurado == 7) {
+                this.getPrimaNeta("primadetalle_ubicacion");
+            } else if (id_tipo_int_asegurado == 8) {
+                this.getPrimaNeta("primadetalle_vehiculo");
+            }
         }
-    }
 
-},
-computed: {
+    },
+    computed: {
 
-    impuestoMonto: function () {
+        impuestoMonto: function () {
             //var imp = this.exoneradoImpuestos == false ? this.impuestoPlan : 0; 
             /*var cadena = $("#ramoscadena").val();
              var imp = 7;
@@ -1242,66 +1242,63 @@ var coberturasForm = new Vue({
 
 
 $(document).ready(function () {
-
-
-
-
-
+	
     if (vista === 'editar') {
         $('#documentos_editar').show();
         $('#docentregados_crear').hide();
         $("#nombre_doc_titulo").hide();
         $("#nombre_doc_titulo_editar").hide();
         $('#cantidad_check').val(documentaciones.length);
-
-        if(agtPrincipal!="")
-        {
-           $('.agentePrincipal').show();
-           $('#nombreAgentePrincipal').html(agtPrincipal);
-           $('#porcAgentePrincipal').html(agtPrincipalporcentaje);
-       }
-       else
-       {
-           $('.agentePrincipal').hide();
-       }
-
-   } else {
-    $("#documentos_editar").hide();
-    $('#docentregados_crear').show();
-    $("#nombre_doc_titulo").hide();
-    $("#nombre_doc_titulo_editar").hide();
-
-
-    if(agtPrincipal!="")
-    {
-       $('.agentePrincipal').show();
-       $('#nombreAgentePrincipal').html(agtPrincipal);
-       $('#porcAgentePrincipal').html(agtPrincipalporcentaje);
-   }
-   else
-   {
-       $('.agentePrincipal').hide();
-   }
-}
-var counter = 2;
-$('#del_file_solicitudes_adicionales').hide();
-$('#add_file_solicitudes_adicionales').click(function () {
-
-    $('#file_tools_solicitudes_adicionales').before('<div class="file_upload_solicitudes_adicionales" id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
-    $('#del_file_solicitudes_adicionales').fadeIn(0);
-    counter++;
-});
-$('#del_file_solicitudes_adicionales').click(function () {
-    if (counter == 3) {
-        $('#del_file_solicitudes_adicionales').hide();
+		
+		if(agtPrincipal!="")
+		{
+			$('.agentePrincipal').show();
+			//$('#nombreAgentePrincipal').val(agtPrincipal);
+			$('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
+			$('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
+		}
+		else
+		{
+			$('.agentePrincipal').hide();
+		}
+		
+    } else {
+        $("#documentos_editar").hide();
+        $('#docentregados_crear').show();
+        $("#nombre_doc_titulo").hide();
+        $("#nombre_doc_titulo_editar").hide();
+		
+		
+		if(agtPrincipal!="")
+		{
+			$('.agentePrincipal').show();
+			$('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
+			$('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
+		}
+		else
+		{
+			$('.agentePrincipal').hide();
+		}
     }
-    counter--;
-    $('#h' + counter).remove();
-});
+    var counter = 2;
+    $('#del_file_solicitudes_adicionales').hide();
+    $('#add_file_solicitudes_adicionales').click(function () {
 
-if (editar_asignado != 1) {
-    $("#usuario_id").attr("disabled", "disabled");
-}
+        $('#file_tools_solicitudes_adicionales').before('<div class="file_upload_solicitudes_adicionales" id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
+        $('#del_file_solicitudes_adicionales').fadeIn(0);
+        counter++;
+    });
+    $('#del_file_solicitudes_adicionales').click(function () {
+        if (counter == 3) {
+            $('#del_file_solicitudes_adicionales').hide();
+        }
+        counter--;
+        $('#h' + counter).remove();
+    });
+
+    if (editar_asignado != 1) {
+        $("#usuario_id").attr("disabled", "disabled");
+    }
 
 });
 
@@ -1405,8 +1402,6 @@ function clearFields(fieldName) {
 }
 
 $(document).ajaxStop(function () {
-
-
 
     if (selInteres != '') {
         if (selInteres != '' && id_tipo_int_asegurado == 1) {
@@ -1597,9 +1592,42 @@ $(document).ajaxStop(function () {
 $("input[name='campo[comision]']").on('change blur', function () {
     $("#comision").val($(this).val());
 });
+$(function () {
+//    console.log(documentaciones.length());
+//    jQuery.validator.setDefaults({
+//        debug: true,
+//        success: "valid"
+//    });
+//    $(formularioCrear).validate({
+//        rules: {
+//            documentacion: {
+//                required: true
+//            }
+//        }
+//    });
 
+//    var cantidad_check = $("#cantidad_check").val();
+//    var $fields = ('input[name="list"]:checked');
+//    if (!$fields.length) {
+//        alert('You must check at least one box!');
+//        return false;
+//    }
+//    for (var i = 0; i < cantidad_check; i++) {
+//    $('input[name="documentacion[]:checked').rules(
+//            "add", {
+//                required: true
+//            });
+//        }
+});
 
 var search = $("#selInteres");
+/*$(search).on("select2:open", function(e) { 
+ console.log("opening ...");       
+ $('ul.select2-results__options li').each(function(){
+ $(this).attr("aria-selected",false);
+ 
+ });
+});*/
 
 
 $("body").on("click", search, function () {
@@ -1608,58 +1636,3 @@ $("body").on("click", search, function () {
 
     });
 });
-
-function saveInvidualCoverage(interesId,interesNumero){
-    var coverageArray =[],
-    deductiblesArray =[];
-    var unico = $('#detalleunico').val();
-    var validateCoverageFields = [
-    {field: {input: "input[name='coverageName[]']", valiation: "alfanúmerico", type: "cn"}},
-    {field: {input: "input[name='coverageValue[]']", valiation: "numeric", type: "cv"}},
-    {field: {input: "input[name='deductibleName[]']", valiation: "alfanúmerico", type: "dn"}},
-    {field: {input: "input[name='deductibleValue[]']", valiation: "numeric", type: "dv"}}];
-    if (customModalValidation(validateCoverageFields) === 0) {
-        coverageArray.push({
-            'coberturas': {nombre: $("input[name='coverageName[]']").map(function () {
-                return $(this).val();
-            }).get(),
-            valor: $("input[name='coverageValue[]']").map(function () {
-                return $(this).val();
-            }).get()
-        }});
-        deductiblesArray.push({'deducibles': {nombre: $("input[name='deductibleName[]']").map(function () {
-            return $(this).val();
-        }).get(),
-        valor: $("input[name='deductibleValue[]']").map(function () {
-            return $(this).val();
-        }).get()
-    } });
-
-
-        $.ajax({
-            type: "POST",
-            data: {
-              deductibles: deductiblesArray[0],
-              coverage:  coverageArray[0],
-              unicDetail:unico,
-              interesId : interesId,
-              erptkn: tkn
-          },
-          url: phost() + 'solicitudes/saveIndividualCoverage',
-          success: function(data)
-          {    
-
-            if ($.isEmptyObject(data.session) == false) {
-                    window.location = phost() + "login?expired";
-                }
-                else if(data==="success"){
-                  $("#IndCoberturas").modal("hide");  
-                  toastr.success('Se han Guardado los cambios correctamente para Interés <b>'+interesNumero);
-              }else{
-                toastr.error('Ocurrio un error al Guardar las coberturas para Interés <b>'+interesNumero);
-              }                 
-               
-          }
-      });   
-    }
-}

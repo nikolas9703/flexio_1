@@ -8,6 +8,7 @@ $route['proveedores/ocultotabla']   = 'proveedores/ocultotabla';
 $route['proveedores/ajax-exportar']             = 'proveedores/ajax_exportar';
 $route['proveedores/ajax-listar']               = 'proveedores/ajax_listar';
 $route['proveedores/ajax-get-proveedor']        = 'proveedores/ajax_get_proveedor';
+$route['proveedores/ajax-get-proveedores'] = 'proveedores/ajax_get_proveedores';
 $route['proveedores/ajax-get-montos'] = 'proveedores/ajax_get_montos';
 $route['proveedores/ajax-valida-identificacion'] = 'proveedores/ajax_valida_proveedor';
 

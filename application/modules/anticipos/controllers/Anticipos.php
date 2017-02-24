@@ -15,6 +15,9 @@ use Carbon\Carbon as Carbon;
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaBancoRepository as CuentaBanco;
 use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
+use Flexio\Modulo\CentrosContables\Models\CentrosContables;
+use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
+use Flexio\Modulo\Polizas\Models\Polizas;
 
 class Anticipos extends CRM_Controller
 {
@@ -27,6 +30,7 @@ class Anticipos extends CRM_Controller
   private $proveedoresRep;
   public $tipo;
   protected $UsuariosRepository;
+  protected $CentrosContables;
 
     function __construct(){
         parent::__construct();
@@ -39,6 +43,7 @@ class Anticipos extends CRM_Controller
 	    $this->empresa_id   = $this->empresaObj->id;
         $this->cuenta_banco = new CuentaBanco;
         $this->proveedoresRep = new ProveedoresRepository();
+        $this->CentrosContables = new CentrosContables;
         $this->setPadreModulo();
         $this->load->module(array('documentos'));
         $this->UsuariosRepository = new UsuariosRepository;
@@ -55,7 +60,8 @@ class Anticipos extends CRM_Controller
 
         $this->_Css();
         $this->assets->agregar_css(array(
-          'public/assets/js/plugins/jquery/context-menu/jquery.contextMenu.min.css'
+          'public/assets/js/plugins/jquery/context-menu/jquery.contextMenu.min.css',
+                         'public/assets/css/plugins/jquery/chosen/chosen.min.css',
         ));
         $this->_js();
         $this->assets->agregar_js(array(
@@ -69,7 +75,7 @@ class Anticipos extends CRM_Controller
         $catalogo_proveedores = new Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
         $catalogo_clientes = new Flexio\Modulo\Cliente\Repository\ClienteRepository;
 
-        if($this->modulo_padre == 'compras'){
+        if(in_array($this->modulo_padre, ["compras", "contratos"])){
             $anticipable = $catalogo_proveedores->get($empresa);
             $this->tipo = $this->modulo_padre;
         }else{
@@ -116,6 +122,9 @@ class Anticipos extends CRM_Controller
         $data['metodos']    = $catalogo_anticipo->getMetodoAnticipo();
         $data['anticipable_type'] = $this->owner();
 
+        $centrosContablesRepository = new \Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository();
+        $data['centro_contables'] =  $centrosContablesRepository->get(['empresa_id'=>$this->empresa_id]);
+
         $breadcrumb["menu"]["opciones"]["#cambiarEstadoAnticipo"] = "Cambiar estado";
         $breadcrumb["menu"]["opciones"]["#exportarListaAnticipo"] = "Exportar";
         $this->template->agregar_titulo_header('Listado de Anticipo');
@@ -140,6 +149,7 @@ class Anticipos extends CRM_Controller
             $clause['anticipable_type'] = $this->anticipable_type();
         }
 
+        $clause['modulo'] = $this->input->post('modulo', true);
         $response = $jqgrid->listar($clause);
 
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
@@ -183,7 +193,7 @@ class Anticipos extends CRM_Controller
             $mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud','clase'=>'alert-danger');
         }
 
-        if($this->modulo_padre == "compras"){
+        if(in_array($this->modulo_padre, ["compras", "contratos"])){
             $this->desde_empezables_compras($request);
             $this->tipo = $this->modulo_padre;
         }else{
@@ -258,19 +268,19 @@ class Anticipos extends CRM_Controller
             redirect(base_url('anticipos/listar'));
         }
 
-        if($this->modulo_padre =="compras"){
-          $subpanels = [
-            'pago'=>['anticipo'=>$anticipo->id],
-            'documento'=>['anticipo'=>$anticipo->id]
-          ];
-          $this->tipo = $this->modulo_padre;
+        if(in_array($this->modulo_padre, ["compras", "contratos"]) || $anticipo->has_proveedor){
+            $subpanels = [
+                'pago'=>['anticipo'=>$anticipo->id],
+                'documento'=>['anticipo'=>$anticipo->id]
+            ];
+            $this->tipo = $this->modulo_padre;
         }
 
         $clause  = array('empresa_id'=> $this->empresa_id);
 
         $this->assets->agregar_var_js(array(
-            "vista"     => 'ver',
-            "acceso"    => $acceso == 0? $acceso : $acceso,
+            "vista" => 'ver',
+            "acceso" => $acceso == 0 ? $acceso : $acceso,
             "hex_anticipo" => $anticipo->uuid_anticipo,
             'usuario_id' => $this->usuario_id,
         ));
@@ -304,6 +314,11 @@ class Anticipos extends CRM_Controller
     }
 
     function ocultoformulario(){
+        $centrosContablesRepository = new \Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository();
+
+        $this->assets->agregar_var_js(array(
+            'centros_contables' => $centrosContablesRepository->get(['empresa_id' => $this->empresa_id]),
+        ));
         $this->load->view('formulario');
     }
 
@@ -327,7 +342,7 @@ class Anticipos extends CRM_Controller
       //$catalogo['caja'] = $cajas->getAll(array_merge($empresa,['estado_id'=>1]));
       //$catalogo["depositable"] = [];
       // hacer dinamico por el tipo se refiere banco o caja
-      if($this->modulo_padre =="compras"){
+      if(in_array($this->modulo_padre, ["compras", "contratos"])){
           $tipoable = [
             ['etiqueta' => 'banco', 'valor'=>'Pagar de cuenta de banco']
           ];
@@ -345,7 +360,11 @@ class Anticipos extends CRM_Controller
        //hacer dinamico se refiere proveedores o clientes
        $catalogo['anticipables'] = $this->catalogo_anticipable($modulo);
        $catalogo['compradores'] = $this->UsuariosRepository->getCollectionUsuarios($this->UsuariosRepository->get($clause));
+	   $centros_contables = $this->CentrosContables->select("nombre","id")->where($empresa)->where("estado","Activo")->get();
+	   $centrosRepository = new CentrosContablesRepository;
 
+	   //$catalogo['centros_contables'] = $this->CentrosContables->getCollectionCentrosContables($centros_contables);
+	   $catalogo['centros_contables'] = $centrosRepository->getCollectionCentrosContablesAnticipos($centros_contables);
 
       $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
         ->set_output(json_encode($catalogo))->_display();
@@ -361,8 +380,8 @@ class Anticipos extends CRM_Controller
        }catch(\Exception $e){
            log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
            $mensaje = array('tipo' => 'error', 'mensaje' => '<b>¡Error! Su solicitud no fue procesada</b>', 'titulo' => "Anticipo");
+			print_r($e->getMessage());
        }
-
        $this->session->set_flashdata('mensaje', $mensaje);
        redirect(base_url('anticipos/listar'));
    }
@@ -468,7 +487,7 @@ class Anticipos extends CRM_Controller
            ]);
            $anticipo->{'proveedor'} = $proveedor;
        }
-       
+
        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
        ->set_output($anticipo)->_display();
        exit;
@@ -476,26 +495,25 @@ class Anticipos extends CRM_Controller
 
    protected function cargar_relaciones($anticipo){
 
-     if($this->modulo_padre =="compras"){
+     if(in_array($this->modulo_padre, ["compras", "contratos"])){
        $anticipo->load('landing_comments','orden_compra','subcontrato','pagos_no_anulados', 'pagos_anulados');
        $anticipo->politica = $anticipo->politica();
        return $anticipo;
      }
 
      $anticipo->load('landing_comments','contrato','orden_venta','anticipable');
-     
+
      $anticipo->politica = [];
      return $anticipo;
    }
 
-   private function owner(){
-
-      if($this->modulo_padre =="compras"){
-          return 'proveedor';
-      }else if($this->modulo_padre =="ventas"){
-        return 'cliente';
-      }
-
+   private function owner()
+   {
+       if(in_array($this->modulo_padre, ["compras", "contratos"])){
+           return 'proveedor';
+       }else if($this->modulo_padre =="ventas"){
+           return 'cliente';
+       }
    }
 
    private function anticipable_type(){
@@ -511,8 +529,8 @@ class Anticipos extends CRM_Controller
    private function catalogo_anticipable($modulo){
 
      $empresa = ['empresa_id' => $this->empresa_id];
-     
-     if($modulo == 'compras'){
+
+     if(in_array($modulo, ["compras", "contratos"])){
        //$catalogo_proveedores = new Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
        //$proveedores = $catalogo_proveedores->get($empresa);
        return [];
@@ -597,20 +615,21 @@ class Anticipos extends CRM_Controller
      return 'fa-line-chart';
    }
 
-   function setPadreModulo(){
-      $request = Illuminate\Http\Request::createFromGlobals();
+    public function setPadreModulo()
+    {
+        $request = Illuminate\Http\Request::createFromGlobals();
+        $moduelo_padre = $this->session->userdata('modulo_padre');
+        if($request->has('contrato')){
+            $this->modulo_padre = 'ventas';
+            return 'ventas';
+        }else if($request->has('subcontrato') || $moduelo_padre == 'contratos'){
+            $this->modulo_padre = 'compras';
+            return 'compras';
+        }
 
-      if($request->has('contrato')){
-        $this->modulo_padre = 'ventas';
-        return 'ventas';
-      }else if($request->has('subcontrato')){
-        $this->modulo_padre = 'compras';
-        return 'compras';
-      }
-
-
-      return $this->modulo_padre = $this->session->userdata('modulo_padre');
-   }
+        $this->modulo_padre = $this->session->userdata('modulo_padre');
+        return $this->modulo_padre;
+    }
 
    public function documentos_campos() {
 
@@ -634,6 +653,55 @@ class Anticipos extends CRM_Controller
        $anticipo        = $anticipoObj->findByUuid($anticipo_id);
        $this->documentos->subir($anticipo);
    }
+
+   /***
+	* Se usa para anticipos de seguros
+	***/
+
+	public function catalogo_anticipos_polizas(){
+		if(!$this->input->is_ajax_request()){
+			return false;
+		}
+		$clause = [];
+		$this->empresa_id;
+		$polizasObj = new Polizas;
+		$id = $this->input->post('id');
+		if(empty($id)){
+			$polizas = $polizasObj->select("pol_polizas.id","pol_polizas.numero as numero_poliza","pol_polizas.ramo as ramo_aso","cli_clientes.nombre as cliente_nombre")->join("pol_poliza_prima","pol_poliza_prima.id_poliza","=","pol_polizas.id")->join("cli_clientes","cli_clientes.id","=","pol_polizas.cliente")->where("pol_polizas.estado","Facturada")->groupBy("pol_polizas.id")->orderBy("cli_clientes.nombre","asc")->orderBy("pol_polizas.ramo","asc")->orderBy("pol_polizas.numero","desc")->get();
+		}else{
+			$polizas = $polizasObj->select("pol_polizas.id","pol_polizas.numero as numero_poliza","pol_polizas.ramo as ramo_aso","cli_clientes.nombre as cliente_nombre")->join("pol_poliza_prima","pol_poliza_prima.id_poliza","=","pol_polizas.id")->join("cli_clientes","cli_clientes.id","=","pol_polizas.cliente")->where("pol_polizas.estado","Facturada")->where("pol_polizas.id",$id)->groupBy("pol_polizas.id")->orderBy("cli_clientes.nombre","asc")->orderBy("pol_polizas.ramo","asc")->orderBy("pol_polizas.numero","desc")->get();
+		}
+
+		/*$response =  $polizas->map(function($fac){
+			return collect([
+				'id'=> $fac->id,
+				'nombre'=> $fac->numero_poliza." - ".$fac->ramo_aso." - No. ".$fac->cliente_nombre,
+				'codigo'=> $fac->codigo,
+				'numero_poliza' => $fac->numero_poliza,
+				'fecha_desde' => $fac->fecha_desde,
+				'fecha_hasta' => $fac->fecha_hasta,
+				'total' => $fac->total,
+				'cobros'=> $fac->cobros,
+				'cliente'=> $fac->cliente,
+				'ordenes_ventas' => $fac->ordenes_ventas->where('estado','facturado_completo')
+			]);
+		});*/
+
+		$response =  $polizas->map(function($fac){
+			return collect([
+				'id'=> $fac->id,
+				'nombre'=> "No. ".$fac->numero_poliza." - ".$fac->ramo_aso." - ".$fac->cliente_nombre,
+                'cliente'=> $fac->cliente,
+                'ordenes_ventas' => $fac->ordenes_ventas,
+                'proveedor' => $fac->cliente
+			]);
+		});
+
+
+
+		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+		exit();
+	}
 
 
     private function _Css(){

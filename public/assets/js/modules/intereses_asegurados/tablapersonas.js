@@ -1,8 +1,6 @@
 
 if(desde=="solicitudes" || desde == "poliza"){
-    var counterCoveragePerson = indCoverageArray.length,
-    counterDedutiblePerson = indCoverageArray.length,
-    defaultArray = indCoverageArray; 
+
     var tablaSolicitudesPersonas = (function () {
 
         var unico = $("#detalleunico").val();
@@ -188,13 +186,14 @@ if(desde=="solicitudes" || desde == "poliza"){
             e.returnValue = false;
             e.stopPropagation();
             var id = $(this).attr("data-id");
+            console.log(id);
             var rowINFO = $.extend({}, gridObj.getRowData(id));
             var options = rowINFO.link;
+            console.log(rowINFO.nombrePersona);
             var numero_interes = rowINFO.numero;
-            var numberText = $(numero_interes).text();
-            //Init Modal data-int-gr
+            //Init Modal
             
-            opcionesModal.find('.modal-title').empty().append('Opciones: ' +numberText+'');
+            opcionesModal.find('.modal-title').empty().append('Opciones: ' +$(numero_interes).text()+'');
             opcionesModal.find('.modal-body').empty().append(options);
             opcionesModal.find('.modal-footer').empty();
             opcionesModal.modal('show');
@@ -410,11 +409,11 @@ if(desde=="solicitudes" || desde == "poliza"){
      $('#participacion_persona').val(response.detalle_participacion);
      if(response.detalle_relacion == "Principal"){
         $('#participacion_persona').attr('disabled',true);
-    }
-    $("#montodetalle_persona").val(response.detalle_monto);
-    $("#primadetalle_persona").val(response.detalle_prima);
-    $("#opcionesModalIntereses").modal("hide");
-});
+     }
+     $("#montodetalle_persona").val(response.detalle_monto);
+     $("#primadetalle_persona").val(response.detalle_prima);
+     $("#opcionesModalIntereses").modal("hide");
+ });
 }, 1000);
 }
 
@@ -448,127 +447,9 @@ if(desde=="solicitudes" || desde == "poliza"){
 
     });*/
 
-    $(opcionesModal).on("click", ".setIndividualCoverage", function (e) {
 
-        e.preventDefault();
-        e.returnValue=false;
-        e.stopPropagation();
-        var planes = $("#planes");
-        if($(planes).val()!==""){
-            var id = $(this).attr("data-int-gr");
-            var rowINFO = $.extend({}, gridObj.getRowData(id));
-            var options = rowINFO.link;
-            var numero_interes = rowINFO.numero;
-            var numberText = $(numero_interes).text();
-            //Init Modal data-int-gr 
-            var btnDismiss ='<button type="button" class="close" data-dismiss="modal">&times;</button>';      
-            var pantalla = $('.individual');
-            var modalContainer = $("#IndCoberturas");
-            var botones_coberturas = $('.btnIndidualCoverage');
-            $(opcionesModal).modal("hide");
-            
-            pantalla.css('display', 'block');
-            botones_coberturas.css('display', 'block');
-            modalContainer.find('.modal-header').empty().append(btnDismiss+"<h4 style='text-align:center'>Coberturas Interés: "+$(numero_interes).text()+'-'+rowINFO.nombrePersona+"</h4>");
-            modalContainer.find('.modal-body').empty().append(pantalla);
-            modalContainer.find('.modal-footer').empty().append(botones_coberturas);
-            $(modalContainer).modal({
-                backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
-                show: false
-            });
-            modalContainer.modal("show");
 
-            var wrapper = $("#indCoveragefields");
-            var btnAdd  = $("#btnAddCoverage");
-            $(btnAdd).click(function(e){
-                e.preventDefault();
-                var text = '<div class="resetModal" id="cobertura_'+counterCoveragePerson+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="coverageValue[]" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapper).append(text);
-                counterCoveragePerson++;  
-            });
-
-    $(wrapper).on("click",".del_row", function(e){ //user click on remove text
-        e.preventDefault();  
-        counterCoveragePerson--;      
-        $('#cobertura_'+counterCoveragePerson).remove();
-    });
-
-    var wrapperDeductibles = $("#indDeductiblefields");
-    var btnAddDeductibles  = $("#btnAddDeductible");
-    $(btnAddDeductibles).click(function(e){
-        e.preventDefault();
-        var text = '<div class="resetModal"  id="deductible_'+counterDedutiblePerson+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="deductibleValue[]"  class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-        $(wrapperDeductibles).append(text);
-        counterDedutiblePerson++;     
-    });
-
-    $(wrapperDeductibles).on("click",".remove_deductible", function(e){ //user click on remove text
-        e.preventDefault();  
-        counterDedutiblePerson--;      
-        $('#deductible_'+counterDedutiblePerson).remove();
-        
-    });
-    
-    $.ajax({
-        type: "POST",
-        data: {
-          detalle_unico: unico,
-          id_interes :id,
-          erptkn: tkn
-      },
-      url: phost() + 'solicitudes/ajax_get_invidualCoverage',
-      success: function(data)
-      {    
-        if ($.isEmptyObject(data.session) == false) {
-            window.location = phost() + "login?expired";
-        }else{
-
-         var temporalArray = [];
-         temporalArray.coberturas =indCoverageArray.coberturas;
-         temporalArray.deducion   =indCoverageArray.deducion; 
-         if(data.coberturas.length){
-            temporalArray.coberturas = data.coberturas;
-        }
-        if(data.deducion.length){
-            temporalArray.deducion = data.deducion;
-        }
-        $(".resetModal").remove();
-        if(temporalArray.coberturas.length){
-            for (var j = temporalArray.coberturas.length - 1; j >= 0; j--) {
-                var value =temporalArray.coberturas[j];
-                var text = '<div class="resetModal"  id="cobertura_'+counterCoveragePerson+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="coverageValue[]" value="'+value.cobertura_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapper).append(text);
-                counterCoveragePerson++;
-            }
-        }
-        if(temporalArray.deducion.length){
-            for (var i = temporalArray.deducion.length - 1; i >= 0; i--) {
-                var value =temporalArray.deducion[i];
-                var text = '<div class="resetModal" id="deductible_'+counterDedutiblePerson+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="deductibleValue[]"  value="'+value.deducible_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapperDeductibles).append(text);
-                counterDedutiblePerson++;
-            } 
-        }
-            $(".moneda").inputmask('currency',{
-              prefix: "",
-              autoUnmask : true,
-              removeMaskOnSubmit: true
-          });  
-                        
-    }
-}
-});  
-    
-    $("#saveIndividualCoveragebtn").click(function(){
-
-      saveInvidualCoverage(id,numberText);  
-  });  
-}else{
-    $(this).text("Seleccione un plan");
-}
-});
-
-var recargar = function () {
+    var recargar = function () {
 
         //Reload Grid
         gridObj.setGridParam({
@@ -631,6 +512,14 @@ var recargar = function () {
     };
 
 })();
+
+/*$(function () {
+    tablaSolicitudesPersonas.init();
+    $("#jqgh_tablaSolicitudesPersonasGrid_cb span").removeClass("s-ico");
+    $('#jqgh_tablaSolicitudesPersonasGrid_options span').removeClass("s-ico");
+});
+*/
+
 
 }
 

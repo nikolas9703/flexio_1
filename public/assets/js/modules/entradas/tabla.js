@@ -180,7 +180,7 @@ var tablaEntradas = (function(){
             rowList: [10,20,50,100],
             rowNum: 10,
             page: 1,
-            pager: "#pager",
+            pager: "#pagerTablaItem",
             loadtext: '<p>Cargando...',
             pgtext : "Página {0} de {1}",
             hoverrows: false,

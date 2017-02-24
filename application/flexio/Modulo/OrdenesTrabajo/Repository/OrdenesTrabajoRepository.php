@@ -144,7 +144,7 @@ class OrdenesTrabajoRepository
                 $servicio_item->impuesto_id = $impuesto->id;
                 $servicio_item->descuento = !empty($item['descuento']) ? $item['descuento'] : "0";
                 $servicio_item->cuenta_id = $cuenta->id;
-                $servicio_item->precio_total = !empty($item['precio_total']) ? $item['precio_total'] : "0.00";
+                $servicio_item->precio_total = !empty($item['precio_total']) ? str_replace(',','',$item['precio_total']) : "0.00";
                 $servicio_item->atributo_id = !empty($item['atributo_id']) ? $item['atributo_id'] : '0';
                 $servicio_item->atributo_text = !empty($item['atributo_text']) ? $item['atributo_text'] : '0';
                 $servicio_item->impuesto_total = $total_impuesto;
@@ -173,9 +173,25 @@ class OrdenesTrabajoRepository
 
     function update($update)
     {
+        //dd($update);
             //Actualizar Orden de Trabajo
-            $orden_trabajo = OrdenTrabajo::find($update['id']);
-            $orden_trabajo->update($update);
+        $orden_trabajo = OrdenTrabajo::find($update['id']);
+        if(isset($update['orden_de']))$orden_trabajo->orden_de = $update['orden_de'];
+        if(isset($update['orden_de_id']))$orden_trabajo->orden_de_id = $update['orden_de_id'];
+        $orden_trabajo->cliente_id = $update['cliente_id'];
+        $orden_trabajo->tipo_orden_id = $update['tipo_orden_id'];
+        $orden_trabajo->equipo_trabajo_id = $update['equipo_trabajo_id'];
+        $orden_trabajo->centro_facturable_id = $update['centro_facturable_id'];
+        $orden_trabajo->fecha_inicio = $update['fecha_inicio'];
+        $orden_trabajo->fecha_planificada_fin = $update['fecha_planificada_fin'];
+        $orden_trabajo->centro_id = $update['centro_id'];
+        $orden_trabajo->lista_precio_id = $update['lista_precio_id'];
+        $orden_trabajo->facturable_id = $update['facturable_id'];
+        $orden_trabajo->bodega_id = $update['bodega_id'];
+        $orden_trabajo->estado_id = $update['estado_id'];
+        $orden_trabajo->comentario = $update['comentario'];
+        $orden_trabajo->save();
+           // $orden_trabajo->update($update);
             if(!empty($update['servicios'])) {
                 $delete_servicios = !empty($update['delete_servicios']) ? $update['delete_servicios'] : "";
                 unset($_POST["delete_servicios"]);
@@ -203,7 +219,7 @@ class OrdenesTrabajoRepository
 
         return $orden_trabajo;
     }
-    
+
     public function saveComent($comment) {
         //crear un ajax
     }
@@ -265,7 +281,7 @@ class OrdenesTrabajoRepository
         }
 
         //Filtrar Departamento
-        if (!empty($clientes)) {
+        if (!empty($cliente)) {
             $clientes = Cliente::where("nombre", $cliente[0], $cliente[1])->get(array('id'))->toArray();
             if (!empty($clientes)) {
                 $cliente_id = (!empty($clientes) ? array_map(function ($clientes) {
@@ -319,7 +335,7 @@ class OrdenesTrabajoRepository
         $ordenes->comentario_timeline()->save($comentario);
         return $ordenes;
     }
-    
+
     public function getLastEstadoHistory($id) {
         return Capsule::table('revisions as i')
                 ->select(capsule::raw('CONCAT(usr.nombre, " " , usr.apellido) as usuario, i.*'))

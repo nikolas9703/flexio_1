@@ -11,7 +11,7 @@ class CobroFactura extends Model
 
     protected $guarded = ['id'];
     protected $table = 'cob_cobro_facturas';
-
+    protected $casts = ['monto_pagado'=>'float'];
     protected $cobrar = ['factura'=>'Flexio\Modulo\FacturasVentas\Models\FacturaVenta'];
 
     public function __construct(array $attributes = array()){

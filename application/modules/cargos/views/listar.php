@@ -64,6 +64,7 @@
                                             <label for="centro">Periodo tarifario</label>
                                             <select id="periodo" class="form-control">
                                                 <option value="">Seleccione</option>
+                                                <option value="4_horas">4 horas</option>
                                                 <option value="diario">Diario</option>
                                                 <option value="semanal">Semanal</option>
                                                 <option value="mensual">Mensual</option>

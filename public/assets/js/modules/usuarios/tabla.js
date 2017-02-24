@@ -15,6 +15,7 @@ $(function(){
 			'',
 			'',
 			'',
+			'',
 		],
 	   	colModel:[
 			{name:'Nombre Completo', index:'nombre_completo', width:70},
@@ -27,6 +28,7 @@ $(function(){
 			{name:'apellido', index:'apellido', hidedlg:true, hidden: true},
 			{name:'rol_sistema_id', index:'rol_sistema_id', hidedlg:true, hidden: true},
 			{name:'rol_id', index:'rol_id', hidedlg:true, hidden: true},
+			{name:'tipos_subcontrato_id', index:'tipos_subcontrato_id', hidedlg:true, hidden: true},
 	   	],
 		mtype: "POST",
 	   	postData: {
@@ -132,6 +134,8 @@ $(function(){
 	    var email = rowINFO["Correo"];
 	    var rol_sistema_id = rowINFO["rol_sistema_id"];
 	    var rol_id = rowINFO["rol_id"];
+	    var tipos_subcontrato_id = rowINFO["tipos_subcontrato_id"];
+			alert(tipos_subcontrato_id);
 	    //Seleccionar scope de controlador angular del formulario
 	    var scope = angular.element('[ng-controller="crearUsuarioController"]').scope();
 
@@ -146,6 +150,7 @@ $(function(){
 				scope.usuario.email		= email;
 				scope.usuario.rol		= rol_sistema_id;
 				scope.usuario.roles		= rol_id;
+				scope.usuario.tipos_subcontrato		= tipos_subcontrato_id;
 	        });
 	    }, 500);
 		$('#opcionesModal').modal('hide');

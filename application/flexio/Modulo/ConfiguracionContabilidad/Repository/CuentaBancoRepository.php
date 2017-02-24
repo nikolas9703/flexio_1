@@ -30,10 +30,16 @@ class CuentaBancoRepository{
     })->delete();
   }
 
-  public function getAll($empresa=[]){
-    if(empty($empresa))return collect($empresa);
-    return CuentaBanco::with('cuenta')->where($empresa)->get();
-  }
+    public function getAll($empresa=[], $clause = []){
+        if(empty($empresa))return collect($empresa);
+        return CuentaBanco::with('cuenta')->where($empresa)->where(function($query) use ($clause){
+            if(isset($clause['q']) && !empty($clause['q'])){$query->whereHas('cuenta',function($cuenta) use ($clause){
+                $aux = $clause['q'];
+                $cuenta->where('codigo', 'like', "%$aux%");
+                $cuenta->orWhere('nombre', 'like', "%$aux%");
+            });}
+        })->get();
+    }
 
     public function getCollectionCuentasBanco($cuentas_banco)
     {

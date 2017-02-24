@@ -248,6 +248,10 @@ class Polizas extends Model
     public function centros(){
         return $this->belongsTo(CentrosContables::class, 'centro_contable', 'id');
     }
+	
+	public function polizasPrimas(){
+    	return $this->belongsTo(PolizasPrima::class, 'id_poliza');
+    }
 
     public function facturasegurofk(){
     	return $this->hasMany(FacturaSeguro::class, 'id_poliza', 'id');

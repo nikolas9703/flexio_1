@@ -20,7 +20,7 @@
                         <label class="control-label">Bodega de entrega: </label>
                         <select data-placeholder="Seleccione" name="articulos[{{parent_index}}][detalles][{{$index}}][bodega_id]" class="form-control chosen-select" data-rule-required="true" v-model="articulo.bodega_id" :disabled="disabledEditar || disabledEditarTabla">
                             <option value="">Seleccione</option>
-                            <option value="{{bodega.id}}" v-for="bodega in bodegas | orderBy 'nombre'" v-if="articulo.serializable == false || (articulo.serializable == true && articulo.ubicacion_id == bodega.id) || vista=='editar'">{{bodega.nombre}}</option>
+                            <option value="{{bodega.id}}" v-for="bodega in bodegas | orderBy 'nombre'" v-if="articulo.serializable == false || articulo.serializable == true || vista=='editar'">{{bodega.nombre}}</option>
                         </select>
                     </div>
                 </td>

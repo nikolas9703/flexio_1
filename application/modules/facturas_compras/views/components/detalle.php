@@ -54,7 +54,7 @@
 
         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
             <label>Creado por <span required="" aria-required="true">*</span></label>
-            <select name="campo[creado_por]" class="form-control" id="comprador" data-rule-required="true" v-model="detalle.creado_por" v-select2="detalle.creado_por" :config="config.select2" :disabled="true">
+            <select name="campo[creado_por]" data-placeholder="Seleccione" class="form-control" id="comprador" data-rule-required="true" v-model="detalle.creado_por" v-select2-catalog="detalle.creado_por" :config="select2_usuarios"  :disabled="true">
                 <option value="">Seleccione</option>
                 <option :value="usuario.id" v-for="usuario in catalogos.usuarios">{{usuario.nombre}}</option>
             </select>
@@ -77,7 +77,7 @@
 
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
             <label>Recibir en bodega <span required="" aria-required="true">*</span></label>
-            <select name="campo[lugar]" class="chosen" id="lugar" data-rule-required="true" aria-required="true" v-model="detalle.recibir_en_id" v-select2="detalle.recibir_en_id" :config="config.select2" :disabled="config.disableDetalle">
+            <select name="campo[lugar]" class="chosen" id="lugar" data-rule-required="true" aria-required="true" v-model="detalle.recibir_en_id" v-select2-catalog="detalle.recibir_en_id" :config="select2_bodega" :disabled="config.disableDetalle">
                 <option value="">Seleccione</option>
                 <option :value="bodega.bodega_id" v-for="bodega in catalogos.bodegas">{{bodega.nombre}}</option>
             </select>

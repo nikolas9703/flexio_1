@@ -14,6 +14,16 @@ class PolizasAereo extends Model
         $aereo = self::where("id_poliza", $id_poliza)->where(function($query) use($clause,$sidx,$sord,$limit,$start){ 
         	if($limit!=NULL) $query->skip($start)->take($limit);               
         });
+
+        if (isset($clause['matricula']) && $clause['matricula'] != "" ) {
+        	$aereo->where("matricula", "LIKE", "%".$clause['matricula']."%");
+        }
+        if (isset($clause['modelo']) && $clause['modelo'] != "" ) {
+        	$aereo->where("modelo", "LIKE", "%".$clause['modelo']."%");
+        }
+        if (isset($clause['serie']) && $clause['serie'] != "" ) {
+        	$aereo->where("serie", "LIKE", "%".$clause['serie']."%");
+        }
         
         if($sidx!=NULL && $sord!=NULL){ $aereo->orderBy($sidx, $sord); }
 

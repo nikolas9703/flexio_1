@@ -435,7 +435,9 @@ class Solicitudes extends CRM_Controller {
         {
          $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
          $agenteprincipalnombre=$agenteprincipal->nombre;
-         $agtPrincipalporcentaje=100;
+
+         $totalparticipacion=$this->Participacion->where('id_solicitud',$solicitudes->id)->sum('porcentaje_participacion');
+         $agtPrincipalporcentaje=number_format((100-$totalparticipacion),2);
      }
      else
      {
@@ -854,7 +856,8 @@ function comentariosformulario() {
     $data["historial"] = bitacoraModel::join('usuarios', 'seg_solicitudes_bitacora.usuario_id', '=', 'usuarios.id')
     ->where('comentable_id', $bitacora->id)
     ->where('comentable_type', 'Comentario')
-    ->select('seg_solicitudes_bitacora.comentario', "seg_solicitudes_bitacora.comentable_type", 'seg_solicitudes_bitacora.created_at', "usuarios.nombre", "usuarios.apellido")->orderBy("created_at", "desc")->get()->toArray();
+    ->select('seg_solicitudes_bitacora.comentario', "seg_solicitudes_bitacora.comentable_type", 'seg_solicitudes_bitacora.created_at', "usuarios.nombre", "usuarios.apellido")
+    ->orderBy("created_at", "desc")->get()->toArray();
 
     $this->load->view('comentarios', $data);
 }
@@ -946,7 +949,8 @@ public function bitacora($uuid_solicitudes = null) {
     $historial = bitacoraModel::join('usuarios', 'seg_solicitudes_bitacora.usuario_id', '=', 'usuarios.id')
     ->where('comentable_id', $bitacora->id)
     ->select('seg_solicitudes_bitacora.comentario', "seg_solicitudes_bitacora.comentable_type", 'seg_solicitudes_bitacora.created_at', "usuarios.nombre", "usuarios.apellido")
-    ->orderBy("created_at", "desc")->get()->toArray();
+    ->orderBy("created_at", "desc")
+    ->get()->toArray();
     $numero = $bitacora->numero;
     $breadcrumb = array(
         "titulo" => '<i class="fa fa-archive"></i> Historial: Solicitud N° ' . $numero,
@@ -2273,6 +2277,7 @@ function ajax_get_comision() {
                     */
                     $fieldset["comentario"] = "Creación de solicitud<br>Estado: " . $campo['estado'];
                     $fieldset["comentable_type"] = "Creación";
+                    $fieldset['created_at'] = date('Y-m-d H:i:s');
                     $fieldset["comentable_id"] = $solicitudes->id;
                     $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
                     $fieldset["empresa_id"] = $this->empresa_id;
@@ -2281,7 +2286,7 @@ function ajax_get_comision() {
 
                     $IInteres = array();
                     $IInteres['comentable_id'] = $solicitudes->id;
-                    $IInteres['created_at'] = date('Y-m-d H:i:s');
+                    //$IInteres['created_at'] = date('Y-m-d H:i:s');
                     $IInteres["comentable_type"] = "Creacion_interes_solicitudes";
                     $bitacora = $this->bitacoraModel->where('comentable_id', $_POST['detalleunico'])->update($IInteres);
                 } else {
@@ -2906,12 +2911,18 @@ function ajax_get_comision() {
         $coverage    = $this->input->post("coverage");
         $unicDetail  = $this->input->post("unicDetail");
         $interesId   = $this->input->post("interesId");
+        $solicitud   = $this->input->post("solicitud");
         $msg = "";
+        $clause["detalle_unico"] = $unicDetail;
+        $clause["id_interes"] = $interesId;
         try {
-           if(count($deductibles)){
-                IndDeductible::where('id_interes',$interesId)
-                ->where ("detalle_unico",$unicDetail)
-                ->delete();
+         if(count($deductibles)){
+            if(isset($solicitud)&& is_numeric($solicitud)){
+                $clause['id_solicitud'] = $solicitud;
+                unset($clause["detalle_unico"]);
+            }
+            IndDeductible::where($clause)
+            ->delete();
             for ($i=0; $i<count($deductibles["deducibles"]['nombre']);$i++) {
 
                 $value = $deductibles["deducibles"];
@@ -2920,49 +2931,67 @@ function ajax_get_comision() {
                 $indDeductible->nombre = $value['nombre'][$i];
                 $indDeductible->deducible_monetario  = $value['valor'][$i];
                 $indDeductible->id_interes = $interesId;
+                if(isset($solicitud)&& is_numeric($solicitud)){
+                    $indDeductible->id_solicitud = $solicitud; 
+                }
                 $indDeductible->save();
             }
         }
 
         if(count($coverage)){
-            IndCoverage::where('id_interes',$interesId)
-                ->where ("detalle_unico",$unicDetail)
-                ->delete();
-         for ($i=0;$i<count($coverage["coberturas"]['nombre']);$i++) {
-            $value = $coverage["coberturas"];
-            $indCoverage= new IndCoverage();
-            $indCoverage->detalle_unico = $unicDetail;
-            $indCoverage->nombre = $value['nombre'][$i];
-            $indCoverage->cobertura_monetario = $value['valor'][$i];
-            $indCoverage->id_interes=$interesId;
-            $indCoverage->save();
+            IndCoverage::where($clause)
+            ->delete();
+            for ($i=0;$i<count($coverage["coberturas"]['nombre']);$i++) {
+                $value = $coverage["coberturas"];
+                $indCoverage= new IndCoverage();
+                $indCoverage->detalle_unico = $unicDetail;
+                $indCoverage->nombre = $value['nombre'][$i];
+                $indCoverage->cobertura_monetario = $value['valor'][$i];
+                $indCoverage->id_interes=$interesId;
+                if(isset($solicitud)&& is_numeric($solicitud)){
+                    $indCoverage->id_solicitud = $solicitud; 
+                }
+                $indCoverage->save();
+            } 
         } 
-    } 
-    $msg = "success";
-} catch (Exception $e) {
-    $msg = $e->getMessage();
-}
+        $msg = "success";
+    } catch (Exception $e) {
+        $msg = $e->getMessage();
+    }
 
-print $msg;
-
+    print $msg;
+    exit;
 }
 
 function ajax_get_invidualCoverage() {
-        $clause['detalle_unico'] = $this->input->post('detalle_unico');
-        $clause['id_interes'] = $this->input->post("id_interes");
-        $coberturas = IndCoverage::where($clause)
-        ->orderBy("created_at",'asc')
-        ->get()->toArray();
-        $deducion = IndDeductible::where($clause)
-        ->orderBy("created_at",'asc')
-        ->get()
-        ->toArray();
-        $response = new stdClass();
-        $response->coberturas = $coberturas;
-        $response->deducion = $deducion;
-        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-        ->set_output(json_encode($response))->_display();
-        exit;
+
+    $clause['detalle_unico'] = $this->input->post('detalle_unico');
+    $clause['id_interes'] = $this->input->post("id_interes");
+    $clause2["id_planes"] = $this->input->post("planId");
+    $solicitud = $this->input->post("solicitud");
+    if(isset($solicitud)&& is_numeric($solicitud)){
+        $clause['id_solicitud'] = $solicitud;
+        unset($clause['detalle_unico']);
     }
+    $coberturas = IndCoverage::where($clause)
+    ->orderBy("created_at",'asc')
+    ->get()->toArray();
+    $deducion = IndDeductible::where($clause)
+    ->orderBy("created_at",'asc')
+    ->get()
+    ->toArray();
+    if(!count($coberturas) &&!count($deducion)){
+      $coberturas = $this->coberturaModel->where($clause2)->get()->toArray();
+      $deducion = $this->deduciblesModel->where($clause2)->get()->toArray();  
+  }
+
+
+  $response = new stdClass();
+  $response->coberturas = $coberturas;
+  $response->deducion = $deducion;
+  $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+  ->set_output(json_encode($response))->_display();
+  exit;
+}
 
 }

@@ -83,6 +83,11 @@ class DevolucionesAlquiler extends Model
 
     }
 
+    public function cliente()
+    {
+        return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
+    }
+
     public function getItemscontratosAttribute() {
         $devolucion_id = $this->id;
 
@@ -135,6 +140,60 @@ class DevolucionesAlquiler extends Model
         return $this->belongsToMany('Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler', 'entregas_devoluciones', 'devolucion_id', 'entrega_id');
     }
 
+    public function ubicacion()
+    {
+        return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
+    }
+
+    public function externo()
+    {
+        return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
+    }
+
+    public function getModuloAttribute()
+    {
+        return 'Retorno';//mod series
+    }
+
+    public function getTimelineAttribute()
+    {
+        return [
+            "Cliente: ".$this->cliente->nombre,
+            "Fecha: ".Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->format('d-m-Y')
+        ];
+    }
+
+    public function getTipoSpanAttribute()
+    {
+        $attrs  = [
+            "style" => "float:right;color:orange;"
+        ];
+        $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
+
+        return $html->setType("htmlSpan")->setAttrs($attrs)->setHtml("Retorno")->getSalida();
+    }
+    public function getTipoFaAttribute()
+    {
+        $attrs = [
+            "class" => "fa fa-car",
+        ];
+        $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
+        return  $html->setType("htmlI")->setAttrs($attrs)->setHtml('')->getSalida();
+    }
+    public function getTimeAgoAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->diffForHumans();
+    }
+    public function getDiaMesAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->formatLocalized('%d de %B');
+    }
+
+    public function getFechaHoraAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->format('d/m/Y @ H:i');
+    }
+
     public function scopeDeEntregaAlquiler($query, $entrega_alquiler_id)
     {
         return $query->whereHas('entregas',function($entrega) use ($entrega_alquiler_id){
@@ -145,6 +204,11 @@ class DevolucionesAlquiler extends Model
     public function contratos() {
         return $this->belongsToMany('Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler', 'entregas_devoluciones', 'devolucion_id', 'entrega_id');
     }
+
+    public function contratos_alquiler_retornos(){
+        return $this->belongsToMany('Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerItems', 'contratos_items_detalles', 'operacion_id', 'relacion_id');
+    }
+
     public function getFechaFormatAttribute() {
         $data = Carbon::createFromFormat('Y-m-d H:i:s', $this->fecha_devolucion);
         return $data->format('d/m/Y');
@@ -284,5 +348,23 @@ class DevolucionesAlquiler extends Model
                   }
 
                   return array($objetoContrato,$tipo_devolucion, $objetoEntrega) ;
+       }
+
+       public function lines_items()
+       {
+           return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems','tipoable');
+       }
+
+       public function scopeDeFiltro($query, $campo)
+       {
+           $queryFilter = new \Flexio\Modulo\DevolucionesAlquiler\Services\DevolucionAlquilerFilters;
+           return $queryFilter->apply($query, $campo);
+       }
+
+       public function scopeEstadoDevuelto($query)
+       {
+          return $query->whereHas('estado', function ($query) {
+            $query->where('tipo', '=', 'estado')->where('valor', 'LIKE', '%devuelto%');
+          });
        }
 }

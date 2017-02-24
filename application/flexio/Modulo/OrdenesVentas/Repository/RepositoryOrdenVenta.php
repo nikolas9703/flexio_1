@@ -27,6 +27,12 @@ class RepositoryOrdenVenta{
     $this->builder->where('estado','por_facturar');
     return $this;
   }
+
+  function conId($id){
+        $this->builder->where('id',$id);
+        return $this;
+  }
+
   function fetch(){
     return $this->builder->get();
   }

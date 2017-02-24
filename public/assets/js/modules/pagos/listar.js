@@ -10,8 +10,15 @@ $(function(){
         singleDatePicker: true
     }).val('');
 
-    $(".chosen-select").chosen({width: "100%"});
-
+    $(".chosen-select").chosen({
+        width: "100%",
+        allow_single_deselect: true
+    });
+    //ELEMENTOS DE TIPO CHOSEN
+    $("#tipo, #categoria").chosen({
+        width: '100%',
+        allow_single_deselect: true 
+    });
     //funcionalidad de exportacion
     var gridObj = $("#tablaPagosGrid");
 	  var aplicarPagosModal = $('#aplicarPagosModal');
@@ -121,7 +128,7 @@ $(function(){
          $("div.modal-content").find('#cambiarEstadoModalBtn').attr('disabled', true);
 
           $.ajax({
-              url: phost() + 'pagos/aplicar_pagos',
+              url: phost() + 'pagos/ajax_aplicar_pagos',
               data: $('#aplicarPagosForm').serialize(),
               type: "POST",
               dataType: "json",
@@ -148,8 +155,15 @@ $(function(){
                 tablaPagos.recargar();
         });
   });
-
-
+     /*valicación para cuando se accede desde seguros */
+     if(localStorage['ms-selected'] == "seguros") {
+      $("a.btn.btn-primary").each(function(index, el) {
+        if($(this).html() == "Crear") {
+          $(this).replaceWith('<label class="btn" >Acción</label>');
+        }
+      });
+      $(".breadcrumb").html($(".breadcrumb").html().replace("Compras","Seguros"));
+     }
 
 
     $("#moduloOpciones").on("click", "#generarMultiplesACH", function(){

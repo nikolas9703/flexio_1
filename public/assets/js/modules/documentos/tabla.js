@@ -13,11 +13,17 @@ var tablaAccionPersonal = (function(){
 		buscar: "#searchBtn",
 		limpiar: "#clearBtn",
 		descargar: ".descargarAdjuntoBtn",
-    detalle: ".verAdjuntoBtn",
-    editNombre: ".editnombreBtn"
+		exportar:"#exportarBtn",
+    	detalle: ".verAdjuntoBtn",
+    	editNombre: ".editnombreBtn",
+		documentDeleting: ".documentDeleting"
 	};
 
 	var tabla = function(){
+		var campos = {};
+		if(!_.isUndefined(window.campo)){
+	        campos = window.campo;
+	    }
 
 		var spordenalquilerid = "";
 		var contratoid = "";
@@ -42,6 +48,9 @@ var tablaAccionPersonal = (function(){
     var itemsid = "";
     var cajasId = "";
 	var moduloId = "";
+	var solicitudId = "";
+	var polizaId = "";
+	var endosoId = "";
 		var ocultar_opciones = false;
 
 		if(typeof modulo_id != "undefined"){
@@ -102,6 +111,9 @@ var tablaAccionPersonal = (function(){
                 if(typeof ordenes_ventas_id != "undefined"){
 			ordenesventas = ordenes_ventas_id;
 		}
+                if(typeof orden_venta != "undefined") {
+                        ordenesventas = orden_venta.id;
+                }
                 if(typeof proveedores_id != "undefined"){
 			proveedoresid = proveedores_id;
 		}
@@ -110,6 +122,15 @@ var tablaAccionPersonal = (function(){
 		}
                 if(typeof caja_id != "undefined"){
 			cajasId = caja_id;
+		}
+		  if(typeof solicitud_id != "undefined"){
+			solicitudId = solicitud_id;
+		}
+		if(typeof poliza_id != "undefined"){
+			polizaId = poliza_id;
+		}
+		if(typeof endoso_id != "undefined"){
+			endosoId = endoso_id;
 		}
 
 		//inicializar jqgrid
@@ -131,7 +152,7 @@ var tablaAccionPersonal = (function(){
 			   	{name:'No. Accion personal', index:'no_accion', width: 40},
 					{name:'Tipo de accion personal', index:'accionable_type', width:40},
 					{name:'Colaborador', index:'colaborador_id', width:40},
-					{name:'link', index:'link', width:25, sortable:false, resizable:false, hidedlg:true, align:"center", hidden: ocultar_opciones},
+					{name:'link', index:'link', width:25, sortable:false, resizable:false, hidedlg:true, align:"center", hidden: ocultar_opciones, search:false},
 					{name:'options', index:'options', hidedlg:true, hidden: true},
 					{name:'archivo_ruta', index:'archivo_ruta', hidedlg:true, hidden: true},
 					{name:'archivo_nombre', index:'archivo_nombre', hidedlg:true, hidden: true},
@@ -145,7 +166,7 @@ var tablaAccionPersonal = (function(){
 		   		factura_id: facturaventaid,
 		   		pedido_id: pedidoid,
 		   		facturacompra_id: facturacompra_id,
-		   		ordencompra_id: moduloId,
+		   		ordencompra_id: facturacompra_id !== '' ? '' : moduloId,
 		   		colaborador_id: colaboradorid,
 		   		equipo_id: equipoid,
           intereses_asegurados_id_persona:interesesaseguradosidpersona,
@@ -162,7 +183,11 @@ var tablaAccionPersonal = (function(){
 					orden_alquiler_id: spordenalquilerid,
           proveedores_id:proveedoresid,
           item_id:itemsid,
-          caja_id:cajasId
+          caja_id:cajasId,
+		  solicitud_id:solicitudId,
+		  poliza_id:polizaId,
+		  endoso_id:endosoId,
+		  campo:campos
 		   	},
 			height: "auto",
 			autowidth: true,
@@ -176,6 +201,7 @@ var tablaAccionPersonal = (function(){
 		    refresh: true,
 		    gridview: true,
 		    multiselect: true,
+			search:true,
 		    sortname: 'created_at',
 		    sortorder: "DESC",
 		    beforeProcessing: function(data, status, xhr){
@@ -207,6 +233,9 @@ var tablaAccionPersonal = (function(){
 		$(window).resizeEnd(function() {
 			tablaAccionPersonal.redimensionar();
 		});
+
+		grid_obj.jqGrid('navGrid',grid_id,{del:false,add:false,edit:false,search:true});
+		grid_obj.jqGrid('filterToolbar',{searchOnEnter : false});
 	};
 
 	//Inicializar Eventos de Botones
@@ -231,6 +260,12 @@ var tablaAccionPersonal = (function(){
 		    opcionesModal.find('.modal-footer').empty();
 		    opcionesModal.modal('show');
 		});
+
+		//document soft deleting
+	    $(opcionesModal).on("click", botones.documentDeleting, function(e){
+	        var document_id = $(this).attr("data-id");
+	        ajaxDocumentDeleting(document_id);
+	    });
 
 		//Ver Detalle
 		$('#optionsModal, #opcionesModal').on("click", botones.detalle, function(e){
@@ -445,6 +480,34 @@ var tablaAccionPersonal = (function(){
 				$('#buscarAccionPersonalForm').find("#fecha_ap_desde").datepicker( "option", "maxDate", selectedDate );
 		    }
 		});
+
+		//Boton de Exportar contacto
+		$(botones.exportar).on("click", function(e){
+			e.preventDefault();
+			e.returnValue=false;
+			e.stopPropagation();
+			if($('#tab_documentos').is(':visible') == true){
+				//Exportar Seleccionados del jQgrid
+				var ids = [];
+				ids = grid_obj.jqGrid('getGridParam','selarrrow');
+				//Verificar si hay seleccionados
+				if(ids.length > 0){
+				console.log(ids);
+					$('#ids_documentos').val(ids);
+			        $('form#exportarDocumentos').submit();
+			        $('body').trigger('click');
+
+					if($("#cb_"+grid_id).is(':checked')) {
+						$("#cb_"+grid_id).trigger('click');
+					}
+					else
+					{
+						$("#cb_"+grid_id).trigger('click');
+						$("#cb_"+grid_id).trigger('click');
+					}
+				}
+	        }
+		});
 	};
 
 	/**
@@ -463,6 +526,23 @@ var tablaAccionPersonal = (function(){
             });
         });
     }
+
+	var ajaxDocumentDeleting = function (document_id){
+		$.ajax({
+			url: phost() + "documentos/document-deleting",
+			type:"POST",
+			data:{erptkn:tkn, document_id: document_id},
+			dataType:"json",
+			success: function(data){
+				opcionesModal.modal('hide');
+				recargar();
+				var aux = {200: 'success', 500: 'error'};
+				toastr[aux[data.estado]](data.mensaje);
+			}
+
+		});
+	};
+
 
 	//Reload al jQgrid
 	var recargar = function(){

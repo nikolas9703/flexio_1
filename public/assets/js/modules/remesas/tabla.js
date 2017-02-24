@@ -17,7 +17,7 @@
         opciones :'.viewOptions',
         clear: "#clearBtn",
         exportar:'#exportarRemesasBtn',
-        modalState: "label.updateState",
+        modalState: "button.updateState",
         cambiarEstado:"#cambiarEstadosBtn"
     };
 
@@ -30,7 +30,7 @@
         '',
         'Nº de Remesa',
         'Recibos remesados',
-        'Nº de Póliza',
+        //'Nº de Póliza',
         'Aseguradora',
         'Monto',
         'Fecha',
@@ -44,7 +44,7 @@
         {name:'id',index:'id', width: 0, align: "center", sortable: false, hidden: true},
         {name:'remesa', index:'seg_remesas.remesa', width:10},
         {name:'recibos_remesados', index:'cantidadRecibos', width:10 },
-        {name:'poliza', index:'pol.numero', width:10 },
+        //{name:'poliza', index:'pol.numero', width:10 },
         {name:'aseguradora_id', index:'aseguradora_id', width:10 },
         {name:'monto', index:'seg_remesas.monto', width: 10  },
         {name:'fecha', index:'seg_remesas.fecha', width: 10  },
@@ -410,8 +410,11 @@ function updateState(arrayStates){
            cambiar = value.ids;
            for (var j = estados.length - 1; j >= 0; j--) {   
              options = estados[j];
-             if(options.name!=value.name){
+             if(options.name!=value.name && value.name!=="Pagada"){
                 button += "<button class='btn btn-block manyremesa' data-estado='"+options.name+"' style='color:white;background-color:"+options.style+"'>"+options.name+"</button>";
+            }else{
+               button =""; 
+               button += "<button class='btn btn-block btn-outline btn-warning'><p>No se puede realizar</p><p>cambio de estado</p></button>"; 
             }
         }
     }

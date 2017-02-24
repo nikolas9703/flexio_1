@@ -21,6 +21,7 @@ class EntregasAlquilerRepository
         if(isset($clause['no_contrato']) and !empty($clause['no_contrato'])){$query->deNoContrato($clause['no_contrato']);}
         if(isset($clause['centro_facturacion_id']) and !empty($clause['centro_facturacion_id'])){$query->deCentroFacturacion($clause['centro_facturacion_id']);}
         if(isset($clause['item_id']) and !empty($clause['item_id'])){$query->deItem($clause['item_id']);}
+        if(isset($clause['campo']) and !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
      }
 
     private function _getHiddenOptions($entrega_alquiler, $auth)
@@ -95,10 +96,14 @@ class EntregasAlquilerRepository
     public function getCollectionCell($entrega_alquiler, $auth)
     {
         $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $entrega_alquiler->uuid_entrega_alquiler .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-
+            if($auth->has_permission('acceso', 'entregas_alquiler/editar/(:any)')) {
+            $enlace_codigo = $entrega_alquiler->numero_documento_enlace;
+            }else{
+            $enlace_codigo =  $entrega_alquiler->numero_documento_enlace_sin_permiso;
+            }
         return [
             $entrega_alquiler->uuid_entrega_alqquiler,
-            $entrega_alquiler->numero_documento_enlace,
+            $enlace_codigo,          
             $entrega_alquiler->fecha_entrega->format('d/m/Y'),
             //'16/01/2016',
             $entrega_alquiler->entregable->numero_documento_enlace,
@@ -143,7 +148,6 @@ class EntregasAlquilerRepository
 
     private function _setItems($entrega_alquiler, $items)
     {
-
         foreach($entrega_alquiler->entregable->contratos_items as $contrato_item)
         {
             foreach($contrato_item->contratos_items_detalles_entregas as $contrato_item_detalle_entrega)
@@ -161,8 +165,13 @@ class EntregasAlquilerRepository
 
             foreach($items as $item)
             {
-
-                if($contrato_item->categoria_id == $item['categoria_id'] && $contrato_item->item_id == $item['item_id'] && $contrato_item->ciclo_id == $item['ciclo_id'])
+                if(
+                    $contrato_item->categoria_id == $item['categoria_id'] &&
+                    $contrato_item->item_id == $item['item_id'] &&
+                    ((count($contrato_item->item->atributos) && $contrato_item->atributo_id == $item['atributo_id']) || (!count($contrato_item->item->atributos) && $contrato_item->atributo_text == $item['atributo_text']))  &&
+                    $contrato_item->ciclo_id == $item['ciclo_id'] &&
+                    $contrato_item->precio_unidad == $item['tarifa']
+                )
                 {
                     $aux = [];
                     foreach($item['detalles'] as $detalle)

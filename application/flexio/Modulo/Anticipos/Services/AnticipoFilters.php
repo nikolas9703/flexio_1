@@ -10,6 +10,13 @@ use Carbon\Carbon as Carbon;
 
 class AnticipoFilters extends QueryFilters{
 
+    public function q($q)
+    {
+        return $this->builder->where(function($query) use ($q){
+            $query->where('codigo', 'like', "%$q%");
+        });
+    }
+
   function codigo($codigo){
     return $this->builder->where('codigo','like',"%".$codigo."%");
   }
@@ -86,5 +93,34 @@ class AnticipoFilters extends QueryFilters{
                 ->where('empezable_type', 'Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra');
       });
   }
+
+  function subcontrato($subcontrato){
+    return $this->builder->whereHas('subcontrato', function ($query) use($subcontrato) {
+        $query->where('id', $subcontrato);
+    });
+  }
+
+    public function modulo($modulo)
+    {
+        if($modulo == 'contratos' || $modulo == 'compras'){
+            $codicion = $modulo == 'compras' ? "!=" : "=";
+            return $this->builder
+            ->select('atc_anticipos.*')
+            ->leftJoin('empezables', function($join) use ($codicion){
+                $join->on('atc_anticipos.id', '=', 'empezables.anticipo_id');
+            })->where(function($q) use ($modulo, $codicion){
+                $q->where("empezables.empezable_type", $codicion, 'Flexio\Modulo\SubContratos\Models\SubContrato');
+                if($codicion == "!=")$q->orWhereRaw("empezables.empezable_type IS NULL");
+            });
+        }
+        return $this->builder;
+    }
+
+    public function centro_contable_id($centro_contable){
+       if(is_array($centro_contable)){
+         return $this->builder->whereIn('centro_contable_id',$centro_contable);
+       }
+       return $this->builder->where('centro_contable_id',$centro_contable);
+    }
 
 }

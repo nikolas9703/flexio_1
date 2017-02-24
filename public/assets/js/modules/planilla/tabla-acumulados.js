@@ -12,11 +12,11 @@ var tablaAcumulados = (function(){
 	var grid_id = "tablaAcumuladosGrid";
 	var grid_obj = $("#tablaAcumuladosGrid");
 	var opcionesModal = $('#opcionesModal');
-  	
+
 	var botones = {
-			opciones: ".viewOptions" 
+			opciones: ".viewOptions"
     	};
- 	
+
 	var lastsel;
 	var tabla = function(){
  		grid_obj.jqGrid({
@@ -24,12 +24,14 @@ var tablaAcumulados = (function(){
 		   	datatype: "json",
 		   	colNames:[
 		   	   'Detalle',
-   	           'Acumulado'
+   	           'Acumulado planilla',
+   	           'Acumulado total'
    			],
 		   	colModel:[
 		   	    {name:'Dia', index:'dia' },
+		   	    {name:'Dia', index:'dia' },
 		   	    {name:'justificacion', index:'justificacion',  sortable:false }
-    				
+
  		   	],
 			mtype: "POST",
 		   	postData: {
@@ -60,11 +62,11 @@ var tablaAcumulados = (function(){
 		    loadBeforeSend: function () {//propiedadesGrid_cb
 		    	$(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
 		    	$(this).closest("div.ui-jqgrid-view").find('#'+ grid_id+'_cb, #jqgh_'+grid_id+"_link").css("text-align", "center");
- 		    }, 
- 		    
+ 		    },
+
 		    beforeRequest: function(data, status, xhr){},
 			loadComplete: function(data){
-				
+
 				//check if isset data
 				if( data['total'] == 0 ){
 					$('#gbox_'+ grid_id).hide();
@@ -76,7 +78,7 @@ var tablaAcumulados = (function(){
 				}
  				$('#'+ grid_id +'Pager_right').empty();
 			},
-			
+
 			 onSelectRow: function(id){
 				 	var parameter = {erptkn: tkn};
 					if(id && id!==lastsel){
@@ -87,8 +89,8 @@ var tablaAcumulados = (function(){
     		},
 		});
 	};
- 
-	return{	    
+
+	return{
 		init: function() {
 			tabla();
 		},
@@ -105,6 +107,3 @@ var tablaAcumulados = (function(){
 })();
 
 tablaAcumulados.init();
-
-
-

@@ -101,13 +101,19 @@ class Ajustadores extends CRM_Controller {
 
         $politicas_transaccion_general = count($this->PoliticasRepository->getAllPoliticasRolesModulo($clause));
         $this->politicas_general = $politicas_transaccion_general;
+        $politicas_transaccion_general2 = $this->PoliticasRepository->getAllPoliticasRolesModulo($clause);
 
         $estados_politicas = array();
         foreach ($politicas_transaccion as $politica_estado) {
             $estados_politicas[] = $politica_estado->politica_estado;
         }
+        $estados_politicasgenerales = array();
+        foreach ($politicas_transaccion_general2 as $politica_estado_generales) {
+            $estados_politicasgenerales[] = $politica_estado_generales->politica_estado;
+        }
 
         $this->politicas = $estados_politicas;
+        $this->politicas_generales = $estados_politicasgenerales;
     }
 
     public function listar() {
@@ -328,7 +334,7 @@ class Ajustadores extends CRM_Controller {
                     }
 
                     $campo['ruc'] = $ruc;
-                    $verificar_ruc = count($this->AjustadoresRepository->consultaRuc($ruc));
+                    $verificar_ruc = count($this->AjustadoresRepository->consultaRucEmp($ruc, $this->empresa_id));
                     $campo["uuid_ajustadores"] = Capsule::raw("ORDER_UUID(uuid())");
                     $clause['empresa_id'] = $this->empresa_id;
                     $total = $this->AjustadoresRepository->listar($clause);
@@ -343,7 +349,7 @@ class Ajustadores extends CRM_Controller {
                         $ajustadores = $this->AjustadoresModel->create($campo);
                     } else {
                         $ajustadores = "";
-                        $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡&Eacute;rror!</b> Registro ya existe', 'titulo' => 'Ajustadores ' . $_POST["campo"]["nombre"]);
+                        $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡&Eacute;rror!</b> Registro ya existe para esta empresa.', 'titulo' => 'Ajustadores ' . $_POST["campo"]["nombre"]);
                         $this->session->set_flashdata('mensaje', $mensaje);
                         redirect(base_url('ajustadores/crear'));
                     }
@@ -465,11 +471,13 @@ class Ajustadores extends CRM_Controller {
             $ajustadores->email = $campo["email"];
             $ajustadores->direccion = $campo["direccion"];
             $ajustadores->estado = $campo["estado"];
+
             if ($ruc != $campo["ruc"]){
-            $verificar_ruc = count($this->AjustadoresRepository->consultaRuc($ruc));
+                $verificar_ruc = count($this->AjustadoresRepository->consultaRucEmp($ruc, $this->empresa_id));
             } else {
                 $verificar_ruc=0;
             }
+
             if ($verificar_ruc == 0) {
                 if ($ajustadores->save()) {
                     $mensaje = array('tipo' => "success", 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente', 'titulo' => 'Ajustadores ' . $_POST["campo"]["nombre"]);
@@ -517,6 +525,7 @@ class Ajustadores extends CRM_Controller {
             "campos" => array(
                 "created_at" => $ajustadores->created_at,
                 "uuid_ajustadores" => $uuid,
+                "ruc" => $ajustadores->ruc,
                 "nombre" => $ajustadores->nombre,
                 "identificacion" => $ajustadores->identificacion,
                 "tomo_j" => $ajustadores->tomo_j,
@@ -534,7 +543,8 @@ class Ajustadores extends CRM_Controller {
                 "estado" => $ajustadores->estado,
                 "guardar" => $guardar,
                 'politicas' => $this->politicas,
-                'politicas_general' => $this->politicas_general
+                'politicas_general' => $this->politicas_general,
+                'politicas_generales' =>$this->politicas_generales
             ),
         );
         $this->template->agregar_titulo_header('ajustadores');
@@ -979,6 +989,10 @@ class Ajustadores extends CRM_Controller {
 
     public function obtener_politicas_general() {
         echo json_encode($this->politicas_general);
+        exit;
+    }
+    public function obtener_politicasgenerales() {
+        echo json_encode($this->politicas_generales);
         exit;
     }
 

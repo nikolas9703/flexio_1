@@ -450,7 +450,8 @@ class Plantillas extends CRM_Controller {
             "estados" => json_encode($estados),
             "plantilla_ver" => json_encode($plantillaInfs),
             "colaborador_id_selected" => json_encode($plantillaInf_colaborador),
-            "firmado_por_id_selected" => json_encode($platillaInf_firmado)
+            "firmado_por_id_selected" => json_encode($platillaInf_firmado),
+            "vista" => "crear"
         ));
 
 

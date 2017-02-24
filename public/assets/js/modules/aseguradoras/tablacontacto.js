@@ -8,7 +8,7 @@ var tablaContactos = (function(){
   
   var botones = {
     opciones: ".aseguradoraopciones", 
-	exportarcontacto: ".botonexportardetalles",
+	exportarcontacto: "#exportarBtn",
 	verdetalle: ".detallecontacto",
 	verdetallenombre:".verdetallenombre",
 	cambiarestadoseparado:".cambiarestadoseparado",
@@ -48,7 +48,7 @@ var tablaContactos = (function(){
 				{name:'estadoestado', index:'estadoestado', width:50,  hidedlg:true, hidden: true},
 				{name:'principal', index:'principal', width:50,  hidedlg:true, hidden: true},
 				{name:'link', index:'link', width:50, sortable:false, resizable:false, hidedlg:true, align:"center", search:false},
-				{name:'options', index:'options', hidedlg:true, hidden: true}  			
+				{name:'options', index:'options', hidedlg:true, hidden: true, search:false}  			
 		   	],
 			mtype: "POST",
 		   	postData: {
@@ -80,7 +80,7 @@ var tablaContactos = (function(){
 		    loadBeforeSend: function () {
 				$(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
 				grid_obj.find('input[type="text"]').css("width", "95% !important");
-                $(this).closest("div.ui-jqgrid-view").find("#tablaContactosGrid_cb, #jqgh_tablaContactosGrid_link").css("text-align", "center");
+                $(this).closest("div.ui-jqgrid-view").find("#"+grid_id+"_cb, #jqgh_tablaContactosGrid_link").css("text-align", "center");
 				
 			}, 
 		    beforeRequest: function(data, status, xhr){},
@@ -285,7 +285,7 @@ var tablaContactos = (function(){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();                        
-			if($('#contactos').is(':visible') == true){			
+			if($('#id_tab_contactos').is(':visible') == true){			
 				//Exportar Seleccionados del jQgrid
 				var ids = [];
 				ids = grid_obj.jqGrid('getGridParam','selarrrow');
@@ -295,6 +295,15 @@ var tablaContactos = (function(){
 					$('#ids').val(ids);
 			        $('form#exportarContactos').submit();
 			        $('body').trigger('click');
+					
+					if($("#cb_"+grid_id).is(':checked')) {
+						$("#cb_"+grid_id).trigger('click');
+					}
+					else
+					{
+						$("#cb_"+grid_id).trigger('click');
+						$("#cb_"+grid_id).trigger('click');
+					}
 				}
 	        }
 		});

@@ -1,10 +1,10 @@
 // Definimos la variable tabs la cual contendrá todo nuestro modulo.
 var tablaAjustes = (function(){
-    
+
     // Objeto al cual establecemos valores que vamos a usar mas adelante en este ambito.
     var st = {
         jqGrid: "#ajustesGrid",
-        optionsModal: "#optionsModal",
+        optionsModal: "#optionsModal, #opcionesModal",
         searchBtn: "#searchBtn",
         clearBtn: "#clearBtn",
         noRecords: ".NoRecordsItems",
@@ -20,7 +20,7 @@ var tablaAjustes = (function(){
         iEstado: "#estado",
         inputsSearch: "#fecha, #bodega, #tipo_ajuste, #numero_ajuste, #categorias, #numero_item, #estado"
     };
-   
+
     // Objeto vacío que guardará elementos que se manejan por HTML.
     var dom = {}
 
@@ -50,22 +50,22 @@ var tablaAjustes = (function(){
         dom.clearBtn.on('click', events.eClearBtn);
     };
 
-    /* Objeto que guarda métodos que se van a usar en cada evento definido 
+    /* Objeto que guarda métodos que se van a usar en cada evento definido
       en la función suscribeEvents. */
     var events = {
         eMostrarModal: function(e)
         {
             var self = $(this);
-            
+
             e.preventDefault();
             e.returnValue=false;
             e.stopPropagation();
-            
+
             var nombre = '';
             var uuid = self.attr("data-uuid");
             var rowINFO = dom.jqGrid.getRowData(uuid);
 	    var options = rowINFO["options"];
-            
+
 
             nombre = rowINFO["Numero de ajuste"];
 	    //Init boton de opciones
@@ -82,7 +82,7 @@ var tablaAjustes = (function(){
             dom.searchBtn.unbind('click', events.eSearchBtnHlr);
 
             var fecha = dom.iFecha.val();
-            
+
             var bodega = dom.iBodega.val();
             var centro = dom.iCentro.val();
             var tipo_ajuste = dom.iTipoAjuste.val();
@@ -140,7 +140,7 @@ var tablaAjustes = (function(){
             dom.inputsSearch.trigger("chosen:updated");
 	}
     };
-    
+
     var muestra_tabla = function(){
         dom.jqGrid.jqGrid({
             url: phost() + st.segmento2 + '/ajax-listar',
@@ -170,13 +170,14 @@ var tablaAjustes = (function(){
             mtype: "POST",
             postData: {
                 erptkn: tkn,
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,
             rowList: [10,20,50,100],
             rowNum: 10,
             page: 1,
-            pager: "#pager",
+            pager: "#pagerAjustes",
             loadtext: '<p>Cargando...',
             pgtext : "Página {0} de {1}",
             hoverrows: false,
@@ -195,7 +196,7 @@ var tablaAjustes = (function(){
             loadBeforeSend: function () {//propiedadesGrid_cb
                 $(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
                 $(this).closest("div.ui-jqgrid-view").find(st.jqGrid + "_cb, #jqgh_" + st.jqGrid + "_link").css("text-align", "center");
-            }, 
+            },
             beforeRequest: function(data, status, xhr){},
             loadComplete: function(data){
 
@@ -208,7 +209,7 @@ var tablaAjustes = (function(){
                     dom.noRecords.hide();
                     $('#gbox_' + st.jqGrid).show();
                 }
-                
+
                 if(multiselect == true){
                     //---------
                     // Cargar plugin jquery Sticky Objects
@@ -218,7 +219,7 @@ var tablaAjustes = (function(){
 
                     //floating headers
                     $('#gridHeader').sticky({
-                        getWidthFrom: '.ui-jqgrid-view', 
+                        getWidthFrom: '.ui-jqgrid-view',
                         className:'jqgridHeader'
                     });
 
@@ -227,7 +228,7 @@ var tablaAjustes = (function(){
                     $(st.jqGrid + " tbody tr").children().first("td").css("width","50px");
                 }
 
-                
+
 
 
             },
@@ -235,8 +236,8 @@ var tablaAjustes = (function(){
                 $(this).find('tr#'+ id).removeClass('ui-state-highlight');
             },
         });
-        
-        dom.jqGrid.jqGrid('columnToggle');
+
+        //dom.jqGrid.jqGrid('columnToggle');
 
         //-------------------------
         // Redimensioanr Grid al cambiar tamaño de la ventanas.
@@ -250,7 +251,7 @@ var tablaAjustes = (function(){
             });
         });
     }
- 
+
     // Función que inicializará los funciones decritas anteriormente.
     var initialize = function(){
         catchDom();
@@ -258,7 +259,7 @@ var tablaAjustes = (function(){
         muestra_tabla();
     };
 
-    /* Retorna un objeto literal con el método init haciendo referencia a la 
+    /* Retorna un objeto literal con el método init haciendo referencia a la
        función initialize. */
     return{
         init:initialize
@@ -272,6 +273,3 @@ var multiselect = window.location.pathname.match(/ajustes/g) ? true : false;
 
 // Ejecutando el método "init" del módulo tabs.
 tablaAjustes.init();
-
- 
-

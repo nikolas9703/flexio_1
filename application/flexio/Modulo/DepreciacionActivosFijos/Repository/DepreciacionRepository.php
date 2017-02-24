@@ -16,6 +16,7 @@ class DepreciacionRepository {
   }
 
   function crear($crear){
+      
       if(!isset($crear['depreciacion']['id'])){
           $depreciacion = DepreciacionActivoFijo::create($crear['depreciacion']);
       }else{

@@ -38,22 +38,28 @@ var formularioCuenta = {
       $("#addCuentaModal").modal('hide');
     });
     planContable.btnGuardar.click(function(e){
-      console.log("guardar");
       e.preventDefault();
       var selfButton = this;
       if($('#form_crear_cuenta').validate().form() === true)
       {
         //$(selfButton).unbind("click");
         $('input').removeAttr("readonly");
+        var padre_id = $('input#padre_id').val();
+        if(padre_id ===""){
+            toastr.warning('debe de seleccionar una cuenta padre','crear cuenta');
+            return false;
+        }
         var guardar = moduloContabilidad.guardarCuenta($('#form_crear_cuenta'));
         guardar.done(function(data){
           var respuesta = $.parseJSON(data);
           if(respuesta.estado==200)
           {
-
-            $("#mensaje_info").empty().html('<div id="success-alert" class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+respuesta.mensaje+'</div>');
+            //$("#mensaje_info").empty().html('<div id="success-alert" class="alert alert-success"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+respuesta.mensaje+'</div>');
+            toastr.success(respuesta.mensaje,'crear cuenta');
             $("#contabilidadGrid").trigger('reloadGrid');
-
+          }else if(respuesta.estado==500){
+            toastr.error(respuesta.mensaje,'Error crear cuenta');
+            return false;
           }
             //$(selfButton).bind("click");
             $("#addCuentaModal").modal('hide');

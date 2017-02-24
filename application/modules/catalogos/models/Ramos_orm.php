@@ -2,9 +2,6 @@
 
 use \Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
-use Flexio\Modulo\Ramos\Models\CatalogoTipoIntereses;
-use Flexio\Modulo\Ramos\Models\CatalogoTipoPoliza;
-
 
 class Ramos_orm extends Model
 {
@@ -46,10 +43,10 @@ class Ramos_orm extends Model
     return $this->belongsTo('Empresa_orm');
   }
   public function interesAsegurado() {
-    return $this->belongsTo(CatalogoTipoIntereses::class,"id_tipo_int_asegurado");
+    return $this->belongsTo('Catalogo_tipo_intereses_orm',"id_tipo_int_asegurado");
   }
   public function tipoPoliza() {
-    return $this->belongsTo(CatalogoTipoPoliza::class,"id_tipo_poliza");
+    return $this->belongsTo('Catalogo_tipo_poliza_orm',"id_tipo_poliza");
   }
   
 

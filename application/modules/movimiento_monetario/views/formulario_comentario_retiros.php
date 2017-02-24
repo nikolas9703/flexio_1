@@ -1,6 +1,3 @@
-<style>.btn-block {
-    display: block;
-    width: 100px!important;}</style>
 <div class="row" ng-controller="entradaManualComentarioController">
 <div class="col-lg-6 col-md-6 col-xs-12 col-sm-12 Comentario<spanrequired>*</span>">
   <form id="entradaComentarioForm">

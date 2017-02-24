@@ -70,4 +70,8 @@ class SubContratoMonto extends Model
         $this->attributes['monto'] = str_replace(',', '', $value);
     }
 
+    public function cuenta() {
+        return $this->belongsTo('Flexio\Modulo\Contabilidad\Models\Cuentas','cuenta_id')->select(['id','codigo','nombre']);
+    }
+
 }

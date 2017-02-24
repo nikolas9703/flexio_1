@@ -14,7 +14,7 @@ var listarSalidas = (function(){
         iFechaDesde: "#fecha_desde",
         iFechaHasta: "#fecha_hasta",
     };
-    
+
     var config = {
         chosen: {
             width: '100%',
@@ -29,7 +29,7 @@ var listarSalidas = (function(){
             singleDatePicker: true
         }
     };
-   
+
     // Objeto vacío que guardará elementos que se manejan por HTML.
     var dom = {}
 
@@ -48,14 +48,14 @@ var listarSalidas = (function(){
     // Función donde establecemos los eventos que tendrán cada elemento.
     var suscribeEvents = function(){
         dom.modulosOpciones.on("click", st.exportarBtn, events.eExportar);
-        
+
         dom.chosens.chosen(config.chosen);
-        
+
         dom.iFechaDesde.daterangepicker(config.dateSimple).val("");
         dom.iFechaHasta.daterangepicker(config.dateSimple).val("");
     };
 
-    /* Objeto que guarda métodos que se van a usar en cada evento definido 
+    /* Objeto que guarda métodos que se van a usar en cada evento definido
       en la función suscribeEvents. */
     var events = {
         eExportar: function(e){
@@ -64,15 +64,15 @@ var listarSalidas = (function(){
             e.stopPropagation();
 
             if(dom.tabla.is(':visible') == true){
-                
+
                 //Desde la Tabla
                 events.eExportarjQgrid();
 
             }else{
-                
+
                 //Desde el Grid
                 events.eExportarGrid();
-                
+
             }
         },
         eExportarjQgrid: function(e) {
@@ -109,7 +109,7 @@ var listarSalidas = (function(){
                 downloadURL(csvUrl, filename);
 
                 $('body').trigger('click');
-            } 
+            }
         },
         eExportarGrid: function(e){
             var registros_grid = [];
@@ -154,30 +154,16 @@ var listarSalidas = (function(){
 
         }
     };
-    
-    var mostrar_mensaje = function(){
-        //mensaje clase viene desde el controlador...
-        if(mensaje_clase != 0)
-        {
-            if(mensaje_clase == "alert-success")
-            {
-                toastr.success("¡&Eacute;xito! Se ha guardado correctamente la << Salida/Salidas de inventario >>.");
-            }
-            else
-            {
-                toastr.error("¡Error! Su solicitud no fue procesada en la << Salida/Salidas de inventario >>.");
-            }
-        }
-    }
- 
+
+
+
     // Función que inicializará los funciones decritas anteriormente.
     var initialize = function(){
         catchDom();
         suscribeEvents();
-        mostrar_mensaje();
     };
 
-    /* Retorna un objeto literal con el método init haciendo referencia a la 
+    /* Retorna un objeto literal con el método init haciendo referencia a la
        función initialize. */
     return{
         init:initialize,
@@ -187,5 +173,3 @@ var listarSalidas = (function(){
 
 // Ejecutando el método "init" del módulo tabs.
 listarSalidas.init();
-
- 

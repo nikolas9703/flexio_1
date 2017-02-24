@@ -15,7 +15,7 @@ $(function() {
         colNames:[
             'No. Abono',
             'Fecha de Abono',
-            'Monto', 
+            'Monto',
             '',
             ''
         ],
@@ -29,7 +29,8 @@ $(function() {
         mtype: "POST",
         postData: {
             erptkn: tkn,
-            id_cliente:id_cliente
+            id_cliente:id_cliente,
+            campo: typeof window.campo !== 'undefined' ? window.campo : {}
         },
         height: "auto",
         autowidth: true,
@@ -59,7 +60,7 @@ $(function() {
             $('#load_clientes_abonosGrid').addClass('ui-corner-all');
         },
         loadComplete: function(data){
-           
+
             $('.jqgrid-overlay').hide();
 
             //check if isset data

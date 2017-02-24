@@ -42,7 +42,7 @@
 
                             <?php
                             $info = !empty($info) ? array("info" => $info) : array();
-                            echo modules::run('facturas_compras/ocultoformulario', $info);
+                            echo modules::run('facturas_compras/ocultoformulario', array_merge($info, ['vista'=>"crear"]));
                             ?>
 
                     </div>

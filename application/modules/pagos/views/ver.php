@@ -21,7 +21,7 @@
             echo form_open(base_url('pagos/guardar'), $formAttr);?>
 
             <!--componente empezar desde-->
-            <empezar_desde :empezable.sync="empezable" :detalle.sync="detalle" :config="config"></empezar_desde>
+            <empezar_desde :empezable.sync="empezable" :detalle.sync="detalle" :config="config" v-show="detalle.formulario != 'movimiento_monetario'"></empezar_desde>
 
             <div class="ibox border-bottom">
                   <div class="ibox-title">

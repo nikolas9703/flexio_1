@@ -110,7 +110,6 @@ class EntradasRepository implements EntradasInterface{
 
         $entrada->estado_id    = $clause["estado_id"];
         $entrada->save();
-
         //Verifico si no tiene registros para mostrar para proceder a borrar
         if(count($entrada->operacion->items) == 0)
         {
@@ -129,7 +128,7 @@ class EntradasRepository implements EntradasInterface{
         $this->_setSeriales($post["items"], $desde_traslado, $registro);
 
         //seteo los items
-        $this->_setItems($post["items"]);
+        $this->_setItems($post["items"], $registro);
 
         //seteo la relacion de seriales y la entrada
 
@@ -148,7 +147,7 @@ class EntradasRepository implements EntradasInterface{
             {
                 $registro->operacion->id_estado     = 3;//Traslado recibido
             }
-            $registro->operacion->fecha_entrega = date("Y-m-d", time());
+            $registro->operacion->fecha_entrega = date('d/m/Y', time());
             $registro->operacion->save();
         }
 
@@ -182,6 +181,7 @@ class EntradasRepository implements EntradasInterface{
 
         //faltan los siguientes:
         if(isset($clause["item_id"]) and !empty($clause["item_id"])){$entradas->deItem($clause["item_id"]);}
+        if(isset($clause["campo"]) and !empty($clause["campo"])){$entradas->deFiltro($clause["campo"]);}
         if(isset($clause["serie_id"]) and !empty($clause["serie_id"])){$entradas->deSerie($clause["serie_id"]);}
 
 

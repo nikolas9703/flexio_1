@@ -89,7 +89,14 @@ echo form_open_multipart("", $formAttr);
             </div>
         </div>
     </div>
-
+    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+        <label for="">Centro contable</label>
+        <select name="campo[centro_contable_id]" data-placeholder="Seleccione"  multiple  class="form-control chosen-select" id="centro_contable_id" >
+            <?php if(!empty($centro_contables)) foreach($centro_contables as $centro) {?>
+                <option   value="<?php echo $centro->id?>"><?php echo $centro->nombre?></option>
+            <?php }?>
+        </select>
+    </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
         <label for="">No. Documento</label>
         <input type="text" name="campo[documento]" id="documento1" class="form-control">

@@ -48,4 +48,8 @@ $route['pagos/ajax-aprobar-pago']       = 'pagos/ajax_aprobar_pago';
 $route['pagos/ajax-aplicar-pago']       = 'pagos/ajax_aplicar_pago';
 
 //Confirmaciocion para anular pago
-$route['pagos/ajax-anular-pago']       = 'pagos/ajax_anular_pago';
+$route['pagos/ajax-anular-pago'] = 'pagos/ajax_anular_pago';
+
+//others
+$route['pagos/ajax-get-empezables'] = 'pagos/ajax_get_empezables';
+$route['pagos/ajax-get-empezable'] = 'pagos/ajax_get_empezable';

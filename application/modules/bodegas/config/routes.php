@@ -10,6 +10,7 @@ $route['bodegas/ajax-listar']               = 'bodegas/ajax_listar';
 $route['bodegas/ajax-listar-bodegas']       = 'bodegas/ajax_listar_bodegas';
 $route['bodegas/ajax-listar-items']         = 'bodegas/ajax_listar_items';
 $route['bodegas/ajax-cambiar-estado']       = 'bodegas/ajax_cambiar_estado';
+$route['bodegas/ajax-catalogo']       = 'bodegas/ajax_catalogo';
 
 //Formulario crear/editar
 $route['bodegas/crear']         = 'bodegas/crear';

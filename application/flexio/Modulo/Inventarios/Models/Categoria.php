@@ -110,7 +110,8 @@ class Categoria extends Model
 
     public function items()
     {
-        return $this->belongsToMany('Flexio\Modulo\Inventarios\Models\Items','inv_items_categorias','id_categoria','id_item')->select(['inv_items.id','uuid_item','codigo','nombre','uuid_ingreso','uuid_venta','tipo_id']);
+        return $this->belongsToMany('Flexio\Modulo\Inventarios\Models\Items','inv_items_categorias','id_categoria','id_item')
+        ->select(['inv_items.id','uuid_item','codigo','nombre','uuid_ingreso','uuid_venta','tipo_id','inv_items.cuentas']);
     }
 
     public function categorias_items()

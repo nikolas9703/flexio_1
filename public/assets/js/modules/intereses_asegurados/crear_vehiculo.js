@@ -152,6 +152,7 @@ function register_user()
 	});              
 }
 $(document).ready(function(){
+   $('.estado').attr('disabled', 'disabled');
 	var counter = 2;
 	$('#del_file_vehiculo').hide();
 	$('#add_file_vehiculo').click(function(){

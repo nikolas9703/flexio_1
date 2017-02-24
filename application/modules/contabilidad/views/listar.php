@@ -113,12 +113,12 @@ echo Modal::config(array(
                     <div class="col-md-5">'.form_open("", $formAttr).'
 
                         <div class="form-group"><label>Nombre</label>
-                         <input id="nombre" name="nombre" type="text" placeholder="nombre" class="form-control" data-rule-required="true"/>
+                         <input id="nombre1" name="nombre" type="text" placeholder="nombre" class="form-control" data-rule-required="true"/>
                          </div>
 
                         <div class="form-group">
                           <label>Codigo</label>
-                          <input id="codigo" name="codigo" type="text" placeholder="codigo" class="form-control" data-rule-required="true" readonly>
+                          <input id="codigo" name="codigo" type="text" placeholder="codigo" class="form-control" data-rule-required="true">
                         </div>
 
 

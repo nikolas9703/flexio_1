@@ -26,6 +26,8 @@ class CalculosCerradoRepository{
                    $csvdata[$i]['nombre'] = isset($value->colaborador->nombre_completo)?$value->colaborador->nombre_completo:'';
                    $csvdata[$i]["cedula"] = isset($value->colaborador->cedula)?$value->colaborador->cedula:'';
                     $csvdata[$i]["rata_hora"] =  $value->colaborador->rata_hora;
+                    $csvdata[$i]["hhr"] = number_format($salarios_divididos['horas_regular'],2);
+                    $csvdata[$i]["hhe"] = number_format($salarios_divididos['horas_no_regular'],2);
                     $csvdata[$i]["hr"] = number_format($salarios_divididos['regular'],2);
                     $csvdata[$i]["he"] = number_format($salarios_divididos['no_regular'],2);
 
@@ -62,23 +64,26 @@ class CalculosCerradoRepository{
 
       private function dividiendo_salario($ingresos) {
 
-         $sumatoria = $sumatoria_no_regular =  0;
+         $sumatoria = $sumatoria_no_regular = $sumatoria_horas_regular=$sumatoria_horas_no_regular= 0;
         if(!empty($ingresos)){
           foreach ($ingresos as   $value) {
 
             if(preg_match("/HR/i", $value->detalle))
             {
                 $sumatoria +=$value->calculo;
+                $sumatoria_horas_regular +=$value->cantidad_horas;
             }else{
                 $sumatoria_no_regular +=$value->calculo;
-
+                $sumatoria_horas_no_regular +=$value->cantidad_horas;
             }
            }
         }
         $totales = [];
         $totales = array(
           "regular" => $sumatoria,
-          "no_regular" => $sumatoria_no_regular
+          "no_regular" => $sumatoria_no_regular,
+          "horas_regular" => $sumatoria_horas_regular,
+          "horas_no_regular" => $sumatoria_horas_no_regular
         );
          return $totales;
       }

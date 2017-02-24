@@ -17,17 +17,17 @@ use Flexio\Modulo\Consumos\Models\Consumos as Consumos;
 use Flexio\Modulo\Salidas\Models\Salidas as Salidas;
 
 class ConsumosRepository implements ConsumosInterface{
-    
+
     private $bodegasRep;
     private $itemsRep;
     private $unidadesRep;
     private $salidasRep;
     private $cuentasRep;
     private $colaboradoresRep;
-    
+
     //variables del entorno
     private $prefijo = "CONS";
-    
+
     public function __construct() {
         $this->bodegasRep       = new bodegasRep();
         $this->itemsRep         = new itemsRep();
@@ -36,13 +36,13 @@ class ConsumosRepository implements ConsumosInterface{
         $this->cuentasRep       = new cuentasRep();
         $this->colaboradoresRep = new colaboradoresRep();
     }
-    
+
     public function findByUuid($uudi_consumo) {
         return Consumos::where("uuid_consumo", hex2bin($uudi_consumo))->first();
     }
 
 
-    public function getColletionCampos($consumo) 
+    public function getColletionCampos($consumo)
     {
         return [
             "fecha"             => $consumo->created_at,
@@ -54,8 +54,8 @@ class ConsumosRepository implements ConsumosInterface{
             "comentarios"       => $consumo->comentarios
         ];
     }
-    
-    public function getColletionCamposItems($items) 
+
+    public function getColletionCamposItems($items)
     {
         $aux = [];
         foreach($items as $item)
@@ -80,7 +80,7 @@ class ConsumosRepository implements ConsumosInterface{
     private function _create($post)
     {
         $campo  = $post["campo"];
-        
+
         $registro                       = new Consumos;
         $registro->uuid_consumo         = Capsule::raw("ORDER_UUID(uuid())");
         $registro->referencia           = "Consumo";
@@ -96,17 +96,17 @@ class ConsumosRepository implements ConsumosInterface{
 
         //GUARDO EL REGISTRO
         $registro->save();
-        
+
         return $registro;
     }
-    
+
     private function _save($post)
     {
         $campo  = $post["campo"];
-        
+
         //DATOS GENERALES DEL TRASLADO
         $registro                       = Consumos::where("uuid_consumo", hex2bin($campo["uuid_consumo"]))->first();
-        
+
         $registro->uuid_centro          = hex2bin(strtolower($campo["centro_contable"]));
         $registro->uuid_bodega          = hex2bin(strtolower($campo["bodega_salida"]));
         $registro->estado_id            = $campo["estado"];
@@ -115,23 +115,23 @@ class ConsumosRepository implements ConsumosInterface{
 
         //GUARDO EL REGISTRO
         $registro->save();
-        
+
         return $registro;
     }
 
 
     private function _syncItems($registro, $items)
     {
-        
+
         $registro->consumos_items()->whereNotIn('id',array_pluck($items,'id_consumo_item'))->delete();
         foreach ($items as $item)
         {
-            
+
             $aux = (!is_numeric($item["item"])) ? $this->itemsRep->findByUuid($item["item"])->id : $item["item"];
-            
+
             $consumo_item_id = (isset($item['id_consumo_item']) and !empty($item['id_consumo_item'])) ? $item['id_consumo_item'] : '';
             $consumo_item = $registro->consumos_items()->firstOrNew(['id'=>$consumo_item_id]);
-            
+
             $consumo_item->item_id = $aux;
             $consumo_item->categoria_id = $item["categoria"];
             $consumo_item->cantidad = $item["cantidad_enviada"];
@@ -139,18 +139,18 @@ class ConsumosRepository implements ConsumosInterface{
             $consumo_item->cuenta_id = (!is_numeric($item["cuenta_gasto"])) ? $this->cuentasRep->findByUuid($item["cuenta_gasto"])->id : $item["cuenta_gasto"];
             $consumo_item->observacion = $item["observacion"];
             $consumo_item->save();
-            
+
         }
-        
-        
+
+
     }
-    
+
     public function save($post, $fieldset_consumo=NULL, $fieldset_items=NULL)
     {
         //codigo old
         $campo  = $post["campo"];
         $items  = $post["items"];
-        
+
         //instaccioando el registro
         if($fieldset_consumo == NULL)
         {
@@ -182,12 +182,12 @@ class ConsumosRepository implements ConsumosInterface{
         //APLICA SOLO PARA LA EDICION CUANDO EL CONSUMO ES APROBADO
         if($campo["estado"] == "1")
         {
-            
+
         }
         if($campo["estado"] == "1" || $campo["estado"] == "2")
         {
             $estadoSalida = ($campo["estado"] == "1") ? "4" : "1";
-            if($this->bodegasRep->find($registro->bodega->id)->raiz->entrada_id == 1)// 1 -> entrada manual : 2 -> entrada automatica 
+            if($this->bodegasRep->find($registro->bodega->id)->raiz->entrada_id == 1)// 1 -> entrada manual : 2 -> entrada automatica
             {
                 $this->salidasRep->create(array("tipo_id" => $registro->id, "estado_id" => $estadoSalida, "tipo" => "Flexio\Modulo\Consumos\Models\Consumos", "empresa_id" => $post["empresa_id"]));
             }
@@ -197,15 +197,15 @@ class ConsumosRepository implements ConsumosInterface{
             //borro el registro de la salida...
             Salidas::where("operacion_type", "Flexio\Modulo\Consumos\Models\Consumos")->where("operacion_id", $registro->id)->delete();
         }
-        
+
         return $registro;
     }
-    
+
     private function genera_numero_consumo($post)
     {
     	$countConsumos = Consumos::deEmpresa($post["empresa_id"])->count();
 
     	return sprintf("%08d", ($countConsumos + 1));
     }
-    
+
 }

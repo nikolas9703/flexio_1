@@ -60,6 +60,12 @@ class OrdenVenta extends Model
     {
         return $this->codigo;
     }
+
+    public function getModuloAttribute()
+    {
+        return 'Orden de venta';
+    }
+
     public function getNumeroDocumentoEnlaceAttribute()
     {
         $attrs = [
@@ -104,7 +110,7 @@ class OrdenVenta extends Model
         ];
         $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
 
-        return $html->setType("htmlSpan")->setAttrs($attrs)->setHtml("Consumo")->getSalida();
+        return $html->setType("htmlSpan")->setAttrs($attrs)->setHtml("Orden de venta")->getSalida();
     }
     public function getTipoFaAttribute()
     {
@@ -124,7 +130,22 @@ class OrdenVenta extends Model
     }
     public function getUbicacionAttribute()
     {
-        return $this->bodega;
+        return $this->cliente;
+    }
+
+    public function getExternoAttribute()
+    {
+        return $this->cliente;
+    }
+
+    public function getFechaHoraAttribute()
+    {
+      return Carbon::createFromFormat("d-m-Y", $this->updated_at)->format('d/m/Y @ H:i');
+    }
+
+    public function lines_items()
+    {
+        return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems', 'tipoable');
     }
 
   public function getUpdatedAtAttribute($value)
@@ -164,7 +185,7 @@ class OrdenVenta extends Model
 
     public function bodega()
     {
-        return $this->belongsTo('Bodegas_orm', 'bodega_id', 'id');
+        return $this->belongsTo('Flexio\Modulo\Bodegas\Models\Bodegas', 'bodega_id', 'id');
     }
 
     public function origen()
@@ -185,6 +206,11 @@ class OrdenVenta extends Model
     public function anticipos()
     {
         return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->where('estado','aprobado');
+    }
+
+    public function anticipos_no_anulados()
+    {
+        return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->whereIn('estado',['por_aprobar','aprobado']);
     }
 
   public function comp_numeroDocumento()
@@ -252,4 +278,11 @@ class OrdenVenta extends Model
   public function present(){
     return new \Flexio\Modulo\OrdenesVentas\Presenter\OrdenesVentaPresenter($this);
   }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\OrdenesVentas\Services\OrdenVentaFilters;
+        return $queryFilter->apply($query, $campo);
+    }
+
 }

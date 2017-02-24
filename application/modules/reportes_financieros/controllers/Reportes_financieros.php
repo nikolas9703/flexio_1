@@ -38,6 +38,7 @@ use Flexio\Modulo\ReporteFinanciero\Reportes\CuentaPorPagarAntiguedad;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\Inventarios\Repository\CategoriasRepository;
 use Flexio\Modulo\Cajas\Repository\CajasRepository;
+use Flexio\Modulo\ReporteFinanciero\Reportes\ImpuestoSobreItbms\Csv\FacturaCompraReporteCsv;
 
 class Reportes_financieros extends CRM_Controller
 {
@@ -152,18 +153,22 @@ class Reportes_financieros extends CRM_Controller
         'public/assets/js/modules/reporte_financiero/vue.tablelizer.ganancias-perdidas.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.estado_cuenta_proveedor.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.costo_por_centro_compras.js',
+        'public/assets/js/modules/reporte_financiero/vue.reporte.transacciones_por_centro_contable.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.estado_cuenta_cliente.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.cuenta_por_pagar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.cuenta_por_cobrar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.impuesto_sobre_ventas.js',
+        'public/assets/js/modules/reporte_financiero/vue.reporte.impuesto_sobre_itbms.js',
         'public/assets/js/modules/reporte_financiero/vue.balance_situacion.js',
         'public/assets/js/modules/reporte_financiero/vue.ganancias_perdidas.js',
         'public/assets/js/modules/reporte_financiero/vue.estado_cuenta_proveedor.js',
         'public/assets/js/modules/reporte_financiero/vue.costo_por_centro_compras.js',
+        'public/assets/js/modules/reporte_financiero/vue.transacciones_por_centro_contable.js',
         'public/assets/js/modules/reporte_financiero/vue.estado_cuenta_cliente.js',
         'public/assets/js/modules/reporte_financiero/vue.form_cuenta_por_pagar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.form_cuenta_por_cobrar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.form_impuesto_sobre_ventas.js',
+        'public/assets/js/modules/reporte_financiero/vue.form_impuesto_sobre_itbms.js',
         'public/assets/js/modules/reporte_financiero/vue.form.flujo_efectivo.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte_de_caja.js',
         'public/assets/js/modules/reporte_financiero/reporte_de_caja_tabla.js',
@@ -175,7 +180,7 @@ class Reportes_financieros extends CRM_Controller
         'public/assets/js/modules/reporte_financiero/vue.reporte.js',
         'public/assets/js/modules/reporte_financiero/exportar.js'
     ));
-      $validos = ['reporte_caja', 'cuenta_por_cobrar_por_antiguedad','estado_de_cuenta_de_cliente','cuenta_por_pagar_por_antiguedad','estado_cuenta_proveedor','costo_por_centro_compras'];
+      $validos = ['reporte_caja', 'cuenta_por_cobrar_por_antiguedad','estado_de_cuenta_de_cliente','cuenta_por_pagar_por_antiguedad','estado_cuenta_proveedor','costo_por_centro_compras', 'impuestos_sobre_itbms'];
       if ($request->has('modulo') && in_array($tipo,$validos)) {
         $modulo = $request->input("modulo");
 
@@ -202,7 +207,7 @@ class Reportes_financieros extends CRM_Controller
     $breadcrumb = array(
       "titulo" => '<i class="fa fa-calculator"></i> Contabilidad: Reportes financieros',
       "menu" => ["nombre" => "Acci&oacute;n",
-                 "url"	 => "",
+                 "url"   => "",
                  "opciones" => array()
                  ]
     );
@@ -210,6 +215,9 @@ class Reportes_financieros extends CRM_Controller
     $data['mensaje'] = $mensaje;
 
     $data['catalogo'] = $catalogo_reporte;
+    if($tipo == 'impuestos_sobre_itbms'){
+    $breadcrumb["menu"]["opciones"]["#imprimirReporte"] = "Imprimir certificado";
+    }
     $breadcrumb["menu"]["opciones"]["#exportarReporte"] = "Exportar";
     $this->template->agregar_titulo_header('Contabilidad: Reportes financieros');
     $this->template->agregar_breadcrumb($breadcrumb);
@@ -221,8 +229,10 @@ class Reportes_financieros extends CRM_Controller
     $this->load->view('balance_situacion');
     $this->load->view('ganancias_perdidas');
     $this->load->view('formulario_impuesto_sobre_venta');
+    $this->load->view('formulario_impuesto_sobre_itbms');
     $this->load->view('estado_cuenta_proveedor');
     $this->load->view('costo_por_centro_compras');
+    $this->load->view('transacciones_por_centro_contable');
     $this->load->view('estado_cuenta_cliente');
     $this->load->view('formulario_cuenta_por_pagar_antiguedad');
     $this->load->view('formulario_cuenta_por_cobrar_antiguedad');
@@ -234,6 +244,7 @@ class Reportes_financieros extends CRM_Controller
     $this->load->view('componente_estado_cuenta_cliente');
     $this->load->view('reporte_cuenta_por_pagar_antiguedad');
     $this->load->view('reporte_impuesto_sobre_ventas');
+    $this->load->view('reporte_transacciones_por_centro_contable');
     //nuevos reportes
     $this->load->view('formulario_43');
     $this->load->view('reporte_formulario43');
@@ -241,6 +252,7 @@ class Reportes_financieros extends CRM_Controller
     $this->load->view('reporte_formulario433');
     $this->load->view('reporte_de_caja');
     $this->load->view('reporte_de_caja_tabla');
+    $this->load->view('reporte_impuesto_sobre_itbms');
   }
 
 
@@ -249,19 +261,23 @@ class Reportes_financieros extends CRM_Controller
     if(!$this->input->is_ajax_request()){
       return false;
     }
-
     $formulario = $this->input->post('formulario');
 
     try{
-        
+
       $response = $this->reporte_catalogo->datoFormulario($formulario);
-      
       if($formulario =="ganancias_perdidas"){
         $clause = ['empresa_id'=>$this->empresa_id,'transaccionales'=>true];
         $centros_contables = ['centros_contable' =>$this->centrosContablesRepository->get($clause)];
         $response = array_merge($response,$centros_contables);
       }
       if($formulario =="estado_cuenta_proveedor"){
+        $clause = ['empresa_id'=>$this->empresa_id];
+        //provedores
+        $proveedores = $this->proveedores->get($clause);
+        $response = ['provedores'=>$proveedores->toArray()];
+      }
+      if($formulario =="impuestos_sobre_itbms"){
         $clause = ['empresa_id'=>$this->empresa_id];
         //provedores
         $proveedores = $this->proveedores->get($clause);
@@ -289,18 +305,26 @@ class Reportes_financieros extends CRM_Controller
           'categorias' => $this->CategoriasRepository->getCollectionCategorias($this->CategoriasRepository->get($clause2)),
         ];
       }
-      
+
+      if(trim($formulario) =="transacciones_por_centro_contable"){
+        $clause = ['empresa_id'=>$this->empresa_id,'transaccionales'=>true];
+        $centros_contables = ['centros_contable' =>$this->centrosContablesRepository->get($clause)];
+        $response = [
+          'centros' =>$this->centrosContablesRepository->get($clause),
+        ];
+      }
+
       if(trim($formulario)=='reporte_de_caja') {
           $clause = ['empresa_id' => $this->empresa_id];
           $cajas = $this->CajasRepo->get($clause);
           $cajas->load('responsable2');
-          
-          
+
+
           $response = [
               'cajas' => $cajas,
               'centros' => $this->centrosContablesRepository->get($clause)
               ];
-          
+
       }
 
     }catch(Exception $e){
@@ -317,13 +341,12 @@ class Reportes_financieros extends CRM_Controller
     if(!$this->input->is_ajax_request()){
       return false;
     }
-    
     $request = Illuminate\Http\Request::createFromGlobals();
     $datos = FormRequest::data_formulario($request->all());
     $datos['empresa_id'] = $this->empresa_id;
-    
+
     $reporte = (new GenerarReporte)->generar($datos);
-    
+
     $datos_reporte = $this->_generar_reporte($datos,$reporte);
 
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
@@ -337,14 +360,12 @@ class Reportes_financieros extends CRM_Controller
     $datos = FormRequest::data_formulario($request->all());
     $datos['empresa_id'] = $this->empresa_id;
     $reporte = (new GenerarReporte)->generar($datos);
-
     $datos_reporte = $this->_generar_reporte($datos,$reporte);
     $this->_crear_csv($datos, $datos_reporte);
     die;
   }
 
   private function _generar_reporte($request, $datos){
-
     if($request['tipo'] == 'balance_situacion')
     {
       return $this->balance_situacionFormato($datos);
@@ -359,8 +380,11 @@ class Reportes_financieros extends CRM_Controller
     }
 
     if($request['tipo'] == 'costo_por_centro_compras'){
-      //dd($datos);
       return $this->costoPorCentroComprasFormato($datos,$request);
+    }
+
+    if($request['tipo'] == 'transacciones_por_centro_contable'){
+      return $this->transaccionesPorCentroContableFormato($datos,$request);
     }
 
     if($request['tipo'] == 'cuenta_por_pagar_por_antiguedad'){
@@ -379,10 +403,16 @@ class Reportes_financieros extends CRM_Controller
       return $this->impuestosSobreVentas($datos,$request);
     }
 
-    if($request['tipo'] == 'formulario43' || $request['tipo'] == 'formulario433'){
-      return $datos;
+    if($request['tipo'] == 'impuestos_sobre_itbms'){
+      return $this->impuestosSobreItbms($datos,$request);
     }
-   
+
+    if($request['tipo'] == 'formulario43' || $request['tipo'] == 'formulario433'){
+      $datos = collect($datos);
+      return $datos->sortBy("nombre")->values()->all();
+
+    }
+
     if($request['tipo'] == 'reporte_de_caja'){
         return $datos;
     }
@@ -486,9 +516,29 @@ class Reportes_financieros extends CRM_Controller
             'datos_antiguedad' => $datos_antiguedad];
   }
 
+  private function impuestosSobreItbms($reporte, $request){
+    $total_facturado = $reporte['resumen']['total_facturado'];
+    $fecha_inicio = Carbon::createFromFormat('d/m/Y', $request['fecha_desde']);
+    $fecha_final = Carbon::createFromFormat('d/m/Y', $request['fecha_hasta']);
+
+    return ['proveedor'=>$reporte['proveedor']->toArray(),
+            'resumen'=> $reporte['resumen'],
+            'fecha_inicial'=>Carbon::parse($fecha_inicio)->format('d/m/Y'),
+            'fecha_final'=>Carbon::parse($fecha_final)->format('d/m/Y')
+            ];
+  }
+
   private function costoPorCentroComprasFormato($reporte,$request) {
     return [
       'detalle' => collect($reporte['detalle']),
+      'totales' => collect($reporte['totales']),
+      'parametros' => collect($reporte['parametros'])
+    ];
+  }
+
+  private function transaccionesPorCentroContableFormato($reporte,$request) {
+    return [
+      'transacciones' => collect($reporte['transacciones']),
       'totales' => collect($reporte['totales']),
       'parametros' => collect($reporte['parametros'])
     ];
@@ -614,6 +664,14 @@ class Reportes_financieros extends CRM_Controller
       (new EstadoCuentaProveedorCsv)->csv($datos_reporte,$csv);
       $csv->output('estado_cuenta_proveedor_'.$datos_reporte['proveedor']['nombre'].'.csv');
     }
+    if($request['tipo'] == 'impuestos_sobre_itbms' && empty($request['pdf'])){
+      $csv->insertOne(['Proveedor', 'rango de fechas']);
+      $csv->insertOne([$datos_reporte['proveedor']['nombre'],$request['fecha_desde']." - ".$request['fecha_hasta']]);
+      $csv->setNewline("\r\n");
+      $csv->insertOne($csv->getNewline());
+      (new FacturaCompraReporteCsv)->csv($datos_reporte,$csv);
+      $csv->output('reporte_retencion_itbms'.$datos_reporte['proveedor']['nombre'].'.csv');
+    }
 
     if($request['tipo'] == 'costo_por_centro_compras'){
       header('Content-Type: application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet');
@@ -621,6 +679,19 @@ class Reportes_financieros extends CRM_Controller
       header('Cache-Control: max-age=0');
       try{
         $formulario = $this->formatoCostoPorCentroCompras($datos_reporte);
+        $objWriter = \PHPExcel_IOFactory::createWriter($formulario, 'Excel2007');
+        $objWriter->save('php://output');
+      }catch(\Exception $e) {
+        log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+      }
+    }
+
+    if($request['tipo'] == 'transacciones_por_centro_contable'){
+      header('Content-Type: application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet');
+      header('Content-Disposition: attachment;filename="reporte-transacciones-por-centro-contable.xlsx"');
+      header('Cache-Control: max-age=0');
+      try{
+        $formulario = $this->formatoTransaccionesPorCentroContables($datos_reporte);
         $objWriter = \PHPExcel_IOFactory::createWriter($formulario, 'Excel2007');
         $objWriter->save('php://output');
       }catch(\Exception $e) {
@@ -691,6 +762,12 @@ class Reportes_financieros extends CRM_Controller
       (new ReportePdf)->render($templatePdf,$nombre_pdf,['papel'=>"Legal",'orientacion'=>'landscape']);
     }
 
+    if($request['tipo'] == 'impuestos_sobre_itbms' && !empty($request['pdf'])){
+      $templatePdf =  $this->load->view('pdf/impuestos_sobre_itbms',$datos_reporte,true);
+      $nombre_pdf ="reporte-retencion-itbms";
+      (new ReportePdf)->render($templatePdf,$nombre_pdf,['papel'=>"Legal",'orientacion'=>'portrait']);
+    }
+
     if($request['tipo'] == 'formulario43'){
       header('Content-Type: application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet');
       header('Content-Disposition: attachment;filename="formulario43.xlsx"');
@@ -706,13 +783,13 @@ class Reportes_financieros extends CRM_Controller
       $writer->save('pruebas.xlsx');
       */
     }
-
+/*
     if($request['tipo'] == 'formulario433'){
       header('Content-Type: application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet');
       header('Content-Disposition: attachment;filename="formulario433.xlsx"');
       header('Cache-Control: max-age=0');
       try{
-        $formulario = $this->formatoFormulario433($datos_reporte);
+        $formulario = $this->formatoFormulario433(collect($datos_reporte));
         $objWriter = \PHPExcel_IOFactory::createWriter($formulario, 'Excel2007');
         $objWriter->save('php://output');
       }catch(\Exception $e) {
@@ -720,6 +797,139 @@ class Reportes_financieros extends CRM_Controller
       }
 
     }
+*/
+    if($request['tipo'] == 'formulario433'){
+
+      //$csv->insertOne(['Cliente','Corriente','30 dias','60 dias','90 dias','120 dias','Total']);
+      $i=0;
+      $datos_csv= [];
+
+      $csv->setDelimiter(chr(9));
+      //  $csv->setEnclosure(chr(0));
+      $csv->setNewline("\r\n");
+
+      foreach($datos_reporte as $fila){
+
+        if(!empty($fila)){
+
+
+        $identificacion  = $fila['identificacion'];
+        $tomo_rollo = $fila['tomo_rollo'] ;
+        $folio_imagen_doc = $fila['folio_imagen_doc'] ;
+        $asiento_ficha = $fila['asiento_ficha'];
+        $provincia = $fila['provincia'];
+        $letra = $fila['letra'];
+        $pasaporte = $fila['pasaporte'];
+        $digito_verificador = $fila['digito_verificador'];
+
+        if(strlen(trim($digito_verificador)) == 0){
+          $digito_verificador = "00";
+        }
+        if(strlen(trim($digito_verificador)) > 2){
+          $digito_verificador = substr($digito_verificador,0,2);
+        }
+
+        $nombre = $fila['nombre'];
+
+        $codigo = $fila['codigo'];
+        $codigo = str_replace(";","",$codigo);
+        $codigo = str_replace(" ","",$codigo);
+
+        if(strlen(trim($codigo)) > 22){
+          $codigo = substr($codigo,0,22);
+        }
+
+
+
+        $monto = round($fila['monto'],2,PHP_ROUND_HALF_UP);
+        $itbms = round($fila['itbms'],2,PHP_ROUND_HALF_UP);
+        $retenido = round($fila['retenido'],2,PHP_ROUND_HALF_UP);
+        $objeto = "4";
+
+          //Busca identificacion
+          if(empty($identificacion)){
+            $identificacion ="";
+          }
+
+          $tipo = "N";
+
+          if ($identificacion == "juridico"){
+            $tipo = "J";
+          }
+
+          if ($identificacion == "ruc_nt"){
+            $tipo = "J";
+          }
+        /*  switch ($identificacion) {
+              case 'juridico':
+                  $tipo = "J";
+                  break;
+              case 'natural':
+                $tipo = "N";
+                  break;
+              case 'pasaporte':
+                  $tipo = "E";
+                  break;
+          }
+*/
+          //Busca ruc
+          if(empty($identificacion)){
+            $identificacion =  "";
+          }
+
+          $tipo_identificacion="";
+          switch ($identificacion) {
+              case 'juridico':
+                  $tipo_identificacion = $tomo_rollo .'-'. $folio_imagen_doc . '-' . $asiento_ficha;
+                  break;
+              case 'natural':
+                $letra_identificacion = empty($provincia)? $letra: $provincia;
+                $tipo_identificacion = $letra_identificacion .'-'. $tomo_rollo . '-' . $asiento_ficha;
+                  break;
+              case 'cedula_nt':
+                  $tipo_identificacion = $provincia .'-NT-'. $tomo_rollo . '-' . $asiento_ficha;
+                  break;
+              case 'pasaporte':
+                  $tipo_identificacion = $pasaporte;
+                  break;
+          }
+
+/*
+          $tipo = str_pad($tipo,1," ",STR_PAD_RIGHT);
+          $tipo_identificacion = str_pad($tipo_identificacion,20," ",STR_PAD_RIGHT);
+          $digito_verificador = str_pad($digito_verificador,2," ",STR_PAD_RIGHT);
+          $nombre = str_pad($nombre,1," ",STR_PAD_RIGHT);
+          $codigo = str_pad($codigo,22," ",STR_PAD_RIGHT);
+          $monto = str_pad($monto,20," ",STR_PAD_LEFT);
+          $itbms = str_pad($itbms,20," ",STR_PAD_LEFT);
+          $objeto = str_pad($objeto,1," ",STR_PAD_RIGHT);
+          $retenido = str_pad($retenido,20," ",STR_PAD_LEFT);
+*/
+          //chr(13)
+
+          //$csv->insertOne([$tipo.chr(9).$tipo_identificacion.chr(9).$digito_verificador.chr(9).$nombre.chr(9).$codigo.chr(9).$monto.chr(9).$itbms.chr(9).$objeto.chr(9).$retenido]);
+          $csv->insertOne([$tipo,$tipo_identificacion,$digito_verificador,$nombre,$codigo,$monto,$itbms,$objeto,$retenido]);
+
+          //$csv->setNewline("\r\n");
+        //  $csv->insertOne($csv->getNewline());
+
+/*
+        $datos_csv[$i] = [utf8_decode($fila['nombre']),FormatoMoneda::numero($fila['corriente']),
+        FormatoMoneda::numero($fila['30_dias']),
+        FormatoMoneda::numero($fila['60_dias']),
+        FormatoMoneda::numero($fila['90_dias']),
+        FormatoMoneda::numero($fila['120_dias']),
+        FormatoMoneda::numero($fila['Totales'])
+        ];
+        */
+        $i++;
+      }
+      }
+  //$retenido = str_pad($retenido,20," ",STR_PAD_LEFT);
+    //  $csv->insertAll($datos_csv);
+      $csv->output('Informe433_'.$this->empresaObj->ruc.'_'.$request['year'].str_pad($request['mes'],2,"0",STR_PAD_LEFT).'.txt');
+    }
+
 
   }
 
@@ -783,6 +993,11 @@ class Reportes_financieros extends CRM_Controller
   function formatoCostoPorCentroCompras($datos){
     $reportecompras = new Flexio\Modulo\ReporteFinanciero\Reportes\CostoPorCentroCompras\ReporteExcell();
     return $reportecompras->generarExcell($datos);
+  }
+
+  function formatoTransaccionesPorCentroContables($datos){
+    $reporte = new Flexio\Modulo\ReporteFinanciero\Reportes\TransaccionesPorCentroContable\ReporteExcell();
+    return $reporte->generarExcell($datos);
   }
 
   function formatoFormulario433($datos){

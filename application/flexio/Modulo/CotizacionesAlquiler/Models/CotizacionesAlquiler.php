@@ -7,6 +7,8 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Library\Util\GenerarCodigo;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler;
+
 
 class CotizacionesAlquiler extends Model
 {
@@ -95,9 +97,39 @@ class CotizacionesAlquiler extends Model
         return $this->attributes['codigo'] = GenerarCodigo::setCodigo('QTA'.Carbon::now()->format('y'), $codigo);
     }
 
+    public function getVendedorNombreAttribute() {
+        if (is_null($this->vendedor)) {
+            return '';
+        }
+        return $this->vendedor->nombre . " " . $this->vendedor->apellido;
+    }
+
+    public function getClienteNombreAttribute() {
+        if (is_null($this->cliente)) {
+            return '';
+        }
+        return $this->cliente->nombre;
+    }
+
+    public function etapa_catalogo() {
+        return $this->belongsTo('Flexio\Modulo\Cotizaciones\Models\CotizacionCatalogo', 'estado', 'etiqueta')->where('tipo', '=', 'etapa');
+    }
+
+    public function termino_pago_catalogo() {
+        return $this->belongsTo('Flexio\Modulo\Cotizaciones\Models\CotizacionCatalogo', 'termino_pago', 'etiqueta')->where('tipo', '=', 'termino_pago');
+    }
+
     public function cliente()
     {
-        return ($this->cliente_tipo == 'cliente') ? $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id') : $this->belongsTo('Flexio\Modulo\ClientesPotenciales\Models\ClientesPotenciales','cliente_id');
+        if($this->cliente_tipo == 'clientes_potenciales')
+        {
+            return $this->belongsTo('Flexio\Modulo\ClientesPotenciales\Models\ClientesPotenciales','cliente_id');
+        }
+        return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
+    }
+
+    public function vendedor() {
+        return $this->belongsTo('Flexio\Modulo\Usuarios\Models\Usuarios', 'creado_por');
     }
 
     public function cotizables()
@@ -105,20 +137,22 @@ class CotizacionesAlquiler extends Model
         return $this->hasMany('Flexio\Modulo\CotizacionesAlquiler\Models\CotizablesAlquiler', 'cotizacion_id');
     }
 
-    /*public function items()
-    {
-        return $this->morphToMany('Flexio\Modulo\Inventarios\Models\Items', 'contratable', 'contratos_items', 'contratable_id', 'item_id')
-                ->select('inv_items.id', 'inv_items.nombre', 'inv_items.tipo_id')
-                ->withPivot(['categoria_id','item_id','cantidad','ciclo_id','tarifa','en_alquiler','devuelto','entregado']);
-    }*/
-
-//    public function cotizaciones_items()
-//    {
-//        return $this->morphMany('Flexio\Modulo\CotizacionesAlquiler\Models\CotizacionesAlquilerItems', 'contratable');
-//    }
 
     public function items() {
          return $this->morphMany(CotizacionesAlquilerItems::class, 'contratable');
+    }
+
+    public function items_alquiler() {
+         return $this->items()->where("item_adicional", 0);
+    }
+
+    public function items_adicionales() {
+         return $this->items()->where("item_adicional", 1);
+    }
+
+    public function articulos()
+    {
+        return $this->morphMany('Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerItems', 'contratable');
     }
 
     public function centro_facturacion()
@@ -143,6 +177,38 @@ class CotizacionesAlquiler extends Model
     }
     public function landing_comments(){
         return $this->morphMany(Comentario::class,'comentable');
+    }
+
+    public function getCreadoPor() {
+        $nombre = $this->hasMany('Flexio\Modulo\Usuarios\Models\Usuarios', 'id', 'creado_por')->first();
+
+        return $nombre->nombre. ' ' .$nombre->apellido;
+    }
+
+    public function getCentroContable(){
+        $centro_contable = $this->hasMany('Flexio\Modulo\CentrosContables\Models\CentrosContables', 'id', 'centro_contable_id')->first();
+        return $centro_contable->nombre;
+    }
+
+    public function getCentroFacturacion(){
+        $centrofacturacion = $this->hasMany('Flexio\Modulo\CentroFacturable\Models\CentroFacturable', 'id', 'centro_facturacion_id')->first();
+        return $centrofacturacion;
+    }
+
+    public function present(){
+         return new \Flexio\Modulo\CotizacionesAlquiler\Presenter\CotizacionesAlquilerPresenter($this);
+    }
+
+    public function contratos_alquiler_exist($id){
+        //
+        return Capsule::table('conalq_contratos_alquiler')
+                ->select()
+                ->where('tipoid','=',$id)
+                ->get();
+    }
+
+    public function contratos_de_alquiler() {
+        return $this->hasMany(ContratosAlquiler::class, 'tipoid');
     }
 
 }

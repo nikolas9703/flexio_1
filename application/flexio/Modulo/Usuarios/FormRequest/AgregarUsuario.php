@@ -8,6 +8,7 @@ use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Library\Util\FormRequest;
 use Flexio\Library\Util\Utiles;
+use Flexio\Library\Util\FlexioSession;
 
 class AgregarUsuario{
 
@@ -38,6 +39,13 @@ class AgregarUsuario{
       return $this->request->input('centros_contables') ? : [];
   }
 
+  protected function getCategorias(){
+      return $this->request->input('categorias') ? : [];
+  }
+
+  protected function getTiposSubcontrato(){
+      return $this->request->input('tipos_subcontrato') ? : [];
+  }
 
   function addUsuario($campos){
 
@@ -56,9 +64,12 @@ class AgregarUsuario{
   }
 
   public function nuevoUsuario($data_usuario, $campos){
+
       $roles = $this->getRoles();
       $centros_contables = $this->getCentrosContables();
-      $guardar =  Capsule::transaction(function() use($data_usuario, $campos, $roles, $centros_contables){
+      $tipos_subcontrato = $this->getTiposSubcontrato();
+
+      $guardar =  Capsule::transaction(function() use($data_usuario, $campos, $roles, $centros_contables, $tipos_subcontrato){
           $usuario = Usuarios::registrar();
           $data_usuario['password'] = $campos["password"];
           $data_usuario["estado"] = 'Activo';
@@ -87,6 +98,12 @@ class AgregarUsuario{
           $usuario->filtro_centro_contable = 'todos';
           $usuario->save();
       }
+      $usuario = $this->GuardarUsuarioCategoria($usuario);
+
+      //Guardar tipos de subcontratos, si existen
+      if(!empty($tipos_subcontrato)){
+        $usuario->tipos_subcontrato()->attach($tipos_subcontrato,array('empresa_id'=>$data_usuario['empresa_id']));
+      }
 
       $respuesta = array(
         'error' => false,
@@ -104,7 +121,8 @@ class AgregarUsuario{
     {
         $rolesPost = $this->getRoles();
         $centros_contables = $this->getCentrosContables();
-        $guardar =  Capsule::transaction(function() use($data_usuario, $rolesPost, $usuario, $centros_contables){
+        $tipos_subcontrato = $this->getTiposSubcontrato();
+        $guardar =  Capsule::transaction(function() use($data_usuario, $rolesPost, $usuario, $centros_contables, $tipos_subcontrato){
             $usuarioObj = $usuario;
             $usuario->fill($data_usuario)->save();
             $usuario = $usuarioObj->fresh();
@@ -133,7 +151,14 @@ class AgregarUsuario{
                 //Guardar Roles
                 $usuario->roles()->attach($nuevo_roles, array('empresa_id'=>$data_usuario['empresa_id']));
             }
-
+            //Guardar tipos de subcontratos, si existen
+            if(!empty($tipos_subcontrato)){
+              $actual_tipos_subcontrato = $usuario->tipos_subcontrato->where('empresa_id',$data_usuario['empresa_id'])->values();
+              $usuario->tipos_subcontrato()->detach($actual_tipos_subcontrato);
+              $usuario->tipos_subcontrato()->attach($tipos_subcontrato,array('empresa_id'=>$data_usuario['empresa_id']));
+            }
+            /// guardar getCategorias
+            $usuario = $this->GuardarUsuarioCategoria($usuario);
             //Guardar centros contables
             $todos = in_array("todos", $centros_contables);
             $aux = [];
@@ -163,6 +188,25 @@ class AgregarUsuario{
             return $respuesta;
         });
         return $guardar;
+    }
+
+    protected function GuardarUsuarioCategoria($usuario){
+        $categorias = $this->getCategorias();
+
+        $session = FlexioSession::now();
+
+      if(!in_array("todos", $categorias)) {
+           $actual_categoria = $usuario->categorias_inventario->where('empresa_id',$session->empresaId())->values();
+           $usuario->categorias_inventario()->detach($actual_categoria);
+           $usuario->categorias_inventario()->attach($categorias,array('empresa_id'=>$session->empresaId()));
+           $usuario->update(["filtro_categoria"=>'']);
+      }
+      else {
+           $categoria = $usuario->categorias_inventario->where('empresa_id',$session->empresaId())->values();
+           $usuario->categorias_inventario()->detach( $categoria);
+           $usuario->update(["filtro_categoria"=>'todos']);
+      }
+      return $usuario;
     }
 
 }

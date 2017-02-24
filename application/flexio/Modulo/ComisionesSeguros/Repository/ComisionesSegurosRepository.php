@@ -1,0 +1,153 @@
+<?php
+namespace Flexio\Modulo\ComisionesSeguros\Repository;
+
+use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
+
+class ComisionesSegurosRepository {
+	
+	public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {	
+	//filtros
+        $comisiones = ComisionesSeguros::select('seg_comisiones.*','seg_aseguradoras.nombre as nom_aseguradora','cob_cobros.codigo as codigo_cobro','cob_cobros.uuid_cobro as uuid_cobro_seguro')->deEmpresa($clause["empresa_id"]); 
+       
+		if(isset($clause["fecha1"]) && $clause["fecha1"]!=NULL && !empty($clause["fecha1"])){
+			//var_dump($clause["fecha1"]);
+			$comisiones->whereRaw("DATE(fecha) >= '".$clause["fecha1"]."'");
+		}
+		
+		if(isset($clause["fecha2"]) && $clause["fecha2"]!=NULL && !empty($clause["fecha2"])){
+			//var_dump($clause["fecha1"]);
+			$comisiones->whereRaw("DATE(fecha) <= '".$clause["fecha2"]."'");
+		}
+		
+		$comisiones->join("seg_aseguradoras", "seg_comisiones.id_aseguradora", "=", "seg_aseguradoras.id");
+		$comisiones->join("cob_cobros", "seg_comisiones.id_cobro", "=", "cob_cobros.id");
+		
+		unset($clause["empresa_id"]);
+		unset($clause["fecha1"]);
+		unset($clause["fecha2"]);
+		if($clause!=NULL && !empty($clause) && is_array($clause))
+        {
+                foreach($clause AS $field => $value)
+                {  
+                        //verificar si valor es array
+                        if(is_array($value)){
+                                $comisiones->where($field, $value[0], $value[1]);
+                        }else{
+							if($field=='no_cobro')
+							{
+								$comisiones->where('cob_cobros.codigo', 'LIKE', '%'.$value.'%');
+							}
+							else{
+								$comisiones->where($field, '=', $value);
+							}
+                        }
+                }
+        }
+		
+		if(preg_match("/(fecha)/i", $sidx))
+		{
+			$comisiones->orderByRaw('FIELD(seg_comisiones.estado,"por_liquidar","con_diferencia","liquidada")');
+			$comisiones->orderBy("seg_comisiones.no_comision", 'desc');
+		}
+		
+		//Si existen variables de orden
+        if($sidx!=NULL && $sord!=NULL){
+                if(!preg_match("/(cargo|departamento|centro_contable)/i", $sidx)){
+						if($sidx=='aseguradora_id')
+						{
+							$comisiones->orderBy('seg_aseguradoras.nombre', $sord);
+						}
+						else if($sidx=='no_recibo')
+						{
+							$comisiones->orderBy('cob_cobros.codigo', $sord);
+						}
+						else if($sidx=='usuario_id')
+						{
+							$comisiones->orderBy('usuarios.nombre','usuarios.apellido', $sord);
+						}
+						else{
+							$comisiones->orderBy($sidx, $sord);
+						}
+                }
+        }   
+		//Si existen variables de limite	
+		
+		return $comisiones->get();
+	}
+	
+	public function exportar($clause){
+		$comisiones = ComisionesSeguros::select('seg_comisiones.*','seg_aseguradoras.nombre as nom_aseguradora','cob_cobros.codigo as codigo_cobro','cob_cobros.uuid_cobro as uuid_cobro_seguro')
+		->join("seg_aseguradoras", "seg_comisiones.id_aseguradora", "=", "seg_aseguradoras.id")
+		->join("cob_cobros", "seg_comisiones.id_cobro", "=", "cob_cobros.id") 
+		->whereIn('seg_comisiones.id',$clause['id'])
+		->orderBy('seg_comisiones.fecha','DESC'); 
+		
+		return $comisiones->get();
+       
+	}
+	
+	public function consultarComisionesProcesar($remesa,$aseguradora,$ramos,$fecha1,$fecha2,$empresa)
+	{
+		$comisiones=ComisionesSeguros::where('id_empresa',$empresa)
+		->where('estado','por_liquidar');
+		
+		if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+			$fecha1=date('Y-m-d', strtotime($fecha1));
+			$comisiones->whereRaw("DATE(fecha) >= '".$fecha1."'");
+		}
+		if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+			$fecha2=date('Y-m-d', strtotime($fecha2));
+			$comisiones->whereRaw("DATE(fecha) <= '".$fecha2."'");
+		}
+		if(!in_array('todos',$ramos))
+		{
+			$comisiones->whereIn('id_ramo',$ramos);
+		}
+		$comisiones->where('id_remesa',$remesa);
+		
+		$comisiones->orWhere(function($query) use ($empresa,$fecha1,$fecha2,$ramos)
+		{
+			$query=ComisionesSeguros::where('id_empresa',$empresa)
+			->where('estado','por_liquidar')
+			->leftJoin("seg_comisiones_remesas", "seg_comisiones_remesas.id_comision", "=", "seg_comisiones.id");
+		
+			if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+				$fecha1=date('Y-m-d', strtotime($fecha1));
+				$query->whereRaw("DATE(fecha) >= '".$fecha1."'");
+			}
+			if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+				$fecha2=date('Y-m-d', strtotime($fecha2));
+				$query->whereRaw("DATE(fecha) <= '".$fecha2."'");
+			}
+			if(!in_array('todos',$ramos))
+			{
+				$comisiones->whereIn('id_ramo',$ramos);
+			}
+			$query->whereNull('seg_comisiones_remesas.id_comision');
+		});
+		
+		return $comisiones;
+	}
+	
+	public function consultarComisionesLiquidada($remesa,$aseguradora,$ramos,$fecha1,$fecha2,$empresa)
+	{
+		$comisiones=ComisionesSeguros::where('id_empresa',$empresa);
+		
+		if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+			$fecha1=date('Y-m-d', strtotime($fecha1));
+			$comisiones->whereRaw("DATE(fecha) >= '".$fecha1."'");
+		}
+		if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+			$fecha2=date('Y-m-d', strtotime($fecha2));
+			$comisiones->whereRaw("DATE(fecha) <= '".$fecha2."'");
+		}
+		if(!in_array('todos',$ramos))
+		{
+			$comisiones->whereIn('id_ramo',$ramos);
+		}
+		$comisiones->where('id_remesa',$remesa);
+		
+		return $comisiones;
+	}
+	
+}

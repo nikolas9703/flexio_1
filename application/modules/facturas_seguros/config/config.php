@@ -11,7 +11,7 @@ $config['modulo_config'] = array(
   	'prefijo'		=> 'fse',
   	'agrupador'		=> array(
         'Seguros' => array(
-            "grupo_orden" => 3
+            "grupo_orden" => 2
         ),
     ),
 	'menu' => array(

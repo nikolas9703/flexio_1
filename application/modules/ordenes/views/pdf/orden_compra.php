@@ -94,6 +94,14 @@
 
 		//$logo = !empty($orden_compra->empresa->logo)?$orden_compra->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').$logo;
 		//dd($coleccion["articulos"]);
+
+        $items=$orden_compra->items;
+
+        $i = 0;$counter=0; $limit_page=11;
+
+        $pages= count($items)%$limit_page;
+        $currentPage=1;
+
     ?>
 <div id="container">
   <table style="width: 100%;">
@@ -104,7 +112,7 @@
             <td class="titulo1">ORDEN DE COMPRA</td>
         </tr>
         <tr>
-            <td class="titulo1_1"><span class="titulo1">No. de Orden: <?php echo $orden_compra->numero_documento;?></span></td>
+            <td class="titulo1_1"><span class="titulo1">No. de Orden: <?php echo $orden_compra->numero_documento;?><br><?php if($orden_compra->id_estado==1){ echo 'Borrador';} ?></span></td>
         </tr>
         <tr>
             <td class="titulo1"><br><br></td>
@@ -177,13 +185,95 @@
                         <?php $aux_descuento_gnral = 0;?>
                         <?php $aux_impuesto_gnral = 0;?>
                         <?php
-							$i = 0;
 							//dd($coleccion);
 							//$coleccion = $this->ordenesCompraRep->getColletionCampos($orden_compra);
 							// $data   = ['orden_compra'=>$orden_compra, 'centro_contable'=>$centro_contable, 'coleccion'=>$coleccion];
-							foreach($orden_compra->items as $item):?>
+							foreach($items as $item):?>
                         <?php
+                                if ($counter == $limit_page) {
+                                     ?> </tbody></table> </td>
+                                            </tr></table><br>
 
+                                        <table style="width: 100%; <?php echo $currentPage<$pages?'page-break-after:always;':'' ?>">
+                                            <!--seccion de cabecera-->
+                                            <tr>
+
+                                                <td rowspan="3"> <img id="logo" src="<?php $logo = !empty($orden_compra->empresa->logo)?$orden_compra->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').$logo;?>" height="56.69px" alt="Logo" border="0" /></td>
+                                                <td class="titulo1">ORDEN DE COMPRA</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="titulo1_1"><span class="titulo1">No. de Orden: <?php echo $orden_compra->numero_documento;?><br><?php if($orden_compra->id_estado==1){ echo 'Borrador';} ?></span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="titulo1"><br><br></td>
+                                            </tr>
+
+                                            <!--datos de la empresa-->
+                                            <tr>
+                                                <td><b><?php echo strtoupper($orden_compra->empresa->nombre);?></b></td>
+                                                <td>Fecha de emisi&oacute;n: <?php echo $orden_compra->fecha_creacion;?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo "R.U.C ".strtoupper($orden_compra->empresa->getRuc());?></td>
+                                                <td>Fecha de esta impresi&oacute;n: <?php echo date('d-m-Y', time())?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo strtoupper($orden_compra->empresa->descripcion);?></td>
+                                                <td>Preparado por: <?php echo $orden_compra->comprador->nombre.' '.$orden_compra->comprador->apellido?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $orden_compra->empresa->telefono?></td>
+                                                <td>Referencia: <?php echo $orden_compra->referencia?></td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="titulo4">Centro: <?=$centro_contable->nombre;?></td>
+                                            </tr>
+                                            <!--division-->
+                                            <tr>
+                                                <td colspan="2" style="border-bottom: 1px solid black;"></td>
+                                            </tr>
+
+                                            <!--datos del proveedor-->
+                                            <tr>
+                                                <td class="titulo2">ORDEN DE COMPRA PARA:</td>
+                                                <td class="titulo2">ENTREGAR EN:</td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $orden_compra->proveedor->nombre;?></td>
+                                                <td><?php echo $orden_compra->bodega->nombre;?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $orden_compra->proveedor->direccion;?></td>
+                                                <td><?php echo $orden_compra->bodega->direccion?></td>
+                                            </tr>
+                                            <tr>
+                                                <td><?php echo $orden_compra->proveedor->ruc?></td>
+                                                <td><?php echo $orden_compra->bodega->telefono?></td>
+                                            </tr>
+
+                                            <!--tabla de items-->
+                                            <tr>
+                                                <td colspan="2">
+                                             <table style="width: 100%;" class="tabla_items">
+                                                        <thead>
+                                                            <tr class="titulo2">
+                                                                <th>Req. No</th>
+                                                                <th>Descripci&oacute;n</th>
+                                                                <th>Atributos</th>
+                                                                <th>Cta. Costo/Gasto</th>
+                                                                <th>Cant.</th>
+                                                                <th>Unidad</th>
+                                                                <th>Precio unitario</th>
+                                                                <th>Descuento</th>
+                                                                <th>Subtotal</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <?php
+                                    $counter=0;
+                                    $currentPage++;
+                                }
 						?>
                         <tr class="titulo5">
                           <td><?php $num_pedido = !isset($orden_compra->pedido->numero)?'':'PD'.$orden_compra->pedido->numero; echo $num_pedido?></td>
@@ -235,6 +325,7 @@
 
                         <?php
 							$i++;
+							$counter++;
 							endforeach;
 						?>
                     </tbody>

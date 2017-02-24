@@ -376,4 +376,10 @@ class Entradas extends Model
     public function comentario_timeline() {
         return $this->morphMany(Comentario::class,'comentable');
     }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Entradas\Services\EntradaFilters;
+        return $queryFilter->apply($query, $campo);
+    }
 }

@@ -131,6 +131,7 @@ bluapp.controller("crearChequeController", function($scope, $timeout,serviceCheq
     };
 
     $scope.datosFormularioCheque = function(data){
+
         $scope.datosCheque.monto_pagado = data.monto_pagado;
         if($scope.vista =='crear'){
             $scope.datosCheque.monto = 0;
@@ -215,6 +216,7 @@ bluapp.controller("crearChequeController", function($scope, $timeout,serviceCheq
     }
 
     else if($scope.vista ==='ver'){
+
         $scope.chequesHeader.tipo = 'pago';
         $scope.empezarDesde($scope.chequesHeader.tipo);
         $scope.chequesHeader.uuid = {uuid:cheque.pago.uuid_pago};
@@ -242,13 +244,14 @@ bluapp.controller("crearChequeController", function($scope, $timeout,serviceCheq
             chequera_id:var_uuid_chequera,
             numero_cheque:cheque.numero
         };
-
+ 
         $scope.facturas = [
             {
                 factura_id: cheque.pago.id,
                 codigo: cheque.pago.codigo,
                 fecha_emision: cheque.pago.created_at,
-                pagado: cheque.pago.monto_pagado.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")
+                //pagado: cheque.pago.monto_pagado.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")
+                pagado: accounting.formatNumber(cheque.pago.monto_pagado, 2, ",")
             }
         ];
 

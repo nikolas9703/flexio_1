@@ -13,7 +13,7 @@ class Empresa extends Model
 
   protected $table      = 'empresas';
   protected $guarded = ['id', 'uuid_empresa'];
-  protected $fillable   = ['nombre','empresa_id','ruc','descripcion','telefono','logo','organizacion_id','retiene_impuesto','fecha_creacion','tomo','asiento','folio','digito_verificador'];
+  protected $fillable   = ['nombre','empresa_id','ruc','descripcion','telefono','logo','organizacion_id','retiene_impuesto','fecha_creacion','tomo','asiento','folio','digito_verificador', 'no_reply_name', 'no_reply_email'];
   protected $nodos      = array();
 
   public function __construct(array $attributes = array()) {
@@ -114,12 +114,14 @@ public function getUuidEmpresaAttribute($value)
         return $this->hasMany('Flexio\Modulo\ConfiguracionContabilidad\Models\CuentaAbonar', 'empresa_id');
     }
 
+    //this is anticipos
     public function cuenta_abonar_proveedores()
     {
         return $this->cuentas_abonos()
                 ->where("tipo", "proveedor");
     }
 
+    //this is anticipos
     public function cuentas_abonar_clientes()
     {
         return $this->cuentas_abonos()
@@ -155,4 +157,9 @@ public function getUuidEmpresaAttribute($value)
         //return $this->hasMany('Flexio\Modulo\ConfiguracionContabilidad\Models\CajaMenuda', 'empresa_id');
         return $this->hasOne('Flexio\Modulo\ConfiguracionContabilidad\Models\CajaMenuda','empresa_id');
     }
+
+    public function getRuc(){
+     $ruc = $this->tomo.'-'.$this->folio.'-'.$this->asiento.' D.V. '.$this->digito_verificador;
+     return $ruc;
+ }
 }

@@ -23,7 +23,8 @@ use Flexio\Modulo\Empresa\Repository\EmpresaRepository;
 use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategoriasRepository;
 use Flexio\Modulo\Notificaciones\Repository\NotificacionesCatalogRepository as NotificacionesCatalogRepository;
 use Flexio\Modulo\Notificaciones\Repository\NotificacionesRepository as NotificacionesRepository;
-
+use Flexio\Modulo\FacturasCompras\Repository\FacturaCompraCatalogoRepository;
+use Flexio\Modulo\FacturasCompras\Models\FacturaCompraCatalogo;
 
 class Notificaciones extends CRM_Controller
 {
@@ -31,6 +32,7 @@ class Notificaciones extends CRM_Controller
     protected $PedidoRepository;
     protected $UsuariosRepository;
     protected $PedidosCatRepository;
+    protected $FacturaCompraCatalogoRepository;
     protected $empresaRepo;
     protected $id_usuario;
     protected $ItemsCategoriasRepository;
@@ -57,6 +59,7 @@ class Notificaciones extends CRM_Controller
         $this->PedidoRepository = new PedidoRepository;
         $this->UsuariosRepository = new UsuariosRepository;
         $this->PedidosCatRepository = new PedidosCatRepository;
+        $this->FacturaCompraCatalogoRepository = new FacturaCompraCatalogoRepository;
         $this->empresaRepo = new EmpresaRepository();
         $this->ItemsCategoriasRepository = new ItemsCategoriasRepository();
         $this->NotificacionesCatalogRepository = new NotificacionesCatalogRepository();
@@ -181,11 +184,17 @@ class Notificaciones extends CRM_Controller
                     $tipos = array();
                     foreach ($aux3 as $tipo){
                         $tipos [] = $tipo->etiqueta;
+                    }                                 
+                    if($row->modulos->id == '36'){                    
+                    $etiqueta_factura = FacturaCompraCatalogo::where('id', $row->transaccion)->get();
+                        $etiqueta = $etiqueta_factura[0]->valor;
+                    }else{
+                        $etiqueta = $row->transacciones->etiqueta;
                     }
                     $response->rows[$i]["id"]   = $row->id;
                     $response->rows[$i]["cell"] = array(
                         'Compras\\'.$row->modulos->nombre,
-                        $row->transacciones->etiqueta,
+                        $etiqueta,
                         (empty($roles)) ? "" : implode(", ", $roles),
                         (empty($usuarios)) ? "" : implode(", ", $usuarios),
                         (empty($row->categorias->nombre)) ? "" :$row->categorias->nombre,
@@ -272,13 +281,19 @@ class Notificaciones extends CRM_Controller
     public function ajax_transaccion()
     {
         $empresa_id = $this->input->post('empresa_id', true);
+        $modulo_id = $this->input->post('modulo_id', true);
        // $id = $this->input->post('id', true);/
-        //if ($id == '20') {
+        //if ($id == '20') {           
         $clause = ['empresa_id' => $empresa_id];
         $catalogo = [];
         $rol = new Rol_orm;
-        //estados transaccionales de pedidos
-        $catalogo['estados'] = $this->PedidosCatRepository->get(['campo_id' => '7']);
+        if($modulo_id == '36'){
+        $clause = ['tipo' => 'estado_factura_compra'];
+        $catalogo['estados'] = $this->FacturaCompraCatalogoRepository->get($clause);        
+        }else{
+        //estados transaccionales de pedidos        
+        $catalogo['estados'] = $this->PedidosCatRepository->get(['tipo' => 'estado_factura_compra']);
+        }
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($catalogo))->_display();
         exit;

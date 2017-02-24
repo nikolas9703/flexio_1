@@ -51,6 +51,11 @@ class Adenda extends Model
         'monto_acumulado'
     ];
 
+    protected $casts = [
+        'monto_adenda' => 'float',
+        'monto_acumulado' => 'float'
+    ];
+
     /**
      * Estos atributos no son asignables
      *

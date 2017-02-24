@@ -20,8 +20,8 @@ class MetodoCobro extends Model
     }
     public function catalogo_metodo_pago(){
         return $this->belongsTo('Flexio\Modulo\Catalogos\Models\Catalogo','tipo_pago','etiqueta')
-               ->where('tipo','metodo_cobro')
-               ->where('modulo','cobro');
+               ->where('tipo','metodo_cobro_seguros')
+               ->where('modulo','cobro_seguros');
     }
 
     public static function register($attributes)

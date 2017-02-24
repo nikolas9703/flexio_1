@@ -1,7 +1,7 @@
 var tablaHistorial={};
 var historial={
     settings: {
-        url: phost() + 'contabilidad/ajax_historial/'+uuid_cuenta,
+        url: phost() + 'contabilidad/ajax_historial',
         gridId : "#historialGrid",
         gridObj : $("#historialGrid"),
         exportarLista: $("exportarTablaHistorial"),
@@ -10,7 +10,8 @@ var historial={
     botones:{
         opciones: "button.viewOptions",
         limpiar: $("#clearBtn"),
-        buscar: $("#searchBtn")
+        buscar: $("#searchBtn"),
+        exportar: $("#exportarTablaHistorial"),
     },
     init:function(){
         tablaHistorial = this.settings;
@@ -22,29 +23,63 @@ var historial={
         this.botones.limpiar.click(function(e) {
             $('#buscarHistorialForm').find('input[type="text"]').prop("value", "");
             $('#buscarHistorialForm').find('select').prop("value", "");
+            $("#centro_contable").val(null).trigger("change");
             historial.recargar();
         });
 
         this.botones.buscar.click(function(e) {
-            console.log("asdasdad");
 
             var nombre = $('#nombre').val();
             var fecha1 = $('#start').val();
             var fecha2 = $('#end').val();
-
-            if (nombre !== "" || fecha1 !== "" || fecha2 !== "") {
+            var centros = $("#centro_contable").val();
+            var myPostData = tablaHistorial.gridObj.jqGrid('getGridParam', 'postData');
+            delete myPostData.campo.centro_contable;
+            if (nombre !== "" || fecha1 !== "" || fecha2 !== "" || centros !=="") {
                 //Reload Grid
                 tablaHistorial.gridObj.setGridParam({
                     url: tabla.url,
                     datatype: "json",
                     postData: {
-                        nombre: nombre,
-                        fecha1: fecha1,
-                        fecha2: fecha2,
+                        campo:{
+                            codigo: nombre,
+                            centro_contable: centros,
+                            fecha_min: fecha1,
+                            fecha_max: fecha2,
+                        },
                         erptkn: tkn
                     }
                 }).trigger('reloadGrid');
             }
+        });
+
+        this.botones.exportar.click(function(e){
+            //e.preventDefault();
+            //e.stopPropagation();
+
+             if ($('#tabla').is(':visible') === true) {
+                 var ids = [];
+                 ids = tablaHistorial.gridObj.jqGrid('getGridParam', 'selarrrow');
+
+                 //Verificar si hay seleccionados
+                 if (ids.length > 0) {
+                     $('#ids').val(ids);
+                 }else{
+                     var centros = $('#centro_contable').val();
+                     var fecha_min = $('#start').val();
+                     var fecha_max = $('#end').val();
+                     var codigo = $('#nombre').val();
+
+                     
+                     $('#exportar_centro_contable').val(centros);
+                     $('#exportar_fecha_min').val(fecha_min);
+                     $('#exportar_fecha_max').val(fecha_max);
+                     $('#exportar_transaccion').val(codigo);
+                     $('#cuenta_ids').val(window.campo.cuenta_ids);
+                 }
+                 $('#exportar_historial_cuenta').submit();
+                 $('body').trigger('click');
+             }
         });
 
         tablaHistorial.gridObj.on("click", this.botones.opciones, function(e){
@@ -60,17 +95,7 @@ var historial={
             tablaHistorial.opcionesModal.find('.modal-body').empty().append(options);
             tablaHistorial.opcionesModal.find('.modal-footer').empty();
             tablaHistorial.opcionesModal.modal('show');
-            console.log(tablaHistorial.opcionesModal);
-        });
 
-        tablaHistorial.exportarLista.on('click',this.botones.exportarLista,function(e){
-            console.log("asdasd");
-            e.preventDefault();
-            e.stopPropagation();
-            var uuid = $(this).data("id");
-            $('#historial_exportar').val(uuid);
-            $('#formularioExportarLista').submit();
-            tablaHistorial.opcionesModal.modal('hide');
         });
 
     },
@@ -88,20 +113,24 @@ var historial={
         tablaHistorial.gridObj.jqGrid({
             url: tablaHistorial.url,
             datatype: "json",
-            colNames: ['','No. Transacci&oacute;n','Fecha','Transacci&oacute;n','D&eacute;bito','Cr&eacute;dito','',''],
+            colNames: ['','No. Transacci&oacute;n','Fecha','Centro contable','Transacci&oacute;n','D&eacute;bito','Cr&eacute;dito','',''],
             colModel: [
                 {name:'id', index:'id', hidedlg:true,key: true, hidden: true},
-                {name:'no_transaccion',index:'no_transaccion', sortable:false},
-                {name:'fecha',index:'fecha', sortable:false},
-                {name:'nombre', index:'nombre', formatter: 'text', sortable:false},
-                {name:'debito', index:'debito', formatter: 'text', sortable:false},
-                {name:'credito', index:'credito', formatter: 'text', sortable:false, align:'center'},
-                {name:'opciones', index:'opciones', sortable:false, align:'center'},
+                {name:'no_transaccion',index:'no_transaccion',width: 30, sortable:false},
+                {name:'fecha',index:'fecha', sortable:false,width: 20},
+                {name:'centro_contable',index:'centro_contable',width: 30, sortable:false},
+                {name:'transaccion', index:'transaccion', formatter: 'text',width: 30, sortable:false},
+                {name:'debito', index:'debito', formatter: 'text',width: 20, sortable:false, align:'center'},
+                {name:'credito', index:'credito', formatter: 'text',width: 20, sortable:false, align:'center'},
+                {name:'opciones', index:'opciones', sortable:false, width: 30,align:'center'},
                 {name:'link', index:'link', hidedlg:true, hidden: true}
             ],
             mtype: "POST",
-            postData: { erptkn:tkn},
-            sortorder: "asc",
+            postData: {
+                campo: typeof window.campo !== 'undefined' ? window.campo : {},
+                erptkn:tkn
+            },
+
             hiddengrid: false,
             loadtext: '<p>Cargando...</p>',
             hoverrows: false,
@@ -116,6 +145,7 @@ var historial={
             autowidth: true,
             rowList:[10,20,30],
             sortname: 'id',
+            sortorder: "desc",
             beforeProcessing: function(data, status, xhr){
                 //Check Session
                 if( $.isEmptyObject(data.session) === false){
@@ -156,13 +186,19 @@ var historial={
     recargar: function() {
 
         //Reload Grid
+        var myPostData = tablaHistorial.gridObj.jqGrid('getGridParam', 'postData');
+        delete myPostData.campo.centro_contable;
         tablaHistorial.gridObj.setGridParam({
             url: tablaHistorial.url,
             datatype: "json",
             postData: {
-                nombre: '',
-                fecha1:'',
-                fecha2:'',
+                campo:{
+                    centro_contable:[],
+                    codigo:'',
+                    fecha_min:'',
+                    fecha_max:'',
+                },
+
                 erptkn: tkn
             }
         }).trigger('reloadGrid');
@@ -172,4 +208,25 @@ var historial={
 
 $(document).ready(function(){
     historial.init();
+    $("#centro_contable").select2({
+        width:'100%'
+    });
+    $("#start").datepicker({
+		//defaultDate: "+1w",
+		dateFormat: 'dd/mm/yy',
+		changeMonth: true,
+		numberOfMonths: 1,
+		onClose: function( selectedDate ) {
+			$("#end").datepicker( "option", "minDate", selectedDate );
+		}
+	});
+	$("#end").datepicker({
+		//defaultDate: "+1w",
+		dateFormat: 'dd/mm/yy',
+		changeMonth: true,
+		numberOfMonths: 1,
+		onClose: function( selectedDate ) {
+			$("#start").datepicker( "option", "maxDate", selectedDate );
+	    }
+	});
 });

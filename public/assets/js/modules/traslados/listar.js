@@ -12,22 +12,12 @@ var listarTraslados = (function(){
         chosens: "#de_bodega, #a_bodega, #estado",
         Fechas: "#fecha_solicitud, #fecha_entrega"
     };
-    
+
     var config = {
-        chosen: {
-            width: '100%',
-            allow_single_deselect: true
-        },
-        dateSimple:{
-            locale:{
-                format: 'DD-MM-YYYY'
-            },
-            showDropdowns: true,
-            defaultDate: '',
-            singleDatePicker: true
-        }
+        select2: {width: '100%'},
+        dateSimple:{dateFormat: "dd/mm/yy"}
     };
-   
+
     // Objeto vacío que guardará elementos que se manejan por HTML.
     var dom = {}
 
@@ -45,13 +35,13 @@ var listarTraslados = (function(){
     // Función donde establecemos los eventos que tendrán cada elemento.
     var suscribeEvents = function(){
         dom.modulosOpciones.on("click", st.exportarBtn, events.eExportar);
-        
-        dom.Fechas.daterangepicker(config.dateSimple).val("");
-        
-        dom.chosens.chosen(config.chosen);
+
+        dom.Fechas.datepicker(config.dateSimple).val("");
+
+        dom.chosens.select2(config.select2);
     };
 
-    /* Objeto que guarda métodos que se van a usar en cada evento definido 
+    /* Objeto que guarda métodos que se van a usar en cada evento definido
       en la función suscribeEvents. */
     var events = {
         eExportar: function(e){
@@ -60,15 +50,15 @@ var listarTraslados = (function(){
             e.stopPropagation();
 
             if(dom.tabla.is(':visible') == true){
-                
+
                 //Desde la Tabla
                 events.eExportarjQgrid();
 
             }else{
-                
+
                 //Desde el Grid
                 events.eExportarGrid();
-                
+
             }
         },
         eExportarjQgrid: function(e) {
@@ -105,7 +95,7 @@ var listarTraslados = (function(){
                 downloadURL(csvUrl, filename);
 
                 $('body').trigger('click');
-            } 
+            }
         },
         eExportarGrid: function(e){
             var registros_grid = [];
@@ -150,30 +140,16 @@ var listarTraslados = (function(){
 
         }
     };
-    
-    var mostrar_mensaje = function(){
-        //mensaje clase viene desde el controlador...
-        if(mensaje_clase != 0)
-        {
-            if(mensaje_clase == "alert-success")
-            {
-                toastr.success("¡&Eacute;xito! Se ha guardado correctamente el << Traslado/Inventario >>.");
-            }
-            else
-            {
-                toastr.error("¡Error! Su solicitud no fue procesada en el << Traslado/Inventario >>.");
-            }
-        }
-    }
- 
+
+
+
     // Función que inicializará los funciones decritas anteriormente.
     var initialize = function(){
         catchDom();
         suscribeEvents();
-        mostrar_mensaje();
     };
 
-    /* Retorna un objeto literal con el método init haciendo referencia a la 
+    /* Retorna un objeto literal con el método init haciendo referencia a la
        función initialize. */
     return{
         init:initialize,
@@ -183,5 +159,3 @@ var listarTraslados = (function(){
 
 // Ejecutando el método "init" del módulo tabs.
 listarTraslados.init();
-
- 

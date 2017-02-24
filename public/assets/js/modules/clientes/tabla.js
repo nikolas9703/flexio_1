@@ -1,6 +1,8 @@
 //modulo clientes
 var tablaClientes = (function () {
-
+	
+	var modulo = localStorage.getItem("ms-selected");
+	
     var tablaUrl = phost() + 'clientes/ajax-listar';
     var gridId = "tablaClientesGrid";
     var gridObj = $("#tablaClientesGrid");
@@ -35,7 +37,8 @@ var tablaClientes = (function () {
                 {name: 'link', index: 'link', width: 50, align: "center", sortable: false, resizable: false, hidden: true, hidedlg: true},
             ],
             postData: {
-                erptkn: tkn
+                erptkn: tkn,
+				modulo:modulo
             },
             height: "auto",
             autowidth: true,

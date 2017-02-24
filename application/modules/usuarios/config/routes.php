@@ -65,6 +65,7 @@ $route['usuarios/ajax-crear-usuario'] 		= 'usuarios/ajax_crear_usuario';
 $route['usuarios/editar-usuario/(:num)'] 	= 'usuarios/editar/$1';
 $route['usuarios/ajax-validando-contrasenas'] 	= 'usuarios/ajax_validando_contrasenas';
 $route['usuarios/ajax-toggle-estado'] 	= 'usuarios/ajax_toggle_estado';
+$route['usuarios/ajax-catalogo'] 	= 'usuarios/ajax_catalogo';
 
 
 

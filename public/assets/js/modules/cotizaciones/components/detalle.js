@@ -1,25 +1,24 @@
+Vue.component('detalle', {
 
-Vue.component('detalle',{
+    template: '#detalle_template',
 
-    template:'#detalle_template',
+    props: {
 
-    props:{
-
-        config:Object,
-        detalle:Object,
-        catalogos:Object,
-        empezable:Object,
-        isClientePotencial:'',
-        disabledCliente:false
+        config: Object,
+        detalle: Object,
+        catalogos: Object,
+        empezable: Object,
+        isClientePotencial: '',
+        disabledCliente: false
 
     },
 
-    ready:function(){
+    ready: function () {
 
         var context = this;
-        if(context.config.vista == 'crear'){
+        if (context.config.vista == 'crear') {
 
-            Vue.nextTick(function(){
+            Vue.nextTick(function () {
 
                 context.setVendedor();
                 context.setPrecio();
@@ -28,73 +27,84 @@ Vue.component('detalle',{
 
         }
 
+        if (window.acceso == 0) {
+            context.config.disableDetalle = true;
+        }
+
     },
 
-    watch:{
-                 'detalle.cliente_id': function(val, oldVal)
-    {
+    watch: {
+        'detalle.cliente_id': function (val, oldVal) {
 
             var context = this;
 
             console.log(context.empezable.type);
-            if(context.config.vista == 'editar' && val != ''){
+            if (context.config.vista == 'editar' && val != '') {
                 console.log('entre');
                 //...no hace nada
             }
-            else if(val == '' || context.empezable.type == 'cliente'){
-              console.log('entre cliente type');
-              context.cliente_id.value = context.empezable.id;
+            else if (val == '' || context.empezable.type == 'cliente') {
+                console.log('entre cliente type');
+                context.cliente_id = context.empezable.id;
             }
-            else if(val == '' || context.empezable.type == 'cliente_potencial' || !context.enableWatch){
+            else if (val == '' || context.empezable.type == 'cliente_potencial' || !context.enableWatch) {
                 this.detalle.saldo_cliente = 0;
                 this.detalle.credito_cliente = 0;
                 return '';
             }
 
             context.enableWatch = true;
-            var datos = $.extend({erptkn: tkn},{cliente_id:val});
+            var datos = $.extend({erptkn: tkn}, {cliente_id: val});
             this.$http.post({
                 url: window.phost() + "clientes/ajax-get-montos",
-                method:'POST',
-                data:datos
-            }).then(function(response){
+                method: 'POST',
+                data: datos
+            }).then(function (response) {
 
-                if(_.has(response.data, 'session')){
+                if (_.has(response.data, 'session')) {
                     window.location.assign(window.phost());
                     return;
                 }
-                if(!_.isEmpty(response.data)){
+                if (!_.isEmpty(response.data)) {
 
                     context.detalle.saldo_cliente = response.data.saldo;
                     context.detalle.credito_cliente = response.data.credito;
-                    if(context.empezable.type == ''){
+
+                    if (response.data.exonerado_impuesto != null) {
+                        $('#cliente_ID').val(response.data.cliente_id);
+                    } else {
+                        console.log("es null");
+                        setTimeout(function () {
+                            $('#cliente_ID').val('');
+                        }, 500);
+                    }
+                    if (context.empezable.type == '') {
 
                         context.detalle.centros_facturacion = response.data.centros_facturacion;
                         context.detalle.centro_facturacion_id = response.data.centro_facturacion_id;
                         console.log('asignar catalogo de centros de facturacion y el perteneciente al cliente');
-
                     }
                     context.enableWatch = true;
 
                 }
-            }).catch(function(err){
-                window.toastr['error'](err.statusText + ' ('+err.status+') ');
+            }).catch(function (err) {
+                window.toastr['error'](err.statusText + ' (' + err.status + ') ');
             });
 
         }
-       
+
     },
 
-    methods:{
+    methods: {
 
-        setVendedor:function(){
+        setVendedor: function () {
 
             var context = this;
-            var vendedor = _.find(context.catalogos.vendedores, function(vendedor){
+            var vendedor = _.find(context.catalogos.vendedores, function (vendedor) {
                 return vendedor.id == context.catalogos.usuario_id;
             });
 
-            if(!_.isEmpty(vendedor)){
+            if (!_.isEmpty(vendedor)) {
 
                 context.detalle.creado_por = vendedor.id;
 
@@ -102,14 +112,14 @@ Vue.component('detalle',{
 
         },
 
-        setPrecio:function(){
+        setPrecio: function () {
 
             var context = this;
-            var precio = _.find(context.catalogos.precios, function(precio){
+            var precio = _.find(context.catalogos.precios, function (precio) {
                 return precio.principal == 1;
             });
 
-            if(!_.isEmpty(precio)){
+            if (!_.isEmpty(precio)) {
 
                 context.detalle.item_precio_id = precio.id;
 
@@ -119,41 +129,39 @@ Vue.component('detalle',{
 
     },
 
-    computed:{
+    computed: {
 
-        getClientes:function(){
+        getClientes: function () {
 
             var context = this;
-            if(context.empezable.type != ''){
-                this.$set('disabledCliente',true);
-                if(context.empezable.type == 'cliente_potencial'){
+            if (context.empezable.type != '') {
+                this.$set('disabledCliente', true);
+                if (context.empezable.type == 'cliente_potencial') {
                     this.$set('isClientePotencial', 'potencial');
-                }else{
+                } else {
                     this.$set('isClientePotencial', '');
                 }
-                
+
                 return context.empezable[context.empezable.type + 's'];
             }
-            this.$set('disabledCliente',false);
+            this.$set('disabledCliente', false);
             this.$set('isClientePotencial', '');
             return context.empezable['cliente' + 's'];
-
 
 
         }
 
     },
 
-    data:function(){
+    data: function () {
 
         return {
 
-            enableWatch:true
+            enableWatch: true
 
         };
 
     }
-
 
 
 });

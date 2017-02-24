@@ -14,14 +14,12 @@ class FacturaSeguroRepositorio{
 
        $this->builder->select("fac_facturas.*","pol_polizas.numero as numero_poliza","pol_polizas.ramo as ramo_aso")->where('fac_facturas.empresa_id',$empresa_id)->whereIn('fac_facturas.estado',['por_cobrar','cobrado_parcial'])->leftJoin("pol_polizas","pol_polizas.id","=","fac_facturas.id_poliza")->groupBy("id_poliza")->orderBy("fac_facturas.cliente_id","asc")->orderBy("pol_polizas.ramo","asc")->orderBy("pol_polizas.numero","desc");;
 	   
-	   //$this->builder->select("fac_facturas.*","pol_polizas.numero as numero_poliza","pol_polizas.ramo as ramo_aso")->where('fac_facturas.empresa_id',$empresa_id)->where('fac_facturas.estado','por_cobrar')->where('fac_facturas.formulario','facturas_seguro')->join("pol_polizas","pol_polizas.id","=","fac_facturas.id_poliza")->groupBy("id_poliza")->orderBy("fac_facturas.cliente_id","asc")->orderBy("pol_polizas.ramo","asc")->orderBy("pol_polizas.numero","desc");
-	   
        return $this;
     }
 
     function getPolizasFacturas($empresa_id){
 		//$this->builder->where('empresa_id',$empresa_id)->where('estado','por_cobrar')->whereNotNull('id_poliza')->groupBy("id_poliza");
-		$this->builder->select("fac_facturas.*","pol_polizas.numero as numero_poliza","pol_polizas.ramo as ramo_aso")->where('fac_facturas.empresa_id',$empresa_id)->whereIn('fac_facturas.estado',['por_cobrar','cobrado_parcial'])->where('fac_facturas.formulario','facturas_seguro')->join("pol_polizas","pol_polizas.id","=","fac_facturas.id_poliza")->groupBy("id_poliza")->orderBy("fac_facturas.cliente_id","asc")->orderBy("pol_polizas.ramo","asc")->orderBy("pol_polizas.numero","desc");
+		$this->builder->select("pol_polizas.id","fac_facturas.uuid_factura","fac_facturas.id_poliza","fac_facturas.referencia","fac_facturas.codigo","fac_facturas.centro_contable_id","fac_facturas.bodega_id","fac_facturas.cliente_id","fac_facturas.created_by","fac_facturas.created_at","fac_facturas.updated_at","fac_facturas.empresa_id","fac_facturas.orden_venta_id","fac_facturas.cotizacion_id","fac_facturas.estado","fac_facturas.fecha_desde","fac_facturas.fecha_hasta","fac_facturas.comentario","fac_facturas.termino_pago","fac_facturas.fecha_termino_pago","fac_facturas.item_precio_id","fac_facturas.lista_precio_alquiler_id","fac_facturas.subtotal","fac_facturas.otros","fac_facturas.impuestos","fac_facturas.total","fac_facturas.descuento","fac_facturas.porcentaje_impuesto","fac_facturas.formulario","fac_facturas.centro_facturacion_id","fac_facturas.cargos_adicionales","fac_facturas.cuenta","fac_facturas.remesa_saliente","fac_facturas.remesa_entrante","fac_facturas.saldo","pol_polizas.numero as numero_poliza","pol_polizas.ramo as ramo_aso")->where('fac_facturas.empresa_id',$empresa_id)->whereIn('fac_facturas.estado',['por_cobrar','cobrado_parcial'])->where('fac_facturas.formulario','facturas_seguro')->join("pol_polizas","pol_polizas.id","=","fac_facturas.id_poliza")->groupBy("id_poliza")->orderBy("fac_facturas.cliente_id","asc")->orderBy("pol_polizas.ramo","asc")->orderBy("pol_polizas.numero","desc");
 		return $this;
     }
 
@@ -31,7 +29,7 @@ class FacturaSeguroRepositorio{
     }
 
     function conId($id){
-        $this->builder->where('id',$id);
+        $this->builder->where('fac_facturas.id',$id);
         return $this;
     }
 

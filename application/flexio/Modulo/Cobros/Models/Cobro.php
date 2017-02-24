@@ -29,7 +29,7 @@ class Cobro extends Model
 
     protected $guarded = ['id','uuid_cobro'];
     protected $appends = ['icono','enlace'];
-
+    protected $casts =['monto_pagado'=>'float'];
     protected $deposito = ['banco'=>"Flexio\Modulo\Contabilidad\Models\Cuentas",'caja'=>'Flexio\Modulo\Cajas\Models\Cajas'];
 
     protected $empezar = ['cliente'=>'Flexio\Modulo\Cliente\Models\Cliente','contrato_venta'=>'Flexio\Modulo\Contratos\Models\Contrato','factura'=>'Flexio\Modulo\FacturasVentas\Models\FacturaVenta','orden_trabajo' => 'Flexio\Modulo\OrdenesTrabajo\Models\OrdenTrabajo'];
@@ -53,13 +53,6 @@ class Cobro extends Model
             }
             return $cobro;
         });
-
-        \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
-          'cliente' => \Flexio\Modulo\Cliente\Models\Cliente::class,
-          'contrato_venta' => \Flexio\Modulo\Contratos\Models\Contrato::class,
-          'factura' =>  \Flexio\Modulo\FacturasVentas\Models\FacturaVenta::class,
-          'orden_trabajo' => \Flexio\Modulo\OrdenesTrabajo\Models\OrdenesTrabajo::class
-        ]);
     }
 
     public function getUuidCobroAttribute($value)
@@ -93,14 +86,22 @@ class Cobro extends Model
     }
 
     public function getEmpezableTypeAttribute($value){
+
+        \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
+          'cliente' => \Flexio\Modulo\Cliente\Models\Cliente::class,
+          'contrato_venta' => \Flexio\Modulo\Contratos\Models\Contrato::class,
+          'factura' =>  \Flexio\Modulo\FacturasVentas\Models\FacturaVenta::class,
+          'orden_trabajo' => \Flexio\Modulo\OrdenesTrabajo\Models\OrdenesTrabajo::class
+      ]);
         $tipos = array_flip($this->empezar);
         if(array_key_exists($value,$tipos)){
-            return  $tipos[$value];
+            return array_get($tipos, $value, $value);
         }
-
     }
 
-
+    /*function getActualClassNameForMorph($class){
+        dd($class);
+    }*/
     public function getClienteNombreAttribute() {
         if (is_null($this->cliente)) {
             return '';

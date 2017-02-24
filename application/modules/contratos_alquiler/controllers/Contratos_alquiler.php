@@ -117,9 +117,12 @@ class Contratos_alquiler extends CRM_Controller
             "toast_mensaje" => $mensaje
         ));
 
-        $clause = ['empresa_id' => $this->empresa_id];
+        $clause =  ['empresa_id' => $this->empresa_id,'estado'=>"Activo"];
         $data['clientes']   = $this->ClienteRepository->get($clause);
         $data['estados']    = $this->ContratosAlquilerCatalogosRepository->get(['tipo'=>'estado']);
+        $data['usuarios']    = $this->UsuariosRepository->get($clause);
+        $data['centros']    = $this->CentrosContablesRepository->get($clause);
+        $data['categorias']    = $this->ItemsCategoriasRepository->get(["empresa_id" => $this->empresa_id]);
 
         $this->template->agregar_titulo_header('Listado de Contratos de alquiler');
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -344,7 +347,19 @@ class Contratos_alquiler extends CRM_Controller
     	$contratos_alquiler = $this->ContratosAlquilerRepository->get(['ids', $post['ids']]);
 
         $csv = Writer::createFromFileObject(new SplTempFileObject());
-        $csv->insertOne(['No. Contrato','Cliente','Fecha de inicio','Saldo por facturar','Total facturado',utf8_decode('Días transcurridos'),'Estado']);
+        $csv->insertOne([
+			'No. Contrato',
+			'Cliente',
+			'Centro facturacion',
+			'Fecha de inicio',
+			'Fecha de vencimiento',
+			'Saldo por facturar',
+			'Total facturado',
+			//utf8_decode('Días transcurridos'),
+			'Centro contable',
+			'Creado por',
+			'Estado',
+		]);
         $csv->insertAll($this->ContratosAlquilerRepository->getCollectionExportar($contratos_alquiler));
         $csv->output("ContratoAlquiler-". date('ymd') .".csv");
         exit();
@@ -352,14 +367,13 @@ class Contratos_alquiler extends CRM_Controller
 
 
     public function crear($modulo=NULL, $modulo_uuid=NULL) {
-
         $acceso = 1;
         $mensaje = array();
         if (!$this->auth->has_permission('acceso', 'contratos_alquiler/crear')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
-        
+
         //#case 1682.1 si el usuario tiene role de vendedor, se deshabilita el campo vendedor y se pone como default el usuario logeado
         $vendedor=1;
         $user_id=0;
@@ -369,7 +383,7 @@ class Contratos_alquiler extends CRM_Controller
                 $user_id = AuthUser::getId();
             }
         }
-        
+
         $disableEmpezarDesde = 0;
         $empezable = collect([
             'id' =>'',
@@ -377,7 +391,7 @@ class Contratos_alquiler extends CRM_Controller
             'clientes' => [],
             'cotizacions' => [],
             'types' => [
-                    
+
                     1 => ['id' => 'cotizacion', 'nombre' => 'Cotizaciones']]
         ]);
 
@@ -386,13 +400,21 @@ class Contratos_alquiler extends CRM_Controller
             //$uuid_contrato_alquiler = str_replace('cotizacion', '', $foreing_key);
 
             $cotizaciones = $this->CotizacionesAlquilerRepository->findBy(['uuid_cotizacion' => $modulo_uuid]);
+
             //dd(collect($cotizaciones->load('articulos'))->toArray());
-            $empezable['cotizacions'] = $cotizaciones;
+
+
+			$cotiza_arr = $cotizaciones->toArray();
+			$cotiza_arr["vendedor_id"] = $cotizaciones->creado_por;
+			$empezable["cotizacions"] = $cotiza_arr;
+            /*$empezable['cotizacions'] = $cotizaciones->map(function($row){
+				return array_merge($row->toArray(), ['vendedor_id' => $row->creado_por]);
+			});*/
             $empezable['type'] = 'cotizacion';
             $empezable['id'] = $cotizaciones->id;
             //$empezable['types'] = [ 0 => ['id' => 'cotizacion', 'nombre' => 'Cotizaciones']];
             $disableEmpezarDesde = 1;
-        } 
+        }
         $clause = array(
             "empresa_id" => $this->empresa_id
         );
@@ -432,8 +454,6 @@ class Contratos_alquiler extends CRM_Controller
     }
 
     public function editar($uuid) {
-
-
         $acceso = 1;
         $mensaje = array();
         if (!$this->auth->has_permission('acceso', 'contratos_alquiler/editar/(:any)')) {
@@ -487,7 +507,8 @@ class Contratos_alquiler extends CRM_Controller
                 $user_id = AuthUser::getId();
             }
         }
-          $this->assets->agregar_var_js(array(
+
+		$this->assets->agregar_var_js(array(
             "vista"                     => 'editar',
             "acceso"                    => $acceso == 0 ? $acceso : $acceso,
             "contrato_alquiler"         => collect($this->ContratosAlquilerRepository->getCollectionCampo($contrato_alquiler)),
@@ -504,22 +525,22 @@ class Contratos_alquiler extends CRM_Controller
         $data['contrato_alquiler']  = $contrato_alquiler;
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-car"></i> Contratos de alquiler: '.$contrato_alquiler->codigo,
-             "historial" => true,
-             "ruta" => [
-                 ["nombre" => "Alquileres", "activo" => false],
-                 ["nombre" => "Contratos de alquiler", "activo" => false,'url'=>'contratos_alquiler/listar'],
-                 ["nombre" => "<b>{$contrato_alquiler->codigo}</b>","activo" => true]
-             ],
-                 "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array("contratos_alquiler/imprimir/{$uuid}" => "Imprimir")]
+			"historial" => true,
+			"ruta" => [
+				["nombre" => "Alquileres", "activo" => false],
+				["nombre" => "Contratos de alquiler", "activo" => false,'url'=>'contratos_alquiler/listar'],
+				["nombre" => "<b>{$contrato_alquiler->codigo}</b>","activo" => true]
+			],
+			"menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array("contratos_alquiler/imprimir/{$uuid}" => "Imprimir")]
 
         );
         $cotizacion_id = 'x';
-        
+
         if($contrato_alquiler->tipoid!=''){
             $cotizacion_id = $contrato_alquiler->tipoid;
         }
         $data['subpanels'] = [
-            
+
             'cotizaciones_alquiler' => ['contrato_alquiler' => $contrato_alquiler->id],
             'entregas' => ['contrato_alquiler' => $contrato_alquiler->id],
             'devoluciones' => ['contrato_alquiler' => $contrato_alquiler->id],
@@ -528,11 +549,11 @@ class Contratos_alquiler extends CRM_Controller
             'items' => ['contrato_alquiler' => $contrato_alquiler->id],
             'series' => ['contrato_alquiler' => $contrato_alquiler->id],
             'documentos' => ['contrato_alquiler' => $contrato_alquiler->id]
-            
+
         ];
-        
-       
-        
+
+
+
         $this->template->agregar_titulo_header('Contratos de alquiler: '.$contrato_alquiler->codigo);
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
@@ -683,7 +704,7 @@ class Contratos_alquiler extends CRM_Controller
         $post = $this->input->post();
         if (!empty($post)) {
 
-            
+
             $contrato_alquiler=null;
 
             Capsule::beginTransaction();
@@ -691,7 +712,7 @@ class Contratos_alquiler extends CRM_Controller
                 $campo = $post['campo'];
                 if(empty($campo['id']))
                 {
-                    
+
                     $post['campo']['codigo']        = $this->_generar_codigo();
                     $post['campo']['empresa_id']    = $this->empresa_id;
                     $contrato_alquiler = $this->ContratosAlquilerRepository->create($post);

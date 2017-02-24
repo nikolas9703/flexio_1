@@ -19,6 +19,7 @@ $config['modulo_config'] = array(
     'prefijo' => 'cotalq',
     'permisos' => array(
         'acceso' => 'Acceso',
-        'editarPrecioUnidad_adicional' => 'Editar Precio Unidad'
+        'editarPrecioUnidad_adicional' => 'Editar Precio Unidad',
+		'ver_todos' => 'Ver Todos'
     )
 );

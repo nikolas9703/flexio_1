@@ -13,7 +13,7 @@ class MetodoCobro extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts =['referencia' => 'array'];
+    protected $casts =['referencia' => 'array','total_pagado'=>'float'];
 
     public function cobro(){
       return $this->belongsTo(Cobro::class, 'cobro_id');

@@ -8,7 +8,7 @@ use \Illuminate\Database\Eloquent\Model as Model;
 class PagadasDescuentos extends Model
 {
 	protected $table = 'pln_pagadas_descuentos';
-	protected $fillable = ['planilla_pagada_id', 'codigo','acreedor','monto_ciclo','saldo_restante','fecha_creacion', 'descuento_id','tipo_descuento_id', 'created_at'];
+	protected $fillable = ['planilla_pagada_id', 'codigo','acreedor','monto_ciclo','saldo_restante','fecha_creacion', 'descuento_id','tipo_descuento_id','estado_pago_proveedor', 'created_at'];
 	protected $guarded = ['id'];
 	public $timestamps = true;
   protected $appends = ['fecha_creacion'];

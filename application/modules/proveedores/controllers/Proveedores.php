@@ -20,6 +20,11 @@ use Flexio\Modulo\Proveedores\Models\Proveedores as proveedoresModel;
 
 use Flexio\Library\HTML\HtmlRender;
 
+//utils
+use Flexio\Library\Util\FlexioAssets;
+use Flexio\Library\Util\FlexioSession;
+use Flexio\Library\Toast;
+
 class Proveedores extends CRM_Controller
 {
     protected $id_empresa;
@@ -35,6 +40,11 @@ class Proveedores extends CRM_Controller
 
     //repositories
     private $proveedoresRep;
+
+    //utils
+    protected $FlexioAssets;
+    protected $FlexioSession;
+    protected $Toast;
 
     public function __construct()
     {
@@ -69,6 +79,11 @@ class Proveedores extends CRM_Controller
 
         $this->HtmlRender = new HtmlRender;
 
+        //utils
+        $this->FlexioAssets = new FlexioAssets;
+        $this->FlexioSession = new FlexioSession;
+        $this->Toast = new Toast;
+
     }
 
 
@@ -94,7 +109,6 @@ class Proveedores extends CRM_Controller
             'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
             'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
             'public/assets/css/plugins/jquery/fileinput/fileinput.css',
-            'public/assets/css/plugins/jquery/toastr.min.css',
             'public/assets/css/modules/stylesheets/proveedores.css',
             'public/assets/css/plugins/jquery/jquery.fileupload.css',
         ));
@@ -126,7 +140,6 @@ class Proveedores extends CRM_Controller
             //'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
-            'public/assets/js/plugins/toastr.min.js',
             'public/assets/js/default/formulario.js',
             'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
             /* Archivos js del propio modulo*/
@@ -184,8 +197,7 @@ class Proveedores extends CRM_Controller
 
         //Agregra variables PHP como variables JS
         $this->assets->agregar_var_js(array(
-            "mensaje_clase" => isset($data["mensaje"]["clase"]) ? $data["mensaje"]["clase"] : "0",
-            "mensaje_contenido" => isset($data["mensaje"]["contenido"]) ? $data["mensaje"]["contenido"] : "0"
+            'flexio_mensaje' => Flexio\Library\Toast::getStoreFlashdata(),
         ));
 
         unset($data["mensaje"]);
@@ -562,6 +574,28 @@ class Proveedores extends CRM_Controller
         exit;
     }
 
+    public function ajax_get_proveedores()
+    {
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $response = [];
+        $request = array_merge($this->input->post(), $this->input->get(), ['empresa' => $this->id_empresa]);
+        if(isset($request['campo']) && !empty($request['campo'])){$request = array_merge($request, $request['campo']);}
+
+        $method = (isset($request['id']) && !empty($request['id'])) ? 'find' : 'get';
+        $result = \Flexio\Modulo\Proveedores\Models\Proveedores::where(function($query) use ($request){
+            $query->deFiltro($request);
+        })->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+        $response = $method == 'find' ? ['id' => $result->id, 'nombre' => $result->nombre, 'retiene_impuesto' => $result->retiene_impuesto] : $result->map(function($row){
+            return ['id' => $row->id, 'text' => $row->nombre, 'retiene_impuesto' => $row->retiene_impuesto];
+        });
+
+        echo json_encode($response);
+        exit;
+    }
+
     public function ajax_get_montos()
     {
 
@@ -710,7 +744,10 @@ class Proveedores extends CRM_Controller
             'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
             'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
             'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
-            'public/assets/css/plugins/jquery/fileinput/fileinput.css'
+            'public/assets/css/plugins/jquery/fileinput/fileinput.css',
+            //select2
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css',
         ));
 
         $this->assets->agregar_js(array(
@@ -724,6 +761,10 @@ class Proveedores extends CRM_Controller
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/default/tabla-dinamica.jquery.js',
             'public/assets/js/default/formulario.js',
+            //select2
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
+            //...
             'public/assets/js/plugins/ckeditor/ckeditor.js',
             'public/assets/js/plugins/ckeditor/adapters/jquery.js',
             'public/assets/js/modules/proveedores/formulario.js',
@@ -822,6 +863,9 @@ class Proveedores extends CRM_Controller
             'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
             'public/assets/css/plugins/jquery/fileinput/fileinput.css',
             'public/assets/css/modules/stylesheets/proveedores.css',
+            //select2
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css',
         ));
 
         $this->assets->agregar_js(array(
@@ -844,6 +888,10 @@ class Proveedores extends CRM_Controller
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/default/tabla-dinamica.jquery.js',
             'public/assets/js/default/formulario.js',
+            //select2
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
+            //...
             'public/assets/js/plugins/ckeditor/ckeditor.js',
             'public/assets/js/plugins/ckeditor/adapters/jquery.js',
             'public/assets/js/modules/proveedores/formulario.js',
@@ -852,13 +900,14 @@ class Proveedores extends CRM_Controller
 
         //dd($proveedores->toArray());
         //Agregra variables PHP como variables JS
+        $ToView = new \Flexio\Modulo\Proveedores\Transformers\ToView;
         $this->assets->agregar_var_js(array(
             "uuid_anterior" => (isset($proveedor->proveedor_anterior()->id)) ? $proveedor->proveedor_anterior()->uuid_proveedor : "",
             "uuid_siguiente" => (isset($proveedor->proveedor_siguiente()->id)) ? $proveedor->proveedor_siguiente()->uuid_proveedor : "",
             'retiene_impuesto' => $proveedor->retiene_impuesto,
             'vista' => 'ver',
             "proveedores_id" => $proveedor->id,
-            "proveedor" => $proveedores,
+            "proveedor" => $ToView->proveedor($proveedores),
             "pro_coment" => (isset($proveedores->comentario_timeline)) ? $proveedores->comentario_timeline : [],
             "lista_asignados" => $proveedor->proveedores_asignados,
             'acceso' => $acceso,
@@ -873,7 +922,7 @@ class Proveedores extends CRM_Controller
             "nombre" => "Ordenes",
         );
         $modulo_subpaneles = Subpanel::lista_modulos_activos_relacionados();
-
+        
         //Recorer el arreglo e introducirlo en
         //el menu de opciones si existe
         if (!empty($modulo_subpaneles)) {
@@ -920,11 +969,6 @@ class Proveedores extends CRM_Controller
         $data['info']['estados'] = Proveedores_cat_orm::where('id_campo', '=', '1')->get();
 
 
-        // dd($proveedor);
-        $this->assets->agregar_var_js(array(
-            'proveedor' => $proveedor
-        ));
-
         $data["info"]["credito"] = number_format($proveedor->credito, 2, '.', ',') ?: "0.00";
         $data["info"]["saldo"] = number_format($proveedor->total_saldo_pendiente(), 2, '.', ',') ?: "0.00";
         $data["info"]["acreedor"] = $proveedor->acreedor;
@@ -967,132 +1011,25 @@ class Proveedores extends CRM_Controller
       echo json_encode(["isValid"=>!$this->proveedoresRep->existDNI($_POST)]);
     }
 
-    function guardar()
+    public function guardar()
     {
-
-        $data = array();
-        $mensaje = array();
-        $proveedor = "";
-
-        //dd($_POST);
-
         if (!empty($_POST)) {
-            $response = false;
-            $response = Capsule::transaction(
-                function () use ($data) {
-                    $campo = $this->input->post("campo");
-                    //       dd($_POST);
-                    //DATOS GENERALES
-                    if (empty($campo["uuid"])) {
-                        /**
-                         * Se busca el proveedor por RUC
-                         */
-
-                        if ($this->proveedoresRep->existDNI($_POST)) {
-                            return 2;
-                        }
-                        $proveedor = new proveedoresModel();
-                    } else {
-                        $proveedor = $this->proveedoresRep->findByUuid($campo["uuid"]);
-                    }
-
-
-                    //DATOS GENERALES DEL PROVEEDOR
-                    $proveedor->nombre = $campo["nombre"];
-                    $proveedor->telefono = $campo["telefono"];
-                    $proveedor->email = $campo["email"];
-                    $proveedor->estado = $campo["estado"];
-                    $proveedor->id_banco = $campo["banco"];
-                    $proveedor->id_tipo_cuenta = $campo["tipo_cuenta"];
-                    $proveedor->numero_cuenta = $campo["numero_cuenta"];
-                    $proveedor->limite_credito = str_replace(',', '', $campo["limite_credito"]);
-                    $proveedor->direccion = $campo["direccion"];
-                    $proveedor->termino_pago_id = $campo["termino_pago_id"];
-                    $proveedor->retiene_impuesto = !empty($campo["retiene_impuesto"]) ? $campo["retiene_impuesto"] : "";
-                    $proveedor->acreedor = $campo["acrededor"];
-                    $identificacion = $campo["tipo_identificacion"];
-                    $proveedor->identificacion = $identificacion;
-                    $proveedor->tipo_id = $campo["tipo_id"];
-
-                    if ($identificacion == 'natural') {
-                        $natural = $this->input->post("natural");
-                        $proveedor->provincia = $natural['provincia'];
-                        $letra = $natural['letra'];
-                        $proveedor->letra = $letra;
-                        if ($letra == 'PAS') {
-                            $proveedor->pasaporte = $natural['pasaporte'];
-                        } else {
-                            $proveedor->tomo_rollo = $natural['tomo'];
-                            $proveedor->asiento_ficha = $natural['asiento'];
-                        }
-                    } elseif ($identificacion == 'juridico') {
-                        $juridico = $this->input->post('juridico');
-                        $proveedor->digito_verificador = $juridico['verificador'];
-                        $proveedor->asiento_ficha = $juridico["asiento"];
-                        $proveedor->folio_imagen_doc = $juridico["folio"];
-                        $proveedor->tomo_rollo = $juridico['tomo'];
-                    } elseif ($identificacion == 'pasaporte') {
-                        $proveedor->pasaporte = $campo['pasaporte'];
-                    }
-
-                    if (empty($campo["uuid"])) {
-                        //Guarda el registro.
-                        $proveedor->uuid_proveedor = Capsule::raw("ORDER_UUID(uuid())");
-                        $proveedor->fecha_creacion = date("Y-m-d", time());
-                        $proveedor->creado_por = $this->id_usuario;
-                        $proveedor->id_empresa = $this->id_empresa;
-                        $proveedor->save();
-
-                    } else {
-                        //Actualiza el registro.
-                        $proveedor->save();
-                    }
-
-                    //Pasa a la session el id del proveedor.
-                    $this->session->set_userdata('updatedProveedor', $proveedor->id);
-                    //Tipos de Pago
-                    $proveedor->formasDePago()->sync($campo["forma_pago"]);
-
-                    //Categorias
-                    $registro = array();
-                    $proveedor_categoria = new Proveedores_proveedor_categoria_orm();
-
-                    if (!empty($campo["categorias"])) {
-                        $i = 0;
-                        $count = 0;
-                        foreach ($campo["categorias"] as $row) {
-                            if (!empty($row)) {
-                                if ($proveedor_categoria->countRegistro($proveedor->id, $row) == 0) {
-                                    $registro[$i]["id_proveedor"] = $proveedor->id;
-                                    $registro[$i]["id_categoria"] = $row;
-                                    $count += 1;
-                                    $i += 1;
-                                }
-                                $i += 1;
-                            }
-                        }
-                        if ($count > 0) {
-                            $proveedor_categoria::insert($registro);
-                        }
-
-                    }
-                    return true;
-                }
-            );
-            if ($response == "1") {
-                redirect(base_url('proveedores/listar'));
+            try {
+                $saveObj = new \Flexio\Modulo\Proveedores\FormRequest\GuardarProveedor;
+                $proveedor = $saveObj->save();
+            } catch (\Exception $e) {
+                log_message('error', ' __METHOD__  ->  , Linea:  __LINE__  --> '.$e->getMessage()."\r\n");
+                $this->Toast->setUrl('proveedores/listar')->run('exception', [$e->getMessage()]);
             }
-            if ($response == "2") {
-                //Pasa a la session el id del proveedor.
-                $this->session->set_userdata('dniExist', true);
-                redirect(base_url('proveedores/crear'));
+
+            if (!is_null($proveedor)) {
+                $this->Toast->run('success', [$proveedor->nombre]);
             } else {
-                //Establecer el mensaje a mostrar
-                $data["mensaje"]["clase"] = "alert-danger";
-                $data["mensaje"]["contenido"] = "Hubo un error al tratar de crear el proveedor.";
+                $this->Toast->run('error');
             }
-        }
 
+            redirect(base_url('proveedores/listar'));
+        }
     }
 
     function documentos_campos()
@@ -1118,17 +1055,17 @@ class Proveedores extends CRM_Controller
     }
 
     function ajax_catalogo_proveedores(){
-            
+
             $clause = ['empresa_id'=>$this->id_empresa,'estado'=>"activo"];
             $nombre = $this->input->get('q', true);
             if(!empty($nombre)){
                 $clause['nombre'] = $nombre;
             }
-            
+
             $coleccion_proveedor = $this->proveedoresRep->get($clause,null,null,10,0);
              //dd($coleccion_proveedor);
             $response = $this->proveedoresRep->getCollectionProveedores($coleccion_proveedor);
-           
+
             $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
           ->set_output($response)->_display();
         exit;

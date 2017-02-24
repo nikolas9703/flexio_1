@@ -274,7 +274,7 @@ class Ordenes_orm extends Model
     /**
      * Actualiza estado de la orden de compra actual
      */
-    public function actualizarEstado()
+    public function actualizarEstado($anulada=false)
     {
         //items de la orden de compra -> solo id
         $ordenes_items = [];
@@ -286,11 +286,17 @@ class Ordenes_orm extends Model
         //facturas que no tengan el estado de aprobadas
         //facturas que no tengan el estado de anulada
         $facturas = Facturas_compras_orm::where("operacion_type", "Ordenes_orm")
-            ->where("operacion_id", $this->id);
+            ->where("operacion_id", $this->id)
+            ->whereIn("estado_id",[14,15,16])
+        ;
+
 
         //items de las facturas asociadas a la orden de compra
         $facturas_items = [];
-        foreach ($facturas->get() as $factura) {
+
+        $find_facturas = $facturas->get();
+        foreach ($find_facturas as $factura) {
+
             if ($factura->valida) {
                 foreach ($factura->facturas_compras_items as $factura_item) {
                     $facturas_items[$factura_item->item_id] = isset($facturas_items[$factura_item->item_id]) ? $facturas_items[$factura_item->item_id] + $factura_item->cantidad : $factura_item->cantidad;
@@ -302,7 +308,6 @@ class Ordenes_orm extends Model
         //3.- Orden facturada parcial
         //4.- Orden facturada completo
         $this->id_estado = count($facturas_items) > 0 ? 4 : 2;
-
         if (count($facturas_items) < count($ordenes_items)) {
             $this->id_estado = 3;
         } else {
@@ -313,7 +318,9 @@ class Ordenes_orm extends Model
                 }
             }
         }
-
+        if($anulada  ){
+            $this->id_estado =  count($find_facturas) > 0 ? 3: 2;
+        }
         $this->save();
     }
 

@@ -156,7 +156,7 @@ bluapp.controller("subirDocumentosController", function($rootScope, $scope, $doc
  		   		'<button id="closeModal" class="btn btn-w-m btn-default btn-block" type="button" data-dismiss="modal" ng-click="limpiarFormulario($event)">Cancelar</button>',
  		   '</div>',
  		   '<div class="form-group col-xs-12 col-sm-6 col-md-6">',
- 		   		'<button class="btn btn-w-m btn-primary btn-block {{disabledBtn}}" type="button" ng-click="subirDocumento($event)" ng-bind-html="guardarBtn"></button>',
+ 		   		'<button class="btn btn-w-m btn-primary btn-block guardarDocBoton {{disabledBtn}}" type="button" ng-click="subirDocumento($event)" ng-bind-html="guardarBtn"></button>',
  		   '</div>',
  		   '</div>'
 	].join('\n');

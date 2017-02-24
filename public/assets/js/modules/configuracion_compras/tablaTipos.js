@@ -247,6 +247,7 @@ var tablaTipos = (function(){
 
         dom.iTipo.val("");
         dom.iDescripcion.val("");
+        dom.iModo.data("uuid", "");
 
     }
     var cambiarEstado = function(uuid, estado){

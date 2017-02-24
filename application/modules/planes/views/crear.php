@@ -417,7 +417,7 @@
                                                                                                             <td>
                                                                                                                 <div class="form-group col-xs-11 col-sm-11 col-md-11 col-lg-11" style="margin-bottom: 0px !important;padding-left: 0px;" >
                                                                                                                     <div class="input-group">
-                                                                                                                        <input  type="text" id="nombre_plan"  name="p_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control coberturas" value="<?=$comision->comision ?>" placeholder="" >
+                                                                                                                        <input  type="text" id="nombre_plan"  name="p_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control comisiones" value="<?=$comision->comision ?>" placeholder="" >
                                                                                                                         <span class="input-group-addon">%</span>
                                                                                                                     </div>
                                                                                                                 </div>
@@ -425,7 +425,7 @@
                                                                                                             <td>
                                                                                                                 <div class="form-group col-xs-11 col-sm-11 col-md-11 col-lg-11" style="margin-bottom: 0px !important;padding-left: 0px;" >
                                                                                                                     <div class="input-group">
-                                                                                                                        <input  type="text" id="nombre_plan"  name="p_sobre_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control coberturas" value="<?=$comision->sobre_comision ?>" placeholder="" >
+                                                                                                                        <input  type="text" id="nombre_plan"  name="p_sobre_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control sobrecomisiones" value="<?=$comision->sobre_comision ?>" placeholder="" >
                                                                                                                         <span class="input-group-addon">%</span>
                                                                                                                     </div>
                                                                                                                 </div>
@@ -489,7 +489,7 @@
                                                                                                         <td>
                                                                                                             <div class="form-group col-xs-11 col-sm-11 col-md-11 col-lg-11" style="margin-bottom: 0px !important;padding-left: 0px;" >
                                                                                                                 <div class="input-group">
-                                                                                                                    <input  type="text" id="p_comision"  name="p_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control coberturas" value="" placeholder="" >
+                                                                                                                    <input  type="text" id="p_comision"  name="p_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control comisiones" value="" placeholder="" >
                                                                                                                     <span class="input-group-addon">%</span>
                                                                                                                 </div>
                                                                                                             </div>
@@ -497,7 +497,7 @@
                                                                                                         <td>
                                                                                                             <div class="form-group col-xs-11 col-sm-11 col-md-11 col-lg-11" style="margin-bottom: 0px !important;padding-left: 0px;" >
                                                                                                                 <div class="input-group">
-                                                                                                                    <input  type="text" id="p_sobre_comision"  name="p_sobre_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control coberturas" value="" placeholder="" >
+                                                                                                                    <input  type="text" id="p_sobre_comision"  name="p_sobre_comision[0]" onkeyup="planes.copyTabla('tabla_comis','tabla_final_comisiones');" class="form-control sobrecomisiones" value="" placeholder="" >
                                                                                                                     <span class="input-group-addon">%</span>
                                                                                                                 </div>
                                                                                                             </div>

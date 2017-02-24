@@ -39,7 +39,8 @@ class InteresesPersonas extends Model
         'observaciones',
         'telefono_principal',
         'direccion_principal',
-        'correo'
+        'correo',
+        'tipo_relacion'
         
         
     ];

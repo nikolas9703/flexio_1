@@ -1,80 +1,97 @@
 
   		var planillaEditar = (function(){
 
-		  	var formulario = '#crearPlanilla';
+		  var formulario = '#crearPlanilla';
 			var opcionesModal = $('#opcionesModal');
 			var pagoEspecialModal = '#pagoEspecialModal';
 			var botones = {
- 		  			editarNoRegulares: "#guardarBtnPlanilla",
+ 		  		//	editarNoRegulares: "#guardarBtnPlanilla",
+          	edicionPlanilla: "#guardarBtnPlanilla",
 		  			cancelar: "#cancelarBtnPlanilla",
-                                        abrirModalPagosEspecialesLiquidaciones: "#pagarLiquidacionBtn",
-
+            abrirModalPagosEspecialesLiquidaciones: "#pagarLiquidacionBtn",
 		  			abrirModalPagosEspecialesVacaciones: "#pagarVacacionBtn",
-
 		  			abrirModalPagosEspecialesLicencias: "#pagarLicenciaBtn",
 		  			abrirModalPagosDecimos: "#pagarDecimoBtn",
 		  			confirmacionImprimir: "#confimrarCrearPagoEspecial",
 		  			imprimirTalonarios: "#imprimirTalonarios",
 		  			exportarPlanillaRegularCerrada: "#exportarPlanillaRegularCerrada",
-		  			exportarPlanillaAbierta: "#exportarPlanillaAbierta"
+		  			exportarPlanillaAbierta: "#exportarPlanillaAbierta",
+            validaMultipleColab: "#validaMultipleColab"
  			};
 
 			var campos = function(){
+        $(".select2").select2();
   		 		$(formulario).validate({
 					focusInvalid: true,
 					ignore: '',
 					wrapper: '',
 				});
- 		  		 $(formulario).find('#rango_fecha1').val("");
+ 		  		$(formulario).find('#rango_fecha1').val("");
 				 $(formulario).find('#rango_fecha2').val("");
 
-
-				$.each(JSON.parse(acumulados), function(i,acumulado) {
-  		  			 $(formulario).find('select[name="acumulados[acumulados][]"] option[value="'+acumulado.acumulado_id +'"]') .prop('selected', 'selected');
-				});
-		  		$.each(JSON.parse(deducciones), function(i,deduccion) {
-						 $(formulario).find('select[name="deducciones[deducciones][]"] option[value="'+deduccion.deduccion_id +'"]') .prop('selected', 'selected');
-				});
-
 		  		if(tipo_planilla_creacion == 'liquidaciones' ){
-		  			//////--------------------//////
-		  			$(formulario).find('select[name="deducciones[deducciones][]"], select[name="acumulados[acumulados][]"]').rules(
-		 					"add",{
-		 						required: false
-		 			});
-		 			$(formulario).find('select[name="acumulados[acumulados][]"]').rules(
-		 					"add",{
-		 						required: false
-		 			});
-		 			$(formulario).find('select[name="ciclo_id"]').rules(
-		 					"add",{
-		 						required: false
-		 			});
-		 			$(formulario).find('select[name="pasivo_id"]').rules(
-		 					"add",{
-		 						required: true
-		 			});
+          		  			//////--------------------//////
+          		  			$(formulario).find('select[name="deducciones[]"], select[name="acumulados[]"]').rules(
+          		 					"add",{
+          		 						required: false
+          		 			});
+          		 			$(formulario).find('select[name="acumulados[]"]').rules(
+          		 					"add",{
+          		 						required: false
+          		 			});
+          		 			$(formulario).find('select[name="ciclo_id"]').rules(
+          		 					"add",{
+          		 						required: false
+          		 			});
+          		 			$(formulario).find('select[name="pasivo_id"]').rules(
+          		 					"add",{
+          		 						required: true
+          		 			});
 
-					 $(formulario).find('select[name="ciclo_id"]').attr('disabled', true);
+          					 $(formulario).find('select[name="ciclo_id"]').attr('disabled', true);
 
-					 $(formulario).find('select[name="deducciones[deducciones][]"], select[name="acumulados[acumulados][]"]').prop('disabled', true);
-					 $(formulario).find('select[name="deducciones[deducciones][]"], select[name="acumulados[acumulados][]"]').chosen({width: '100%'}).trigger('chosen:updated');
-		  			/////---------------------//////
- 					 $(formulario).find('#rango_fecha1').attr('disabled', true);
-					 $(formulario).find('#rango_fecha2').attr('disabled', true);
+          		  			/////---------------------//////
+           					 $(formulario).find('#rango_fecha1').attr('disabled', true);
+          					 $(formulario).find('#rango_fecha2').attr('disabled', true);
 
 				}
 
-  				if(tipo_planilla_creacion == 'liquidaciones' ||  tipo_planilla_creacion == 'vacaciones' || tipo_planilla_creacion == 'licencias'){
- 					 $(formulario).find('#rango_fecha1').attr('disabled', true);
-					 $(formulario).find('#rango_fecha2').attr('disabled', true);
+        if( tipo_planilla_creacion == 'vacaciones' || tipo_planilla_creacion == 'licencias' || tipo_planilla_creacion == 'xiii_mes' ){
+          $(formulario).find('select[name="ciclo_id"]').attr('disabled', true);
+          $(formulario).find('select[name="centro_contable_id[]"]').attr('disabled', true);
+          $(formulario).find('#rango_fecha1').attr('disabled', true);
+          $(formulario).find('#rango_fecha2').attr('disabled', true);
 
-				}
-  				 $(formulario).find('select[name="ciclo_id"]').attr('disabled', true);
+          $(formulario).find('select[name="centro_contable_id[]"],select[name="ciclo_id"]').rules(
+               "add",{
+                 required: false
+           });
+           $(formulario).find('select[name="deducciones[]"]').rules(
+               "add",{
+                 required: false
+           });
+           $(formulario).find('select[name="acumulados[]"] ').rules(
+               "add",{
+                 required: false
+           });
+           if(tipo_planilla_creacion == 'xiii_mes'){
+                $(formulario).find('select[name="ciclo_id"]').rules(
+                    "add",{
+                      required: true
+                });
+           }
+           else {
+             $(formulario).find('select[name="ciclo_id"]').rules(
+                 "add",{
+                   required: false
+             });
+           }
+        }
+
+
+  			$(formulario).find('select[name="ciclo_id"]').attr('disabled', true);
  				$(formulario).find('#tipo_id').val( tipo_planilla_id );
 				$(formulario).find('select[name="tipo_id"]').attr('disabled', true);
-				$(formulario).find('select[name="tipo_id"],#ciclo_id, #pasivo_id,select[name="deducciones[deducciones][]"], select[name="acumulados[acumulados][]"]').chosen({width: '100%'}).trigger('chosen:updated');
-
 			};
       $(document).on('keyup', '.select2-search > input.select2-input', function (e) {
         // Close select2 if enter key
@@ -83,6 +100,36 @@
             $(selector).jqGrid('saveRow', lastSel, false, 'clientArray');
             }
         });
+
+        $(botones.edicionPlanilla).on("click", function(e){
+          e.preventDefault();
+          e.returnValue=false;
+          e.stopPropagation();
+         		$(formulario).find('input, select').attr( "disabled", false );
+
+          		 if ( $(formulario).valid() != false) {
+                      $.ajax({
+                         url: phost() + 'planilla/ajax-editar-planilla',
+                         data: $(formulario).serialize()+'&planilla_id='+planilla_id,
+                         type: "POST",
+                         dataType: "json",
+                         cache: false,
+                     }).done(function(json) {
+                         //Check Session
+                           if( $.isEmptyObject(json.session) == false){
+                             window.location = phost() + "login?expired";
+                         }
+                          if(json.response == true){
+                              window.location.href = phost() + 'planilla/listar';
+
+                         }else{
+                             toastr.error(json.mensaje);
+
+                         }
+                     });
+                 }
+         });
+
 			$(botones.exportarPlanillaRegularCerrada).on("click", function(e){
  				e.preventDefault();
 				e.returnValue=false;
@@ -113,6 +160,20 @@
 		 	});
 
 
+			$(botones.validaMultipleColab).on("click", function(e){
+
+        e.preventDefault();
+				e.returnValue=false;
+				e.stopPropagation();
+	 				$(pagoEspecialModal).modal('hide');
+ 				opcionesModal.modal('show');
+					opcionesModal.find('.modal-title').empty().append('Confirme');
+				opcionesModal.find('.modal-body').empty().append('Est&aacute; seguro que desea validar todas las hojas de tiempo? Solo se validarán las horas registradas.');
+				opcionesModal.find('.modal-footer')
+					.empty()
+					.append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>')
+					.append('<button id="confimrarValidarColaboradores"   data-id="'+ planilla_id +'"  class="btn btn-w-m btn-danger" type="button">Confirmar</button>');
+      });
 			$(botones.imprimirTalonarios).on("click", function(e){
  		 		e.preventDefault();
 				e.returnValue=false;
@@ -126,7 +187,32 @@
 					.append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>')
 					.append('<button id="confimrarImprimirTalonarios"   data-id="'+ planilla_id +'"  class="btn btn-w-m btn-danger" type="button">Imprimir PDF</button>');
 		 });
+     //Funcion que se encarga de exportar el talonario en el pdf de todos los colaboradores
+     $('#opcionesModal').on("click", "#confimrarValidarColaboradores", function(e){
+         e.preventDefault();
+         e.returnValue=false;
+         e.stopPropagation();
+         opcionesModal.modal('hide');
 
+          $.ajax({
+            url: phost() + 'planilla/ajax-validar-multiples',
+            data: {
+                planilla_id: planilla_id,
+                erptkn: tkn,
+            },
+            type: "POST",
+            dataType: "json",
+            cache: false,
+        }).done(function(json) {
+            //Check Session
+
+             if( $.isEmptyObject(json.session) == false){
+                window.location = phost() + "login?expired";
+            }
+            window.location.href =  phost() + 'planilla/listar';
+         });
+
+      });
 		//Funcion que se encarga de exportar el talonario en el pdf de todos los colaboradores
 	 	$('#opcionesModal').on("click", "#confimrarImprimirTalonarios", function(e){
 				e.preventDefault();
@@ -290,7 +376,7 @@
 		              url: phost() + 'planilla/ajax_detalles_pago_especiales',
 		              data: {
 		            	  	planilla_id: planilla_id,
-		            	  	cantidad_semanas:cantidad_semanas,
+		            	  	//cantidad_semanas:cantidad_semanas,
 		            	  	tipo:"licencias",
 							erptkn: tkn,
 			 			},
@@ -361,7 +447,8 @@
 			});
 
 			$(botones.abrirModalPagosEspecialesVacaciones).on("click", function(e){
-				e.preventDefault();
+
+ 				e.preventDefault();
 				e.returnValue=false;
 				e.stopPropagation();
 
@@ -371,7 +458,7 @@
 		              url: phost() + 'planilla/ajax_detalles_pago_especiales',
 		              data: {
 		            	  	planilla_id: planilla_id,
-		            	  	cantidad_semanas:cantidad_semanas,
+		            	  	//cantidad_semanas:cantidad_semanas,
 		            		tipo:"vacaciones",
 							erptkn: tkn,
 			 			},

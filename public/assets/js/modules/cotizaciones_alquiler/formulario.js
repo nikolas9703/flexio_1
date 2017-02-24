@@ -1,40 +1,40 @@
 
 
 var formularioCrearCotizacionAlquiler = new Vue({
-    
+
     el: '#form_crear_cotizacion_alquiler',
-    
+
     ready: function ()
     {
         var context = this;
-        
+
         if(context.vista == 'editar')
         {
             var cotizacion_alquiler_json = JSON.parse(cotizacion_alquiler);
             context.cotizacion_alquiler = cotizacion_alquiler_json;
             context.disabledEstado = false;
-            
+
             if(cotizacion_alquiler_json.estado_id != 'por_aprobar')//distinto de por aprobar
             {
                 context.disabledEditar = true;
             }
         }
     },
-    
+
     data: {
         vista: vista,
         disabledHeader: false,
         disabledEstado: true,
         disabledEditar: false,
-        
+
         config:{
-            
+
             datepicker2:{
-                
+
                 dateFormat: "dd/mm/yy",
-                
+
                 onClose: function( selectedDate ) {
-                    
+
                     var id = $(this).prop('id');
                     if(id ==='fecha_emision'){
                         $("#valido_hasta").datepicker( "option", "minDate", selectedDate );
@@ -42,13 +42,13 @@ var formularioCrearCotizacionAlquiler = new Vue({
                     if(id ==='valido_hasta'){
                         $("#fecha_emision").datepicker( "option", "maxDate", selectedDate );
                     }
-                    
+
                 }
-                
+
             }
-            
+
         },
-        
+
 
         cotizacion_alquiler: {
             id:'',
@@ -65,7 +65,7 @@ var formularioCrearCotizacionAlquiler = new Vue({
             vendedor_id: '',
             estado_id: 'por_aprobar'//por aprobar
         },
-        
+
         //catalogos
         clientes: clientes, //catalogos from controller
         clientes_potenciales: clientes_potenciales, //catalogos from controller
@@ -75,9 +75,9 @@ var formularioCrearCotizacionAlquiler = new Vue({
         centros_contables: centros_contables
 
     },
-    
+
     methods: {
-        
+
         cambiarTipo: function (tipo)
         {
             if (_.isEmpty(tipo))
@@ -85,17 +85,17 @@ var formularioCrearCotizacionAlquiler = new Vue({
                 this.cotizacion_alquiler.empezar_desde_id = '';
             }
         },
-        
+
         cambiarTipoId: function (tipo_id)
         {
-            
+
             var context = this;
-            
+
             context.cotizacion_alquiler.saldo = '';
             context.cotizacion_alquiler.credito = '';
             context.cotizacion_alquiler.centro_facturacion_id = '';
             context.cotizacion_alquiler.centros_facturacion = [];
-            
+
             if (!_.isEmpty(tipo_id) && context.cotizacion_alquiler.empezar_desde_type == 'cliente')
             {
                 var cliente = _.find(context.clientes, function(cliente){
@@ -105,14 +105,14 @@ var formularioCrearCotizacionAlquiler = new Vue({
                 context.cotizacion_alquiler.credito = cliente.credito_favor;
                 context.cotizacion_alquiler.centros_facturacion = cliente.centro_facturable;
             }
-            
+
         },
-        
+
         guardar: function () {
             var context = this;
             var $form = $("#form_crear_cotizacion_alquiler");
             var tableErrors = $("#cotizacionesAlquilerItemsErros");
-            
+
             $form.validate({
                 ignore: '',
                 wrapper: '',

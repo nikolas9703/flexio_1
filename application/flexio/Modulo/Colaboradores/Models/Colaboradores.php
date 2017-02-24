@@ -12,20 +12,22 @@ use Flexio\Modulo\Planilla\Models\Planilla;
 use Flexio\Modulo\Bancos\Models\Bancos;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\Colaboradores\Models\Familia;
+use Flexio\Modulo\Colaboradores\Models\BaseAcumulados;
 
 class Colaboradores extends Model
 {
     protected $table = 'col_colaboradores';
     public $timestamps = false;
     protected $dateFormat = 'U';
-    protected $fillable = ['id','uuid_colaborador','empresa_id', 'estado_id','sexo_id', 'estado_civil_id','nombre', 'segundo_nombre', 'apellido', 'apellido_materno', 'cedula', 'provincia_id', 'letra_id', 'tomo', 'asiento', 'no_pasaporte', 'seguro_social', 'fecha_nacimiento','edad','lugar_nacimiento','telefono_residencial','celular','email','direccion', 'centro_contable_id','departamento_id', 'cargo_id', 'tipo_salario', 'salario_mensual', 'ciclo_id', 'rata_hora', 'horas_semanales', 'fecha_inicio_labores', 'creado_por', 'estatura', 'peso', 'talla_camisa', 'talla_pantalon', 'no_botas', 'banco_id', 'forma_pago_id', 'tipo_cuenta_id', 'numero_cuenta', 'tutor_nombre', 'tutor_parentesco_id', 'tutor_cedula', 'designado_nombre', 'designado_parentesco_id', 'designado_cedula', 'consulta_medica', 'consulta_medica_fecha', 'consulta_nombre_medico', 'consulta_causas', 'consulta_examen', 'consulta_resultado', 'enfermedad_sufre', 'enfermedad_nombre', 'enfermedad_sometido_tratamiento', 'enfermedad_explicar', 'seguro_otro', 'seguro_nombre_compania', 'seguro_valor', 'deduccion_tipo_declarante_id', 'deduccion_otros_ingresos_id', 'deduccion_zona_postal', 'deduccion_provincia_id', 'deduccion_distrito', 'deduccion_corregimiento', 'deduccion_barrio', 'deduccion_fecha', 'patrono_clasificacion_empleado', 'patrono_razon_social', 'patrono_nombre_comercial', 'patrono_ruc', 'patrono_telefono', 'patrono_direccion'];
+    protected $fillable = ['id','gasto_de_representacion', 'uuid_colaborador','empresa_id', 'estado_id','sexo_id', 'estado_civil_id','nombre', 'segundo_nombre', 'apellido', 'apellido_materno', 'cedula', 'provincia_id', 'letra_id', 'tomo', 'asiento', 'no_pasaporte', 'seguro_social', 'fecha_nacimiento','edad','lugar_nacimiento','telefono_residencial','celular','email','direccion', 'centro_contable_id','departamento_id', 'cargo_id', 'tipo_salario', 'salario_mensual', 'ciclo_id', 'rata_hora', 'horas_semanales', 'fecha_inicio_labores', 'creado_por', 'estatura', 'peso', 'talla_camisa', 'talla_pantalon', 'no_botas', 'banco_id', 'forma_pago_id', 'tipo_cuenta_id', 'numero_cuenta', 'tutor_nombre', 'tutor_parentesco_id', 'tutor_cedula', 'designado_nombre', 'designado_parentesco_id', 'designado_cedula', 'consulta_medica', 'consulta_medica_fecha', 'consulta_nombre_medico', 'consulta_causas', 'consulta_examen', 'consulta_resultado', 'enfermedad_sufre', 'enfermedad_nombre', 'enfermedad_sometido_tratamiento', 'enfermedad_explicar', 'seguro_otro', 'seguro_nombre_compania', 'seguro_valor', 'deduccion_tipo_declarante_id', 'deduccion_otros_ingresos_id', 'deduccion_zona_postal', 'deduccion_provincia_id', 'deduccion_distrito', 'deduccion_corregimiento', 'deduccion_barrio', 'deduccion_fecha', 'patrono_clasificacion_empleado', 'patrono_razon_social', 'patrono_nombre_comercial', 'patrono_ruc', 'patrono_telefono', 'patrono_direccion', 'digito_verificador', 'ss_gasto_representacion', 'islr_gasto_representacion', 'cuenta_gasto_representacion_id'];
 
     use RevisionableTrait;
 
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['id','uuid_colaborador','empresa_id', 'estado_id','sexo_id', 'estado_civil_id','nombre', 'segundo_nombre', 'apellido', 'apellido_materno', 'cedula', 'provincia_id', 'letra_id', 'tomo', 'asiento', 'no_pasaporte', 'seguro_social', 'fecha_nacimiento','edad','lugar_nacimiento','telefono_residencial','celular','email','direccion', 'centro_contable_id','departamento_id', 'cargo_id', 'tipo_salario', 'salario_mensual', 'ciclo_id', 'rata_hora', 'horas_semanales', 'fecha_inicio_labores', 'creado_por', 'estatura', 'peso', 'talla_camisa', 'talla_pantalon', 'no_botas', 'banco_id', 'forma_pago_id', 'tipo_cuenta_id', 'numero_cuenta', 'tutor_nombre', 'tutor_parentesco_id', 'tutor_cedula', 'designado_nombre', 'designado_parentesco_id', 'designado_cedula', 'consulta_medica', 'consulta_medica_fecha', 'consulta_nombre_medico', 'consulta_causas', 'consulta_examen', 'consulta_resultado', 'enfermedad_sufre', 'enfermedad_nombre', 'enfermedad_sometido_tratamiento', 'enfermedad_explicar', 'seguro_otro', 'seguro_nombre_compania', 'seguro_valor', 'deduccion_tipo_declarante_id', 'deduccion_otros_ingresos_id', 'deduccion_zona_postal', 'deduccion_provincia_id', 'deduccion_distrito', 'deduccion_corregimiento', 'deduccion_barrio', 'deduccion_fecha', 'patrono_clasificacion_empleado', 'patrono_razon_social', 'patrono_nombre_comercial', 'patrono_ruc', 'patrono_telefono', 'patrono_direccion'];
+    protected $keepRevisionOf = ['id', 'gasto_de_representacion', 'uuid_colaborador','empresa_id', 'estado_id','sexo_id', 'estado_civil_id','nombre', 'segundo_nombre', 'apellido', 'apellido_materno', 'cedula', 'provincia_id', 'letra_id', 'tomo', 'asiento', 'no_pasaporte', 'seguro_social', 'fecha_nacimiento','edad','lugar_nacimiento','telefono_residencial','celular','email','direccion', 'centro_contable_id','departamento_id', 'cargo_id', 'tipo_salario', 'salario_mensual', 'ciclo_id', 'rata_hora', 'horas_semanales', 'fecha_inicio_labores', 'creado_por', 'estatura', 'peso', 'talla_camisa', 'talla_pantalon', 'no_botas', 'banco_id', 'forma_pago_id', 'tipo_cuenta_id', 'numero_cuenta', 'tutor_nombre', 'tutor_parentesco_id', 'tutor_cedula', 'designado_nombre', 'designado_parentesco_id', 'designado_cedula', 'consulta_medica', 'consulta_medica_fecha', 'consulta_nombre_medico', 'consulta_causas', 'consulta_examen', 'consulta_resultado', 'enfermedad_sufre', 'enfermedad_nombre', 'enfermedad_sometido_tratamiento', 'enfermedad_explicar', 'seguro_otro', 'seguro_nombre_compania', 'seguro_valor', 'deduccion_tipo_declarante_id', 'deduccion_otros_ingresos_id', 'deduccion_zona_postal', 'deduccion_provincia_id', 'deduccion_distrito', 'deduccion_corregimiento', 'deduccion_barrio', 'deduccion_fecha', 'patrono_clasificacion_empleado', 'patrono_razon_social', 'patrono_nombre_comercial', 'patrono_ruc', 'patrono_telefono', 'patrono_direccion', 'digito_verificador'];
 
     protected $guarded      = ['id'];
     protected $appends      = ['icono','enlace','total_devengado'];
@@ -34,6 +36,14 @@ class Colaboradores extends Model
     public static function findByUuid($uuid){
         return self::where('uuid_colaborador',hex2bin($uuid))->first();
     }
+
+  public function familia() {
+		return $this->hasMany(Familia::class, 'colaborador_id');
+	}
+
+  public function base_acumulados() {
+      return $this->hasMany(BaseAcumulados::class, 'colaborador_id');
+  }
 
     public static function boot() {
         parent::boot();
@@ -107,7 +117,7 @@ class Colaboradores extends Model
         return $this->hasMany(DescuentosDirectos::class, 'colaborador_id', 'id')
             ->where("desc_descuentos.estado_id", "6");//descuentos activos
     }
- 
+
 
     public function colaboradores_contratos(){
       return $this->hasMany(ColaboradoresContratos::Class, 'colaborador_id')->where("estado",1);
@@ -123,10 +133,26 @@ class Colaboradores extends Model
     }
 
   public function getTotalDevengadoAttribute(){
-
-       return $this->salarios_devengados()->where("contrato_id", $this->colaboradores_contratos[0]->id)->sum('salario_bruto');
+    if(isset($this->colaboradores_contratos[0])){
+      $contrato_id = $this->colaboradores_contratos[0]->id;
+       return $this->salarios_devengados()->where("contrato_id", $contrato_id)->sum('salario_bruto');
+     }
+     else{
+       return 0;
+     }
 
   }
+/*
+  public function scopeDeSalariosDevengadoDecimo($query, $fecha1, $fecha2)
+  {
+    if(isset($this->colaboradores_contratos[0])){
+      $contrato_id = $this->colaboradores_contratos[0]->id;
+       return $this->salarios_devengados()->where("contrato_id", $contrato_id)->sum('salario_bruto');
+     }
+     else{
+       return 0;
+     }
+  }*/
 
     public function salarios_devengados_ultimos_cinco_anos(){
         $haceCinco = strtotime ( '-5 year' , strtotime ( date("Y-m-d") ) ) ;
@@ -160,5 +186,9 @@ class Colaboradores extends Model
     }
     public function dependientes(){
         return $this->hasMany('Dependientes_orm', 'colaborador_id');
+    }
+
+    public function distribucion_salario(){
+        return $this->hasMany('Flexio\Modulo\Colaboradores\Models\ColaboradoresDistribucionSalario', 'colaborador_id');
     }
 }

@@ -7,6 +7,8 @@ use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Modulo\Cliente\Models\Asignados;
 use Flexio\Modulo\Bancos\Models\Bancos;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\Catalogos\Models\CatalogoMod;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class Proveedores extends Model
 {
@@ -19,16 +21,26 @@ class Proveedores extends Model
     protected $dontKeepRevisionOf = ['created_at', 'update_at'];
 
     protected $table        = 'pro_proveedores';
-    protected $fillable     = ['uuid_proveedor', 'nombre', 'telefono', 'email', 'ruc', 'estado', 'fecha_creacion', 'creado_por', 'id_empresa', 'id_forma_pago', 'id_banco', 'id_tipo_cuenta', 'numero_cuenta', 'limite_credito', 'credito', 'tipo_id', 'acreedor', 'direccion', 'termino_pago_id', 'referencia', 'identificacion', 'tomo_rollo', 'folio_imagen_doc', 'asiento_ficha', 'digito_verificador', 'retiene_impuesto', 'provincia', 'letra', 'pasaporte'];
-    protected $guarded      = ['id'];
-    protected $appends      = ['saldo_pendiente','icono','codigo','enlace'];
+    protected $fillable     = [
+        'nombre', 'telefono', 'email', 'ruc', 'estado', 'fecha_creacion', 'creado_por', 'id_empresa',
+        'id_forma_pago', 'id_banco', 'id_tipo_cuenta', 'numero_cuenta', 'limite_credito', 'credito', 'tipo_id', 'acreedor',
+        'direccion', 'termino_pago_id', 'referencia', 'identificacion', 'tomo_rollo', 'folio_imagen_doc', 'asiento_ficha',
+        'digito_verificador', 'retiene_impuesto', 'provincia', 'letra', 'pasaporte'
+    ];
+    protected $guarded = ['id', 'uuid_proveedor'];
+    protected $appends = ['saldo_pendiente', 'icono', 'codigo', 'enlace'];
+    protected $cast = [
+        'limite_credito' => 'real',
+        'credito' => 'real'
+    ];
     public $timestamps      = false;
 
-    /**
-     * Register any other events for your application.
-     *
-     * @return void
-     */
+    public function __construct(array $attributes = array())
+    {
+        $this->setRawAttributes(array_merge($this->attributes, array('uuid_proveedor' => Capsule::raw("ORDER_UUID(uuid())"))), true);
+        parent::__construct($attributes);
+    }
+
     public static function boot() {
         parent::boot();
     }
@@ -37,6 +49,30 @@ class Proveedores extends Model
     public function getUuidProveedorAttribute($value)
     {
         return strtoupper(bin2hex($value));
+    }
+
+    public function setLimiteCreditoAttribute($value)
+    {
+        $this->attributes['limite_credito'] = str_replace(",", "", $value);
+    }
+
+    public function setCreditoAttribute($value)
+    {
+        $this->attributes['credito'] = str_replace(",", "", $value);
+    }
+
+    public function  getFormaDePagoAttribute(){
+            if(is_null($this->metodo_pagos)){
+                return '';
+            }
+            $forma_pago = [];
+            $tipos = [1 => "efectivo", 2 => "credito_favor", 3 => "cheque", 4 => "tarjeta_credito", 5 => "ach"];
+            $catalogo = $this->metodo_pagos->first();
+
+            if ($catalogo && isset($tipos[$catalogo->catalogo_id])) {
+                $forma_pago = $tipos[$catalogo->catalogo_id];
+            }
+            return $forma_pago;
     }
 
     public function termino_pago(){
@@ -100,6 +136,11 @@ class Proveedores extends Model
     public function formasDePago()
     {
         return $this->belongsToMany('Catalogos_orm', 'pro_proveedores_catalogos', 'proveedor_id', 'catalogo_id');
+    }
+
+
+    public function metodo_pagos(){
+        return $this->hasMany('Flexio\Modulo\Proveedores\Models\ProveedoresCatalogos', 'proveedor_id');
     }
     /**
      * Solo importan los pagos asociados a facturas por pagar o pagadas de forma parcial
@@ -182,8 +223,32 @@ class Proveedores extends Model
         return $this->nombre;
     }
 
-    public function anticipos(){
-
-        return $this->morphMany('Flexio\Modulo\Acticipos\Models\Anticipo', 'anticipable');
+    public function anticipos()
+    {
+        return $this->morphMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'anticipable');
     }
+
+    //apply to provider credit, card 8 from flexio 2017 board
+    public function anticipos_aprobados()
+    {
+        return $this->morphMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'anticipable')
+        ->select('atc_anticipos.*')
+        ->leftJoin('empezables', function($join){
+            $join->on('empezables.anticipo_id', "=", 'atc_anticipos.id');
+        })
+        ->whereRaw('empezables.anticipo_id IS NULL');
+    }
+
+    public function tipo_de_cuenta_banco() {
+        return CatalogoMod::where('identificador', '=', 'Tipo de Cuenta')
+                        ->where('id_cat', '=', $this->id_tipo_cuenta)
+                        ->get()->first();
+    }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Proveedores\Service\ProveedorFilters;
+        return $queryFilter->apply($query, $campo);
+    }
+
 }

@@ -184,8 +184,9 @@ function lista_totales($clause=array()) {
     if(isset($clause['fecha_desde']))$query->where('fecha_desde','<=',$clause['fecha_desde']);
     if(isset($clause['fecha_hasta']))$query->where('fecha_hasta','>=',$clause['fecha_hasta']);
     if(isset($clause['codigo']))$query->where('codigo','LIKE', "%". $clause['codigo'] ."%");
-  })->with(array("contrato_alquiler"));
-
+    if(isset($clause['campo']) and !empty($clause['campo']))$query->deFiltro($clause['campo']);
+    })->with(array("contrato_alquiler"));
+    
   $contrato_codigo = !empty($clause["no_contrato"]) ? $clause["no_contrato"] : array();
 
   //Clause Contrato
@@ -199,7 +200,7 @@ function lista_totales($clause=array()) {
 
     $query->whereIn("contrato_id", $contratos);
   }
-
+  
   return $query->count();
 }
 
@@ -207,6 +208,7 @@ function lista_totales($clause=array()) {
 * @function de listar y busqueda
 */
 public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
+    
     $query = OrdenVentaAlquiler::where(function($query) use($clause){
         $query->where('empresa_id','=',$clause['empresa_id']);
         //$query->where('formulario', '=', $clause['formulario']);
@@ -218,8 +220,9 @@ public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $st
         if(isset($clause['fecha_desde']))$query->where('fecha_desde','<=',$clause['fecha_desde']);
         if(isset($clause['fecha_hasta']))$query->where('fecha_hasta','>=',$clause['fecha_hasta']);
         if(isset($clause['codigo']))$query->where('codigo','LIKE', "%". $clause['codigo'] ."%");
-    })->with(array("contrato_alquiler"));
-
+        if(isset($clause['campo']) and !empty($clause['campo']))$query->deFiltro($clause['campo']);
+    }) //->with(array("contrato_alquiler"))
+    ;
     $contrato_codigo = !empty($clause["no_contrato"]) ? $clause["no_contrato"] : array();
 
     //Clause Contrato
@@ -233,10 +236,11 @@ public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $st
 
       $query->whereIn("contrato_id", $contratos);
     }
-
+    
     if($sidx!=NULL && $sord!=NULL) $query->orderBy($sidx, $sord);
     if($limit!=NULL) $query->skip($start)->take($limit);
-  return $query->get();
+    
+    return $query->get();
 }
 
     public function addPolymorphicRelationship($centro_facturable_id,$orden_alquiler) {

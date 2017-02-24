@@ -53,9 +53,9 @@ echo '<h2>Consultando Antes ROWS:</h2><pre>';
 								</div>
                                                                     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	<label for="Nombre">Nombre</label>
-							            	<select name="nombre" class="form-control chosen-select" id="nombre">
-                                                                        <option value="">Seleccione</option>
-                                                                        </select>
+							            	<select id="cliente_proveedor" class="form-control select2" data-rule-required="true" aria-required="true" style="width:100%!important;">
+								<option value=""></option>
+							</select>
                                                                     </div>
                                                                     <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
 							            	<label for="Narracion">Narraci&oacute;n</label>

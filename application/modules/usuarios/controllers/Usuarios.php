@@ -5,7 +5,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Empresa\FormRequest\CrearEmpresaRequest;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
-
+use Flexio\Modulo\Catalogos\Repository\CatalogoRepository;
 //utils
 use Flexio\Library\Util\FlexioAssets;
 use Flexio\Library\Util\FlexioSession;
@@ -17,6 +17,7 @@ class Usuarios extends CRM_Controller {
     protected $empresa_request;
     protected $userRepo;
     protected $CentrosContablesRepository;
+    protected $CatalogoRepository;
     protected $cache;
 
     //utils
@@ -52,12 +53,35 @@ class Usuarios extends CRM_Controller {
         $this->load->module(array('roles'));
         $this->userRepo = new UsuariosRepository;
         $this->CentrosContablesRepository = new CentrosContablesRepository;
+        $this->CatalogoRepository = new CatalogoRepository;
         $this->cache = Cache::inicializar();
 
         //utils
         $this->FlexioAssets = new FlexioAssets;
         $this->FlexioSession = new FlexioSession;
         $this->Toast = new Toast;
+    }
+
+    public function ajax_get_usuarios()
+    {
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $response = [];
+        $request = array_merge($this->input->post(), $this->input->get(), ['empresa' => $this->FlexioSession->empresaId()]);
+        if(isset($request['campo']) && !empty($request['campo'])){$request = array_merge($request, $request['campo']);}
+
+        $method = (isset($request['id']) && !empty($request['id'])) ? 'find' : 'get';
+        $result = \Flexio\Modulo\Usuarios\Models\Usuarios::where(function($query) use ($request){
+            $query->deFiltro($request);
+        })->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+        $response = $method == 'find' ? ['id' => $result->id, 'nombre' => $result->nombre." ".$result->apellido] : $result->map(function($row){
+            return ['id' => $row->id, 'text' => $row->nombre." ".$row->apellido];
+        });
+
+        echo json_encode($response);
+        exit;
     }
 
     /* LISTAR EMPRESA */
@@ -82,7 +106,7 @@ class Usuarios extends CRM_Controller {
             'public/assets/css/default/ui/base/jquery-ui.css',
             'public/assets/css/default/ui/base/jquery-ui.theme.css',
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
-            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
+            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css'
         ));
 
         $this->assets->agregar_js(array(
@@ -92,7 +116,7 @@ class Usuarios extends CRM_Controller {
             'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
             'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
             'public/assets/js/modules/usuarios/routes.js',
-            'public/assets/js/modules/usuarios/empresa.js'
+            'public/assets/js/modules/usuarios/empresa.js',
         ));
 
         $data = array();
@@ -159,6 +183,7 @@ class Usuarios extends CRM_Controller {
             exit;
         }
     }
+
 
     /* CREAR EMPRESA */
 
@@ -269,7 +294,7 @@ class Usuarios extends CRM_Controller {
         {
             redirect('/');
         }
-        
+
         $this->template->agregar_titulo_header('Empresa: Editar');
         $this->form_validation->set_rules('campo[nombre]', 'Nombre de Compañia', 'trim|required');
         $this->form_validation->set_rules('campo[descripcion]', 'Dirección', 'trim|required');
@@ -298,7 +323,7 @@ class Usuarios extends CRM_Controller {
         if (empty($uuid_empresa))
             redirect('usuarios/listar_empresa/');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
-        
+
         if ($empresa === null) {
             redirect('usuarios/listar-empresa');
         } else {
@@ -326,7 +351,7 @@ class Usuarios extends CRM_Controller {
                 'empresa' => $empresa->toArray()
             );*/
             $data = ['empresa' => $empresa->toArray()];
-            
+
             $this->template->agregar_contenido($data);
             $this->template->agregar_breadcrumb($breadcrumb);
 
@@ -352,9 +377,9 @@ class Usuarios extends CRM_Controller {
                         $error_image = true;
                     }
                 }
-                
+
                 $logo = isset($config['file_name']) ? $config['file_name'] : '';
-                
+
                 /*$padre = $this->input->post('padre', true);
                 $nombre_empresa = $this->input->post('nombre_empresa', true);
                 $direccion = $this->input->post('direccion', true);
@@ -374,9 +399,9 @@ class Usuarios extends CRM_Controller {
                 } else {
                 $datos = ['id' => $empresa->id,'logo'=>$logo];
                 }
-                
+
                 $empresa = $this->empresa_request->datos($datos);
-                
+
                 //$guardar = Empresa_orm::actualizar_empresa($campos);
 
                 if (!is_null($empresa)){
@@ -413,6 +438,7 @@ class Usuarios extends CRM_Controller {
 
         $clause = ['empresa_id'=>$empresa->id,'transaccionales'=>true];
 
+        $tipos_subcontrato = $this->CatalogoRepository->get(['modulo' => 'subcontratos', 'tipo' => 'tipo_subcontrato', 'con_acceso' => 1]);
         //Agregra variables PHP como variables JS
         $this->assets->agregar_var_js(array(
             'vista' => 'agregar_usuarios',
@@ -420,6 +446,8 @@ class Usuarios extends CRM_Controller {
             "rol" => Rol_orm::find(array(2, 3)),//modelo arquitectura vieja por cuestiones de tiempo
             "roles" => Rol_orm::where('id', '>', 3)->where("empresa_id", $empresa->id)->get(),//modelo arquitectura vieja por cuestiones de tiempo
             'centros_contables' => $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause)),
+            //catalogo tipos de Subcontratos q no necesitan acceso
+            'tipos_subcontrato' => !empty($tipos_subcontrato) ? collect($tipos_subcontrato->toArray()) : array()
         ));
 
         //breadcrumb
@@ -723,6 +751,35 @@ class Usuarios extends CRM_Controller {
                                             }
                                         }, $roles)) : "");
 
+                //tipos_subcontrato
+                //Seleccionar Tipos de subcontrato
+                $tipos_subcontrato = $row['tipos_subcontrato'];
+                /*$tipos_subcontrato_id="";
+                if(!empty($tipos_subcontrato)){*/
+                  $tipos_subcontrato_id = (!empty($tipos_subcontrato) ? implode(",", array_map(function($tipos_subcontrato) use ($empresa) {
+                    return $tipos_subcontrato["id"];
+                  }, $tipos_subcontrato)) : "");
+                //}
+
+
+                $filtro_centro_contable_descripcion = "";
+                if (  $row['filtro_centro_contable'] == 'todos') {
+                        $filtro_centro_contable_descripcion = '&lt;&lt;Todos&gt;&gt;';
+                } else {
+                      if (count($row['centros_contables']) < 5) {
+                            $filtro_centro_contable_descripcion = implode(', ', array_pluck($row['centros_contables'], 'nombre'));
+                      } else {
+                            $filtro_centro_contable_descripcion  = '<a href="javascript:;" title="'.implode(', ', array_pluck($row['centros_contables'], 'nombre')).'">' .count($row['centros_contables']).' Centros seleccionados </a>';
+                      }
+                }
+
+                $filtro_categoria_descripcion = "";
+                if ($row['filtro_categoria'] == 'todos') {
+                    $filtro_categoria_descripcion = '&lt;&lt;Todos&gt;&gt;';
+                } else {
+                  $filtro_categoria_descripcion = implode(', ', array_pluck($row['categorias_inventario'], 'nombre'));
+                }
+
                 //Seleccionar centros contables del usuario
                 $centros_contables = $row['filtro_centro_contable'] == 'todos' ? ['todos'] : array_pluck($row['centros_contables'], 'id');
                 $categorias_inventario = $row['filtro_categoria'] == 'todos' ? ['todos'] : array_pluck($row['categorias_inventario'], 'id');
@@ -732,8 +789,10 @@ class Usuarios extends CRM_Controller {
                     $row['nombre_completo'],
                     $row['email'],
                     $row['fecha_creacion'],
-                    $row['filtro_centro_contable'] == 'todos' ? '&lt;&lt;Todos&gt;&gt;' : count($row['centros_contables'])<5? implode(', ', array_pluck($row['centros_contables'], 'nombre')): '<a href="javascript:;" title="'.implode(', ', array_pluck($row['centros_contables'], 'nombre')).'">' .count($row['centros_contables']).' Centros seleccionados </a>',
-                     $row['filtro_categoria'] == 'todos' ? 'todos' : implode(', ', array_pluck($row['categorias_inventario'], 'nombre')),
+                  //$row['filtro_centro_contable'] == 'todos' ? '&lt;&lt;Todos&gt;&gt;' : count($row['centros_contables'])<5? implode(', ', array_pluck($row['centros_contables'], 'nombre')): '<a href="javascript:;" title="'.implode(', ', array_pluck($row['centros_contables'], 'nombre')).'">' .count($row['centros_contables']).' Centros seleccionados </a>',
+                   $row['filtro_centro_contable'] = $filtro_centro_contable_descripcion,
+                     //$row['filtro_categoria'] == 'todos' ? 'todos' : implode(', ', array_pluck($row['categorias_inventario'], 'nombre')),
+                     $row['filtro_categoria'] = $filtro_categoria_descripcion,
                     '<span class="label label-' . $label_class . '">' . $row["estado"] . '</span>',
                     $link_option,
                     $hidden_options,
@@ -742,7 +801,8 @@ class Usuarios extends CRM_Controller {
                     $rol_sistema_id,
                     $rol_id,
                     $centros_contables,
-                    $categorias_inventario
+                    $categorias_inventario,
+                    $tipos_subcontrato_id
                 );
                 $i++;
             }
@@ -837,6 +897,7 @@ class Usuarios extends CRM_Controller {
     }
 
     public function ajax_empresa_usuario() {
+
         if (!$this->input->is_ajax_request()) {
             return false;
         }
@@ -1041,6 +1102,20 @@ class Usuarios extends CRM_Controller {
 
         $this->template->agregar_contenido($datos);
         $this->template->visualizar($datos);
+    }
+
+    public function ajax_catalogo(){
+        if(!isset($_POST) )
+            exit;
+        $usuarios = $this->userRepo->search($_POST)->map(function($usuario){
+            return [
+                'id'=>$usuario->id,
+                'nombre'=>$usuario->nombre_completo,
+            ];
+        });
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($usuarios))->_display();
+        exit;
     }
 
 }

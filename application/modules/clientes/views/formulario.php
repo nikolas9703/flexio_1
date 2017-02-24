@@ -24,12 +24,15 @@ $formAttr = array(
             <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
             <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
 				<?php 
+                //var_dump($clientes);
 				if(isset($_GET['mod']))
 				{
 					 if ($_GET['mod']=="fact") {
                         $regreso='facturas_seguros/listar';
                     }else if ($_GET['mod']=="recl") {
                         $regreso='reclamos/listar';
+                    }elseif ($_GET['mod']=="endo") {
+                        $regreso = 'endosos/listar';
                     }	
 				}				
 				else 

@@ -6,10 +6,14 @@ use Flexio\Repository\SysTransaccion\SysTransaccionRepository as SysTransaccionR
 use Flexio\Modulo\EntradaManuales\Models\AsientoContable as AsientoContable;
 use Flexio\Modulo\Cajas\Models\Cajas;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Modulo\Anticipos\Events\RealizarTransaccionAnticipo;
+use Flexio\Modulo\Anticipos\Events\ActualizarCreditoProveedor;
+use Flexio\Modulo\Anticipos\Transacciones\AnticipoAnularTransaccion;
+use Flexio\Modulo\Proveedores\Service\AnularCredito;
 
 
 class PagosProveedor {
-    
+
     protected $SysTransaccionRepository;
 
     public function __construct() {
@@ -37,9 +41,9 @@ class PagosProveedor {
             });
 
         }
-            
+
     }
-    
+
     public function deshaceTransaccion($pago)
     {
         $clause      = [
@@ -56,8 +60,16 @@ class PagosProveedor {
                 if(is_null($transaccion)){throw new \Exception('No se pudo hacer la transacción');}
             });
         }
+
+        //logic changed -> card 8 from flexio 2017 board
+        /*if($pago->empezable_type == "anticipo"){
+            foreach($pago->anticipo as $anticipo){
+                $actualizarCreditoProveedor = new AnularCredito($anticipo);
+                $actualizarCreditoProveedor->hacer();
+            }
+        }*/
     }
-    
+
     public function transacciones($pago)
     {
         return array_merge($this->_debito($pago),$this->_credito($pago));
@@ -66,65 +78,137 @@ class PagosProveedor {
 
     private function _debito($pago)
     {
-        
+
         $cuenta_id  = $this->_getCuentaIdDebito($pago);
-        $asientos   = [];        
-        foreach($pago->facturas as $factura)
-        {
-            $asientos[] = new AsientoContable([
-                'codigo'        => $pago->codigo,
-                'nombre'        => $pago->codigo. ' - '.$factura->codigo,
-                'debito'        => $factura->pivot->monto_pagado,
-                'cuenta_id'     => $cuenta_id,
-                'empresa_id'    => $pago->empresa_id
-            ]);
-        }        
-        
+        $asientos   = [];
+
+            if($pago->empezable_type == "anticipo"){
+                foreach($pago->anticipo as $anticipo)
+                {
+                    $asientos[] = new AsientoContable([
+                        'codigo'        => $pago->codigo,
+                        'nombre'        => $pago->codigo. ' - '.$anticipo->codigo,
+                        'debito'        => $anticipo->pivot->monto_pagado,
+                        'cuenta_id'     => $cuenta_id,
+                        'empresa_id'    => $pago->empresa_id
+                    ]);
+
+                    //logic changed -> card 8 from flexio 2017 board
+                    /*
+                    $actualizarCreditoProveedor = new ActualizarCreditoProveedor($anticipo);
+                    $actualizarCreditoProveedor->hacer();
+                    */
+               }
+            }else if($pago->empezable_type == "movimiento_monetario"){
+              //DEBITO
+              foreach($pago->retiros as $retiro) {
+                //Recorrer items
+                $asientos = $this->retiroItems($retiro, $pago);
+              }
+            }else{
+                foreach($pago->facturas as $factura)
+                {
+                    $asientos[] = new AsientoContable([
+                        'codigo'        => $pago->codigo,
+                        'nombre'        => $pago->codigo. ' - '.$factura->codigo,
+                        'debito'        => $factura->pivot->monto_pagado,
+                        'cuenta_id'     => $cuenta_id,
+                        'empresa_id'    => $pago->empresa_id
+                    ]);
+                }
+            }
+
         return $asientos;
     }
 
     private function _credito($pago){
-        
         $cuenta_id  = $this->_getCuentaIdCredito($pago);
         $asientos   = [];
-        
-        foreach($pago->facturas as $factura)
-        {    
-        $asientos[] = new AsientoContable([
-            'codigo'        => $pago->codigo,
-            'nombre'        => $pago->codigo. ' - '.$factura->codigo,
-            'credito'       => $pago->monto_pagado,
-            'cuenta_id'     => $cuenta_id,
-            'empresa_id'    => $pago->empresa_id
-        ]);
+        if($pago->empezable_type == "anticipo"){
+            foreach($pago->anticipo as $anticipo)
+            {
+                //hacer transaccion del anticipo.
+                $transaccionAnticipo = new RealizarTransaccionAnticipo($anticipo);
+                $transaccionAnticipo->hacer();
+                //actualizar credito proveedor.
+                //logic changed -> card 8 from flexio 2017 board
+                /*
+                $actualizarCreditoProveedor = new ActualizarCreditoProveedor($anticipo);
+                $actualizarCreditoProveedor->hacer();
+                */
+                $asientos[] = new AsientoContable([
+                    'codigo'        => $pago->codigo,
+                    'nombre'        => $pago->codigo. ' - '.$anticipo->codigo,
+                    'credito'       => $pago->monto_pagado,
+                    'cuenta_id'     => $cuenta_id,
+                    'empresa_id'    => $pago->empresa_id
+                ]);
+            }
+        }else if($pago->empezable_type == "movimiento_monetario"){
+          foreach($pago->retiros as $retiro)
+          {
+              $asientos[] = new AsientoContable([
+                  'codigo'        => $pago->codigo,
+                  'nombre'        => $pago->codigo. ' - '.$retiro->codigo,
+                  'credito'       => $pago->monto_pagado,
+                  'cuenta_id'     => $cuenta_id,
+                  'empresa_id'    => $pago->empresa_id
+              ]);
+          }
+        }else{
+            foreach($pago->facturas as $factura)
+            {
+                $asientos[] = new AsientoContable([
+                    'codigo'        => $pago->codigo,
+                    'nombre'        => $pago->codigo. ' - '.$factura->codigo,
+                    'credito'       => $pago->monto_pagado,
+                    'cuenta_id'     => $cuenta_id,
+                    'empresa_id'    => $pago->empresa_id
+                ]);
+            }
         }
-        
-        if($pago->depositable_type == "Flexio\Modulo\Cajas\Models\Cajas"){ 
-        $cuenta_id = $pago->depositable_id;     
-        $caja = Cajas::find($cuenta_id);
-        $caja->saldo =  $caja->saldo - $pago->monto_pagado;        
-        $caja->save();               
+        if($pago->depositable_type == 'Flexio\Modulo\Cajas\Models\Cajas'){
+
+            $caja = Cajas::find($pago->depositable_id);
+            $cuenta_id = $caja->cuenta_id;
+            $caja->saldo =  $caja->saldo - $pago->monto_pagado;
+            $caja->save();
         }
-          
-        
         return $asientos;
     }
-    
+
+    private function retiroItems($retiro, $pago){
+      $asientos=array();
+      foreach($retiro->items as $item)
+      {
+          $asientos[] = new AsientoContable([
+            'codigo'        => $pago->codigo,
+            'nombre'        => $pago->codigo. ' - '.$retiro->codigo,
+            'debito'        => $item->debito,
+            'cuenta_id'     => $item->cuenta_id,
+            'empresa_id'    => $pago->empresa_id
+          ]);
+      }
+      return $asientos;
+    }
+
+
     private function _getCuentaIdDebito($pago)
     {
-        return $pago->empresa->cuenta_por_pagar_proveedores->first()->cuenta_id;             
-       
+        return $pago->empresa->cuenta_por_pagar_proveedores->first()->cuenta_id;
+
     }
-    
+
     private function _getCuentaIdCredito($pago)
     {
         $cuenta_id = 0;
+
         if($pago->metodo_pago[0]->tipo_pago == 'aplicar_credito')
         {
             $cuenta_id = $pago->empresa->cuenta_abonar_proveedores->first()->cuenta_id;
         }
-        elseif($pago->depositable_type == "Flexio\Modulo\Cajas\Models\Cajas"){        
-            $cuenta_id = $pago->empresa->cuenta_caja_menuda->cuenta_id;            
+        elseif($pago->depositable_type == "caja"){
+            $cuenta_id = $pago->empresa->cuenta_caja_menuda->cuenta_id;
         }
         else
         {
@@ -132,5 +216,5 @@ class PagosProveedor {
         }
         return $cuenta_id;
     }
-    
+
 }

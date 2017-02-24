@@ -61,6 +61,11 @@ class AjustadoresRepository {
         return $ruc_dev->get();
     }
 
+    public function consultaRucEmp($ruc, $empresa) {
+        $ruc_dev = Ajustadores::where('ruc', '=', $ruc)->where('empresa_id', '=', $empresa);
+        return $ruc_dev->get();
+    }
+
     public function verAjustadores($id) {
         //filtros
         $ajustadores = Ajustadores::where("uuid_ajustadores", $id);

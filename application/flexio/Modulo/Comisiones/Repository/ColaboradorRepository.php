@@ -47,7 +47,15 @@ class ColaboradorRepository
     //Aqui se realizan los calculos para Deducciones y acumulados
   public function editar_calculos($collectionColaborador, $post){
 
-     $collectionColaborador->monto_total = $post['Monto'];
+      $monto = explode('$', $post['Monto']);
+      $monto_total = null;
+
+      if(count($monto) > 1){
+          $monto_total = $monto[1];
+      }else{
+          $monto_total = $monto[0];
+      }
+     $collectionColaborador->monto_total = $monto_total;
      $collectionColaborador->descripcion = $post['Detalle'];
      $collectionColaborador->save();
 

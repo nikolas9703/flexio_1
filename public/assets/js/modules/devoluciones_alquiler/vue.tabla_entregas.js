@@ -63,6 +63,10 @@ Vue.component('tabla_entregas', {
                               	categoria_id:entrega.categoria_id,
                               	items:categoria.items_contratos_alquiler,
                               	item_id:entrega.item_id,
+								atributo_id:entrega.atributo_id,
+								atributo_text:entrega.atributo_text,
+                                ciclo_id:entrega.ciclo_id,
+                                tarifa:entrega.precio_unidad,
                               	cantidad_alquiler: entrega.en_alquiler,
                                 series:entrega.contratos_items_detalles_devoluciones,
                                 detalles:(context.vista == 'editar') ? entrega.contratos_items_detalles_devoluciones : entrega.contratos_items_detalles_entregas,
@@ -101,6 +105,10 @@ Vue.component('tabla_entregas', {
                             		categoria_id:entrega.categoria_id,
                                   	items:categoria.items_contratos_alquiler,//Lista de Items
                                   	item_id:entrega.item_id, //Item seleccionado
+                                    atributo_id:entrega.atributo_id,
+    								atributo_text:entrega.atributo_text,
+                                    ciclo_id:entrega.ciclo_id,
+                                    tarifa:entrega.precio_unidad,
                                   	cantidad_alquiler: entrega.en_alquiler,
                                     series:entrega.contratos_items_detalles_entregas,
                                     detalles:(context.vista == 'editar') ? entrega.contratos_items_detalles_devoluciones : entrega.contratos_items_detalles_entregas,

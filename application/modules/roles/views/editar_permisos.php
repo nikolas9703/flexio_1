@@ -1,6 +1,5 @@
 <div id="wrapper">
 <?php
-
 function findKey($keySearch, $array) {
 	foreach ($array AS $key => $item){
 		if(!empty($item[$keySearch])){
@@ -63,6 +62,7 @@ Template::cargar_vista('sidebar');
 								<div class="panel-group" id="accordion-addons" role="tablist" aria-multiselectable="true">
 								  	<?php
 									foreach ($modulos AS $controller_name => $modulo):
+									
 										$modulo_id = (!empty($modulo['modulo_id']) ? $modulo['modulo_id'] : "");
 
 										$selectedModuleKey  = findKey($controller_name, (!empty($rol_info['modulos']) ? $rol_info['modulos'] : array()));

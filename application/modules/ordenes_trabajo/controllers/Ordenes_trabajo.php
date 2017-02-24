@@ -369,20 +369,16 @@ class Ordenes_trabajo extends CRM_Controller {
 
 		//Si existe UUID
 		if ($orden_uuid != NULL) {
-
 			$info = $this->OrdenesTrabajoRepository->findByUuid($orden_uuid);
 			$titulo_formulario 	= '<i class="fa fa-wrench"></i> &Oacute;rdenes de trabajo: '. (!empty($info->numero) ? $info->numero : "");
 
 			//subpanels
 			$data['ordenes_trabajo_id'] = $info->id;
-			$subpanels = [
-				'ordenes_trabajo'=>$info->id,
-				'clientes'=>$info->id,
+			$data['subpanels'] = [
+				'orden_trabajo' => $info->id
 			];
-			$data['subpanels'] = $subpanels;
-
 			$this->assets->agregar_var_js(array(
-					'cliente' => $info->cliente_id
+				'cliente' => $info->cliente_id
 			));
 		}
 
@@ -523,8 +519,10 @@ class Ordenes_trabajo extends CRM_Controller {
 			//$fieldset = Util::set_fieldset(true);
             $fieldset = array();
 
-            $fieldset["orden_de"] =  !empty($_POST["orden_de"]) ? $_POST["orden_de"] : "0";
-            $fieldset["orden_de_id"] =  !empty($_POST["orden_de_id"]) ? $_POST["orden_de_id"] : "0";
+			if(empty($id)){
+				$fieldset["orden_de"] =  !empty($_POST["orden_de"]) ? $_POST["orden_de"] : "0";
+	            $fieldset["orden_de_id"] =  !empty($_POST["orden_de_id"]) ? $_POST["orden_de_id"] : "0";
+			}
             $fieldset["cliente_id"] = $_POST["cliente_id"];
 			$fieldset["tipo_orden_id"] = $_POST["tipo_orden_id"];
 
@@ -834,6 +832,10 @@ class Ordenes_trabajo extends CRM_Controller {
 	}
 
 	private function _crear_variables_catalogos($orden_uuid=NULL) {
+
+        //temporal solution added. it will be optimized
+        ini_set('memory_limit','256M');
+
 		$clause = array('empresa_id' => $this->empresa_id);
 		$clause_precios = array_merge($clause, ["estado" => 1]);
 

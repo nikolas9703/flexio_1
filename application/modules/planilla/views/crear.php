@@ -419,6 +419,7 @@ form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
   										</div>
 
 										<div class="col-xs-2">
+											<button type="button" id="listar_colaborador" class="btn btn-block btn-primary">Listar</button>
 											<button type="button" id="lista_colaboradores_rightAll" class="btn btn-block"><i class="fa fa-forward"></i></button>
 											<button type="button" id="lista_colaboradores_rightSelected" class="btn btn-block"><i class="fa fa-chevron-right"></i></button>
 											<button type="button" id="lista_colaboradores_leftSelected" class="btn btn-block"><i class="fa fa-chevron-left"></i></button>

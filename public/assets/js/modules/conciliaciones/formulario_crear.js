@@ -45,8 +45,12 @@ var conciliacionFormulario = new Vue({
         'disabled_actualizar':function(){
             return this.campo.cuenta === '' || this.campo.fecha_inicio === '' || this.campo.fecha_fin === '';
         },
-        'balance_verificado_flexio':function(){
+        /*'balance_verificado_flexio':function(){
+
             return parseFloat(this.campo.balance_flexio) - parseFloat(this.retiros_verificados_sum) + parseFloat(this.depositos_verificados_sum);
+        },*/
+        'balance_verificado_flexio':function(){
+              return parseFloat(this.campo.balance_flexio) - parseFloat(this.retiros_verificados_sum_ordenado) + parseFloat(this.depositos_verificados_sum_ordenado);
         },
         'diferencia':function(){
             return parseFloat(this.balances.balance_banco.monto) - parseFloat(this.balance_verificado_flexio);
@@ -86,10 +90,27 @@ var conciliacionFormulario = new Vue({
             });
             return sum;
         },
+        'retiros_verificados_sum_ordenado':function(){
+            var sum = 0;
+            _.forEach(this.transacciones, function(transaccion){
+                /*if(transaccion.balance_verificado.checked === true){
+                  console.log(transaccion.monto);
+                }*/
+                sum += transaccion.color === 'red' && transaccion.balance_verificado.checked === true ? parseFloat(transaccion.monto) : 0;
+            });
+            return sum;
+        },
         'retiros_no_verificados_sum':function(){
             var sum = 0;
             _.forEach(this.transacciones, function(transaccion){
                 sum += transaccion.color === 'red' && transaccion.balance_verificado.checked === false ? parseFloat(transaccion.monto) : 0;
+            });
+            return sum;
+        },
+        'depositos_verificados_sum_ordenado':function(){
+            var sum = 0;
+            _.forEach(this.transacciones, function(transaccion){
+                sum += transaccion.color === 'green' && transaccion.balance_verificado.checked === true ? parseFloat(transaccion.monto) : 0;
             });
             return sum;
         },
@@ -100,7 +121,6 @@ var conciliacionFormulario = new Vue({
             });
             return sum;
         },
-
         'depositos_no_verificados_sum':function(){
             var sum = 0;
             _.forEach(this.transacciones, function(transaccion){
@@ -139,7 +159,7 @@ var conciliacionFormulario = new Vue({
                 type:"POST",
                 data:{
                     erptkn:tkn,
-                    cuenta_id: context.campo.cuenta_id,
+                    cuenta_id: context.campo.cuenta_id==''?cuenta_id.value:context.campo.cuenta_id,
                     fecha_inicio:context.campo.fecha_inicio,
                     fecha_fin:context.campo.fecha_fin,
                     vista:context.vista
@@ -173,18 +193,33 @@ var conciliacionFormulario = new Vue({
             context.resultado = false;
             context.getTransacciones();
         },
-        verificar_monto:function(transaccion){
+
+        actualizar_balances:function(){
 
 
-            var context = this;
+           var context = this;
+           var monto_verificado = context.campo.balance_flexio;
+              _.forEach(this.transacciones, function(transaccion){
 
-            //var monto_verificado = this.balance_verificado_flexio;
+                   if(transaccion.balance_verificado.checked  == true){
+                     if(transaccion.color === 'red' ){
+                          monto_verificado = parseFloat(monto_verificado) - parseFloat(transaccion.monto);
+                    }else{
+                          monto_verificado = parseFloat(monto_verificado) + parseFloat(transaccion.monto);
+                    }
+                    transaccion.balance_verificado.monto =monto_verificado;
+                 }
 
-            transaccion.balance_verificado.monto = parseFloat(this.depositos_verificados_sum);
+             });
+       },
+        //transaccion.balance_verificado.monto
+        verificar_monto:function(){
+             var context = this;
+             Vue.nextTick(function(){
+                 context.actualizar_balances();
+             });
 
-            transaccion.balance_verificado.orden = this.orden;
-            this.orden += 1;
-        },
+          },
         getConciliacion:function(conciliacion){
             var datos = {erptkn: tkn,uuid:conciliacion};
             var conciliacionGet = this.postAjax('conciliaciones/ajax_conciliacion',datos);
@@ -197,13 +232,12 @@ var conciliacionFormulario = new Vue({
                 self.campo.cuenta_id = response.data.cuenta_id;
                 self.campo.fecha_inicio = response.data.fecha_inicio;
                 self.campo.fecha_fin = response.data.fecha_fin;
-                //self.campo.balance_flexio = response.data.balance_flexio;
+                self.campo.balance_flexio_original = response.data.balance_flexio;
 
                 self.balances.balance_banco.monto = response.data.balance_banco;
                 self.transacciones = response.data.balance_transacciones;
                 self.resultado = true;
-                //self.balances.balance_flexio.detalle1= false;
-                //self.balances.balance_flexio.detalle2= true;
+
             });
         },
         postAjax:function(ajaxUrl, datos){

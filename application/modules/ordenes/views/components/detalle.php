@@ -7,7 +7,7 @@
             <label>Proveedor <span required="" aria-required="true">*</span></label>
             <select name="campo[proveedor]" class="chosen"  id="proveedor_id" data-rule-required="true" aria-required="true" v-select2="detalle.proveedor_id" :config="config.select2" :disabled="config.disableProveedor">
                 <option value="">Seleccione</option>
-                <option :value="proveedor.id" v-for="proveedor in catalogos.proveedores">{{proveedor.nombre}}</option>
+                <option :value="proveedor.uuid_proveedor" v-for="proveedor in catalogos.proveedores">{{proveedor.nombre}}</option>
             </select>
         </div>
          <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">

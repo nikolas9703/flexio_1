@@ -37,7 +37,7 @@ class ComisionesRepository
     }
 
     public function create($post){
- 
+
  			$comision_creada = Comisiones::create($post['campo']);
  	    $comision_creada->acumulados()->saveMany($this->_getAcumulados($post['acumulados']));
  	    $comision_creada->deducciones()->saveMany($this->_getDeducciones($post['deducciones']));
@@ -125,7 +125,7 @@ class ComisionesRepository
         foreach($colaboradores as $colaborador)
         {
             $fieldset = [];
-            $fieldset["fecha_creacion"] = date('Y-m-d H:i:s');
+            //$fieldset["fecha_creacion"] = date('Y-m-d H:i:s');
             $fieldset["colaborador_id"] = $colaborador;
             $fieldset["monto_total"] = 0.00;
             $comision_colaborador[] = new ComisionColaborador($fieldset);

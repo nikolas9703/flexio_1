@@ -119,6 +119,10 @@ class Pagos_orm extends Model {
         return $this->belongsTo('Proveedores_orm', 'proveedor_id');
     }
 
+    public function scopeDeCodigo($query, $codigo) {
+      return $query->where("codigo", $codigo);
+    }
+
     public function scopeDeEmpresa($query, $empresa_id) {
         return $query->where("empresa_id", $empresa_id);
     }
@@ -157,6 +161,7 @@ class Pagos_orm extends Model {
     }
 
     public function scopeDeEstado($query, $estado){
+        if(is_array($estado))return $query->whereIn("estado", array_filter($estado));
         return $query->where("estado", $estado);
     }
 
@@ -176,25 +181,50 @@ class Pagos_orm extends Model {
 
     public function scopeDeDocumentoPago($query, $numeroDocumento) {
       return  $query->whereHas("facturas", function($factura)  use ($numeroDocumento) {
-              $factura->where("factura_proveedor", $numeroDocumento);
+              $factura->where("factura_proveedor", 'like', '%' . $numeroDocumento . '%');
        })->orWhereHas("planillas", function($planilla)  use ($numeroDocumento) {
-              $planilla->where("codigo", $numeroDocumento);
+              $planilla->where("codigo", 'like', '%' . $numeroDocumento . '%');
       })->orWhereHas("pagos_extraordinarios",function($pagos_extraordinarios) use ($numeroDocumento){
-              $pagos_extraordinarios->where("numero",$numeroDocumento);
+              $pagos_extraordinarios->where("numero", 'like', '%' . $numeroDocumento . '%');
       });
 
     }
 
+    public function anticipo()
+    {
+        return $this->morphedByMany('Flexio\Modulo\Anticipos\Models\Anticipo','pagable', 'pag_pagos_pagables','pago_id')
+                ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+    }
 
+    /**
+     * @param $query \Illuminate\Database\Query\Builder
+     * @param $tipo
+     * @return mixed
+     */
     public function scopeDeTipo($query, $tipo) {
         if ($tipo === "planilla" || $tipo === "pago_extraordinario") {
             return $query->where("formulario", $tipo);
-        } else {
+        }
+        elseif ($tipo =="contratos"){
+            return $query->whereHas("facturas", function($factura) {
+                $factura->where("faccom_facturas.operacion_type", 'Flexio\Modulo\SubContratos\Models\SubContrato');
+            })->orWhereHas("anticipo", function($anticipo){
+                $anticipo->where('pag_pagos_pagables.id', '>', 0);
+            });
+        }
+        else {
             return $query->where(function($q) {
                         $q->where("formulario", "factura")
                                 ->orWhere("formulario", "proveedor");
                     });
         }
+    }
+    public function scopeDeCategoria($query, $categoria) {
+        $aux = is_numeric($categoria) ? $categoria : Proveedores_proveedor_categoria_orm::whereIn("id_categoria", $categoria)->get();
+        return $query->whereIn("proveedor_id", $aux->pluck('id_proveedor'));
+    }
+    public function categorias() {
+        return $this->belongsToMany('Proveedores_categorias_orm', 'pro_proveedor_categoria', 'id_proveedor', 'id_categoria');
     }
 
     public function scopeDeBanco($query, $banco) {

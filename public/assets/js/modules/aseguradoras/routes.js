@@ -17,6 +17,12 @@ var moduloAseguradora = (function() {
 				dataType: "json",
 			});
 		},
+                ajaxcambiarObtenerPoliticasGenerales:function(){
+			return $.ajax({
+				url: "aseguradoras/obtener_politicasgenerales",
+				dataType: "json",
+			});
+		},
 	};
 })();
 

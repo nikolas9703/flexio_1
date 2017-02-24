@@ -48,8 +48,8 @@ var tablaDevoluciones = (function(){
 	 	  refresh: true,
 	 	  gridview: true,
 	 	  multiselect: true,
-	 	  sortname: 'codigo',
-	 	  sortorder: "ASC",
+	 	  sortname: 'id',
+	 	  sortorder: "DESC",
 			beforeProcessing: function(data, status, xhr){
 				if( $.isEmptyObject(data.session) === false){
 					window.location = phost() + "login?expired";

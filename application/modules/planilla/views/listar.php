@@ -47,14 +47,19 @@
 
 
                                     <div class="row">
+                                      <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                          <label for="No_oc">Número de planilla</label><br>
 
+                                               <input type="text" name="codigo" id="codigo" class="form-control">
+
+
+
+                                      </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	   <label for="nombre">Centro Contable</label>
                                            <select id="centro_contable_id" name="centro_contable" class="form-control select2" style="width:375px;" >
 								                <option value="">Seleccione</option>
 								                <?php
-
-
 								                if(!empty($centros))
 								                {
 									                foreach ($centros AS $centro)
@@ -82,36 +87,36 @@
 							                </select>
                                         </div>
 
+
+                                        <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
+                                            <label for="nombre">Estado</label>
+                                          <select id="estado_id" name="estado" class="form-control select2"  style="width:375px;">
+                                        <option value="">Seleccione</option>
+                                        <?php
+                                        if(!empty($estados))
+                                        {
+                                        foreach ($estados AS $estado)
+                                        {
+                                        echo '<option value="'. $estado['id_cat'].'">'. $estado['etiqueta'] .'</option>';
+                                        }
+                                        }
+                                        ?>
+                                        </select>
+                                        </div>
                                         <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
                                           <label for="rango_fecha">Rango de fechas</label><br>
                                            <div class="form-inline">
-				                                <div class="form-group">
-				                                    <div class="input-group">
-				                                      <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-				                                      <input type="text" name="desde" id="fecha1" class="form-control">
-				                                      <span class="input-group-addon">a</span>
-				                                      <input type="text" class="form-control" name="hasta" id="fecha2">
-				                                    </div>
-				                                </div>
-				                            </div>
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                              <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                              <input type="text" name="desde" id="fecha1" class="form-control">
+                                              <span class="input-group-addon">a</span>
+                                              <input type="text" class="form-control" name="hasta" id="fecha2">
+                                            </div>
+                                        </div>
+                                    </div>
                                             <!-- <input type="text" id="rango_fecha" class="form-control" value="" readonly="readonly">-->
                                         </div>
-                                         <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
-                                             <label for="nombre">Estado</label>
-                                           <select id="estado_id" name="estado" class="form-control select2"  style="width:375px;">
-								                <option value="">Seleccione</option>
-								                <?php
-								                if(!empty($estados))
-								                {
-									                foreach ($estados AS $estado)
-									                {
-									               		echo '<option value="'. $estado['id_cat'].'">'. $estado['etiqueta'] .'</option>';
-									                }
-								                }
-								                ?>
-							                </select>
-                                        </div>
-
                                     </div>
 
                                     <div class="row">
@@ -147,11 +152,8 @@
 </div><!-- cierra #wrapper -->
 
 <?php
-
     echo    Modal::config(array(
                 "id"    => "opcionesModal",
                 "size"  => "sm"
              ))->html();
-
-
 ?>

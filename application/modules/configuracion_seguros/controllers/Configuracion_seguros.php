@@ -209,7 +209,7 @@ class Configuracion_seguros extends CRM_Controller
                     'parent' => $row["padre_id"] == 0 ? "#" : (string)$row["padre_id"],
                     'text' => "<span id='labelramo' style='".$spanStyle."'>".$row["nombre"]."</span>",
                     'icon' => 'fa fa-folder',
-                    'codigo' => $row["id"],
+                    'codigo' => $row["id"]
                     //'state' =>array('opened' => true)
                     );
 

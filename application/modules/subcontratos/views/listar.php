@@ -60,6 +60,16 @@
                               				</select>
 										</div>
 
+                    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+							            	<label for="">Tipo de subcontrato</label>
+                    				<select name="tipo_subcontrato_id" class="form-control select2" id="tipo_subcontrato_id">
+                      				<option value="">Seleccione</option>
+                      				<?php foreach($tipos_subcontratos as $tipo): ?>
+                      				<option value="<?php echo $tipo->id?>"><?php echo $tipo->valor?></option>
+                      				<?php endforeach; ?>
+                    				</select>
+										</div>
+
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="monto1">Rango de montos</label>
                                             <div class="form-inline">
@@ -127,13 +137,17 @@
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 
-<?php 
+<!-- formulario para exportar el reporte-->
+<?php echo modules::run('subcontratos/ocultoformularioExportarCuenta'); ?>
+<?php
 echo Modal::config(array(
 	"id" => "documentosModal",
 	"size" => "lg",
 	"titulo" => "Subir Documentos",
 	"contenido" => modules::run("documentos/formulario", array())
 ))->html();
+
+echo Modal::config(array( "id" => "pagarRetenidoModal", "size"  => "lg"))->html();
 
 echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->
 <?php //echo Modal::modalSubirDocumentos();?>  <!-- modal subir documentos -->

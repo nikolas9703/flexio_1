@@ -6,7 +6,10 @@ var notaCreditoFormulario = new Vue({
     acceso: acceso === 1? true : false,
     vista: vista,
     tablaError:'',
-    datosFactura:{cliente:{},created_by:'',centro_contable_id:""},
+    datosFactura:{cliente:{
+        saldo_pendiente:0,
+        credito_favor:0
+    },created_by:'',centro_contable_id:""},
     datos:{estado:'por_aprobar'},
     filas:[{descripcion:'',cuenta_id:'',monto:'0.00'}],
     mensaje:"",
@@ -20,6 +23,7 @@ var notaCreditoFormulario = new Vue({
     disabledOpcionTipo:true,
     incluir:false,
     vista_comments:"",
+    campo: {comentario: ''},
     comentarios:[],
     itemsFactura:[{id:'',impuesto_total:0,precio_total:0,cuenta_id:'',credito:0,inventario_item:{id:'',nombre:''},impuesto:{id:''}}]
   },
@@ -35,6 +39,7 @@ var notaCreditoFormulario = new Vue({
       this.cabecera.tipoId = [nota_credito.factura_id];
       this.datosFactura = nota_credito.factura;
       this.datosFactura.cliente =  nota_credito.cliente;
+      comentario.value = nota_credito.observaciones;
       this.comentarios =  nota_credito.comentario;
       nota_credito.items.forEach(function(item){
         var precio_total =  _.find(nota_credito.factura.items,function(query){ return query.item_id == item.item_id; });

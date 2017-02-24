@@ -17,6 +17,7 @@ use Flexio\Modulo\Cotizaciones\Repository\CotizacionCatalogoRepository as Cotiza
 use Flexio\Modulo\Cliente\Repository\ClienteRepository;
 use Flexio\Modulo\ClientesPotenciales\Repository\ClientesPotencialesRepository;
 use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
+use Flexio\Modulo\CentrosContables\Models\CentrosContables;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategoriasRepository;
 use Flexio\Modulo\ContratosAlquiler\Repository\ContratosAlquilerCatalogosRepository;
@@ -100,7 +101,13 @@ class Cotizaciones_alquiler extends CRM_Controller
                 0 => ["nombre" => "Alquileres", "activo" => false],
                 1 => ["nombre" => '<b>Cotizaciones</b>', "activo" => true]
             ),
-            "menu" => ["nombre" => "Crear", "url" => "cotizaciones_alquiler/crear","opciones" => array()]
+            "menu" => [
+				"nombre" => "Crear",
+				"url" => "cotizaciones_alquiler/crear",
+				"opciones" => array(
+					"#exportarLnk" => "Exportar"
+				)
+			]
         );
         //$breadcrumb["menu"]["opciones"]["#exportarCotizacionesAlquiler"] = "Exportar";
 
@@ -108,32 +115,40 @@ class Cotizaciones_alquiler extends CRM_Controller
             "toast_mensaje" => $mensaje
         ));
         $repositoryCliente = new  Flexio\Modulo\Cliente\Repository\ClienteRepositorio;
-        $clause = ['empresa_id' => $this->empresa_id];
+        $clause = ['empresa_id' => $this->empresa_id,'estado'=>"Activo"];
         $data['clientes']   = $repositoryCliente->getClientes($this->empresa_id)->activos()->fetch();
         $data['estados']    = $this->CotizacionesAlquilerCatalogosRepository->getEtapas();
+        $data['centros']    = $this->CentrosContablesRepository->get($clause);
+        $data['usuarios']    = $this->UsuariosRepository->get($clause);
         $this->template->agregar_titulo_header('Cotizaciones ');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar($breadcrumb);
     }
 
-   public function ajax_listar()
-   {
-       if(!$this->input->is_ajax_request()) return false;
+	public function ajax_listar()
+	{
+		if(!$this->input->is_ajax_request()) return false;
 
-       $clause                 = $this->input->post();
-       $clause['campo']        = $this->input->post();
-       $jqgrid = new Flexio\Modulo\CotizacionesAlquiler\Services\CotizacionAlquilerJqgrid($this->auth);
-       $clause['empresa']   = $this->empresa_id;
-       $clause['tipo'] = 'alquiler';
-       //if(!AuthUser::is_owner())$clause['creado_por'] =  AuthUser::getId();
+		$clause                 = $this->input->post();
+		$clause['campo']        = $this->input->post();
+		$jqgrid = new Flexio\Modulo\CotizacionesAlquiler\Services\CotizacionAlquilerJqgrid($this->auth);
+		$clause['empresa']   = $this->empresa_id;
+		$clause['tipo'] = 'alquiler';
+		//if(!AuthUser::is_owner())$clause['creado_por'] =  AuthUser::getId();
+		
+		if (!$this->auth->has_permission('ver_todos','cotizaciones_alquiler/listar')) {
+			$clause["creado_por"] = $this->session->userdata("id_usuario");
+		}
+		
+		
+		
+		$response = $jqgrid->listar($clause);
 
-       $response = $jqgrid->listar($clause);
-
-       $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-       ->set_output(json_encode($response))->_display();
-       exit;
-   }
+		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+		->set_output(json_encode($response))->_display();
+		exit;
+	}
 
 
 
@@ -197,19 +212,42 @@ class Cotizaciones_alquiler extends CRM_Controller
         ));
     }
 
-//    public function ajax_exportar()
-//    {
-//        $post = $this->input->post();
-//    	if(empty($post)){exit();}
-//
-//    	$cotizaciones_alquiler = $this->CotizacionesAlquilerRepository->get(['ids', $post['ids']]);
-//
-//        $csv = Writer::createFromFileObject(new SplTempFileObject());
-//        $csv->insertOne(['No. Cotizacion','Cliente','Fecha de inicio','Saldo por facturar','Total facturado',utf8_decode('Días transcurridos'),'Estado']);
-//        $csv->insertAll($this->CotizacionesAlquilerRepository->getCollectionExportar($cotizaciones_alquiler));
-//        $csv->output("CotizacionAlquiler-". date('ymd') .".csv");
-//        exit();
-//    }
+	public function exportar()
+	{
+		$post = $this->input->post();
+		if(empty($post)){
+			exit();
+		}
+
+		//$cotizaciones_alquiler = $this->CotizacionesAlquilerRepository->get(['ids', $post['ids']]);
+
+		$csv = Writer::createFromFileObject(new SplTempFileObject());
+		$csv->insertOne([utf8_decode('No. Cotización'), 'Cliente', utf8_decode('Fecha de emisión'), utf8_decode('Válido hasta'), 'Centro contable', 'Creado por', 'Estado']);
+		
+		$registros = $this->CotizacionesAlquilerRepository->getCollectionExportar(['ids' => $post['ids']]);
+		$i=0;
+		foreach ($registros AS $row)
+		{
+			
+			$c = CentrosContables::where("id",$row->centro_contable_id)->get()->toArray();
+			$centro_contable = $c[0]["nombre"];
+			
+			$csvdata[$i]['numero'] = $row->codigo;
+			$csvdata[$i]["cliente"] = utf8_decode(Util::verificar_valor($row->cliente->nombre));
+			$csvdata[$i]["fecha_emision"] = utf8_decode($row->fecha_desde);
+			$csvdata[$i]["fecha_hasta"] = utf8_decode($row->fecha_hasta);
+			$csvdata[$i]["centro_contable"] = ($centro_contable);
+			$csvdata[$i]["creado_por"] = utf8_decode($row->vendedor->nombre." ".$row->vendedor->apellido);
+			$csvdata[$i]["estado"] = ucwords(utf8_decode($row->estado));
+			
+			$i++;
+		}
+		
+		$csv->insertAll($csvdata);
+		
+		$csv->output("CotizacionAlquiler-". date('ymd') .".csv");
+		exit();
+	}
 
     public function crear(){
 

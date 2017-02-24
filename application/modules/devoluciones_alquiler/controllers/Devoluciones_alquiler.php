@@ -221,7 +221,7 @@ function crear() {
       $devolucion_alquiler->load('comentario_timeline');
     //  $devolucion_alquiler->load("entregas","contratos");
      // $devolucion_alquiler->load("contratos_items_detalles_devoluciones");
-       $this->_crear_variables_catalogos($devolucion_alquiler->tipo_contrato);
+       $this->_crear_variables_catalogos($devolucion_alquiler);
         //if( $devolucion_alquiler->entregas[0]->id > 0 ){
           //$devolucion_alquiler->load();
           /*$entregas_alquiler = EntregasAlquiler::where("empresa_id","=", $this->empresa_id)->where("estado_id","=", 4)->get(array('id','codigo'));
@@ -295,7 +295,7 @@ function crear() {
   /**
    * Crea catalogos en variables js
    */
-  private function _crear_variables_catalogos($tipo_contrato = NULL) {
+  private function _crear_variables_catalogos($devolucion_alquiler = NULL) {
 
           $clause = array('empresa_id' => $this->empresa_id);
           $clause_precios = array_merge($clause, ["estado" => 1]);
@@ -344,7 +344,7 @@ function crear() {
 
             		    $entregas = EntregasAlquiler::where("entregable_type","=","Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler")->get(array('id','codigo'));
 
-            		   if($tipo_contrato == 1){
+            		   if($devolucion_alquiler !=null &&  $devolucion_alquiler->tipo_contrato == 1){
             		          $empezables = ContratosAlquiler::where("empresa_id","=", $this->empresa_id)->where("estado_id","=", 2)->get();
             		          $empezables = $empezables->each(function ($item, $key) {
             		              $item->load('cliente');
@@ -360,12 +360,16 @@ function crear() {
             		           return $item;
             		       });
             		   }
+                      $usuario_id=$this->id_usuario;
+                      if($devolucion_alquiler !=null){
+                          $usuario_id=$devolucion_alquiler->recibido_id;
+                      }
 
-                       $recibidos = Usuario_orm::where("id","=",$this->id_usuario)->get(array("id","nombre","apellido"));
+                       $recibidos = Usuario_orm::where("id","=",$usuario_id)->get(array("id","nombre","apellido"));
 
                        $this->assets->agregar_var_js(array(
                            "clientesArray" => collect($clientes),
-                           "usuario_id" =>  $this->id_usuario,
+                           "usuario_id" => $usuario_id,
                            "recibidosArray" => $recibidos,
                            "vendedoresArray" => $this->UsuariosRepository->get(array_merge($clause, ['vendedor' => true])),
                             "estadosArray" => json_encode($estados),

@@ -34,7 +34,7 @@
                             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                     <label>Aseguradora</label>
-                                    <select name="aseguradora" id="aseguradora" class="form-control">
+                                    <select name="aseguradora" id="aseguradora" class="form-control" <?php if($ver == 1){echo 'disabled';} ?> >
                                         <option value="">Seleccione</option>
                                         <?php
                                             foreach ($aseguradoras as $key => $value) {
@@ -60,9 +60,9 @@
                                     <label>Rango de fechas</label>
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-calendar"></i></span>    
-                                        <input type="input" id="fecha_desde" name="fecha_desde" readonly="readonly" class="form-control" value="" data-rule-required="true">
+                                        <input type="input" id="fecha_desde" name="fecha_desde" readonly="readonly" class="form-control" value="" data-rule-required="true" <?php if($ver == 1){echo 'disabled';} ?> >
                                         <span class="input-group-addon">a</span>
-                                        <input type="input" id="fecha_hasta" name="fecha_hasta" readonly="readonly" class="form-control" value="" data-rule-required="true">
+                                        <input type="input" id="fecha_hasta" name="fecha_hasta" readonly="readonly" class="form-control" value="" data-rule-required="true" <?php if($ver == 1){echo 'disabled';} ?> >
                                     </div>
                                 </div>
                                 <!--
@@ -75,7 +75,8 @@
                             <!-- <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"> -->
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                     <label>Ramo</label>
-                                    <select id="ramos" name="ramos" class="ramo chosen-select grouper" multiple="multiple" data-placeholder="Seleccione una opción">
+                                    <select id="ramos" name="ramos" class="ramo chosen-select grouper" multiple="multiple" data-placeholder="Seleccione una opción" <?php if($ver == 1){echo 'disabled';} ?> >
+                                        <option value="todos">Todos</option>
                                         <?php 
                                             //var_dump($ramos_id);
                                             $cont = 0;

@@ -66,7 +66,7 @@ bluapp.controller("contactoFormularioController", function($scope, $http){
 		    	contacto.letra = letra;
 			var formularioContacto = objFrom.contactoForm;
 			if(formularioContacto.valid() === true){
-				contacto.uuidcliente = id_cliente;
+				contacto.uuidcliente = cliente.uuid_cliente;
 				$scope.contacto = contacto;
 				var datos = $.extend({erptkn: tkn},$scope.contacto);
 				$http({
@@ -167,7 +167,7 @@ bluapp.controller("aseguradoraFormularioController", function($scope, $http){
 
 		var formularioContacto = objFrom.contactoForm;
 		if(formularioContacto.valid() === true){
-			contacto.uuidcliente = id_cliente;
+			contacto.uuidcliente = cliente.uuid_cliente;
             contacto.vista = "aseguradoras";
 			$scope.contacto = contacto;
 			var datos = $.extend({erptkn: tkn},$scope.contacto);

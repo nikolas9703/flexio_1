@@ -29,7 +29,7 @@ var LandingPaginador = Vue.extend({
 
         }
         if(this.estado==='ocultar'){
-          this.$set('limite',this.limite - 3);
+          this.estado = 'ver_mas';
           return;
         }
 

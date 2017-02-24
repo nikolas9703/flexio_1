@@ -64,6 +64,13 @@
         </select>
 
     </div>
+    <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
+        <label>Centro contable <span required="" aria-required="true">*</span></label>
+        <select name="campo[centro_contable_id]" class="" id="centro_contable_id" data-rule-required="true" aria-required="true" v-model="formulario.centro_contable_id" v-select2="formulario.centro_contable_id" :config="config.select2" :disabled="config.disableDetalle">
+            <option value="">Seleccione</option>
+            <option :value="centro_contable.id" v-for="centro_contable in catalogoFormulario.centros_contables">{{centro_contable.nombre}}</option>
+        </select>
+    </div>
 </div>
 
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-top:30px">

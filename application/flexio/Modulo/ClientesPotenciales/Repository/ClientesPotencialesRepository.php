@@ -21,7 +21,7 @@ class ClientesPotencialesRepository{
 
              $this->_filtros($query, $clause);
 
-         });
+         })->where('deleted_at', '=', null);
 
          if($sidx !== null && $sord !== null){$clientes_potenciales->orderBy($sidx, $sord);}
          if($limit != null){$clientes_potenciales->skip($start)->take($limit);}
@@ -39,6 +39,7 @@ class ClientesPotencialesRepository{
      }
 
     private function _filtros($clientes_potenciales, $clause) {
+        
         if(isset($clause['empresa_id']) and !empty($clause['empresa_id'])){$clientes_potenciales->whereEmpresaId($clause['empresa_id']);}
         if(isset($clause['nombre']) and !empty($clause['nombre'])){$clientes_potenciales->DeNombre($clause['nombre']);}
         if(isset($clause['uuid_cliente_potencial']) and !empty($clause['uuid_cliente_potencial'])){$clientes_potenciales->whereUuidClientePotencial(hex2bin($clause['uuid_cliente_potencial']));}
@@ -49,11 +50,14 @@ class ClientesPotencialesRepository{
         if(isset($clause['correo']) and !empty($clause['correo'])){
             $clientes_potenciales->DeCorreos($clause['correo']);
         }
+        
     }
 
     function getAll($clause,$columns=['*']) {
   		return ClientesPotenciales::where(function ($query) use($clause, $columns) {
   			$query->where('empresa_id', '=', $clause['empresa_id']);
+                        if(isset($clause['cliente_id'])&&!empty('cliente_id'))$query->where('id', '=', $clause['cliente_id']);
+                        if(isset($clause['q'])&&!empty($clause['q']))$query->where("nombre",'like',"%".$clause['q']."%");
   		})->get($columns);
   	}
 

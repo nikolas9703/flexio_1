@@ -121,10 +121,10 @@ private function _filtros($intereses_asegurados, $clause) {
     if(isset($clause["estado"]) and !empty($clause["estado"])){$intereses_asegurados->deEstado($clause["estado"]);}
 }
 public static function identificacion($chasis) {
-    return VehiculoAsegurados::where('chasis', $chasis)->first();      
+    return VehiculoAsegurados::where('motor', $chasis)->first();      
 }
-public static function identificacionUuid($motor,$uuid) {
-    return VehiculoAsegurados::where('motor', $motor)->where('id','!=',$uuid)->first();      
+public static function identificacionUuid($chasis,$uuid) {
+    return VehiculoAsegurados::where('motor', $chasis)->where('id','!=',$uuid)->first();      
 }
 public function consultaOrden($orden) {
     $orden_dev = ProyectoAsegurados::where('no_orden', '=', $orden);

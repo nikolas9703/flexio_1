@@ -47,7 +47,8 @@ class EntradaManualRequest
         return $transaciones;
     }
 
-    function save($entrada, $transaccion){
+    public function save($entrada, $transaccion)
+    {
         $entrada_manual = EntradaManual::create($entrada);
         $formato = new TransformTransaccion;
         $relacion = $formato->crearInstancia($transaccion);

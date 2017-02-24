@@ -138,31 +138,41 @@ class FacturaCompra extends Model
     */
     public function getSaldoAttribute()
     {
-      $nota_debito_total = $this->nota_debito()->where('compra_nota_debitos.estado','aprobado')->sum('compra_nota_debitos.total');
+        $nota_debito_total = $this->nota_debito()->where('compra_nota_debitos.estado','aprobado')->sum('compra_nota_debitos.total');
       if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto=='no' && $this->total > 0){
+
 
         // $aux = $this->total - number_format(($this->facturas_items->sum('retenido') + $this->pagos_aplicados_suma),2) - $nota_debito_total - $this->retencion; ORIGINAL
         /*$retenido_itbm = round($this->facturas_items->sum('retenido'),2,PHP_ROUND_HALF_UP) + round($this->pagos_aplicados_suma,2) - round($nota_debito_total);
 
          $aux = round($this->total,2,PHP_ROUND_HALF_UP) - round($retenido_itbm,2,PHP_ROUND_HALF_UP) - round($this->retencion,2,PHP_ROUND_HALF_UP);*/
 
-         $aux = round($this->total,2,PHP_ROUND_HALF_UP) - (round($this->facturas_items->sum('retenido') ,2,PHP_ROUND_HALF_UP) + $this->pagos_aplicados_suma) - $nota_debito_total - $this->retencion;
+         $aux = round($this->total,2,PHP_ROUND_HALF_UP)
+         - (round(round($this->impuestos ,2,PHP_ROUND_HALF_UP)*0.5, 2, PHP_ROUND_HALF_UP) + $this->pagos_aplicados_suma)
+         - $nota_debito_total
+         - $this->retencion
+         - $this->creditos_aplicados->sum('total');
 
          return $aux < 0 ? 0 : round($aux,2,PHP_ROUND_HALF_UP);
       }
+
       // round(float,2,PHP_ROUND_HALF_UP) redondea a 2 digitos y 0.5 hacia arriba devuleve float
       $total = round($this->total,2,PHP_ROUND_HALF_UP);
       $pagos_aplicados = round($this->pagos_aplicados_suma,2,PHP_ROUND_HALF_UP);
-      $aux = $total - $pagos_aplicados - $nota_debito_total- $this->retencion;
+      $aux = $total
+      - $pagos_aplicados
+      - $nota_debito_total
+      - $this->retencion
+      - $this->creditos_aplicados->sum('total');
       return $aux < 0 ? 0 : $aux;
      }
 
     //muestra siempre el saldo real de la factura
     public function getMontoAttribute(){
       if(!empty($this->empresa) && $this->empresa->retiene_impuesto =="si" && !empty($this->proveedor) && $this->proveedor->retiene_impuesto=='no' && $this->total > 0){
-         return $this->total - $this->facturas_items->sum('retenido');
+         return  round($this->total - $this->impuesto * 0.5 - $this->retencion,2,PHP_ROUND_HALF_UP);
       }
-      return $this->total;
+      return round($this->total - $this->retencion,2,PHP_ROUND_HALF_UP);
     }
 
     public function getRetenidoAttribute(){
@@ -184,11 +194,16 @@ class FacturaCompra extends Model
         return $this->pagos_todos()->sum("pag_pagos_pagables.monto_pagado");
     }
 
+    public function getPagosRetenidosTodosSumaAttribute()
+    {
+        //anulados is not include
+        return $this->pagos_de_retenido_todos()->sum("pag_pagos_pagables.monto_pagado");
+    }
+
     //Relationships
-    public function operacion(){
-
+    public function operacion()
+    {
         return $this->morphTo();
-
     }
 
     public function pagos()
@@ -196,6 +211,7 @@ class FacturaCompra extends Model
         return $this->morphToMany('Flexio\Modulo\Pagos\Models\Pagos', 'pagable', 'pag_pagos_pagables', '', "pago_id")
         ->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
+
 
     ///utilizado en notas de debitos
     public function facturas_compras_items() {
@@ -206,6 +222,31 @@ class FacturaCompra extends Model
 
         return $this->hasMany('Flexio\Modulo\FacturasCompras\Models\FacturaCompraItems', 'factura_id');
 
+    }
+
+    public function pagos_de_retenido_aplicados()
+    {
+        return $this->pagos()
+        ->where("pag_pagos.formulario", "retenido")
+        ->where("pag_pagos.estado", "aplicado");
+    }
+
+    public function getRetenidoPagadoAttribute()
+    {
+        //dd($this->pagos_de_retenido_aplicados->toArray());
+        return $this->pagos_de_retenido_aplicados->sum('pivot.monto_pagado');
+    }
+
+    public function getRetenidoPorPagarAttribute()
+    {
+        return $this->retencion - $this->retenido_pagado;
+    }
+
+    public function pagos_de_retenido_todos()
+    {
+        return $this->pagos()
+        ->where("pag_pagos.formulario", "retenido")
+        ->where("pag_pagos.estado", "!=" ,"anulado");
     }
 
     public function pagos_aplicados()
@@ -287,8 +328,9 @@ class FacturaCompra extends Model
       });
     }
 
-    function empresa(){
-       return $this->belongsTo('Empresa_orm','empresa_id');
+    public function empresa()
+    {
+       return $this->belongsTo('Flexio\Modulo\Empresa\Models\Empresa','empresa_id');
     }
 
     public function scopeDeEmpresa($query, $empresa_id)
@@ -325,11 +367,6 @@ class FacturaCompra extends Model
        //return $this->where("operacion_type", "Flexio\\Modulo\\SubContratos\\Models\\SubContrato");
     }
 
-    public function contrato_relacionado(){
-       // return $this->where("operacion_type", "Flexio\\Modulo\\SubContratos\\Models\\SubContrato");
-        return $this->belongsTo("Flexio\\Modulo\\SubContratos\\Models\\SubContrato", "operacion_id", "id");
-    }
-
     function documentos(){
     	return $this->morphMany(Documentos::class, 'documentable');
     }
@@ -342,6 +379,42 @@ class FacturaCompra extends Model
      }
     public function historial(){
         return $this->morphMany(Historial::class,'historiable');
+    }
+
+    public function creditos_aplicados()
+    {
+        return $this->morphMany('Flexio\Modulo\CreditosAplicados\Models\CreditoAplicado', 'acreditable');
+    }
+
+    public function contrato_relacionado(){
+       return $this->belongsTo("Flexio\Modulo\SubContratos\Models\SubContrato", "operacion_id", "id")
+       ->select('sub_subcontratos.*')
+       ->join('faccom_facturas', function($join){
+           $join->on('faccom_facturas.operacion_id', '=', 'sub_subcontratos.id');
+       })->where('faccom_facturas.operacion_type', '=', 'Flexio\Modulo\SubContratos\Models\SubContrato');
+    }
+
+    public function orden_compra(){
+       return $this->belongsTo("Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra", "operacion_id", "id")
+       ->select('ord_ordenes.*')
+       ->join('faccom_facturas', function($join){
+           $join->on('faccom_facturas.operacion_id', '=', 'ord_ordenes.id');
+       })->where('faccom_facturas.operacion_type', '=', 'Ordenes_orm');
+    }
+
+    //card 8 flexio board 2017
+    public function getCreditoFavorAttribute()
+    {
+        $aplied_credit = $this->creditos_aplicados->sum('total');
+        $applicable_credit = count($this->proveedor->anticipos_aprobados) ? $this->proveedor->anticipos_aprobados->sum('monto') : 0;
+        if (count($this->contrato_relacionado)){
+            $applicable_credit += count($this->contrato_relacionado->anticipos_aprobados) ? $this->contrato_relacionado->anticipos_aprobados->sum('monto') : 0;
+            return $applicable_credit - $aplied_credit;
+        }else if(count($this->orden_compra)){
+            $applicable_credit += count($this->orden_compra->anticipos_aprobados) ? $this->orden_compra->anticipos_aprobados->sum('monto') : 0;
+            return $applicable_credit - $aplied_credit;
+        }
+        return $applicable_credit - $aplied_credit;
     }
 
      function present(){

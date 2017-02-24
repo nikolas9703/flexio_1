@@ -14,7 +14,26 @@ bluapp.controller("AgenteFormularioController", function ($scope, $http) {
                 if (respuesta.existe) {
                     $("#mensaje_info").empty().html('<div id="success-alert" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><strong>¡Error!</strong> Identificacion ya existe.</div>');
                 } else {
-                    form.submit();
+                    var x="";
+					var totalesagentesramos=[];
+					totalesagentesramos=$('select[name="ramos[]"]').val();
+					
+					console.log(totalesagentesramos);
+					if(totalesagentesramos!="" && totalesagentesramos!=null)
+					{
+						$('select[name="ramos[]"]').each(function(){                        
+							console.log($(this).val());
+							$.each( $(this).val(), function(key, value){
+								console.log(key);
+								console.log(value);
+								x=x+value+",";               
+							});
+							x=x+"-";         
+						});
+						$("#camporamo").val(""+x+"");
+					}
+					console.log($("#camporamo").val());
+						form.submit();
                 }
 
             });
@@ -31,19 +50,55 @@ bluapp.controller("AgenteFormularioController", function ($scope, $http) {
     $scope.inicializar();
 });
 
+function desabilitaramos2 (){
+    var num = [];
+    $('select[name="ramos[]"]').each(function(){
+        if ($(this).val() != "" && $(this).val() != null) {
+            $.each( $(this).val(), function(key, value){
+                console.log(value);
+                console.log("-");
+                num.push(value);                
+            });
+        }     
+    });
 
-$("#tabla_ramos_parti tbody tr").each(function (index)
-{
+    $('select[name="ramos[]"]').each(function(){
+        var valor = $(this).val();
+        $("option", this).each(function(){
+            $(this).removeAttr("disabled");
+            if ($.inArray($(this).attr('value'), num)>=0) {   
+                //console.log($(this).attr('value')); 
+                if ($.inArray($(this).attr('value'), valor)<0) {
+                    $(this).attr("disabled", "disabled");
+                    var y = $(this).attr('data-index');                    
+                }            
+            }
+        });        
+    });
+} 
 
+
+var clones = $("#tabla_ramos_parti tr.bodyramo:last").clone(true);
+console.log(countramos);
+if (countramos>0) {
+    $("#tabla_ramos_parti tr.bodyramo:last").remove();  
+}
+
+$("#tabla_ramos_parti tbody tr").each(function (index){
     var sumcob2 = index;
 });
 var margin = 0;
 var sumcob = 0;
+
+
+
 function agregarfila(evt, tabla) {
-    console.log(evt);
-    console.log(tabla);
-    var $tr = $('#' + tabla).find("tbody tr:last").clone();
-    //var $tr = $('#'+tabla).find("tbody tr:last").clone();
+
+    var ParentRow = $("table tr.bodyramo").last();
+    clones.clone(true).insertAfter(ParentRow);
+
+    //var $tr = $('#' + tabla).find("tbody tr:first").clone();
+    var $tr = $('#'+tabla).find("tbody tr:last");
 
 
     $tr.attr('style', '');
@@ -60,7 +115,7 @@ function agregarfila(evt, tabla) {
         }
         return id;
     });
-    $('#' + tabla).find("tbody tr:last").after($tr);
+    //$('#' + tabla).find("tbody tr:last").after($tr);
     $tr.find("#porcentaje_participacion").inputmask('float', {min: 0.01, max: 100.00});
     var sum=0;
     $("#tabla_ramos_parti tbody tr").each(function (index)
@@ -90,6 +145,13 @@ function agregarfila(evt, tabla) {
             $(this).find("#eliminarbtn").attr('style', 'margin-top: -16px; display:block;');
         });
     }
+
+    desabilitaramos2();
+    $('.chosen-select-width').trigger("chosen:updated");    
+    $('tr.bodyramo:last select.ramotabla').chosen();
+    $(".chosen-container").css("margin-top", "0px");
+    $('tr.bodyramo:first .chosen-container').css("margin-top", "0px");
+
 }
 
 function eliminarfila(evt) {
@@ -113,6 +175,9 @@ function eliminarfila(evt) {
     }
 
     $(evt).parent().parent().parent().remove();
+
+    desabilitaramos2();
+    $('.chosen-select-width').trigger("chosen:updated");  
 }
 
 $(".PAS").hide();
@@ -195,5 +260,12 @@ $(document).on("ready", function () {
          if (cantidad === "0") {
             $(this).find("#eliminarbtn").attr('style', 'margin-top: 0px; display:none;');
         }
+
+        $("select.ramotabla").chosen({width: "100%"});
+        if (countramos==0) { 
+            $(".chosen-container").css("margin-top", "-20px");
+        }
+        desabilitaramos2();
+        $('.chosen-select-width').trigger("chosen:updated");
 
 });

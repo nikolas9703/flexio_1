@@ -80,7 +80,7 @@ var formularioNotificaciones = new Vue({
 
                 data: {
                     erptkn: tkn,
-                    id: modulo_id,
+                    modulo_id: this.detalle.modulo_id,
                     empresa_id:self.empresa_id
                 }
             }).then(function (response) {
@@ -131,12 +131,15 @@ var formularioNotificaciones = new Vue({
 
         },
         recargar:function () {
+            var context = this;
+            //var empresa_id = window.empresa_id;
             //Reload Grid
             $('#notificacionesGrid').setGridParam({
                 url: phost() + 'notificaciones/ajax-listar',
                 datatype: "json",
                 postData: {
-                    erptkn: tkn
+                    erptkn: tkn,
+                    empresa_id:context.empresa_id
                 }
             }).trigger('reloadGrid');
         }

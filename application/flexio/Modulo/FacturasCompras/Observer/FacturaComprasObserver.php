@@ -18,32 +18,35 @@ class FacturaComprasObserver
 {
     public function created($facturaCompra = null)
     {
-        $cambio = $facturaCompra->getDirty();
-            if(isset($cambio['estado_id'])){
-                //$facturaCompra->sendNotify($cambio['estado_id']);
-            }
+
+        $cambio = $facturaCompra->getDirty(); 
+            /*if(isset($cambio['estado_id'])){               
+                $facturaCompra->sendNotify($cambio['estado_id']);
+            }*/
+
         $creado_por = FlexioSession::now();
         $created = [
             'antes' => $this->antes($facturaCompra),
             'despues' => $this->despues($facturaCompra),
             'usuario_id' => $creado_por->usuarioId(),
             'descripcion' => "Estado: Por aprobar",
-            'titulo' => 'Se creó la factura de compra'
+            'titulo' => 'Se creÃ³ la factura de compra'
         ];
         $facturaCompra->historial()->save(new Historial($created));
     }
 
     public function updating($facturaCompra = null){
 
-        $creado_por = FlexioSession::now();
-        $cambio = $facturaCompra->getDirty();
-            if(isset($cambio['estado_id'])){
-                //$facturaCompra->sendNotify($cambio['estado_id']);
-            }
+        $creado_por = FlexioSession::now();        
+        $cambio = $facturaCompra->getDirty();       
+            /*if(isset($cambio['estado_id'])){                              
+                $facturaCompra->sendNotify($cambio['estado_id']);
+            }*/
+
         $updated = [
             'antes' => $this->antes($facturaCompra),
             'despues' => $this->despues($facturaCompra),
-            'titulo' => 'Se actualizó la factura de compra',
+            'titulo' => 'Se actualizÃ³ la factura de compra',
             'usuario_id' => $creado_por->usuarioId(),
             'descripcion' => $this->descripcion($facturaCompra),
             'tipo'=> 'actualizado'

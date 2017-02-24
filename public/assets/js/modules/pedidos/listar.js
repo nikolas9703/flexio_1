@@ -1,123 +1,248 @@
- $(function() {
-     
-    //ELEMENTOS DE TIPO CHOSEN
-    $("#estado, #centro").chosen({
-        width: '100%',
-        allow_single_deselect: true 
-    });
-    
-    
-	
-	 
-    //Expotar a CSV
-    $('#moduloOpciones ul').on("click", "#exportarBtn", function(e){
-        e.preventDefault();
-        e.returnValue=false;
-        e.stopPropagation();
+$(function() {
 
-        if($('#tabla').is(':visible') == true){
-            //Desde la Tabla
-            exportarjQgrid();
+  var gridObj = $("#pedidosGrid");
 
-        }else{
-            //Desde el Grid
-            exportarGrid();
+  //ELEMENTOS DE TIPO CHOSEN
+  $("#estado, #centro").chosen({
+      width: '100%',
+      allow_single_deselect: true
+  });
+
+  var normalize = (function() {
+    var from = "ÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛãàáäâèéëêìíïîòóöôùúüûÑñÇç",
+        to   = "AAAAAEEEEIIIIOOOOUUUUaaaaaeeeeiiiioooouuuunncc",
+        mapping = {};
+
+    for(var i = 0, j = from.length; i < j; i++ )
+        mapping[ from.charAt( i ) ] = to.charAt( i );
+
+    return function( str ) {
+        var ret = [];
+        for( var i = 0, j = str.length; i < j; i++ ) {
+            var c = str.charAt( i );
+            if( mapping.hasOwnProperty( str.charAt( i ) ) )
+                ret.push( mapping[ c ] );
+            else
+                ret.push( c );
         }
-     });
-    
-    function exportarjQgrid() {
-        //Exportar Seleccionados del jQgrid
-        var registros_jqgrid = [];
-
-        registros_jqgrid = $("#pedidosGrid").jqGrid('getGridParam','selarrrow');
-
-        var obj = new Object();
-        obj.count = registros_jqgrid.length;
-
-        if(obj.count) {
-
-            obj.items = new Array();
-
-            for(elem in registros_jqgrid) {
-                //console.log(proyectos[elem]);
-                var registro_jqgrid = $("#pedidosGrid").getRowData(registros_jqgrid[elem]);
-
-                //Remove objects from associative array
-                delete registro_jqgrid['link'];
-                delete registro_jqgrid['options'];
-
-                //Push to array
-                obj.items.push(registro_jqgrid);
-            }
-            
-            
-            var json = JSON.stringify(obj);
-            var csvUrl = JSONToCSVConvertor(json);
-            var filename = 'pedidos_'+ Date.now() +'.csv';
-
-            //Ejecutar funcion para descargar archivo
-            downloadURL(csvUrl, filename);
-
-            $('body').trigger('click');
-        } 
+        return ret.join( '' );
     }
-    
-    function exportarGrid(){
-        var registros_grid = [];
 
-        $("#iconGrid").find('input[type="checkbox"]:checked').filter(function(){
-            registros_grid.push(this.value);
-        });
-        
-        //Verificar si ha seleccionado algun proyecto
-        if(registros_grid.length==0){
+  })();
+
+  Array.prototype.allValuesSame = function() {
+
+    for(var i = 1; i < this.length; i++){
+        if(this[i] !== this[0])
             return false;
+    }
+    return true;
+  }
+
+  var verificarConversion = function(){
+
+    var pedidos = gridObj.jqGrid('getGridParam','selarrrow');
+
+    if(pedidos.length<=0) {
+      return false;
+    }
+    //Validar seleccion
+    var valido = true;
+    var check_centros = [];
+    var check_bodegas = [];
+    var i=0;
+
+    for(pedido_id in pedidos) {
+        var pedido = gridObj.getRowData(pedidos[pedido_id]);
+        var estado = normalize($(pedido['Estado']).text().toLowerCase());
+        var centro_id = pedido['centro_id'];
+        var bodega_id = pedido['bodega_id'];
+
+        //si el objeto es vacio continuar la iteracion
+        if($.isEmptyObject(pedido)){
+          continue;
         }
-        //Convertir array a srting separado por guion
-        var registros_grid_string = registros_grid.join('-');
-        var obj;
-        
-        $.ajax({
-            url: phost() + "pedidos/ajax-exportar",
-            type:"POST",
-            data:{
-                erptkn:tkn,
-                id_registros: registros_grid_string
-            },
-            dataType:"json",
-            success: function(data){
-                if(!data)
-                {
-                    return;
-                }
 
-                var json = JSON.stringify(data);
-                var csvUrl = JSONToCSVConvertor(json);
-                var wfilename = 'pedidos_'+ Date.now() +'.csv';
+        //Verificar Estados
+        if(!estado.match(/cotizacion|parcial/gi)){
+          toastr.warning('Por favor! seleccione s&oacute;lo pedidos en estado <strong>En cotizaci&oacute;n</strong> o <strong>Parcial</strong>.');
+          valido = false;
+          break;
+        }
 
-                //Ejecutar funcion para descargar archivo
-                downloadURL(csvUrl, filename);
-
-                $('body').trigger('click');
-            }
-            
-        });
-        
+        //Armar array de centros y bodegas
+        check_centros[i] = centro_id;
+        check_bodegas[i] = bodega_id;
+        i++;
     }
 
-     $(function(){
-         "use strict";
-         //Init Bootstrap Calendar Plugin
-         $('#fecha1, #fecha2').daterangepicker({
-             format: 'YYYY-MM-DD',
-             showDropdowns: true,
-             defaultDate: '',
-             singleDatePicker: true
-         }).val('');
+    //Verificar si estado valido
+    if(valido==false) {
+      $('body').trigger('click');
+      return false;
+    }
 
-         $(".chosen-select").chosen({width: "100%"});
+    //Verificar si los pedidos son del mismo Centro
+    if(check_centros.allValuesSame()==false) {
+      toastr.warning('Por favor! seleccione s&oacute;lo pedidos con el mismo centro contable.');
+      return false;
+    }
 
-     });
+    //Verificar si los pedidos son de la misma bodega
+    if(check_bodegas.allValuesSame()==false) {
+      toastr.warning('Por favor! seleccione s&oacute;lo pedidos con la misma bodega.');
+      return false;
+    }
+    console.log('check bodegas', check_bodegas);
 
- });
- 
+    //Convertir pedidos seleccionados
+    //a orden de compras.
+    convertirOrdenCompra();
+  };
+
+  var convertirOrdenCompra = function(){
+
+    var pedidos = gridObj.jqGrid('getGridParam','selarrrow');
+    if(pedidos.length<=0) {
+      return false;
+    }
+
+    $.ajax({
+        url: phost() + "pedidos/ajax-convetir-a-orden",
+        type:"POST",
+        data:{
+            erptkn:tkn,
+            pedido_id: pedidos
+        },
+        dataType:"json",
+        success: function(data){
+          if(!data){
+            return;
+          }
+
+          $('body').trigger('click');
+        }
+    });
+  };
+
+  //Convertir orden de compra
+  $('#moduloOpciones ul').on("click", "#convertirOrdenBtn", function(e){
+      e.preventDefault();
+      e.returnValue=false;
+      e.stopPropagation();
+      console.log('aqui.....');
+      //Verificar si selecciono solo
+      //pedidos en estado cotizacion.
+      verificarConversion();
+   });
+
+  //Expotar a CSV
+  $('#moduloOpciones ul').on("click", "#exportarBtn", function(e){
+      e.preventDefault();
+      e.returnValue=false;
+      e.stopPropagation();
+
+      if($('#tabla').is(':visible') == true){
+          //Desde la Tabla
+          exportarjQgrid();
+
+      }else{
+          //Desde el Grid
+          exportarGrid();
+      }
+   });
+
+  function exportarjQgrid() {
+      //Exportar Seleccionados del jQgrid
+      var registros_jqgrid = [];
+
+      registros_jqgrid = gridObj.jqGrid('getGridParam','selarrrow');
+
+      var obj = new Object();
+      obj.count = registros_jqgrid.length;
+
+      if(obj.count) {
+
+          obj.items = new Array();
+
+          for(elem in registros_jqgrid) {
+              //console.log(proyectos[elem]);
+              var registro_jqgrid = gridObj.getRowData(registros_jqgrid[elem]);
+
+              //Remove objects from associative array
+              delete registro_jqgrid['link'];
+              delete registro_jqgrid['options'];
+
+              //Push to array
+              obj.items.push(registro_jqgrid);
+          }
+
+
+          var json = JSON.stringify(obj);
+          var csvUrl = JSONToCSVConvertor(json);
+          var filename = 'pedidos_'+ Date.now() +'.csv';
+
+          //Ejecutar funcion para descargar archivo
+          downloadURL(csvUrl, filename);
+
+          $('body').trigger('click');
+      }
+  }
+
+  function exportarGrid(){
+      var registros_grid = [];
+
+      $("#iconGrid").find('input[type="checkbox"]:checked').filter(function(){
+          registros_grid.push(this.value);
+      });
+
+      //Verificar si ha seleccionado algun proyecto
+      if(registros_grid.length==0){
+          return false;
+      }
+      //Convertir array a srting separado por guion
+      var registros_grid_string = registros_grid.join('-');
+      var obj;
+
+      $.ajax({
+          url: phost() + "pedidos/ajax-exportar",
+          type:"POST",
+          data:{
+              erptkn:tkn,
+              id_registros: registros_grid_string
+          },
+          dataType:"json",
+          success: function(data){
+              if(!data)
+              {
+                  return;
+              }
+
+              var json = JSON.stringify(data);
+              var csvUrl = JSONToCSVConvertor(json);
+              var wfilename = 'pedidos_'+ Date.now() +'.csv';
+
+              //Ejecutar funcion para descargar archivo
+              downloadURL(csvUrl, filename);
+
+              $('body').trigger('click');
+          }
+
+      });
+
+  }
+
+  $(function(){
+     "use strict";
+     //Init Bootstrap Calendar Plugin
+     $('#fecha1, #fecha2').daterangepicker({
+         format: 'YYYY-MM-DD',
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val('');
+
+     $(".chosen-select").chosen({width: "100%"});
+  });
+
+});

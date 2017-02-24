@@ -7,6 +7,7 @@ var tablaFacturas = (function () {
     if (typeof cliente_id === 'undefined') {
         cliente_id = "";
     }
+	
     var tablaUrl = phost() + 'facturas/ajax-listar';
     var gridId = "tablaFacturasGrid";
     var gridObj = $("#tablaFacturasGrid");
@@ -29,25 +30,26 @@ var tablaFacturas = (function () {
             datatype: "json",
             colNames: ['', 'No.Factura', 'Cliente', 'Fecha de emisión', 'Fecha de vencimiento', 'Estado', 'Monto', 'Saldo por cobrar', 'Vendedor', '', ''],
             colModel: [
-                {name: 'uuid', index: 'uuid', width: 30, hidedlg: true, hidden: true},
-                {name: 'codigo', index: 'codigo', width: 30, sortable: true},
-                {name: 'cliente', index: 'cliente', width: 70, sortable: true},
-                {name: 'fecha_desde', index: 'fecha_desde', width: 50, sortable: false, },
-                {name: 'fecha_hasta', index: 'fecha_hasta', width: 70, sortable: false, },
-                {name: 'estado', index: 'estado', width: 30, sortable: false},
-                {name: 'monto', index: 'monto', width: 30, sortable: false},
-                {name: 'saldo', index: 'saldo', width: 30, sortable: false},
-                {name: 'vendedor', index: 'vendedor', width: 30, sortable: false},
-                {name: 'options', index: 'options', width: 40},
-                {name: 'link', index: 'link', width: 50, align: "center", sortable: false, resizable: false, hidden: true, hidedlg: true},
+                {name: 'uuid', index: 'uuid' , hidedlg: true, hidden: true},
+                {name: 'codigo', index: 'codigo', sortable: true},
+                {name: 'cliente', index: 'cliente', sortable: true},
+                {name: 'fecha_desde', index: 'fecha_desde', sortable: false, },
+                {name: 'fecha_hasta', index: 'fecha_hasta',  sortable: false, },
+                {name: 'estado', index: 'estado',  sortable: false},
+                {name: 'monto', index: 'monto',  sortable: false},
+                {name: 'saldo', index: 'saldo',  sortable: false},
+                {name: 'vendedor',align: "center", index: 'vendedor',  sortable: false},
+                {name: 'options', index: 'options'},
+                {name: 'link', index: 'link',  align: "center", sortable: false, resizable: false, hidden: true, hidedlg: true},
             ],
             postData: {
                 erptkn: tkn,
                 cliente_id: cliente_id,
-                contrato_alquiler_id:(typeof contrato_alquiler_id === 'undefined') ? '' : contrato_alquiler_id,
+                contrato_alquiler_id:(typeof contrato_alquiler_id === 'undefined' || _.toString(window.contrato_alquiler_id) == "[object HTMLInputElement]") ? '' : contrato_alquiler_id,
                 contrato_id:(typeof sp_contrato_id === 'undefined') ? '' : sp_contrato_id,
                 orden_alquiler_id:(typeof sp_orden_alquiler_id === 'undefined') ? '' : sp_orden_alquiler_id,
-                ms_selected: typeof(Storage) !== "undefined" ? localStorage.getItem("ms-selected") : ""
+                ms_selected: typeof(Storage) !== "undefined" ? localStorage.getItem("ms-selected") : "",
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,
@@ -143,6 +145,15 @@ var tablaFacturas = (function () {
             opcionesModal.find('.modal-footer').empty();
             opcionesModal.modal('show');
         });
+		
+		opcionesModal.on("click",".imprimirFactura",function(e){
+			e.preventDefault();
+            e.returnValue = false;
+            e.stopPropagation();
+			var id = $(this).attr("data-id");
+			location.href = phost() + "facturas/imprimirFactura/" + id;
+			return false;
+		});
 
     };
     $(botones.limpiar).click(function (e) {

@@ -346,4 +346,291 @@ class FacturaSeguroRepository implements FacturaSeguroInterface {
         $factura->comentario_timeline()->save($comentario);
         return $factura;
     }
+	
+	public static function getFacturas($clause = array()) {
+		$facturas=FacturaSeguro::select('fac_facturas.*','pol_polizas.ramo_id','seg_remesas_entrantes_facturas.chequeada')
+		->where('fac_facturas.empresa_id',$clause['fac_facturas.empresa_id'])
+		->whereIn('fac_facturas.estado',array('por_cobrar','cobrado_completo'))
+		->where('formulario','facturas_seguro')
+		->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+		->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+		->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id")
+		->whereNull('seg_remesas_entrantes_facturas.factura_id');
+		
+		$fecha1="";
+		$fecha2="";
+		if(isset($clause["fecha1"]) && $clause["fecha1"]!=NULL && !empty($clause["fecha1"])){
+			$fecha1=$clause["fecha1"];
+			$facturas->whereRaw("DATE(fecha_desde) >= '".$clause["fecha1"]."'");
+		}
+		
+		if(isset($clause["fecha2"]) && $clause["fecha2"]!=NULL && !empty($clause["fecha2"])){
+			$fecha2=$clause["fecha2"];
+			$facturas->whereRaw("DATE(fecha_desde) <= '".$clause["fecha2"]."'");
+		}
+		
+		unset($clause["fecha1"]);
+		unset($clause["fecha2"]);
+		
+		if($clause!=NULL && !empty($clause) && is_array($clause))
+        {
+                foreach($clause AS $field => $value)
+                { 
+					if($field=='ramo_id')
+					{
+						if($field=='ramo_id')
+						{
+							$facturas->whereIn($field, $clause["ramo_id"]);
+						}
+					}
+					else{
+						//verificar si valor es array
+						if(is_array($value)){
+								$facturas->where($field, $value[0], $value[1]);
+						}else{
+								$facturas->where($field, '=', $value);
+						}
+					}
+                }
+        }
+		$facturas->orWhere(function($query) use($clause,$fecha1,$fecha2)
+		{
+			$query->where('fac_facturas.estado', 'cobrado_parcial')
+			->where('fac_facturas.empresa_id',$clause['fac_facturas.empresa_id'])
+			->where('formulario','facturas_seguro')
+			->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+			->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+			->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id");
+			
+			if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+				$query->whereRaw("DATE(fecha_desde) >= '".$fecha1."'");
+			}
+			
+			if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+				$query->whereRaw("DATE(fecha_desde) <= '".$fecha2."'");
+			}
+			
+			if($clause!=NULL && !empty($clause) && is_array($clause))
+			{
+					foreach($clause AS $field => $value)
+					{ 
+						if($field=='ramo_id')
+						{
+							if($field=='ramo_id')
+							{
+								$query->whereIn($field, $clause["ramo_id"]);
+							}
+						}
+						else{
+							//verificar si valor es array
+							if(is_array($value)){
+									$query->where($field, $value[0], $value[1]);
+							}else{
+									$query->where($field, '=', $value);
+							}
+						}
+					}
+			}
+		});
+		
+		$facturas->orderBy('seg_ramos.nombre')
+		->groupBy('fac_facturas.id');
+		;
+		return $facturas->get();
+    }
+	
+	public static function getFacturasRemesas($clause = array(),$clause1 = array()) {
+		$facturas=FacturaSeguro::select('fac_facturas.*','pol_polizas.ramo_id','seg_remesas_entrantes_facturas.mont_pag_factura',
+		'seg_remesas_entrantes_facturas.chequeada')
+		->where('fac_facturas.empresa_id',$clause['fac_facturas.empresa_id'])
+		->whereIn('fac_facturas.estado',array('por_cobrar','cobrado_completo'))
+		->where('formulario','facturas_seguro')
+		->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+		->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+		->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id")
+		->whereNull('seg_remesas_entrantes_facturas.factura_id');
+		
+		$fecha1="";
+		$fecha2="";
+		if(isset($clause["fecha1"]) && $clause["fecha1"]!=NULL && !empty($clause["fecha1"])){
+			$fecha1=$clause["fecha1"];
+			$facturas->whereRaw("DATE(fecha_desde) >= '".$clause["fecha1"]."'");
+		}
+		
+		if(isset($clause["fecha2"]) && $clause["fecha2"]!=NULL && !empty($clause["fecha2"])){
+			$fecha2=$clause["fecha2"];
+			$facturas->whereRaw("DATE(fecha_desde) <= '".$clause["fecha2"]."'");
+		}
+		
+		unset($clause["fecha1"]);
+		unset($clause["fecha2"]);
+		
+		if($clause!=NULL && !empty($clause) && is_array($clause))
+        {
+                foreach($clause AS $field => $value)
+                {
+					if($field=='ramo_id')
+						{
+							if($field=='ramo_id')
+							{
+								$facturas->whereIn($field, $clause["ramo_id"]);
+							}
+						}
+						else{
+							//verificar si valor es array
+							if(is_array($value)){
+									$facturas->where($field, $value[0], $value[1]);
+							}else{
+									$facturas->where($field, '=', $value);
+							}
+						}
+                }
+        }
+		$facturas->orWhere(function($query) use ($clause,$fecha1,$fecha2)
+		{
+			$query->where('fac_facturas.estado', 'cobrado_parcial')
+			->where('fac_facturas.empresa_id',$clause['fac_facturas.empresa_id'])
+			->where('formulario','facturas_seguro')
+			->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+			->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+			->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id");
+			
+			if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+				$query->whereRaw("DATE(fecha_desde) >= '".$fecha1."'");
+			}
+			
+			if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+				$query->whereRaw("DATE(fecha_desde) <= '".$fecha2."'");
+			}
+			
+			if($clause!=NULL && !empty($clause) && is_array($clause))
+			{
+				foreach($clause AS $field => $value)
+				{ 
+					if($field=='ramo_id')
+					{
+						if($field=='ramo_id')
+						{
+							$query->whereIn($field, $clause["ramo_id"]);
+						}
+					}
+					else{
+						//verificar si valor es array
+						if(is_array($value)){
+								$query->where($field, $value[0], $value[1]);
+						}else{
+								$query->where($field, '=', $value);
+						}
+					}
+				}
+			}
+		});
+		$facturas->orWhere(function($query) use($clause1,$clause,$fecha1,$fecha2)
+		{
+			$query->where('seg_remesas_entrantes_facturas.remesa_entrante_id', $clause1['remesa_entrante_id'])
+			->where('formulario','facturas_seguro')
+			->where('fac_facturas.empresa_id',$clause['fac_facturas.empresa_id'])
+			->where('formulario','facturas_seguro')
+			->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+			->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+			->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id");
+			
+			if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+				$query->whereRaw("DATE(fecha_desde) >= '".$fecha1."'");
+			}
+			
+			if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+				$query->whereRaw("DATE(fecha_desde) <= '".$fecha2."'");
+			}
+			
+			if($clause!=NULL && !empty($clause) && is_array($clause))
+			{
+				foreach($clause AS $field => $value)
+				{ 
+					if($field=='ramo_id')
+					{
+						if($field=='ramo_id')
+						{
+							$query->whereIn($field, $clause["ramo_id"]);
+						}
+					}
+					else{
+						//verificar si valor es array
+						if(is_array($value)){
+								$query->where($field, $value[0], $value[1]);
+						}else{
+								$query->where($field, '=', $value);
+						}
+					}
+				}
+			}
+		});
+		
+		$facturas->orderBy('seg_ramos.nombre')
+		->groupBy('fac_facturas.id');
+		;
+		return $facturas->get();
+    }
+	
+	public static function getFacturasPrtocesadas($clause = array()) {
+		$facturas=FacturaSeguro::select('fac_facturas.*','pol_polizas.ramo_id')
+		->where('fac_facturas.empresa_id',$clause['fac_facturas.empresa_id'])
+		->where('formulario','facturas_seguro')
+		->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+		->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+		->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id");
+		
+		
+		if($clause!=NULL && !empty($clause) && is_array($clause))
+        {
+                foreach($clause AS $field => $value)
+                { 
+					if($field=='fac_facturas.id' || $field=='fac_facturas.id1')
+					{
+						if($field=='fac_facturas.id')
+						{
+							$facturas->whereIn($field, $value);
+						}
+						if($field=='fac_facturas.id1')
+						{
+							$facturas->whereIn('fac_facturas.id', $value);
+						}
+					}
+					else{
+						//verificar si valor es array
+						if(is_array($value)){
+								$facturas->where($field, $value[0], $value[1]);
+						}else{
+								$facturas->where($field, '=', $value);
+						}
+					}
+                }
+        }
+		
+		$facturas->orderBy('seg_ramos.nombre')
+		->groupBy('fac_facturas.id');
+		;
+		return $facturas->get();
+    }
+	
+	public static function getFacturasPrtocesadasRemesas($clause = array()) {
+		$facturas=FacturaSeguro::select('fac_facturas.*','pol_polizas.ramo_id','seg_remesas_entrantes_facturas.mont_pag_factura',
+		'seg_remesas_entrantes_facturas.comision_pagada')
+		->where('formulario','facturas_seguro')
+		->leftJoin("seg_remesas_entrantes_facturas", "seg_remesas_entrantes_facturas.factura_id", "=", "fac_facturas.id")
+		->leftJoin("pol_polizas", "fac_facturas.id_poliza", "=", "pol_polizas.id")
+		->leftJoin("seg_ramos", "pol_polizas.ramo_id", "=", "seg_ramos.id")
+		->where('seg_remesas_entrantes_facturas.remesa_entrante_id',$clause['remesa_entrante_id']);
+		
+		
+		$facturas->orderBy('seg_ramos.nombre')
+		->groupBy('fac_facturas.id');
+		;
+		return $facturas->get();
+    }
+
+    public function GetFacturasRemesasSalientes($id_factura,$id_aseguradora){
+        $factura = FacturaSeguro::where("fac_facturas.id",$id_factura)->where('seg_aseguradoras.id',$id_aseguradora)->rightJoin("pol_polizas","pol_polizas.id","=","fac_facturas.id_poliza")->join("pol_poliza_prima","pol_poliza_prima.id_poliza","=","fac_facturas.id_poliza")->join("seg_aseguradoras","seg_aseguradoras.id","=","pol_polizas.aseguradora_id")->first();
+        return  $factura;
+    }
 }

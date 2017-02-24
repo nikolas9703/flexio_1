@@ -388,7 +388,7 @@ var tablaRecibos = (function(){
            // console.log("llegaste");
 
 		var cliente 	        = $('#cliente').val();
-		var nombre              = $('#nombre').val();
+		var nombre              = $('#cliente_proveedor').val();
 		var narracion    	= $('#narracion').val();
 		var monto_desde         = $('#monto_desde').val();
 		var monto_hasta         = $('#monto_hasta').val();
@@ -422,7 +422,7 @@ var tablaRecibos = (function(){
            // console.log("llegastelimpiando");
 		$('input[type="text"]').prop("value", "");
 		$('#cliente').val('').trigger('chosen:updated');
-                $('#nombre').val('').trigger('chosen:updated');
+                $('#cliente_proveedor').val('').trigger('change');
 
 	};
 
@@ -448,7 +448,7 @@ var tablaRecibos = (function(){
 	};
 })();
 
-$("#cliente").change(function() {
+$("#cliente2").change(function() {
 var cliente_proveedor = $('#cliente').val();
 
   $.ajax({
@@ -479,6 +479,39 @@ var cliente_proveedor = $('#cliente').val();
     
 });
 
+$('#cliente_proveedor').removeClass("chosen-filtro").addClass("form-control").select2({
+        ajax: {
+            url: phost() + "movimiento_monetario/ajax-cliente-proveedor",
+            method: 'POST',
+            dataType: 'json',
+            delay: 200,
+            cache: true,
+            data: function (params) {
+                return {
+                    cliente_proveedor: $('#cliente').val(),
+                    q: params.term, // search term
+                    page: params.page,
+                    limit: 10,
+                    erptkn: window.tkn
+                };
+            },
+            processResults: function (data, params) {
 
+
+                let resultsReturn = data.map(resp=> [{
+                    'id': resp['id'],
+                    'text': resp['nombre']
+                }]).reduce((a, b) => a.concat(b), []);
+
+                return {results: resultsReturn};
+            },
+            escapeMarkup: function (markup) {
+                return markup;
+            },
+        }
+    }).on("change", function () {
+        $('.id_cliente_proveedor').val($(this).val());
+        $('.guardar1').removeAttr('disabled');
+    });
 tablaRecibos.init();
 

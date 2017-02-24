@@ -7,6 +7,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\OrdenesAlquiler\Models\OrdenVentaAlquiler;
 
 class ContratosAlquiler extends Model
 {
@@ -16,10 +17,10 @@ class ContratosAlquiler extends Model
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['codigo','cliente_id','fecha_inicio','fecha_fin','saldo_facturar','total_facturado','estado_id','empresa_id','created_by','created_at','updated_at','observaciones','referencia','centro_facturacion_id','centro_contable_id','corte_facturacion_id','facturar_contra_entrega_id','dia_corte', 'calculo_costo_retorno_id','lista_precio_alquiler_id'];
+    protected $keepRevisionOf = ['codigo','cliente_id','fecha_inicio','fecha_fin','saldo_facturar','total_facturado','estado_id','empresa_id','created_by','created_at','updated_at','observaciones','referencia','centro_facturacion_id','centro_contable_id','corte_facturacion_id','facturar_contra_entrega_id','dia_corte', 'calculo_costo_retorno_id','lista_precio_alquiler_id', 'tipoid'];
 
     protected $table    = 'conalq_contratos_alquiler';
-    protected $fillable = ['codigo','cliente_id','fecha_inicio','fecha_fin','saldo_facturar','total_facturado','estado_id','empresa_id','created_by','created_at','updated_at','observaciones','referencia','centro_facturacion_id','facturar_contra_entrega_id','centro_contable_id','tipo', 'calculo_costo_retorno_id','lista_precio_alquiler_id'];
+    protected $fillable = ['codigo','cliente_id','fecha_inicio','fecha_fin','saldo_facturar','total_facturado','estado_id','empresa_id','created_by','created_at','updated_at','observaciones','referencia','centro_facturacion_id','facturar_contra_entrega_id','centro_contable_id','tipo', 'calculo_costo_retorno_id','lista_precio_alquiler_id', 'tipoid'];
     protected $guarded  = ['id','uuid_contrato_alquiler'];
     protected $appends  = ['fecha_format','fecha_inicio_format','fecha_fin_format','icono','enlace','enlace_bitacora'];
 
@@ -43,7 +44,8 @@ class ContratosAlquiler extends Model
 
     public function ordenes_alquiler()
     {
-        return $this->hasMany('Flexio\Modulo\OrdenesAlquiler\Models\OrdenVentaAlquiler','contrato_id');
+        //dd($this->id);
+        return $this->hasMany(OrdenVentaAlquiler::class,'contrato_id', 'id');
     }
 
     public function ordenes_alquiler_por_facturar()
@@ -173,6 +175,10 @@ class ContratosAlquiler extends Model
     {
         return $this->morphMany('Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler','entregable');
     }
+    
+    public function entregas_activas() {
+        return $this->morphMany('Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler','entregable')->where('estado_id', '=', '4');
+    }
 
     public function cotizable()
     {
@@ -194,6 +200,11 @@ class ContratosAlquiler extends Model
     public function centro_facturacion()
     {
         return $this->belongsTo('Flexio\Modulo\CentroFacturable\Models\CentroFacturable', 'centro_facturacion_id');
+    }
+
+    public function centro_contable()
+    {
+        return $this->belongsTo('Flexio\Modulo\CentrosContables\Models\CentrosContables', 'centro_contable_id');
     }
 
     public function entregas_validas()
@@ -324,4 +335,8 @@ class ContratosAlquiler extends Model
             });
 
        }
+	   
+	public function usuario() {
+		return $this->belongsTo('Flexio\Modulo\Usuarios\Models\Usuarios', 'created_by');
+    }
  }

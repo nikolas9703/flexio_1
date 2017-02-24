@@ -36,18 +36,19 @@ class FacturaVentaPresenter extends Presenter{
   function total() {
    if(is_numeric($this->facturaVenta->total)) {
      return '<label class="label-outline outline-success">$' . FormatoMoneda::numero($this->facturaVenta->total) . '</label>';
-   }   
+   }
 
    return '';
   }
 
   function saldo_pendiente() {
-      if ($this->facturaVenta->estado == 'anulada') { 
+      if ($this->facturaVenta->estado == 'anulada') {
           $saldo = 0;
       } else {
         $total = $this->facturaVenta->total;
         $cobrado = $this->facturaVenta->factura_cobros_aplicados()->sum('cob_cobro_facturas.monto_pagado');
-        $saldo = $total - $cobrado;
+        $notas_credito = $this->facturaVenta->nota_credito_aprobada()->sum('venta_nota_creditos.total');
+        $saldo = $total - $cobrado - $notas_credito;
       }
     return '<label class="label-outline outline-danger">$' . FormatoMoneda::numero($saldo) . '</label>';
   }

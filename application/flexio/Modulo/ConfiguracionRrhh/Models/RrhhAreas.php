@@ -10,5 +10,5 @@ class RrhhAreas extends Model
   protected $table = 'dep_departamentos';
 	protected $fillable = ['empresa_id', 'nombre', 'creado_por'];
 	protected $guarded = ['id'];
-
+ 
 }

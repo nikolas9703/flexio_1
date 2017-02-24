@@ -2,6 +2,7 @@
 namespace Flexio\Modulo\Inventarios\Models;
 use Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra as OrdenesCompra;
+use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler;
 
 //utils
 use Flexio\Library\Util\FlexioSession;
@@ -114,6 +115,19 @@ class Items extends Model
         return strlen($value) > 0 ? $value : "[]";
     }
 
+    public function getCuentaVentasAttribute(){
+
+        $cuentas = json_decode($this->cuentas);
+        $cuenta_id =[];
+        if(empty($cuentas)) return $cuenta_id;
+        foreach($cuentas as $cuenta) {
+            if(str_contains($cuenta,'ingreso:')){
+                $cuenta_id[] = str_replace("ingreso:", "", $cuenta);
+            }
+        }
+        return $cuenta_id;
+    }
+
 
     //buscadores
     public static function findByUuid($uuid_item){
@@ -140,7 +154,8 @@ class Items extends Model
 
     public function getCostoPromedioAttribute()
     {
-        $costo_promedio = $i = 0;
+        //Card 1210: Se quito este calculo, por la lentitud que se esta generando al momento de su calculo, Kimi
+        /*$costo_promedio = $i = 0;
 
         $clause                 = [];
         $clause["empresa_id"]   = $this->empresa_id;
@@ -162,7 +177,8 @@ class Items extends Model
             }
         }
 
-        return ($i > 0) ? number_format($costo_promedio/$i, 4, '.', '') : number_format($costo_promedio, 4, '.', '');
+        return ($i > 0) ? number_format($costo_promedio/$i, 4, '.', '') : number_format($costo_promedio, 4, '.', '');*/
+        return 0;
     }
 
     public function getCostoPromedioLabelAttribute()
@@ -302,6 +318,7 @@ class Items extends Model
         return $query->join('inv_items_categorias', 'inv_items_categorias.id_item', '=', 'inv_items.id')
                 ->where('inv_items_categorias.id_categoria',$categoria_id)
                 ->select('inv_items.*');
+                //->select('inv_items.id', 'codigo', 'inv_items.nombre', 'cuentas', 'uuid_venta');
     }
 
     public function scopeDeEstado($query, $estado)
@@ -466,7 +483,8 @@ class Items extends Model
 
         foreach($this->salidasRep->get($clause) as $s)
         {
-            foreach($s->operacion->items as $si)
+            $aux = $s->operacion_type == 'Flexio\\Modulo\\OrdenesVentas\\Models\\OrdenVenta' ? $s->operacion->items2 : $s->operacion->items;
+            foreach($aux as $si)
             {
                 if($this->id == $si->id)
                 {
@@ -545,5 +563,16 @@ class Items extends Model
     public function landing_comments() {
         return $this->hasMany(Comentario::class,'comentable_id')->where('comentable_type','Flexio\\Modulo\\Inventarios\\Models\\Items2');
     }
+
+           public function scopeDeFiltro($query, $campo)
+       {
+
+           $queryFilter = new \Flexio\Modulo\Inventarios\Services\ItemFilters;
+           return $queryFilter->apply($query, $campo);
+       }
+
+       public function contrato_alquiler() {
+           return $this->belongsToMany(ContratosAlquiler::class, 'contratos_items', 'item_id', 'contratable_id');
+       }
 
 }

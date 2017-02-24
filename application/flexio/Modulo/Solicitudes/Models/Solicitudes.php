@@ -1,6 +1,7 @@
 <?php
 namespace Flexio\Modulo\Solicitudes\Models;
 
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Modulo\Cliente\Models\Cliente;
@@ -15,12 +16,13 @@ use Flexio\Modulo\Solicitudes\Models\SolicitudesPrima;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesParticipacion;
 use Flexio\Modulo\Planes\Models\Planes;
 use Flexio\Modulo\Empresa\Models\Empresa;
+use Flexio\Modulo\CentrosContables\Models\CentrosContables;
 
 
 class Solicitudes extends Model
 {
     protected $table        = 'seg_solicitudes';    
-    protected $fillable     = ['uuid_solicitudes', 'numero', 'cliente_id', 'aseguradora_id', 'ramo', 'id_tipo_poliza', 'usuario_id', 'estado', 'observaciones', 'updated_at', 'created_at', 'empresa_id', 'fecha_creacion','plan_id','comision','ramo_id','grupo','direccion','porcentaje_sobre_comision','impuesto'];
+    protected $fillable     = ['uuid_solicitudes', 'numero', 'cliente_id', 'aseguradora_id', 'ramo', 'id_tipo_poliza', 'usuario_id', 'estado', 'observaciones', 'updated_at', 'created_at', 'empresa_id', 'fecha_creacion','plan_id','comision','ramo_id','grupo','direccion','porcentaje_sobre_comision','impuesto', 'centro_contable'];
     protected $guarded      = ['id'];
     
     //scopes
@@ -75,5 +77,20 @@ class Solicitudes extends Model
         return $this->hasOne(Empresa::class, 'id', 'empresa_id');
     }
 
-    
-}
+    public function centros(){
+        return $this->belongsTo(CentrosContables::class, 'centro_contable', 'id');
+    }
+
+    public function guardarcopiadocumentos($campos){
+        
+        foreach ($campos as $value) {
+            $clause = array();
+            $clause = array("empresa_id" => $value['empresa_id'], "archivo_ruta" => $value['archivo_ruta'], "archivo_nombre" => $value['archivo_nombre'], "extra_datos" => $value['extra_datos'], "subido_por" => $value['subido_por'], "documentable_id" => $value['documentable_id'], "documentable_type" => $value['documentable_type'], "nombre_documento" => $value['nombre_documento'], "centro_contable_id" => "0", "tipo_id" => "0", "etapa" => "por_enviar", "padre_id" => "0", "archivado" => "0" );
+            $clause["uuid_documento"] = Capsule::raw("ORDER_UUID(uuid())");
+            $query = Documentos::create($clause);
+        }
+
+        return $query;
+        //return $this->hasMany(Documentos::class,'padre_id','id');
+    }
+}   

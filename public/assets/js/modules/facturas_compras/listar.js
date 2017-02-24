@@ -5,7 +5,7 @@ var listarFacturasCompras = (function(){
         iExportar: "#exportarListaFacturasCompras",
         iGrid: "#tablaFacturasComprasGrid"
     };
-    
+
     var config = {
         chosen:{
             width:"100%"
@@ -19,22 +19,27 @@ var listarFacturasCompras = (function(){
             singleDatePicker: true
         }
     };
-    
+
     var dom = {};
-    
+
     var catchDom = function(){
         dom.cFechas = $(st.cFechas);
         dom.cChosens = $(st.cChosens);
         dom.iExportar = $(st.iExportar);
         dom.iGrid = $(st.iGrid);
     };
-    
+
     var suscribeEvents = function(){
-        dom.cFechas.daterangepicker(config.dateRangePicker).val("");
+        //no se debe formatear campo fecha de buscador si existe valor en localStorage
+        //author: @josecoder
+        //date: 14/02/2017
+        if (typeof localStorage.fc_fecha1 == "undefined") {
+          dom.cFechas.daterangepicker(config.dateRangePicker).val("");
+        }
         dom.cChosens.chosen(config.chosen);
         $("#moduloOpciones").on("click", st.iExportar, events.eExportar);
     };
-    
+
     var events = {
         eExportar: function(){
             //contiene un arreglo con los identificadores de los proveedores (uuid_proveedor)
@@ -59,7 +64,7 @@ var listarFacturasCompras = (function(){
             }
         }
     };
-    
+
     var initialize = function(){
         catchDom();
         suscribeEvents();
@@ -69,5 +74,36 @@ var listarFacturasCompras = (function(){
         init:initialize
     };
 })();
+$(document).ready(function() {
+    listarFacturasCompras.init();
+    $("#proveedor3").select2({
+    width:"100%",
+    theme: "bootstrap",
+    language: "es",
+    maximumInputLength: 10,
+    ajax: {
+                url: phost() + 'proveedores/ajax_catalogo_proveedores',
+                dataType: 'json',
+                cache: true,
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        erptkn: tkn
+                    };
+                },
+                processResults: function (data, params) {
 
-listarFacturasCompras.init();
+                   var resultados = data.map(function(resp){
+                       return [{'id': resp.proveedor_id,'text': resp.nombre}];
+                   }).reduce(function(a,b){
+                       return a.concat(b);
+                   },[]);
+                     return {
+                          results:resultados
+                     };
+                },
+                escapeMarkup: function (markup) { return markup; },
+            }
+});
+});

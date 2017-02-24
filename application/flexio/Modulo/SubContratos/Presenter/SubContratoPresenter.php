@@ -33,7 +33,7 @@ class SubContratoPresenter extends Presenter{
   }
 
   function monto_subcontrato(){
-    return '<label class="label-outline outline-info">$'.number_format($this->Subcontrato->monto_contrato, 2, '.', ',').'</label>';
+    return '<label class="label-outline outline-info">$'.number_format($this->Subcontrato->monto_subcontrato, 2, '.', ',').'</label>';
   }
 
   function por_facturar(){
@@ -41,7 +41,12 @@ class SubContratoPresenter extends Presenter{
   }
 
   function facturado(){
-    return '<label class="label-outline outline-success">$'.number_format($this->Subcontrato->facturas_habilitadas->sum('total'), 2, '.', ',').'</label>';
+    $subtotal = $this->Subcontrato->facturas_habilitadas->map(function($subtotal){
+      return [
+        'precio_subtotal' => $subtotal->facturas_items->sum(function($precio_subtotal){return $precio_subtotal->cantidad * $precio_subtotal->precio_unidad;})
+      ];  
+      });    
+    return '<label class="label-outline outline-success">$'.number_format($subtotal->sum('precio_subtotal'), 2, '.', ',').'</label>';
   }
 
 

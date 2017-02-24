@@ -24,7 +24,7 @@ var tablaNotaDebito = (function(){
 		 url: tablaUrl,
 		 mtype: "POST",
 		 datatype: "json",
-		 colNames:['','No. Nota de D&eacute;bito','No. Nota de Cr&eacute;dito','Proveedor','Fecha de emisión','Monto de d&eacute;bito','Creado por','Estado','', ''],
+		 colNames:['','N&uacute;mero interno de nota','No. de nota del proveedor','Proveedor','Fecha de emisión','Monto de d&eacute;bito','Creado por','Estado','', ''],
 		 colModel:[
 		 {name:'uuid', index:'uuid', width:70,  hidedlg:true, hidden: true},
 		 {name:'codigo', index:'codigo', width:70, sortable:true},
@@ -110,7 +110,33 @@ var tablaNotaDebito = (function(){
 				opcionesModal.modal('show');
 		});
 
+
 	};
+		//Documentos Modal
+	$("#optionsModal").on("click", ".subirArchivoBtn", function (e) {
+		e.preventDefault();
+		e.returnValue = false;
+		e.stopPropagation();
+
+		//Cerrar modal de opciones
+		$("#optionsModal").modal('hide');
+		var nota_debito_id = $(this).attr("data-id");
+
+		//Inicializar opciones del Modal
+		$('#documentosModal').modal({
+			backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+			show: false
+		});
+
+
+		var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
+
+		scope.safeApply(function () {
+			scope.campos.nota_debito_id = nota_debito_id;
+		});
+		$('#documentosModal').modal('show');
+	});
+
 	$(botones.limpiar).click(function(e){
 		e.preventDefault();
 		e.returnValue=false;
@@ -126,7 +152,7 @@ var tablaNotaDebito = (function(){
 		e.returnValue=false;
 		e.stopPropagation();
 
-		var cliente = $('#cliente').val();
+		var proveedor_id = $('#proveedor_id').val();
 		var desde = $('#fecha1').val();
 		var hasta = $('#fecha2').val();
 		var etapa = $('#etapa').val();
@@ -136,13 +162,14 @@ var tablaNotaDebito = (function(){
 		var monto1 = $('#monto1').val();
 		var monto2 = $('#monto2').val();
 
-		if (cliente !== "" || desde !== "" || hasta !== "" || etapa !== "" || vendedor !== "" || codigo !== "" || no_nota_credito !== ""|| monto1 !== ""|| monto2 !== "") {
+		if (proveedor_id !== "" || desde !== "" || hasta !== "" || etapa !== "" || vendedor !== "" || codigo !== "" || no_nota_credito !== ""|| monto1 !== ""|| monto2 !== "") {
 			//Reload Grid
+			gridObj.setGridParam({postData:null});
 			gridObj.setGridParam({
 				url: tablaUrl,
 				datatype: "json",
 				postData: {
-					cliente: cliente,
+					proveedor_id: proveedor_id,
 					desde: desde,
 					hasta: hasta,
 					etapa: etapa,
@@ -161,11 +188,12 @@ var tablaNotaDebito = (function(){
 	var recargar = function(){
 
 		//Reload Grid
+		gridObj.setGridParam({postData:null});
 		gridObj.setGridParam({
 			url: tablaUrl,
 			datatype: "json",
 			postData: {
-				cliente: '',
+				proveedor_id: '',
 				desde: '',
 				hasta: '',
 				etapa: '',
@@ -177,6 +205,9 @@ var tablaNotaDebito = (function(){
 				erptkn: tkn
 			}
 		}).trigger('reloadGrid');
+
+		$('#buscarNotaDebitoForm').find('selected').find('option:eq(0)').prop("selected", "selected")
+		$("select").trigger("chosen:updated").trigger("change");
 
 	};
 	var redimencionar_tabla = function(){

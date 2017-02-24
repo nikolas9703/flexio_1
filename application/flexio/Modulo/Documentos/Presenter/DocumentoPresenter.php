@@ -36,7 +36,7 @@ class DocumentoPresenter extends Presenter
 
     public function fecha_documento()
     {
-        if($this->documento->fecha_documento == '0000-00-00 00:00:00')return '';
+        if(empty($this->documento->fecha_documento) || $this->documento->fecha_documento == '0000-00-00 00:00:00')return '';
         return Carbon::createFromFormat('Y-m-d H:i:s', $this->documento->fecha_documento)->format('d/m/Y');
     }
 

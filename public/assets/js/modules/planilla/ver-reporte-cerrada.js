@@ -26,12 +26,12 @@
  				e.preventDefault();
 				e.returnValue=false;
 				e.stopPropagation();
- 				   window.location.href =  phost() + 'planilla/exportar_ver_reporte_cerrada?planilla_id='+planilla_id+'&colaborador_id='+colaborador_id;	 
+ 				   window.location.href =  phost() + 'planilla/exportar_ver_reporte_cerrada?planilla_id='+planilla_id+'&colaborador_id='+colaborador_id;
     		 });
 
 			return{
 				init: function() {
-					campos();
+				//	campos();
 					//eventos();
 				}
  			};

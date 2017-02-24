@@ -24,11 +24,39 @@ class GuardarCotizacionAlquiler{
         $this->clientable = ['clientes'=>'Flexio\Modulo\Cliente\Models\Cliente', 'clientes_potenciales'=>'Flexio\Modulo\ClientesPotenciales\Models\ClientesPotenciales'];
     }
 
+    private function required_fields($cotizacion)
+    {
+        $required_fields = ['creado_por'];
+        foreach ($required_fields as $field) {
+            if(!isset($cotizacion[$field]) || empty($cotizacion[$field])) throw new \Exception('Missing required field');
+        }
+    }
 
     function guardar(){
         $cotizacion = FormRequest::data_formulario($this->request->input('campo'));
-        $items = FormRequest::array_filter_dos_dimenciones($this->request->input('items'));
+        $this->required_fields($cotizacion);
 
+        $items_adicionales = FormRequest::array_filter_dos_dimenciones($this->request->input('items'));
+        $items = FormRequest::array_filter_dos_dimenciones($this->request->input('items_alquiler'));
+
+        $itemsadicionales = array();
+        if (!empty($items_adicionales)) {
+          $j=0;
+          foreach($items_adicionales AS $itemsadd) {
+              if(empty($itemsadd["item_id"])){
+                continue;
+              }
+              $itemsadd["item_adicional"] = 1;
+              $itemsadd['empresa_id'] = $this->session->empresaId();
+              $itemsadd['categoria_id'] = $itemsadd["categoria"];
+              $itemsadd['cuenta_id'] = $itemsadd["cuenta"];
+              $itemsadd['unidad_id'] = $itemsadd["unidad"];
+              $itemsadicionales[$j] = $itemsadd;
+              $j++;
+          }
+        }
+        $items = array_merge($items, $itemsadicionales);
+        //dd($items);
         if(isset($cotizacion['id'])){
             return $this->actualizar($cotizacion, $items);
         }

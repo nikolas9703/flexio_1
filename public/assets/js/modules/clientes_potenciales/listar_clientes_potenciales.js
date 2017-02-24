@@ -1,4 +1,5 @@
 $(function() {
+	//localStorage.setItem('ml-parent-selected', localStorage.getItem('ms-selected'));
 	
 	//Convertir a Cliente Juridico
 	$('#moduloOpciones ul').on("click", "#confirmarConvertirJuridicoBtn", function(e){

@@ -61,14 +61,6 @@ $.validator.addMethod(
 	 //$(location).attr('href','aseguradoras/agregarcontacto');  
  });
 
- $('#exportarBtn').attr('class','botonexportardetalles');
- $('.botonexportardetalles').attr('id','exportarPlanesLnk');
+	//$('#exportarBtn').attr('class','botonexportardetalles');
 
-  $("#tab_planes").click(function(){
-  	$('.botonexportardetalles').attr('id','exportarPlanesLnk');
-  });
-  $("#tab_contactos").click(function(){
-  	$('.botonexportardetalles').attr('id','exportarContactos');
-  });
-  
-   $("#formulariocontacto").hide();
+  $("#formulariocontacto").hide();
