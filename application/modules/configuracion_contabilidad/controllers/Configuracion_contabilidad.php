@@ -18,7 +18,14 @@ use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaBancoRepository as 
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaPorAbonarRepository as CuentaPorAbonar;
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaInventarioRepository as CuentaInventario;
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaPlanillaRepository as CuentaPlanilla;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaContratoRepository;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaAseguradoraPagarRepository;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaAseguradoraCobrarRepository;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaAgentePagarRepository;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaRemesaEntranteRepository;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaRemesaSalienteRepository;
 use Flexio\Modulo\Empresa\Repository\EmpresaRepository;
+
 
 
 class Configuracion_contabilidad extends CRM_Controller
@@ -32,8 +39,14 @@ class Configuracion_contabilidad extends CRM_Controller
     protected $cuenta_banco;
     protected $cuenta_abono;
     protected $cuenta_inventario;
+    protected $cuenta_contratos;
     protected $empresa_repository;
     protected $cuenta_planilla;
+    protected $cuenta_aseguradora_pagar;
+    protected $cuenta_agente_pagar;
+    protected $cuenta_remesa_entrante;
+    protected $cuenta_remesa_saliente;
+    protected $cuenta_aseguradora_cobrar;
 
     function __construct()
     {
@@ -56,6 +69,13 @@ class Configuracion_contabilidad extends CRM_Controller
         $this->cuenta_inventario = new CuentaInventario;
         $this->empresa_repository = new EmpresaRepository();
         $this->cuenta_planilla = new CuentaPlanilla();
+        $this->cuenta_contratos = new CuentaContratoRepository();
+        $this->cuenta_aseguradora_pagar = new CuentaAseguradoraPagarRepository();
+        $this->cuenta_aseguradora_cobrar = new CuentaAseguradoraCobrarRepository();
+        $this->cuenta_agente_pagar = new CuentaAgentePagarRepository();
+        $this->cuenta_remesa_entrante = new CuentaRemesaEntranteRepository();
+        $this->cuenta_remesa_saliente = new CuentaRemesaSalienteRepository();
+        
     }
 
     public function index()
@@ -121,6 +141,14 @@ class Configuracion_contabilidad extends CRM_Controller
             'public/assets/js/modules/configuracion_contabilidad/arbol_cobros.js'
         ));
         $this->load->view('cuenta_por_cobrar');
+    }
+
+    function cuenta_cobrar_aseguradora(){
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_contabilidad/arbol_cobros_aseguradora.js'
+        ));
+
+        $this->load->view('cuenta_cobrar_aseguradora');
     }
 
     function cajamenuda()
@@ -324,6 +352,71 @@ class Configuracion_contabilidad extends CRM_Controller
 
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
         exit;
+    }
+
+    function ajax_get_cuenta_aseguradora_pagar(){
+        $cuenta = [];
+        $empresa = [
+            'empresa_id' => $this->empresa_id,
+        ];
+        if ($this->cuenta_aseguradora_pagar->tieneCuenta($empresa)) {
+            $cuenta = $this->cuenta_aseguradora_pagar->getAll($empresa);
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
+        exit;
+    }
+
+    function ajax_get_cuenta_agente_pagar(){
+        $cuenta = [];
+        $empresa = [
+            'empresa_id' => $this->empresa_id,
+        ];
+        if ($this->cuenta_agente_pagar->tieneCuenta($empresa)) {
+            $cuenta = $this->cuenta_agente_pagar->getAll($empresa);
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
+        exit;
+    }
+
+    function ajax_get_cuenta_remesa_entrante(){
+        $cuenta = [];
+        $empresa = [
+            'empresa_id' => $this->empresa_id,
+        ];
+        if ($this->cuenta_remesa_entrante->tieneCuenta($empresa)) {
+            $cuenta = $this->cuenta_remesa_entrante->getAll($empresa);
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
+        exit;
+    }
+
+    function ajax_get_cuenta_remesa_saliente(){
+        $cuenta = [];
+        $empresa = [
+            'empresa_id' => $this->empresa_id,
+        ];
+        if ($this->cuenta_remesa_saliente->tieneCuenta($empresa)) {
+            $cuenta = $this->cuenta_remesa_saliente->getAll($empresa);
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
+        exit;
+    }
+
+    function ajax_get_cuenta_aseguradora_cobrar(){
+        $cuenta = [];
+        $empresa = [
+            'empresa_id' => $this->empresa_id
+        ];
+        if ($this->cuenta_aseguradora_cobrar->tieneCuenta($empresa)) {
+            $cuenta = $this->cuenta_aseguradora_cobrar->getAll($empresa);
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
+        exit();
     }
 
     function ajax_cuenta_banco()
@@ -600,6 +693,153 @@ class Configuracion_contabilidad extends CRM_Controller
         exit;
     }
 
+    public function ajax_guardar_cuenta_aseguradora_por_pagar(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $id = $this->input->post('id', TRUE);
+        $crear = [
+            'empresa_id' => $this->empresa_id,
+            'cuenta_id' => $id,
+        ];
+        $cuenta_aseguradora_pagar = $this->cuenta_aseguradora_pagar;
+        $dato = Capsule::transaction(function () use ($cuenta_aseguradora_pagar, $crear) {
+            try {
+                $cuenta_aseguradora_pagar->create($crear);
+                return $mensaje = [
+                    'tipo' => 'success',
+                    'mensaje' => 'la cuenta fue guardada con &eacute;xito'
+                ];
+            } catch (Illuminate\Database\QueryException $e) {
+                return $mensaje = [
+                    'tipo' => 'error',
+                    'mensaje' => 'su solicitud no fue procesada'
+                ];
+            }
+        });
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($dato))->_display();
+        exit;
+    }
+
+    public function ajax_guardar_cuenta_aseguradora_cobrar(){
+        $id = $this->input->post('id', TRUE);
+        $crear = [
+            'empresa_id' => $this->empresa_id,
+            'cuenta_id' => $id
+        ];
+        $cuenta_aseguradora_cobrar = $this->cuenta_aseguradora_cobrar;
+        $dato = Capsule::transaction(function () use ($cuenta_aseguradora_cobrar, $crear) {
+            try {
+                $cuenta_aseguradora_cobrar->create($crear);
+                return $mensaje = [
+                    'tipo' => 'success',
+                    'mensaje' => 'la cuenta fue guardada con &eacute;xito'
+                ];
+            } catch (Illuminate\Database\QueryException $e) {
+                return $mensaje = [
+                    'tipo' => 'error',
+                    'mensaje' => 'su solicitud no fue procesada'
+                ];
+            }
+        });
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($dato))->_display();
+        exit();
+    }
+
+
+    public function ajax_guardar_cuenta_agente_pagar(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $id = $this->input->post('id', TRUE);
+        $crear = [
+            'empresa_id' => $this->empresa_id,
+            'cuenta_id' => $id,
+        ];
+        $cuenta_agente_pagar = $this->cuenta_agente_pagar;
+        $dato = Capsule::transaction(function () use ($cuenta_agente_pagar, $crear) {
+            try {
+                $cuenta_agente_pagar->create($crear);
+                return $mensaje = [
+                    'tipo' => 'success',
+                    'mensaje' => 'la cuenta fue guardada con &eacute;xito'
+                ];
+            } catch (Illuminate\Database\QueryException $e) {
+                return $mensaje = [
+                    'tipo' => 'error',
+                    'mensaje' => 'su solicitud no fue procesada'
+                ];
+            }
+        });
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($dato))->_display();
+        exit;
+    }
+
+    public function ajax_guardar_cuenta_remesa_entrante(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $id = $this->input->post('id', TRUE);
+        $crear = [
+            'empresa_id' => $this->empresa_id,
+            'cuenta_id' => $id,
+        ];
+        $cuenta_remesa_entrante = $this->cuenta_remesa_entrante;
+        $dato = Capsule::transaction(function () use ($cuenta_remesa_entrante, $crear) {
+            try {
+                $cuenta_remesa_entrante->create($crear);
+                return $mensaje = [
+                    'tipo' => 'success',
+                    'mensaje' => 'la cuenta fue guardada con &eacute;xito'
+                ];
+            } catch (Illuminate\Database\QueryException $e) {
+                return $mensaje = [
+                    'tipo' => 'error',
+                    'mensaje' => 'su solicitud no fue procesada'
+                ];
+            }
+        });
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($dato))->_display();
+        exit;
+    }
+
+    public function ajax_guardar_cuenta_remesa_saliente(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $id = $this->input->post('id', TRUE);
+        $crear = [
+            'empresa_id' => $this->empresa_id,
+            'cuenta_id' => $id,
+        ];
+        $cuenta_remesa_saliente = $this->cuenta_remesa_saliente;
+        $dato = Capsule::transaction(function () use ($cuenta_remesa_saliente, $crear) {
+            try {
+                $cuenta_remesa_saliente->create($crear);
+                return $mensaje = [
+                    'tipo' => 'success',
+                    'mensaje' => 'la cuenta fue guardada con &eacute;xito'
+                ];
+            } catch (Illuminate\Database\QueryException $e) {
+                return $mensaje = [
+                    'tipo' => 'error',
+                    'mensaje' => 'su solicitud no fue procesada'
+                ];
+            }
+        });
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($dato))->_display();
+        exit;
+    }
+
     function ajax_eliminar_cuenta_por_pagar()
     {
         if (!$this->input->is_ajax_request()) {
@@ -640,6 +880,198 @@ class Configuracion_contabilidad extends CRM_Controller
         exit();
     }
 
+    function ajax_eliminar_cuenta_aseguradora_pagar()
+    {
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $id = $this->input->post('cuenta_id', TRUE);
+        $mensaje = [];
+        $condicion = ['empresa_id' => $this->empresa_id, 'cuenta_id' => $id];
+
+        if ($this->cuenta_aseguradora_pagar->tienes_transacciones($condicion)) {
+            $mensaje = [
+                'puede_eliminar' => false,
+                'tipo' => 'warning',
+                'mensaje' => 'la cuenta tiene transacciones y no puede ser eliminada'
+            ];
+        } else {
+            $cuenta_aseguradora_pagar = $this->cuenta_aseguradora_pagar;
+            $mensaje = Capsule::transaction(function () use ($cuenta_aseguradora_pagar, $condicion) {
+                try {
+                    $cuenta_aseguradora_pagar->delete($condicion);
+                    return [
+                        'puede_eliminar' => true,
+                        'tipo' => 'success',
+                        'mensaje' => 'cuenta aseguradora por pagar eliminada'
+                    ];
+                } catch (Illuminate\Database\QueryException $e) {
+                    return [
+                        'puede_eliminar' => false,
+                        'tipo' => 'error',
+                        'mensaje' => 'su solicitud no fue procesada'
+                    ];
+                }
+            });
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($mensaje))->_display();
+        exit();
+    }
+
+    function ajax_eliminar_cuenta_aseguradora_cobrar(){
+
+        $id = $this->input->post('cuenta_id', TRUE);
+        $mensaje = [];
+        $condicion = ['empresa_id' => $this->empresa_id, 'cuenta_id' => $id];
+
+        
+        if ($this->cuenta_aseguradora_cobrar->tienes_transacciones($condicion)) {
+            $mensaje = [
+                'puede_eliminar' => false,
+                'tipo' => 'success',
+                'mensaje' => 'la cuenta tiene transacciones y no puede ser eliminada'
+            ];
+        } else {
+            $cuenta_aseguradora_cobrar = $this->cuenta_aseguradora_cobrar;
+            $mensaje = Capsule::transaction(function () use ($cuenta_aseguradora_cobrar, $condicion) {
+                try {
+                    $cuenta_aseguradora_cobrar->delete($condicion);
+                    return [
+                        'puede_eliminar' => true,
+                        'tipo' => 'success',
+                        'mensaje' => 'cuenta aseguradora por cobrar eliminada'
+                    ];
+                } catch (Illuminate\Database\QueryException $e) {
+                    return [
+                        'puede_eliminar' => false,
+                        'tipo' => 'error',
+                        'mensaje' => 'su solicitud no fue procesada'
+                    ];
+                }
+            });
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($mensaje))->_display();
+        exit();
+    }
+
+
+    function ajax_eliminar_cuenta_agente_pagar(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $id = $this->input->post('cuenta_id', TRUE);
+        $mensaje = [];
+        $condicion = ['empresa_id' => $this->empresa_id, 'cuenta_id' => $id];
+
+        if ($this->cuenta_agente_pagar->tienes_transacciones($condicion)) {
+            $mensaje = [
+                'puede_eliminar' => false,
+                'tipo' => 'warning',
+                'mensaje' => 'la cuenta tiene transacciones y no puede ser eliminada'
+            ];
+        } else {
+            $cuenta_agente_pagar = $this->cuenta_agente_pagar;
+            $mensaje = Capsule::transaction(function () use ($cuenta_agente_pagar, $condicion) {
+                try {
+                    $cuenta_agente_pagar->delete($condicion);
+                    return [
+                        'puede_eliminar' => true,
+                        'tipo' => 'success',
+                        'mensaje' => 'cuenta agente por pagar eliminada'
+                    ];
+                } catch (Illuminate\Database\QueryException $e) {
+                    return [
+                        'puede_eliminar' => false,
+                        'tipo' => 'error',
+                        'mensaje' => 'su solicitud no fue procesada'
+                    ];
+                }
+            });
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($mensaje))->_display();
+        exit();
+    }
+
+    function ajax_eliminar_cuenta_remesa_entrante(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $id = $this->input->post('cuenta_id', TRUE);
+        $mensaje = [];
+        $condicion = ['empresa_id' => $this->empresa_id, 'cuenta_id' => $id];
+
+        if ($this->cuenta_remesa_entrante->tienes_transacciones($condicion)) {
+            $mensaje = [
+                'puede_eliminar' => false,
+                'tipo' => 'warning',
+                'mensaje' => 'la cuenta tiene transacciones y no puede ser eliminada'
+            ];
+        } else {
+            $cuenta_remesa_entrante = $this->cuenta_remesa_entrante;
+            $mensaje = Capsule::transaction(function () use ($cuenta_remesa_entrante, $condicion) {
+                try {
+                    $cuenta_remesa_entrante->delete($condicion);
+                    return [
+                        'puede_eliminar' => true,
+                        'tipo' => 'success',
+                        'mensaje' => 'cuenta remesa entrante por pagar eliminada'
+                    ];
+                } catch (Illuminate\Database\QueryException $e) {
+                    return [
+                        'puede_eliminar' => false,
+                        'tipo' => 'error',
+                        'mensaje' => 'su solicitud no fue procesada'
+                    ];
+                }
+            });
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($mensaje))->_display();
+        exit();
+    }
+
+    function ajax_eliminar_cuenta_remesa_saliente(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $id = $this->input->post('cuenta_id', TRUE);
+        $mensaje = [];
+        $condicion = ['empresa_id' => $this->empresa_id, 'cuenta_id' => $id];
+
+        if ($this->cuenta_remesa_saliente->tienes_transacciones($condicion)) {
+            $mensaje = [
+                'puede_eliminar' => false,
+                'tipo' => 'warning',
+                'mensaje' => 'la cuenta tiene transacciones y no puede ser eliminada'
+            ];
+        } else {
+            $cuenta_remesa_saliente = $this->cuenta_remesa_saliente;
+            $mensaje = Capsule::transaction(function () use ($cuenta_remesa_saliente, $condicion) {
+                try {
+                    $cuenta_remesa_saliente->delete($condicion);
+                    return [
+                        'puede_eliminar' => true,
+                        'tipo' => 'success',
+                        'mensaje' => 'cuenta remesa saliente por pagar eliminada'
+                    ];
+                } catch (Illuminate\Database\QueryException $e) {
+                    return [
+                        'puede_eliminar' => false,
+                        'tipo' => 'error',
+                        'mensaje' => 'su solicitud no fue procesada'
+                    ];
+                }
+            });
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($mensaje))->_display();
+        exit();
+    }
+
+    
     function ajax_guardar_cuenta_banco()
     {
         if (!$this->input->is_ajax_request()) {
@@ -829,12 +1261,163 @@ class Configuracion_contabilidad extends CRM_Controller
         $this->load->view('inventarios');
     }
 
+    function contratos() {
+        $this->load->view('contratos');
+    }
+
+    function seguros(){
+        $this->load->view('seguros');
+    }
+
     function inventario_facturado()
     {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/configuracion_contabilidad/cuentas_inventario_facturado.js'
         ));
         $this->load->view('inventario_facturado');
+    }
+
+    function contratos_cuenta_anticipos() {
+        $this->assets->agregar_js(array(
+           'public/assets/js/modules/configuracion_contabilidad/contratos_anticipos_activo.js'
+        ));
+        $this->load->view('contratos_cuenta_anticipos');
+    }
+
+    function contratos_cuenta_retencion() {
+        $this->assets->agregar_js(array(
+           'public/assets/js/modules/configuracion_contabilidad/contratos_retencion_pasivo.js'
+        ));
+
+        $this->load->view('contratos_cuenta_retencion');
+    }
+
+    function cuenta_pagar_aseguradora(){        
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_contabilidad/cuenta_aseguradora_pagar.js'
+        ));
+
+        $this->load->view('cuenta_pagar_aseguradora');
+    }
+
+    function cuenta_pagar_agente(){
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_contabilidad/cuenta_agente_pagar.js'
+        ));
+
+        $this->load->view('cuenta_pagar_agente');
+    }
+
+    function remesa_entrante(){
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_contabilidad/cuenta_remesa_entrante.js'
+        ));
+
+        $this->load->view('cuenta_remesa_entrante');
+    }
+
+    function remesa_saliente(){
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_contabilidad/cuenta_remesa_saliente.js'
+        ));
+
+        $this->load->view('cuenta_remesa_saliente');
+    }
+
+    function ajax_get_cuentas_contrato() {
+        $cuenta = [];
+        $tipo = $this->input->post('tipo');
+        $empresa = [
+            'empresa_id' => $this->empresa_id,
+            'tipo' => $tipo
+        ];
+        if ($this->cuenta_contratos->tieneCuenta($empresa)) {
+            $cuenta = $this->cuenta_contratos->getAll($empresa);
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
+        exit;
+    }
+
+    function ajax_guardar_cuenta_contratos() {
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $id = $this->input->post('id', TRUE);
+        $tipo = $this->input->post('tipo', TRUE);
+        $crear = [
+            'empresa_id' => $this->empresa_id,
+            'cuenta_id' => $id,
+            'tipo' => $tipo
+        ];
+        $cuenta_contract = $this->cuenta_contratos;
+        $dato = Capsule::transaction(function () use ($cuenta_contract, $crear) {
+            try {
+                $cuenta_contract->create($crear);
+                return $mensaje = [
+                    'tipo' => 'success',
+                    'mensaje' => 'la cuenta fue guardada con &eacute;xito'
+                ];
+            } catch (Illuminate\Database\QueryException $e) {
+                return $mensaje = [
+                    'tipo' => 'error',
+                    'mensaje' => 'su solicitud no fue procesada. Motivo: '. $e->getMessage()
+                ];
+            }
+        });
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($dato))->_display();
+        exit;
+    }
+
+    function ajax_eliminar_cuenta_contratos(){
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $id = $this->input->post('cuenta_id', TRUE);
+        $tipo = $this->input->post('tipo', TRUE);
+        $mensajepara = '';
+        if($tipo=='anticipo_activo'){
+            $mensajepara = 'cuenta para anticipos a proveedores eliminada';
+        }else{
+            $mensajepara = 'cuenta para anticipos a clientes eliminada';
+        }
+        $mensaje = [];
+        $condicion = ['empresa_id' => $this->empresa_id, 'cuenta_id' => $id, 'tipo' => $tipo];
+
+        if ($this->cuenta_contratos->tienes_transacciones($condicion)) {
+            $mensaje = [
+                'puede_eliminar' => false,
+                'tipo' => 'warning',
+                'mensaje' => 'la cuenta tiene transacciones y no puede ser eliminada'
+            ];
+        } else {
+            $cuenta_contract = $this->cuenta_contratos;
+            $mensaje = Capsule::transaction(function () use ($cuenta_contract, $condicion) {
+                try {
+                    $cuenta_contract->delete($condicion);
+                    return [
+                        'puede_eliminar' => true,
+                        'tipo' => 'success',
+                        'mensaje' => 'cuenta eliminada correctamente'
+                    ];
+                } catch (Illuminate\Database\QueryException $e) {
+                    return [
+                        'puede_eliminar' => false,
+                        'tipo' => 'error',
+                        'mensaje' => 'su solicitud no fue procesada'
+                    ];
+                }
+            });
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($mensaje))->_display();
+        exit();
+    }
+
+    function ajax_get_cuenta_contratos(){
+
     }
 
     function inventario_recibido_activo()

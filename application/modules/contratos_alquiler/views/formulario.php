@@ -111,7 +111,8 @@ $info = !empty($info) ? $info : array();
         </select>
     </div>
 
-     <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
+    <!--<div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">-->
+    <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
         <label for="referencia">Referencia</label>
         <input type="text" name="campo[referencia]" class="form-control" v-model="contrato_alquiler.referencia" :disabled="disabledEditar">
     </div>

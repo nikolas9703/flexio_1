@@ -111,7 +111,7 @@
 
 								<div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
 									<label>Recibido por <span class="required">*</span></label>
-									<select name="campo[recibido_id]" id="recibido_id" class="form-control"   :disabled="true" v-model="recibido_id" d required="" data-rule-required="true" >
+									<select name="campo[recibido_id]" id="recibido_id" class="form-control"   :disabled="true" v-model="recibido_id"  required="" data-rule-required="true" >
  										<template v-for="option in recibidosOptions" track-by="$index" >
 		                                 	<option v-bind:value="option.id">{{{option.nombre}}} {{{option.apellido}}}</option>
 		                            	</template>

@@ -61,4 +61,20 @@ class BodegasRepository{
         if(isset($clause["transaccionales"]) and !empty($clause["transaccionales"])){$acreedores->transaccionales($clause["empresa_id"]);}
         if(isset($clause["uuid_bodega"]) and !empty($clause["uuid_bodega"])){$acreedores->deUuid($clause["uuid_bodega"]);}
     }
+
+    public function search($clause)
+    {
+        $query= Bodegas::where('empresa_id', '=', $clause['empresa_id']);
+        if(isset($clause['id'])){
+            $query->where("id","=", $clause['id']);
+        }else if(isset($clause['q'])){
+            $query->where("estado", "=", 1);
+            $query->where(function($query)use ($clause){
+                $query->where("nombre","like", "%".$clause['q']."%");
+                $query->orWhere("codigo","like", "%".$clause['q']."%");
+            });
+        }
+        $query->take(isset($clause['limit'])?$clause['limit']:10);
+        return $query->get();
+    }
 }

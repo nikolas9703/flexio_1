@@ -227,10 +227,10 @@ class AjustesRepository implements AjustesInterface{
 
         }
 
-
+        //si el ajuste es aprobado registra los seriales
         foreach($registro->items as $row)
         {
-            $this->serialesRep->delete(["item_id" => $row->id, "line_id" => $row->pivot->id]);
+            //$this->serialesRep->delete(["item_id" => $row->id, "line_id" => $row->pivot->id]);
 
             $aux = array_filter($items, function($value) use ($row){
                 return $value["item_id"] == $row->id;
@@ -244,7 +244,8 @@ class AjustesRepository implements AjustesInterface{
                     $llave = $key;
                 }
                 $aux[$llave]["id_entrada_item"] = $row->pivot->id;
-                $this->serialesRep->save($aux[$llave], $registro);
+                $estado = (($registro->estado_id == '4' && $registro->tipo_ajuste_id == '2') || ($registro->estado_id == '3' && $registro->tipo_ajuste_id == '1')) ? 'disponible' : 'no_disponible';
+                $this->serialesRep->save($aux[$llave], $registro, $estado);
             }
         }
     }

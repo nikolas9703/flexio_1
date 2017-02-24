@@ -231,17 +231,27 @@ var tablaComisiones = (function(){
 				e.returnValue=false;
 				e.stopPropagation();
 				var id_comision = $(this).attr('data-id');
-					var salario = $(this).attr('data-salario');
+				var salario = $(this).attr('data-salario');
+				var fecha_pago = $(this).attr('data-fecha');
+				var disabled = mensaje_pendiente = '';
+
+
+						//$("#pagarExtraordinario").prop("disabled",true);
 
 				//Init boton de opciones
 			opcionesModal.find('.modal-title').empty().append('Confirme');
 			opcionesModal.find('.modal-body').empty().append('Est&aacute; seguro que desea pagar este pago extraordinario?'+"</BR></BR>");
 			opcionesModal.find('.modal-body').append('<b>Monto Total:</b> '+salario);
-			opcionesModal.find('.modal-footer')
 
-					.empty()
+			if(fecha_pago == 'Pendiente'){
+				disabled = 'disabled';
+ 				opcionesModal.find('.modal-body').append('</br></br><span style="color:red;">No existe fecha programada</span> ');
+			}
+
+ 			opcionesModal.find('.modal-footer')
+ 					.empty()
 					.append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>')
-					.append('<button id="pagarExtraordinario" data-id="'+ id_comision +'" class="btn btn-w-m btn-primary" type="button">Por Pagar</button>');
+					.append('<button id="pagarExtraordinario" '+disabled+' data-id="'+ id_comision +'"  class="btn btn-w-m btn-primary" type="button">Por Pagar</button>');
 			});
 
 			//Opcion: Desactivar Usuario

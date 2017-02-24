@@ -8,7 +8,7 @@ use Flexio\Modulo\Cajas\Models\Cajas as Cajas;
 class Transferencias extends Model
 {
     protected $table    = 'ca_transferencias';
-    protected $fillable = ['empresa_id', 'caja_id', 'cuenta_id',  'numero', 'monto', 'fecha', 'creado_por','transferencia_desde','tipo_transferencia_hasta'];
+    protected $fillable = ['empresa_id', 'caja_id', 'cuenta_id',  'numero', 'monto', 'fecha', 'creado_por','estado','transferencia_desde','tipo_transferencia_hasta'];
     protected $guarded	= ['id'];
     protected $appends      = ['enlace'];
     public function pagos(){
@@ -36,12 +36,18 @@ class Transferencias extends Model
     	$html = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory);
     	return $html->setType("HtmlA")->setAttrs($attrs)->setHtml($this->numero)->getSalida();
     }
- 
+
     public function getEnlaceAttribute()
     {
 
     	return base_url("cajas/ver/".$this->caja->uuid_caja);
     }
-
-
-}
+    public function present(){
+        return new \Flexio\Modulo\Cajas\Presenter\TransferenciasPresenter($this);
+    }
+    public function catalogo_estado()
+    {
+        return $this->belongsTo('Flexio\Modulo\Catalogos\Models\Catalogo','estado','etiqueta')->where('tipo','=','estado')
+        ->where('modulo','=','transferencias');
+    }
+ }

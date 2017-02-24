@@ -4,13 +4,13 @@ namespace Flexio\Modulo\Salidas\Transacciones;
 
 use Flexio\Repository\SysTransaccion\SysTransaccionRepository as SysTransaccionRepository;
 use Flexio\Modulo\EntradaManuales\Models\AsientoContable as AsientoContable;
- 
+
 //repositorios
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 
 class Consumo {
-    
+
     protected $SysTransaccionRepository;
     protected $ImpuestosRepository;
     protected $CuentasRepository;
@@ -21,7 +21,7 @@ class Consumo {
         $this->ImpuestosRepository      = new ImpuestosRepository();
         $this->CuentasRepository        = new CuentasRepository();
     }
-    
+
     public function _crearTransaccion($salida)
     {
     	$asiento = [];
@@ -30,41 +30,43 @@ class Consumo {
      			$asiento[] = $this->transacciones($item, $salida);
     		}
     	}
-    	
+
     	return $asiento;
     }
-    
+
   	private function transacciones($item, $salida){
    		 return array_merge($this->debito($item, $salida),$this->credito($item, $salida));
   	}
-  	
+
   	private function credito($item, $salida){
-  	
+
   		$asientos   = [];
-  	
+
+        if(empty($item->cuenta_activo_id))
+            throw new \Exception("El item ({$item->nombre}) no tiene cuenta de activo definida.");
   		$asientos[] = new AsientoContable([
-  				'codigo'        => $item->codigo,
-  				'nombre'        => $salida->numero. ' - '.$item->id,
-  				'credito'       => $item->costo_promedio*$item->pivot->cantidad,
-  				'cuenta_id'     => $item->cuenta_activo->id,
-  				'empresa_id'    => $item->empresa_id
-  				]);
-  	
+  			'codigo'        => $item->codigo,
+  			'nombre'        => $salida->numero. ' - '.$item->id,
+  			'credito'       => $item->costo_promedio*$item->pivot->cantidad,
+  			'cuenta_id'     => $item->cuenta_activo_id,
+  			'empresa_id'    => $item->empresa_id
+  		]);
+
   		return $asientos;
   	}
-  	
+
     public function debito($item, $salida)
     {
     	$asientos   = [];
         $asientos[] = new AsientoContable([
             'codigo'        => $item->codigo,
-            'nombre'        => $ajustes->numero. ' - '.$item->id,
+            'nombre'        => $salida->numero. ' - '.$item->id,
             'debito'        => $item->costo_promedio*$item->pivot->cantidad,
-            'cuenta_id'     => $item->cuenta_costo->id,
+            'cuenta_id'     => $item->pivot->cuenta_id,
             'empresa_id'    => $item->empresa_id
         ]);
         return $asientos;
     }
-   
-     
+
+
 }

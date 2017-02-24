@@ -17,7 +17,7 @@ var tablaSalidas = (function(){
         //campos generales
         jqGrid: "#salidasGrid",
         jqPager: "#pagerSalidas",
-        optionsModal: "#optionsModal",
+        optionsModal: "#optionsModal, #opcionesModal",
         searchBtn: "#searchBtn",
         clearBtn: "#clearBtn",
         noRecords: ".NoRecordsSalidas",
@@ -135,7 +135,8 @@ var tablaSalidas = (function(){
                     estado: '',
                     numero: '',
                     tipo: '',
-                    erptkn: tkn
+                    erptkn: tkn,
+                    factura_id: ''
                 }
             }).trigger('reloadGrid');
 
@@ -178,7 +179,10 @@ var tablaSalidas = (function(){
                 erptkn: tkn,
                 operacion_id: operacion_id,
                 operacion_type: operacion_type,
-                cliente_id: this.cliente_id
+                cliente_id: this.cliente_id,
+                order_venta_id: (typeof this.infofactura != 'undefined') ? this.infofactura.orden_venta_id:'',
+                factura_uuid: (typeof this.uuid_factura != 'undefined') ? this.uuid_factura:'',
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,
@@ -245,7 +249,7 @@ var tablaSalidas = (function(){
             },
         });
 
-        dom.jqGrid.jqGrid('columnToggle');
+        //dom.jqGrid.jqGrid('columnToggle');
 
         //-------------------------
         // Redimensioanr Grid al cambiar tamaño de la ventanas.

@@ -36,7 +36,7 @@
                     </div>
 
                     <?php
-                    echo modules::run('pedidos/ocultoformulario');
+                    echo modules::run('pedidos/ocultoformulario',$pedido_obj);
                     ?>
 
                 </div>

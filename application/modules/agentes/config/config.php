@@ -10,7 +10,7 @@ $config['modulo_config'] = array(
 	'grupo'			=> 'Administración',
 	'agrupador'		=> array(
             'Seguros' => array(
-                "grupo_orden" => 3
+                "grupo_orden" => 8
             ),
         ),
 	'prefijo'		=> 'agt',

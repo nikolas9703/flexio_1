@@ -36,7 +36,7 @@ class ClienteRequest {
         $centros = FormRequest::array_filter_dos_dimenciones($this->request->input('centro_facturacion'));
         $asignados = FormRequest::array_filter_dos_dimenciones($this->request->input('asignados'));
         $telefonos = FormRequest::array_filter_dos_dimenciones($this->request->input('telefonos'));
-        $correos = FormRequest::array_filter_dos_dimenciones($this->request->input('correos'));;
+        $correos = FormRequest::array_filter_dos_dimenciones($this->request->input('correos'));
 
         $cp_id = $this->request->input('id_cp');
         $centros = $this->setEmpresa($centros, $empresa_id);

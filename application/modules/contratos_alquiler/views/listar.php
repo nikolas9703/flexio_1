@@ -49,9 +49,9 @@
                                             <input type="text" name="codigo" id="codigo" class="form-control">
                                         </div>
 
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" style="margin-bottom:3em;height: auto !important;">
                                             <label for="">Cliente</label>
-                                            <select name="cliente_id" class="form-control select2" id="cliente_id">
+                                            <select name="cliente_id" class="form-control" id="cliente_id"  multiple="multiple" >
                                                 <option value="">Seleccione</option>
                                                 <?php foreach ($clientes as $cliente): ?>
                                                     <option value="<?php echo $cliente->id ?>"><?php echo $cliente->nombre ?></option>
@@ -71,6 +71,39 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Centro contable</label>
+                                            <select name="centro_contable_id" class="form-control select2" id="centro_contable_id">
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($centros as $centro): ?>
+                                                    <option value="<?php echo $centro->id ?>"><?php echo $centro->nombre ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+									</div>
+
+									<div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12"">
+										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" style="margin-bottom:3em;height: auto !important;">
+                                            <label for="">Categor&iacute;(s) de item</label>
+                                            <select name="categoria" class="form-control" id="categoria"  multiple="multiple" >
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($categorias as $categoria): ?>
+                                                    <option value="<?php echo $categoria->id ?>"><?php echo $categoria->nombre ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Creado por</label>
+                                            <select name="creado_por" class="form-control select2" id="creado_por">
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($usuarios as $usuario): ?>
+                                                    <option value="<?php echo $usuario->id ?>"><?php echo $usuario->nombre." ".$usuario->apellido ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
 
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">

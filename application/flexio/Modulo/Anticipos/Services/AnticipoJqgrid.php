@@ -23,9 +23,8 @@ class AnticipoJqgrid extends JqgridAbstract{
 
     list($page, $limit, $sidx, $sord) = $this->inicializar();
 
-    $clause = array_merge($clause, $this->camposBuscar());
-
-
+    $clause = array_filter(array_merge($clause, $this->camposBuscar()));
+    
     $count = $this->registros($clause)->count();
 
     list($total_pages, $page, $start) = $this->paginacion($count, $limit, $page);
@@ -39,7 +38,6 @@ class AnticipoJqgrid extends JqgridAbstract{
 
   function registros($clause = array(),$sidx=null, $sord=null, $limit=null, $start=null){
     $builder = $this->scoped->newQuery();
-
     $registros = $this->filters->apply($builder, $clause);
 
     if(!is_null($sidx) && !is_null($sord)) $registros->orderBy($sidx, $sord);
@@ -72,7 +70,7 @@ class AnticipoJqgrid extends JqgridAbstract{
             $row->fecha_anticipo,
             $row->present()->monto,
             $row->present()->documento,
-            $row->present()->metodo_anticipo,
+            //$row->present()->metodo_anticipo,
             $row->present()->estado_label,
             $link_option,
             $hidden_options

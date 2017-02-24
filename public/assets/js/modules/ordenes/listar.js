@@ -9,7 +9,8 @@ var listarOrdenes = (function(){
         filename: "ordenes",
         segmento2: "ordenes",
         input: "input",
-        chosens: "#proveedor, #estado, #centro,#creado_por, #categoria_id",
+        chosens: "#estado, #centro,#creado_por, #categoria_id",
+        //selects2: "#proveedor",
         fecha_desde: "#fecha_desde",
         fecha_hasta: "#fecha_hasta"
     };
@@ -25,6 +26,7 @@ var listarOrdenes = (function(){
         dom.jqGrid = $(st.jqGrid);
         dom.input = $(st.input);
         dom.chosens = $(st.chosens);
+        //dom.selects2 = $(st.selects2);
         dom.fechas = $(st.fechas);
     };
 
@@ -38,6 +40,10 @@ var listarOrdenes = (function(){
             width: '100%',
             allow_single_deselect: true
         });
+
+       // dom.selects2.select2({
+        //    with:"100%"
+        //}),
 
         dom.fechas.daterangepicker({
             showDropdowns: true,
@@ -217,6 +223,41 @@ $(function(){
 			$("#fecha_desde").datepicker( "option", "maxDate", selectedDate );
 	    }
 	});
+
+
+$("#proveedor3").select2({
+    width:"100%",
+    theme: "bootstrap",
+    language: "es",
+    maximumInputLength: 10,
+    ajax: {
+                url: phost() + 'proveedores/ajax_catalogo_proveedores',
+                dataType: 'json',
+                cache: true,
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        erptkn: tkn
+                    };
+                },
+                processResults: function (data, params) {
+                    
+                   var resultados = data.map(function(resp){
+                       return [{'id': resp.id,'text': resp.nombre}];
+                   }).reduce(function(a,b){
+                       return a.concat(b);
+                   },[]);
+                     return {
+                          results:resultados
+                     };
+                },
+                escapeMarkup: function (markup) { return markup; },
+            }
+});
+
+
+
 
 
 });

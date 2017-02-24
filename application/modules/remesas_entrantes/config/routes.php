@@ -8,5 +8,6 @@
 $route['remesas_entrantes/listar'] = 'remesas_entrantes/listar';
 $route['remesas_entrantes/crear'] = 'remesas_entrantes/crear';
 $route['remesas_entrantes/ver/(:any)'] = 'remesas_entrantes/ver/$1';
+$route['remesas_entrantes/editar/(:any)']         = 'remesas_entrantes/editar/$1';
 
-$route['remesas_entrantes/ajax-listar-remesas'] = 'remesas_entrantes/ajax_listar_remesas';
+$route['remesas_entrantes/ajax-listar-remesas-entrantes'] = 'remesas_entrantes/ajax_listar_remesas';

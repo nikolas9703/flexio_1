@@ -65,6 +65,7 @@ var ODTModel = new Vue({
     	estado_id: typeof estado_id != 'undefined' && _.isNumber(estado_id) ? estado_id : 11,
     	tipo_orden_id: typeof tipo_orden_id != 'undefined' && _.isNumber(tipo_orden_id) ? tipo_orden_id : '',
     	lista_precio_id: typeof lista_precio_id != 'undefined' && _.isNumber(lista_precio_id) ? lista_precio_id : listaPrecioIdDefault,
+    	lista_precio_alquiler_id: typeof lista_precio_alquiler_id != 'undefined' && _.isNumber(lista_precio_alquiler_id) ? lista_precio_alquiler_id : listaPrecioAlquilerIdDefault,
     	facturable_id: typeof facturable_id != 'undefined' && _.isNumber(facturable_id) ? facturable_id : '',
     	centro_contable_id: typeof centro_id != 'undefined' && _.isNumber(centro_id) ? centro_id : '',
     	bodega_id: typeof bodega_id != 'undefined' && _.isNumber(bodega_id) ? bodega_id : '',
@@ -173,7 +174,7 @@ var ODTModel = new Vue({
         verficarSeleccion: function(evt, params){
 
         	this.orden_de_id = params.selected;
-          console.log(evt, params);
+
         	//Clientes
         	if(this.orden_de == "clientes"){
 

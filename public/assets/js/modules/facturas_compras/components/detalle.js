@@ -25,21 +25,26 @@ Vue.component('detalle',{
 
         'detalle.proveedor_id':function(val, oldVal){
 
+            var context = this;
+            if(context.responseWaiting)return;
+
 
             if(val == ''){
                 this.detalle.saldo_proveedor = 0;
                 this.detalle.credito_proveedor = 0;
+                this.config.disableEmpezarDesde = false;
                 return '';
             }
 
-            var context = this;
             var datos = $.extend({erptkn: tkn},{proveedor_id:val});
+            context.responseWaiting = true;
             this.$http.post({
                 url: window.phost() + "proveedores/ajax-get-montos",
                 method:'POST',
                 data:datos
             }).then(function(response){
 
+                context.responseWaiting = false;
                 if(_.has(response.data, 'session')){
                     window.location.assign(window.phost());
                     return;
@@ -48,6 +53,12 @@ Vue.component('detalle',{
 
                     context.detalle.saldo_proveedor = response.data.saldo;
                     context.detalle.credito_proveedor = response.data.credito;
+                    if($('#empezable_type option:selected').val() == 'ordencompra' || $('#empezable_type option:selected').val() == 'subcontrato'){
+                      context.config.disableEmpezarDesde = false;
+                      $('#proveedor_id').attr('disabled', 'disabled');
+                    }else{
+                      context.config.disableEmpezarDesde = true;
+                    }
                     if(context.config.vista == 'crear'){
                         context.detalle.terminos_pago = response.data.termino_pago;
                     }
@@ -64,8 +75,10 @@ Vue.component('detalle',{
     data:function(){
 
         return {
+            select2_usuarios:{url: phost() + 'usuarios/ajax-catalogo',using:['id', 'nombre']},
+            select2_bodega:{url: phost() + 'bodegas/ajax_catalogo',using:['id', 'nombre']},
 
-
+            responseWaiting: false
 
         };
 
@@ -137,3 +150,104 @@ Vue.component('detalle',{
 
 
 });
+
+
+Vue.directive('select2-catalog',
+    {
+        previousValue:null,
+        twoWay: true,
+        data:[],
+        select2:{
+
+        },
+        //priority: 1000,
+        params: ['config','options'],
+
+        bind: function () {
+            console.log("databinding", this.vm);
+            var self = this;
+            console.log("bind::",this)
+            if(this.params.config==null){
+                console.log("Parameter config is null select catalog");
+                return;
+            }
+            this.select2={
+                width:'100%',
+                ajax: {
+                    url: self.params.config.url,
+                    method:'POST',
+                    dataType: 'json',
+                    delay: 200,
+                    cache: true,
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                            limit: 10,
+                            erptkn: window.tkn
+                        };
+                    },
+                    processResults: function (data, params) {
+                        self.data=data;
+                        if(self.params.config.using==null){
+                            console.log("ERROR: using is missing in select2-catalog config");
+                        }
+                        let resultsReturn = data.map(resp=> [{'id': resp[self.params.config.using[0]],'text': resp[self.params.config.using[1]]}]).reduce((a, b) => a.concat(b),[]);
+                        self.vm.$emit("select_result", data, self.el);
+                        return {results:resultsReturn};
+                    },
+                    escapeMarkup: function (markup) { return markup; },
+                }
+            }
+            $(this.el).select2(this.select2);
+
+            this.previousValue=$(this.el).val();
+        },
+
+        update: function (value) {
+            var self = this;
+
+            if(value!=null && value != ""){
+                var obj = this.data.find((q)=> q[self.params.config.using[0]] == value);
+
+                if(typeof obj != "undefined"){
+                    this.select2['data']=[{'id': obj[self.params.config.using[0]],'text': obj[self.params.config.using[1]]}];
+                    this.select2['ajax']=null;
+                    self.vm.$emit("selected", obj, self.el);
+                }else{
+
+                    self.vm.$http.post({
+                        url: typeof self.params.config.url_find != "undefined"? self.params.config.url_find:self.params.config.url ,
+                        method: 'POST',
+                        data: {
+                            id: value, // search term
+                            erptkn: window.tkn
+                        }}).then((response) => {
+                        if(response!=null && response.data.length > 0){
+                            self.vm.$emit("select_result", response.data, self.el);
+                            obj=response.data[0];
+                            self.select2['data']=[{'id': obj[self.params.config.using[0]],'text': obj[self.params.config.using[1]]}];
+                           // self.select2['ajax']=null;
+                            $(self.el).select2(self.select2).on('change', function(e) {
+                                self.set($(self.el).val());
+                            })
+                            $(self.el).val(value).trigger('change');
+
+                            self.vm.$emit("selected", obj, self.el);
+                        }
+                    });
+                }
+            }
+
+            $(self.el).select2(self.select2).on('change', function(e) {
+                self.set($(self.el).val());
+            })
+            $(self.el).val(value).trigger('change');
+        },
+
+        unbind: function () {
+            $(this.el).off().select2('destroy');
+        }
+    }
+
+);

@@ -7,6 +7,8 @@ use Flexio\Modulo\Cotizaciones\Models\CotizacionCatalogo as CotizacionCatalogo;
 use Flexio\Modulo\Cotizaciones\Models\LineItemTransformer as LineItemTransformer;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable;
+use Flexio\Modulo\OrdenesVentas\Repository\OrdenVentaRepository;
+use Flexio\Modulo\FacturasVentas\Repository\FacturaVentaRepository;
 
 class CotizacionRepository {
 
@@ -72,22 +74,58 @@ class CotizacionRepository {
 
     public function getCollectionCotizacion($cotizacion){
 
+    $articulo = new \Flexio\Library\Articulos\ArticuloVenta;
+    return collect(array_merge(
+        [
+            'centros_facturacion' => count($cotizacion->cliente->centro_facturable) ? $cotizacion->cliente->centro_facturable : [],
+        ],
+        $cotizacion->toArray(),
+        [
+            'articulos' => $articulo->get($cotizacion->items, $cotizacion),
+            'observaciones' => $cotizacion->comentario,
+            'comentario_timeline' => $cotizacion->comentario_timeline,
+            'saldo_cliente' => 0,
+            'credito_cliente' => 0,
+            'nombre' => "{$cotizacion->codigo} - {$cotizacion->cliente->nombre}"
+        ]
+    ));
+
+}
+    public function getCollectionCotizacionDuplicar($cotizacion){
+
         $articulo = new \Flexio\Library\Articulos\ArticuloVenta;
         return collect(array_merge(
-                [
-                    'centros_facturacion' => count($cotizacion->cliente->centro_facturable) ? $cotizacion->cliente->centro_facturable : [],
-                ],
-                $cotizacion->toArray(),
-                [
-                    'articulos' => $articulo->get($cotizacion->items, $cotizacion),
-                    'observaciones' => $cotizacion->comentario,
-                    'comentario_timeline' => $cotizacion->comentario_timeline,
-                    'saldo_cliente' => 0,
-                    'credito_cliente' => 0,
-                    'nombre' => "{$cotizacion->codigo} - {$cotizacion->cliente->nombre}"
-                ]
+            [
+                'centros_facturacion' => count($cotizacion->cliente->centro_facturable) ? $cotizacion->cliente->centro_facturable : [],
+            ],
+            $this->getCollectionDataCotizacion($cotizacion),
+            [
+                'articulos' => $articulo->getCollectionArticuloCotizacionDuplicada($cotizacion->items, $cotizacion),
+                'observaciones' => '',
+                'comentario_timeline' => $cotizacion->comentario_timeline,
+                'saldo_cliente' => 0,
+                'credito_cliente' => 0,
+                'nombre' => "{$cotizacion->codigo} - {$cotizacion->cliente->nombre}"
+            ]
         ));
 
+    }
+
+    public function getCollectionDataCotizacion($cotizacion){
+        return [
+            'id' => '',
+            'codigo'=>'',
+            'cliente_id' => '',
+           // 'fecha_desde' => '',
+          //  'fecha_hasta' => '',
+            'estado' => 'por_aprobar',
+            'creado_por' => $cotizacion->creado_por,
+            'comentario'=> '',
+            'termino_pago' => 'al_contado',
+            'item_precio_id' => $cotizacion->item_precio_id,
+            'centro_contable_id' => $cotizacion->centro_contable_id,
+            'centro_facturacion_id' => ''
+        ];
     }
 
     function create($created) {
@@ -107,7 +145,24 @@ class CotizacionRepository {
 
     function update($update) {
         $cotizacion = Cotizacion::find($update['cotizacion']['id']);
-        $cotizacion->update($update['cotizacion']);
+        $cotizacion->termino_pago = $update['cotizacion']['termino_pago'];
+        $cotizacion->fecha_desde = $update['cotizacion']['fecha_desde'];
+        $cotizacion->fecha_hasta = $update['cotizacion']['fecha_hasta'];
+        $cotizacion->creado_por = $update['cotizacion']['creado_por'];
+        $cotizacion->item_precio_id = $update['cotizacion']['item_precio_id'];
+        $cotizacion->centro_facturacion_id = $update['cotizacion']['centro_facturacion_id'];
+        $cotizacion->centro_contable_id =
+        !empty($update['cotizacion']['centro_contable_id']) ?$update['cotizacion']['centro_contable_id']: $cotizacion->centro_contable_id;
+        $cotizacion->estado = $update['cotizacion']['estado'];
+        $cotizacion->subtotal = $update['cotizacion']['subtotal'];
+        $cotizacion->descuento = $update['cotizacion']['descuento'];
+        $cotizacion->impuestos = $update['cotizacion']['impuestos'];
+        $cotizacion->total = $update['cotizacion']['total'];
+       // $cotizacion->oportunidad_id = $update['cotizacion']['oportunidad_id'];
+        $cotizacion->comentario = $update['cotizacion']['comentario'];
+        $cotizacion->cliente_tipo = $update['cotizacion']['cliente_tipo'];
+        $cotizacion->save();
+       // $cotizacion->update($update['cotizacion']);
 
         $this->_sync_items($cotizacion, $update['lineitem']);
         $this->addPolymorphicRelationship($update['cotizacion']['centro_facturacion_id'],$cotizacion);
@@ -157,6 +212,7 @@ class CotizacionRepository {
 
         if(isset($clause['oportunidad_id']) and !empty($clause['oportunidad_id'])){$query->deOportunidad($clause['oportunidad_id']);}
         if(isset($clause['orden_venta_id']) and !empty($clause['orden_venta_id'])){$query->deOrdenVenta($clause['orden_venta_id']);}
+        if(isset($clause['campo']) and !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
 
     }
 
@@ -164,6 +220,24 @@ class CotizacionRepository {
         return Cotizacion::where(function($query) use($clause) {
                     $this->_filtros($query, $clause);
                     $query->where('empresa_id', '=', $clause['empresa_id']);
+                    if(isset($clause['factura_id'])) {
+                        $factura_venta_id = $clause['factura_id'];
+                        $factura_venta = (new FacturaVentaRepository)->find($factura_venta_id);
+
+                        $ordenes_de_venta = $factura_venta->orden_venta;
+                        $idsdeOrdenes = array();
+                        $i = 0;
+                        foreach ($ordenes_de_venta as $orden_venta) {
+                            $idsdeOrdenes[$i] = $orden_venta->id;
+                            $i++;
+                        }
+
+                        $query->whereHas("orden_venta", function($cotizacion) use ($idsdeOrdenes) {
+                            $cotizacion->whereIn('cotizacion_id', $idsdeOrdenes);
+                        });
+                    }
+                    if (isset($clause['tipo']))
+                        $query->where('tipo', '=', $clause['tipo']);
                     if (isset($clause['cliente_id']))
                         $query->where('cliente_id', '=', $clause['cliente_id']);
                     if (isset($clause['id']))
@@ -186,6 +260,24 @@ class CotizacionRepository {
                     $query->where('empresa_id', '=', $clause['empresa_id']);
                     if (isset($clause['cliente_id']))
                         $query->where('cliente_id', '=', $clause['cliente_id']);
+                    if(isset($clause['factura_id'])) {
+                        $factura_venta_id = $clause['factura_id'];
+                        $factura_venta = (new FacturaVentaRepository)->find($factura_venta_id);
+
+                        $ordenes_de_venta = $factura_venta->orden_venta;
+                        $idsdeOrdenes = array();
+                        $i = 0;
+                        foreach ($ordenes_de_venta as $orden_venta) {
+                            $idsdeOrdenes[$i] = $orden_venta->id;
+                            $i++;
+                        }
+
+                        $query->whereHas("orden_venta", function($cotizacion) use ($idsdeOrdenes) {
+                            $cotizacion->whereIn('id', $idsdeOrdenes);
+                        });
+                    }
+                    if (isset($clause['tipo']))
+                        $query->where('tipo', '=', $clause['tipo']);
                     if (isset($clause['id']))
                         $query->where('id', '=', $clause['id']);
                     if (isset($clause['estado']))
@@ -213,4 +305,37 @@ class CotizacionRepository {
         $centro_facturacion->cotizacion()->sync([$cotizacion->id]);
     }
 
+    public static function exportar($clause = array()) {
+
+        $query = Cotizacion::where(function($query) use($clause) {
+                    if (!empty($sidx) && preg_match("/cargo/i", $sidx)) {
+                        $query->orderBy("nombre", $sord);
+                    }
+                });
+
+
+        //Si existen variables de limite
+        if ($clause != NULL && !empty($clause) && is_array($clause)) {
+            foreach ($clause AS $field => $value) {
+                $i = 0;
+                foreach ($value AS $row) {
+
+                    $valor_fin[$i] = hex2bin($row);
+
+                    $i++;
+                }
+                //verificar si valor es array
+                if (is_array($value)) {
+
+
+                    $query->whereIn("uuid_cotizacion", $valor_fin);
+
+                } else {
+                    $query->where($field, '=', $valor_fin);
+                }
+            }
+        }
+
+        return $query->get();
+    }
 }

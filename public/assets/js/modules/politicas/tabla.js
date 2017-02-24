@@ -18,7 +18,7 @@ var tablaPoliticas = (function(){
             url: tablaUrl,
             mtype: "POST",
             datatype: "json",
-            colNames:['','Empresa','Nombre','Rol(es)','Categor&iacute;a(a)','M&oacute;dulo','Transacci&oacute;n(es)','Monto l&iacute;mite','Estado','', ''],
+            colNames:['','Empresa','Nombre','Rol(es)','Categor&iacute;a(s)','M&oacute;dulo','Transacci&oacute;n(es)','Monto l&iacute;mite','Estado','', ''],
             colModel:[
                 {name:'uuid', index:'uuid', width:30,  hidedlg:true, hidden: true},
                 {name:'empresa', index:'empresa', width:55, sortable:true},

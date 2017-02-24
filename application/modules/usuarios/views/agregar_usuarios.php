@@ -96,14 +96,22 @@ Template::cargar_vista('sidebar');
 							</select>
 						</div>
 					</div>
-				</div>	
-				<div class="row">			
+				</div>
+				<div class="row">
 					<div class="col-lg-3 col-md-3">
 						<div class="form-group">
 							<label>Categoria(s)</label>
 							<select name="campo[categorias]" multiple="true" class="form-control" v-select2="detalle.categorias" :config="config.select2">
 								<option value="todos">Todos</option>
 								<option :value="categorias.id" v-for="categorias in getCategorias" v-html="categorias.nombre"></option>
+							</select>
+						</div>
+					</div>
+					<div class="col-lg-3 col-md-3">
+						<div class="form-group">
+							<label>Tipo de subcontrato</label>
+							<select name="campo[tipos_subcontrato]" multiple="true" class="form-control" v-select2="detalle.tipos_subcontrato" :config="config.select2" data-placeholder="Seleccione">
+								<option :value="option.id" v-for="option in catalogos.tipos_subcontrato" v-html="option.valor"></option>
 							</select>
 						</div>
 					</div>

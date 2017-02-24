@@ -97,7 +97,7 @@ class ContratosAlquilerItems extends Model
 
     public function item()
     {
-        return $this->belongsTo('Flexio\Modulo\Inventarios\Models\Items', 'item_id')->select('id', 'nombre', 'tipo_id');
+        return $this->belongsTo('Flexio\Modulo\Inventarios\Models\Items', 'item_id')->select('id', 'nombre', 'tipo_id', 'codigo');
     }
 
     public function ciclo()

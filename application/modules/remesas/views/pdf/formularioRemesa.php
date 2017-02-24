@@ -52,17 +52,17 @@
             <td></td>
         </tr>
         <?php 
-
+            $nombre_ramos = "";
             foreach ($nombreRamos as $key => $value) {
-                echo '
-                    <tr>
-                        <th class="columnasnombres"></th>
-                        <td>'.$value["nombre"].'</td>
-                    </tr>
-                ';
+                $nombre_ramos = $value["nombre"]." , ".$nombre_ramos;
             }
         ?>
-         
+        <tr>
+            <th class="columnasnombres"></th>
+            <td><?php echo $nombre_ramos?></td>
+        </tr>
+        
+        
     </table>
     <br>
     <table style="width: 100%;">
@@ -75,7 +75,7 @@
             <th class='columnasnombres' width="7%">No. poliza </th> 
             <th class='columnasnombres' width="7%">Inicio vigencia </th> 
             <th class='columnasnombres' width="7%">Fin vigencia </th> 
-            <th class='columnasnombres' width="7%">Prima total </th> 
+            <th class='columnasnombres' width="7%">Prima cobrada </th> 
             <th class='columnasnombres' width="7%">Comisión descontada </th> 
             <th class='columnasnombres' width="7%">S.Comisión descontada </th> 
             <th class='columnasnombres' width="7%">Pago a aseguradora </th>

@@ -27,8 +27,9 @@ var tablaAdendas = (function(){
  		 {name:'link', index:'link', width:50, align:"center", sortable:false, resizable:false,hidden: true, hidedlg:true},
  		 ],
   	   postData: {
-  	   		erptkn: tkn,
- 				subcontrato_id: subcontrato_id
+
+  	   		erptkn: tkn, 			
+          campo: typeof window.campo !== 'undefined' ? window.campo : {}
   	   	},
  			height: "auto",
  	 		autowidth: true,

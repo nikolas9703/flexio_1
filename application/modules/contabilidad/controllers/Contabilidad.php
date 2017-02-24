@@ -13,6 +13,13 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Contabilidad\Repository\ListarCuentas;
 use Flexio\Modulo\Contabilidad\Models\Cuentas as Cuenta;
 use Flexio\Modulo\CentrosContables\Models\CentrosContables as CentrosContables;
+use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaBancoRepository;
+use Flexio\Modulo\Cajas\Repository\CajasRepository;
+use Flexio\Modulo\Contabilidad\Models\CuentasCentro;
+use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
+use League\Csv\Writer as Writer;
+
 //use Carbon\Carbon;
 @include_once ('HistorialCuenta.php'); //similacion de trait porque CI no permite hacerlo de otra manera
 class Contabilidad extends CRM_Controller
@@ -21,6 +28,10 @@ class Contabilidad extends CRM_Controller
     protected $empresa_id;
     protected $listar_cuentas;
     protected $impuestoFormRequest;
+    protected $CuentasRepository;
+    protected $CuentaBancoRepository;
+    protected $CajasRepository;
+    private $CentrosContablesRepository;
 
     public function __construct() {
 
@@ -40,6 +51,10 @@ class Contabilidad extends CRM_Controller
 
         $uuid_empresa       = $this->session->userdata('uuid_empresa');
         $this->empresa_id   = Empresa_orm::findByUuid($uuid_empresa)->id;
+        $this->CuentasRepository = new CuentasRepository;
+        $this->CuentaBancoRepository = new CuentaBancoRepository;
+        $this->CajasRepository = new CajasRepository;
+        $this->CentrosContablesRepository           = new CentrosContablesRepository();
     }
 
 
@@ -93,7 +108,70 @@ class Contabilidad extends CRM_Controller
         $this->template->agregar_contenido($data);
         $this->template->visualizar($breadcrumb);
     }
+    public function listar_cuentas_contables($uuid_cuenta) {
+                $data = array();
+               $this->assets->agregar_css(array(
+                  'public/assets/css/default/ui/base/jquery-ui.css',
+                  'public/assets/css/default/ui/base/jquery-ui.theme.css',
+                  'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
+                  'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
+                  'public/assets/css/plugins/jquery/jstree/default/style.min.css',
+                  //'public/assets/css/modules/stylesheets/contabilidad.css',
+               ));
+               $this->assets->agregar_js(array(
+                   'public/assets/js/default/jquery-ui.min.js',
+                   'public/assets/js/default/lodash.min.js',
+                   'public/assets/js/plugins/jquery/jquery.sticky.js',
+                   'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+                   'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
+                   'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+                   'public/assets/js/plugins/jquery/jquery.progresstimer.min.js',
+                   'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
+                   'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
+                   'public/assets/js/plugins/jquery/jstree.min.js',
+                   'public/assets/js/modules/contabilidad/routes.js',
 
+               ));
+
+               $centro = $this->CentrosContablesRepository->findByUuid($uuid_cuenta);
+               $this->assets->agregar_var_js(array(
+                   "centro_id" =>$centro->id
+             ));
+
+
+                     $breadcrumb = array(
+                       "titulo" => '<i class="fa fa-calculator"></i> Centro contable: '.$centro->nombre,
+                       "filtro" => false,
+                         "ruta" => array(
+                           0 => array(
+                               "nombre" => "<b>Centros contables</b>",
+                               "url" => 'contabilidad/listar_centros_contables',
+                               "activo" => true
+                             ),
+                           1 => array(
+                               "nombre" => "Contabilidad",
+                               "activo" => false,
+                             ),
+                            2 => array(
+                                "nombre" => "Listar",
+                                "activo" => false
+                              ),
+
+
+                         ),
+                         "menu" => array(
+                             "nombre" => "Acción",
+                             "url" => "",
+                             "opciones" => array()
+                         )
+                     );
+               $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
+               $this->template->agregar_titulo_header('Cuentas contables');
+               $this->template->agregar_breadcrumb($breadcrumb);
+               $this->template->agregar_contenido($data);
+               $this->template->visualizar($breadcrumb);
+
+           }
     public function ajax_listar() {
         //Just Allow ajax request
 
@@ -232,7 +310,7 @@ class Contabilidad extends CRM_Controller
                 $response->core->data[$i] = array(
                     'id' => (string)$row['id'],
                     'parent'=> $row["padre_id"]==0? "#": (string)$row["padre_id"],
-                    'text' => $row["nombre"],
+                    'text' =>$row["codigo"] .' '. $row["nombre"],
                     'icon' => 'fa fa-folder',
                     'codigo' => $row["codigo"]
                     //'state' =>array('opened' => true)
@@ -265,77 +343,113 @@ class Contabilidad extends CRM_Controller
         exit;
 
     }
+
+    public function ajax_get_cuentas()
+    {
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $response = [];
+        $post = $this->input->post();
+        $q = $this->input->get('q');
+        $depositable_type = $this->input->get('depositable_type');
+        $centro_contable_id = $this->input->get('centro_contable_id');
+        $clause = ['empresa_id' => $this->empresa_id, 'transaccionales' => true, 'q' => $q, 'centro_contable_id' => $centro_contable_id];
+        if(isset($post['campo']) && $post['campo']['id'] && !empty($post['campo']['id'])){
+            if($depositable_type != 'caja'){
+                if(!is_numeric($centro_contable_id)){
+                    $aux = \Flexio\Modulo\CentrosContables\Models\CentrosContables::where('uuid_centro', hex2bin($centro_contable_id))->first();
+                    if(count($aux)){$clause['centro_contable_id'] = $aux->id;}
+                }
+                $result = \Flexio\Modulo\Contabilidad\Models\Cuentas::where(function($query) use ($post, $clause, $centro_contable_id){
+                    $query->whereRaw('contab_cuentas.id='.$post['campo']['id']);
+                });
+                if(isset($clause["centro_contable_id"]) and !empty($clause["centro_contable_id"]) and !$this->input->get('aplica_centro')){
+                    $result->select('contab_cuentas.*')
+                    ->join("contab_cuentas_centros", function ($join) use ($clause){
+                        $join->on("contab_cuentas_centros.cuenta_id", "=", "contab_cuentas.id");
+                        $join->where("contab_cuentas_centros.centro_id", "=", $clause["centro_contable_id"]);
+                    });
+                }
+                $result = $result->first();
+                $response = ['id' => count($result) ? $result->id : '', 'nombre' => count($result) ? $result->codigo.' '.$result->nombre : 'Seleccione'];
+            }else{
+                $result = \Flexio\Modulo\Cajas\Models\Cajas::find($post['campo']['id']);
+                $response = ['id' => $result->id, 'nombre' => $result->nombre];
+            }
+        }else{
+            if($depositable_type == 'banco'){
+                $result = $this->CuentaBancoRepository->getAll(['empresa_id' => $this->empresa_id], ['q' => $q])->map(function($cuenta_banco){
+                    return $cuenta_banco->cuenta;
+                });
+            }else if($depositable_type == 'caja'){
+                $result = $this->CajasRepository->get($clause)->map(function($caja){
+                    return ['id' => $caja->id, 'nombre' => $caja->nombre, 'codigo' => ''];
+                });
+            }else{
+                if(!is_numeric($centro_contable_id)){
+                    $aux = \Flexio\Modulo\CentrosContables\Models\CentrosContables::where('uuid_centro', hex2bin($centro_contable_id))->first();
+                    if(count($aux)){$clause['centro_contable_id'] = $aux->id;}
+                }
+                //$clause['campo'] = ["cuentas" => json_decode($this->input->get('cuentas'))];
+                $result = $this->CuentasRepository->get($clause, NULL, NULL, 10, NULL);
+            }
+
+            $response = $result->map(function($cuenta){
+                return ['id' => (string) $cuenta->id, 'text' => $cuenta->codigo.' '.$cuenta->nombre];
+            });
+        }
+
+        echo json_encode($response);
+        exit;
+    }
+
+    public function ajax_get_centros()
+    {
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $response = [];
+        $request = array_merge($this->input->post(), $this->input->get(), ['empresa' => $this->empresa_id]);
+        if(isset($request['campo']) && !empty($request['campo'])){$request = array_merge($request, $request['campo']);}
+
+        $method = (isset($request['id']) && !empty($request['id'])) ? 'find' : 'get';
+        $result = \Flexio\Modulo\CentrosContables\Models\CentrosContables::where(function($query) use ($request){
+            $query->deFiltro($request);
+        })->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+        $response = $method == 'find' ? ['id' => $result->id, 'nombre' => $result->nombre] : $result->map(function($row){
+            return ['id' => $row->id, 'text' => $row->nombre];
+        });
+
+        echo json_encode($response);
+        exit;
+    }
+
     //guarda la cuenta del plan contable
     function ajax_guardarCuenta() {
         if(!$this->input->is_ajax_request()){
             return false;
         }
-        $response = new stdClass();
-        $uuid_empresa = $this->session->userdata('uuid_empresa');
-        $empresa = Empresa_orm::findByUuid($uuid_empresa);
-        $campos = array();
-        $id = $this->input->post('id');
-        $nombre = $this->input->post('nombre');
-        $codigo = $this->input->post('codigo');
-        $descripcion = $this->input->post('descripcion');
-        $padre_id = $this->input->post('padre_id');
-        $cuenta = Cuentas_orm::find($padre_id);
-        $tipo_cuenta_id = $cuenta->tipo_cuenta_id;
-        $impuesto = $this->input->post('impuesto');
-        Capsule::beginTransaction();
-        $campos['codigo']= $codigo;
-        $campos['nombre']= $nombre;
-        $campos['detalle']= $descripcion;
-        $campos['padre_id']= $padre_id;
-        $campos['tipo_cuenta_id']= $tipo_cuenta_id;
-        $campos['empresa_id']= $empresa->id;
-        //$campos['impuesto_id']= $impuesto;
-        try {
-            if(!isset($id))
-            {
-                $nuevo = Cuentas_orm::create($campos);
-                $response->mensaje = '<b>¡&Eacute;xito!</b> Se ha guardado correctamente '. $nuevo->nombre;
-                $response->estado = 200;
-                $ids_centros = $empresa->centros_contables->map(function($item){
-                    return $item->id;
-                });
-                if(!empty($ids_centros->toArray())){
-                    $nuevo->centros_contables()->attach($ids_centros->toArray(),array('empresa_id'=>$empresa->id));
-                }
 
-            }elseif(isset($id)){
-                $cuenta_data = Cuenta::find($id);
-                ///$nuevo = Cuentas_orm::find($id);
-                //$nuevo->nombre = $nombre;
-                $cuenta_data->nombre = $nombre;
-                //$nuevo->impuesto_id = $impuesto;
-                if(isset($descripcion)){
-                   // $nuevo->detalle = $descripcion;
-                    $cuenta_data->detalle = $descripcion;
-                }
-                $cuenta_data->save();
-               // $nuevo->save();
-               //
-               $response->estado = 200;
-                $response->mensaje = '<b>¡&Eacute;xito!</b> Se ha actualizado correctamente '. $cuenta_data->nombre;
-            }
-            Capsule::commit();
+
+        $formGuardar = new Flexio\Modulo\Contabilidad\FormRequest\GuardarCuenta;
+        $response = new stdClass();
+
+        //$cuenta = Cuentas_orm::find($padre_id);
+        //$tipo_cuenta_id = $cuenta->tipo_cuenta_id;
+
+        try {
+            $cuenta = $formGuardar->guardar();
+            $response->estado = 200;
+            $response->mensaje = '<b>¡&Eacute;xito!</b> Se ha actualizado correctamente '. $cuenta->nombre;
         }catch(Exception $e){
             $response->mensaje = $e;
             $response->estado = 500;
-            $response->mensaje = '<b>¡Error!</b> Su solicitud no fue procesada';
-            log_message('error',$e);
-            Capsule::rollback();
+            $response->mensaje = '<b>¡Error!</b> Su solicitud no fue procesada '.$e->getMessage();
+            log_message('error',$response->mensaje);
         }
-
-
-        /*if($cuenta_data){
-            $response->estado = 200;
-
-        }else{
-            $response->estado = 500;
-            $response->mensaje = '<b>¡Error!</b> Su solicitud no fue procesada';
-        }*/
 
         echo json_encode($response);
         exit;
@@ -394,6 +508,120 @@ class Contabilidad extends CRM_Controller
 
         $this->load->view('tabla_centro');
     }
+    function ocultotablacuentas() {
+                $this->assets->agregar_js(array(
+                  'public/assets/js/modules/contabilidad/tabla_cuenta.js'
+              ));
+              $this->load->view('tabla_centro');
+    }
+
+    //Nueva funcion
+    function ajax_listar_cuentas_contables() {
+      //Just Allow ajax request
+
+      if(!$this->input->is_ajax_request()){
+          return false;
+      }
+
+
+      $codigo = $this->input->post('codigo');
+      $nombre = $this->input->post('nombre');
+      $centro_id  = $this->input->post('centro_id');
+      $estado =  $this->input->post('estado');
+
+    //'cuenta_contable' =>  $this->CuentasRepository->catalagos_transacciones($this->CuentasRepository->get(['empresa_id'=>$this->empresa_id,'facturables'=>true,'transaccionales'=>true,'conItems'=>true])),
+
+      //$clause["empresa_id"] = $this->empresa_id;
+      $clause = ['empresa_id'=>$this->empresa_id,'facturables'=>true,'transaccionales'=>true,'conItems'=>true];
+      if(!empty($codigo)) $clause["codigo"] = $codigo;
+      if(!empty($nombre)) $clause["nombre"] = $nombre;
+      if(!empty($estado)){
+          $clause["estado"] = $estado;
+          $clause['centro_id'] = $centro_id;
+      }
+
+
+      //Desde aqui empieza
+      list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+      $count = $this->CuentasRepository->count($clause);
+      list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+      $cuentas = $this->CuentasRepository->get($clause ,$sidx, $sord, $limit, $start);
+       // if(!empty($estado)) dd($cuentas);
+    //  $cuentas->orderBy($sidx, $sord)->skip($start)->take($limit);
+/*
+//hacer repositorio de centros de facturacion
+list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+$count = $CentroFacturableRepository->count($clause);
+list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+$centros_facturacion = $CentroFacturableRepository->get($clause ,$sidx, $sord, $limit, $start);
+
+// Constructing a JSON
+$response = new stdClass ();*/
+      $response = new stdClass();
+      $response->page     = $page;
+      $response->total    = $total_pages;
+      $response->record  = $count;
+      $i=0;
+
+      if(!empty($cuentas)){
+          foreach ($cuentas as  $row){
+                $estado = '<a href="javascript:" data-tipo="Habilitar"  data-cuenta-id="'. $row['id'] .'" data-centro-id="'. $centro_id .'" class="habilDestarCuentaBtn"><span  id="cuenta_'.$row['id'].'" class="label label-danger">Deshabilitado</span></a>';
+
+               if( count($row->cuentas_centros($centro_id))>0){
+                $estado = '<a href="javascript:" data-tipo="Deshabilitar"   data-cuenta-id="'. $row['id'] .'" data-centro-id="'. $centro_id .'" class="habilDestarCuentaBtn"><span id="cuenta_'.$row['id'].'" class="label label-primary">Habilitado</span></a>';
+              }
+
+               $response->rows[$i] = array("id" => $row['id'], 'cell' => array(
+                $row['id'],
+                $row['nombre_completo'],
+                $estado
+               ));
+              $i++;
+          }
+      }
+
+      echo json_encode($response);
+      exit;
+    }
+    public function ajax_habilitar_cuenta() {
+      // Just Allow ajax request
+      if (! $this->input->is_ajax_request ()) {
+       return false;
+      }
+
+      Capsule::beginTransaction();
+
+      try {
+        $cuenta_id= $this->input->post('cuenta_id', true);
+        $centro_id = $this->input->post('centro_id', true);
+        $tipo = $this->input->post('tipo', true);
+
+        $fieldset['cuenta_id'] 	= $cuenta_id;
+        $fieldset["centro_id"] = $centro_id;
+        $fieldset["empresa_id"] = $this->empresa_id;
+
+        CuentasCentro::where('cuenta_id', $cuenta_id)
+        ->where('centro_id',$centro_id)
+        ->delete();
+
+        if($tipo == 'Habilitar')
+          $cuentas = CuentasCentro::create($fieldset);
+
+      } catch(ValidationException $e){
+       Capsule::rollback();
+       echo json_encode(array(
+           "response" => false,
+           "mensaje" => "Hubo un error tratando de Habilitar la cuenta."
+       ));
+       exit;
+      }
+      Capsule::commit();
+
+      echo json_encode(array(
+         "response" => true,
+       ));
+      exit;
+ }
 
     function ajax_listar_centros_contable() {
         if(!$this->input->is_ajax_request()) {
@@ -434,6 +662,8 @@ class Contabilidad extends CRM_Controller
                 $tituloBoton = ($row['estado']!='Activo')?'Activar':'Inactivar';
                 $estado_valor = $row['estado']=='Activo'?'Inactivo':'Activo';
                 $hidden_options .= '<a href="javascript:" data-uuid="'. $row['uuid_centro'] .'" data-estado="'. $estado_valor .'" class="btn btn-block btn-outline btn-success estadoCentroBtn">'.$tituloBoton.' Centro Contable</a>';
+                if($row["hijos"] == 1)
+                  $hidden_options .= '<a href="'. base_url('contabilidad/listar-cuentas-contables/'.$row['uuid_centro']) .'" class="btn btn-block btn-outline btn-success">Habilitar cuentas contables</a>';
                 $response->rows[$i] = array("id" => $row['id'], 'cell' => array(
                     'id' => (string)$row['id'],
                     'nombre' => $row['nombre'],
@@ -466,7 +696,9 @@ class Contabilidad extends CRM_Controller
 
         $this->load->view('modal_formulario_crear_centro');
     }
-
+    public function ocultoformularioExportarCuentas(){
+        $this->load->view('exportar_cuentas_contables');
+    }
     public function ajax_guardarCentro() {
         if(!$this->input->is_ajax_request()){
             return false;
@@ -487,7 +719,7 @@ class Contabilidad extends CRM_Controller
                 if($centro){
                     $cuentas = Cuentas_orm::where('empresa_id',$empresa->id)->lists('id');
 
-                    $centro->cuentas_contables()->attach($cuentas->toArray(),array('empresa_id'=>$empresa->id));
+                    //$centro->cuentas_contables()->attach($cuentas->toArray(),array('empresa_id'=>$empresa->id));
                     $response = array('estado'=>200, 'mensaje'=>'<b>¡&Eacute;xito!</b> Se ha guardado correctamente el '.$centro->nombre);
                 }
             }else{
@@ -828,6 +1060,51 @@ class Contabilidad extends CRM_Controller
         }else{
             die;
         }
+    }
+    public function exportar_cuenta()
+    {
+        if (empty($_POST)) {
+            exit();
+        }
+
+        $codigo = $this->input->post('codigo_cuenta', true);
+        $nombre = $this->input->post('nombre_cuenta', true);
+        $centro_id  = $this->input->post('centro_id_cuenta', true);
+        $estado =  $this->input->post('estado_cuenta', true);
+
+        $clause = ['empresa_id'=>$this->empresa_id,'facturables'=>true,'transaccionales'=>true,'conItems'=>true];
+        if(!empty($codigo)) $clause["codigo"] = $codigo;
+        if(!empty($nombre)) $clause["nombre"] = $nombre;
+        if(!empty($estado)){
+            $clause["estado"] = $estado;
+            $clause['centro_id'] = $centro_id;
+        }
+
+        $cuentas = $this->CuentasRepository->get($clause ,NULL, NULL, NULL, NULL);
+        $datos_excel= array();
+        //columnas dinamicas
+        $colNames = array('Cuenta contable','Estado');
+        $i=0;
+        foreach($cuentas as $cuenta){
+            $estado = 'Deshabilitado';
+
+            if( count($cuenta->cuentas_centros($centro_id))>0){
+                $estado = 'Habilitado';
+            }
+
+            $datos_excel[$i]['cuenta'] = utf8_decode($cuenta['nombre_completo']);
+            $datos_excel[$i]['estado'] = $estado;
+
+            $i++;
+        }
+        $csv = Writer::createFromFileObject(new SplTempFileObject());
+
+        $csv->insertOne($colNames);
+        $csv->insertAll($datos_excel);
+
+        $csv->output('Cuenta_contable.csv');
+       exit();
+
     }
 
 function _js(){

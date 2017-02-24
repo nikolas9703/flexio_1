@@ -21,13 +21,37 @@ class AsientoContable extends Model
 	    parent::__construct($attributes);
 	}
 
-	/* esta relacion no funciona*/
-	function transaccion_contable(){
-	    return $this->belongsTo('SysTransaccion');
-	}
+
+	public function transaccionable()
+    {
+       return $this->morphTo();
+    }
 
     public function getUuidTransaccionAttribute($value){
 		return strtoupper(bin2hex($value));
+	}
+
+	public function setDebitoAttribute($value)
+	{
+        return $this->attributes['debito'] = str_replace(',', '', $value);
+    }
+	public function setCreditoAttribute($value)
+	{
+        return $this->attributes['credito'] = str_replace(',', '', $value);
+    }
+
+	public function getNombreCentroContableAttribute(){
+		if(is_null($this->centro_contable)){
+			return "N/D";
+		}
+		return $this->centro_contable->nombre;
+	}
+
+	public function getCuentaContableAttribute(){
+		if(is_null($this->cuentas)){
+			return "";
+		}
+		return $this->cuentas->codigo. " - ". $this->cuentas->nombre;
 	}
 
 
@@ -43,7 +67,7 @@ class AsientoContable extends Model
 
     public function getCreatedAtAttribute($value)
     {
-        return Carbon::createFromFormat('Y-m-d H:i:s', $value)->format('d-m-Y');
+        return Carbon::createFromFormat('Y-m-d H:i:s', $value)->format('d/m/Y');
     }
 
     public function scopeNoConciliados($query)
@@ -66,13 +90,13 @@ class AsientoContable extends Model
 		}
     public function scopeDeFechaInicio($query, $fecha_inicio)
     {
-        $aux = Carbon::createFromFormat('d/m/Y', $fecha_inicio)->format('Y-m-d');
+        $aux = Carbon::createFromFormat('d/m/Y', $fecha_inicio)->startOfDay();
         return $query->whereDate("created_at", '>=', $aux);
     }
 
     public function scopeDeFechaFin($query, $fecha_fin)
     {
-        $aux = Carbon::createFromFormat('d/m/Y', $fecha_fin)->format('Y-m-d');
+        $aux = Carbon::createFromFormat('d/m/Y', $fecha_fin)->endOfDay();
         return $query->where("created_at", '<=', $aux);
     }
 
@@ -80,13 +104,27 @@ class AsientoContable extends Model
         return self::where('uuid_transaccion',hex2bin($uuid))->first();
     }
 
-	public function transaccionable()
+	/*public function transaccionable()
     {
         return $this->morphedByMany('SysTransaccion','transaccion','contab_transacciones','id');
-    }
+    }*/
 
 	public function cuentas(){
 		return $this->belongsTo(Cuentas::class,'cuenta_id');
 	}
+
+	public function centro_contable()
+    {
+        return $this->belongsTo('Flexio\Modulo\CentrosContables\Models\CentrosContables', 'centro_id', 'id');
+    }
+
+	public function present(){
+		return new \Flexio\Modulo\EntradaManuales\Presenter\TransaccionPresenter($this);
+	}
+
+	public function scopeFiltro($query, $campo){
+        $queryFilter = new \Flexio\Modulo\Contabilidad\Services\HistorialCuentaQueryFilters;
+        return $queryFilter->apply($query, $campo);
+    }
 
 }

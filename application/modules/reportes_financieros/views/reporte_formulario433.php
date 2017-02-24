@@ -6,7 +6,7 @@
     </div>
     <div class="ibox-content">
       <div class="row col-lg-12">
-        <div class="table-responsive">
+
           <table class="table table-striped antiguedad">
             <thead>
               <tr>
@@ -14,8 +14,10 @@
                 <th>RUC Informado</th>
                 <th>DV-RUC</th>
                 <th>Nombre o Raz&oacute;n</th>
-
+                <th>No. Factura / Documento</th>
                 <th>Monto PA</th>
+                <th>ITBMS</th>
+                <th>Objeto Retenci&oacute;n</th>
                 <th>ITBMS Retenido</th>
               </tr>
             </thead>
@@ -25,12 +27,15 @@
                 <td v-text="getRUC(reporte)"></td>
                 <td v-text="getDV(reporte)"></td>
                 <td v-text="reporte.nombre"></td>
+                <td v-text="reporte.codigo"></td>
                 <td v-text="reporte.monto | moneda"></td>
+                <td v-text="reporte.itbms | moneda"></td>
+                <td v-text="4"></td>
                 <td v-text="reporte.retenido | moneda"></td>
               </tr>
             </tbody>
           </table>
-        </div>
+
       </div>
     </div>
   </div>

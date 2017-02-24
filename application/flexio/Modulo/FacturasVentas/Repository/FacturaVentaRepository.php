@@ -111,7 +111,6 @@ class FacturaVentaRepository implements FacturaVentaInterface {
         $created['lineitem'] = array_map(function($line_item){
           return array_merge($line_item, ["lineitem_id" => ""]);
         }, $created['lineitem']);
-
         $factura_venta = FacturaVenta::create($created['facturaventa']);
         $lineItem = new LineItemTransformer;
         $items = $lineItem->crearInstancia($created['lineitem']);
@@ -171,6 +170,7 @@ class FacturaVentaRepository implements FacturaVentaInterface {
         if (isset($clause["item_id"]) and ! empty($clause["item_id"])){$query->deItem($clause["item_id"]);}
         if (isset($clause['contrato_alquiler_id']) and !empty($clause['contrato_alquiler_id'])){$query->deContratoAlquiler($clause['contrato_alquiler_id']);}
         if (isset($clause['contrato_id']) and !empty($clause['contrato_id'])){$query->deContrato($clause['contrato_id']);}
+        
     }
 
     function lista_totales($clause = array()) {
@@ -189,6 +189,8 @@ class FacturaVentaRepository implements FacturaVentaInterface {
                         $query->where('fecha_desde', '<=', $clause['fecha_desde']);
                     if (isset($clause['fecha_hasta']))
                         $query->where('fecha_hasta', '>=', $clause['fecha_hasta']);
+                    if (isset($clause['campo']) and !empty($clause['campo']))
+                        $query->deFiltro($clause['campo']);
 
 
 
@@ -206,6 +208,8 @@ class FacturaVentaRepository implements FacturaVentaInterface {
                     //if(isset($clause['codigo']))$query->where($clause["codigo"]);
                     if (isset($clause['cliente_id']))
                         $query->where('cliente_id', $clause['cliente_id']);
+                    if (isset($clause['campo']) and !empty($clause['campo']))
+                        $query->deFiltro($clause['campo']);
                    // if (isset($clause['estado']))
                        // $query->where('estado1', '=', $clause['estado']);
                     //if (isset($clause['created_by']))
@@ -224,6 +228,7 @@ class FacturaVentaRepository implements FacturaVentaInterface {
         if(isset($clause['page'])){unset($clause['page']);}
         if(isset($clause['sidx'])){unset($clause['sidx']);}
         if(isset($clause['sord'])){unset($clause['sord']);}
+        if(isset($clause['campo']))unset($clause['campo']);
         foreach ($clause AS $field => $value) {
 
             //Verificar si el campo tiene el simbolo @ y removerselo.

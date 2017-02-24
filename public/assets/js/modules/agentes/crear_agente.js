@@ -50,4 +50,6 @@ $(function(){
 	        $(this).val(res);
 
 	    });
+		
+		$('select[name="campo[estado]"').attr('disabled', 'disabled');
 });

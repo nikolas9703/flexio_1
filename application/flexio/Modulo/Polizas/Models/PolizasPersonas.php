@@ -18,6 +18,16 @@ class PolizasPersonas extends Model
             	if((isset($clause['id_interes'])) && (!empty($clause['id_interes']))) $query->where('detalle_int_asociado','=' , $clause['id_interes']);
             if($limit!=NULL) $query->skip($start)->take($limit);            
             });
+
+        if (isset($clause['nombrePersona']) && $clause['nombrePersona'] != "" ) {
+            $personas->where("nombrePersona", "LIKE", "%".$clause['nombrePersona']."%");
+        }
+        if (isset($clause['identificacion']) && $clause['identificacion'] != "" ) {
+            $personas->where("identificacion", "LIKE", "%".$clause['identificacion']."%");
+        }
+        if (isset($clause['no_certificado']) && $clause['no_certificado'] != "" ) {
+            $personas->where("detalle_certificado", "LIKE", "%".$clause['no_certificado']."%");
+        }
         
         if($sidx!=NULL && $sord!=NULL){ $personas->orderBy($sidx, $sord); }
 

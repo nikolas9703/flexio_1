@@ -21,7 +21,8 @@ $(function(){
 		comentarios: ".agregarBtnComentario",
 		eliminar: "#EliminarBtnComisionColaborador",
 		anular: "#confirmAnular",
-		cerrarPlanilla: "#cerrarPlanilla",
+		cerrarPlanilla: "#cerrarPlanilla, #cerrarPlanillaVacacion",
+		//cerrarPlanillaVacacion: "#cerrarPlanillaVacacion",
 		pagarPlanilla: "#pagarPlanilla",
  		exportar: "#ExportarBtnComision",
 		buscar: "#searchBtn",
@@ -118,6 +119,9 @@ $(function(){
 
  	//Inicializacion de Campos de Busqueda
 	var campos = function(){
+
+
+
 		//Init Bootstrap Calendar Plugin
 		var fecha1 = $(formulario).find('#fecha1');
 		var fecha2 = $(formulario).find('#fecha2');
@@ -153,53 +157,7 @@ $(function(){
 	      });
  		fecha1.val("");
  		fecha2.val("");
-
- 		$(centro_contable_id).chosen({width: '100%'}).trigger('chosen:updated');
- 		$(estado_id).chosen({width: '100%'}).trigger('chosen:updated');
-
-  		$(campo_departamento_id).prop("disabled",true);
-  		$(campo_departamento_id).chosen({width: '100%'}).trigger('chosen:updated');
-
-		$(formulario).on("change", '#centro_contable_id', function(e){
- 			 e.preventDefault();
-			e.returnValue=false;
-			e.stopPropagation();
-
-			var centro_id = $(this).find('option:selected').val();
- 			var campo_departamento = $(formulario).find('#departamento_id');
-
- 			//Mensaje de Loading
-			$('.departamento-loader').remove();
-			$(campo_departamento).closest('div').append('<div class="departamento-loader"><small class="text-success">Buscando &Aacute;reas de Negocio... <i class="fa fa-circle-o-notch fa-spin"></i></small></div>');
-
-			$(campo_departamento_id).prop("disabled",true);
- 	  		$(campo_departamento_id).chosen({width: '100%'}).trigger('chosen:updated');
-
- 			popular_departamento({centro_id: centro_id}).done(function(json){
-
-     				if( $.isEmptyObject(json.session) == false){
-    					window.location = phost() + "login?expired";
-    				}
-     				$(campo_departamento).empty();
-      				$(campo_departamento).empty().append('<option value="">Seleccione</option>').removeAttr('disabled');
-
-     				if($.isEmptyObject(json['result']) == true){
-
-     					$('.departamento-loader').remove();
-
-
-    					return false;
-    				}else{
-         				$.each(json['result'], function(i, result){
-           					$(campo_departamento).append('<option value="'+ result.id +'">'+ result.nombre +'</option>');
-        				});
-    				}
-     				$('.departamento-loader').remove();
-     				$(campo_departamento_id).prop("disabled",false);
-     				$(campo_departamento_id).chosen({width: '100%'}).trigger('chosen:updated');
-   			});
-
- 		});
+ 		$(".select2").select2();
    	};
 
    	/**
@@ -260,12 +218,13 @@ $(function(){
 	var limpiarCampos = function(){
 
 		formulario.find('input[type="text"]').prop("value", "");
-		formulario.find('select').val('');
+		formulario.find('#centro_contable_id, #departamento_id').val('');
 
-		$(formulario).find('#departamento_id').empty();
-		$(formulario).find('#departamento_id').prop("disabled",true);
+		/*$(formulario).find('#departamento_id').val();
+		$(formulario).find('#centro_contable_id').val();*/
+//		$(formulario).find('#departamento_id').prop("disabled",true);
 
-  		$(formulario).find('#centro_contable_id, #departamento_id, #estado_id').chosen({width: '100%'}).trigger('chosen:updated');
+  	//	$(formulario).find('#centro_contable_id, #departamento_id, #estado_id').chosen({width: '100%'}).trigger('chosen:updated');
 	};
 	//Buscar cargo en jQgrid
 	var buscarPlanilla = function(){
@@ -275,8 +234,9 @@ $(function(){
 		var centro_contable_id 	= $('#centro_contable_id').val();
 		var estado_id 			= $('#estado_id').val();
  		var area_negocio 			= $('#departamento_id').val();
+		var codigo 				= $('#codigo').val();
 
-		if(id_codigo != "" ||  centro_contable_id !=''  || estado_id !='' || area_negocio!='' || (fecha1!='' && fecha2!=''))
+		if(id_codigo != "" ||  centro_contable_id !=''  || estado_id !='' || area_negocio!='' || codigo!=''  || (fecha1!='' && fecha2!=''))
 		{
  			//Reload Grid
 			grid_obj.setGridParam({
@@ -289,6 +249,7 @@ $(function(){
 					centro_contable_id: centro_contable_id,
 					estado_id: estado_id,
 					area_negocio: area_negocio,
+					codigo:codigo,
  					erptkn: tkn
 				}
 			}).trigger('reloadGrid');
@@ -372,6 +333,7 @@ $(function(){
 		e.returnValue=false;
 		e.stopPropagation();
 		var id_planilla = $(this).attr('data-id');
+		var tipo = $(this).attr('data-tipo');
 
 	    //Init boton de opciones
 		opcionesModal.find('.modal-title').empty().append('Confirme');
@@ -379,7 +341,7 @@ $(function(){
 		opcionesModal.find('.modal-footer')
 			.empty()
 			.append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>')
-			.append('<button id="cerrarPlanillaAccion" data-id="'+ id_planilla +'" class="btn btn-w-m btn-primary" type="button">Cerrar</button>');
+			.append('<button id="cerrarPlanillaAccion" data-id="'+ id_planilla +'" data-tipo="'+ tipo +'"  class="btn btn-w-m btn-primary" type="button">Cerrar</button>');
 	 });
 
 	 opcionesModal.on("click", botones.pagarPlanilla, function(e){
@@ -465,12 +427,18 @@ opcionesModal.on("click", "#pagarPlanillaAccion", function(e){
 			 		e.stopPropagation();
 
 	 				var id_planilla = $(this).attr('data-id');
-
+	 				var tipo = $(this).attr('data-tipo');
+					if(tipo  == 'regular'){
+						var url = 'planilla/ajax-pagar-planilla';
+					}
+					if(tipo  == 'vacacion'){
+						var url = 'planilla/ajax-pagar-vacacion';
+					}
 					$("div.modal-content").find('#closeModal').attr('disabled', true);
 					$("div.modal-content").find('#cerrarPlanillaAccion').attr('disabled', true);
 					$("div.modal-content").find('#cerrarPlanillaAccion').text("Un momento...");
 					$.ajax({
-				          url: phost() + 'planilla/ajax-pagar-planilla',
+				          url: phost() + url,
 				          data: {
 				          	planilla_id: id_planilla,
 				  					erptkn: tkn,
@@ -493,7 +461,7 @@ opcionesModal.on("click", "#pagarPlanillaAccion", function(e){
 				                 toastr.error(json.mensaje);
 												 opcionesModal.modal('hide');
                  }
-							 }); 
+							 });
 
 	});
 
@@ -551,6 +519,7 @@ opcionesModal.on("click", "#pagarPlanillaAccion", function(e){
 				centro_contable_id: '',
 				area_negocio:'',
 				estado_id: '',
+				codigo: '',
  				erptkn: tkn
 			}
 		}).trigger('reloadGrid');

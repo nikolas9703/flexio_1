@@ -107,7 +107,7 @@ Vue.component('detalle',{
               console.log("creado por y estado por aprobar");
               this.config.disableArticulos = false;
               this.config.disableDetalle = false;
-              setTimeout(function(){              
+              setTimeout(function(){
               $('#estado').attr('disabled', true);
             }, 400);
             }else{

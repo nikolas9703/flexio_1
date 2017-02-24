@@ -22,4 +22,8 @@ $(function(){
 		autoUnmask : true,
 		removeMaskOnSubmit: true 
 	});
+	$(".chosen-select").chosen({
+		width:"100%",
+		no_results_text: "No se encontraron resultados!"
+	});
 });

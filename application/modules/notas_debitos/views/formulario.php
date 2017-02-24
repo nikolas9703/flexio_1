@@ -1,5 +1,5 @@
 
-<detalle :config.sync="config" :detalle.sync="detalle" :catalogos="catalogos" :empezable="empezable"></detalle>
+<detalle :config.sync="config" :detalle.sync="detalle" :catalogos.sync="catalogos" :empezable="empezable"></detalle>
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
   <!-- componente de vue-->
   <nota-debito-items :catalogos="catalogos" :config.sync="config" :empezable="empezable" :rows.sync="detalle.filas" :detalle.sync="detalle" :error.sync="tablaError" :boton.sync="botonDisabled"></nota-debito-items>
@@ -23,7 +23,7 @@
     </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
         <input type="hidden"  id="id"  name="campo[id]"  value="{{detalle.id}}">
-        <button id="guardarBtn"  class="btn btn-primary btn-block" :disabled="botonDisabled || config.disableDetalle">Guardar</button>
+        <button id="guardarBtn"  class="btn btn-primary btn-block" :disabled="botonDisabled || estado_actual=='anulado'">Guardar</button>
     </div>
 </div>
-<!-- Termina campos de Busqueda -->
+<!-- Termina campos de Busqueda ...-->

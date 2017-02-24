@@ -3,7 +3,7 @@ $info = !empty($info) ? $info : array();
 //dd($info);
 ?>
 <div id="vue-form-adenda">
-   
+
         <div class="form-group col-xs-12 col-sm-12 col-md-4 col-lg-4 "><label></label>
             <label for="fecha">Fecha</label>
             <div class="input-group">
@@ -24,7 +24,7 @@ $info = !empty($info) ? $info : array();
             <input type="text" name="campo[referencia]" class="form-control"  id="referencia" data-rule-required="true" value="<?php echo empty($info) ? '' : $info['referencia'] ?>">
             <label id="referencia-error" class="error" for="referencia"></label>
         </div>
-   
+
 
     <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
         <cuentas-montos :lista.sync="tablaDatos"></cuentas-montos>
@@ -49,12 +49,13 @@ $info = !empty($info) ? $info : array();
         </div>
         <div class="form-group col-xs-12 col-sm-12 col-md-2 col-lg-2">
             <input type="hidden" name="campo[subcontrato_id]" id="subcontrato_id" v-model="campo.subcontrato_id">
+            <input type="hidden" name="campo[adenda_id]" id="adenda_id" v-model="campo.adenda_id">
             <input type="submit" id="guardar_adendaBtn"  class="btn btn-primary btn-block" value="Guardar" v-on:click="guardar()"/>
         </div>
     </div>
-    
+
     <div class="row">
-        <component :is="vista_comments" :historial.sync="comentarios"></componente>            
+        <component :is="vista_comments" :historial.sync="comentarios"></componente>
     </div>
 
 </div>

@@ -38,6 +38,9 @@ class Roles extends CRM_Controller {
         //Inicializar variable cache
         $this->cache = Cache::inicializar();
 
+        $this->load->model('Roles_menu_orm');
+        $this->load->model('menu_orm'); 
+
     }
     public function listar() {
         if(!in_array(2,$this->session->userdata('roles' )))
@@ -53,8 +56,9 @@ class Roles extends CRM_Controller {
          $this->cache->delete("usuario-roles-". $this->session->userdata('huuid_usuario'));
      }*/
 
-
         $data = array();
+        
+
         $this->assets->agregar_css(array(
             'public/assets/css/default/ui/base/jquery-ui.css',
             'public/assets/css/default/ui/base/jquery-ui.theme.css',
@@ -62,6 +66,7 @@ class Roles extends CRM_Controller {
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
             'public/assets/css/plugins/jquery/switchery.min.css',
+            'public/assets/css/plugins/jquery/awesome-bootstrap-checkbox.css',
         ));
         $this->assets->agregar_js(array(
             'public/assets/js/default/jquery-ui.min.js',
@@ -75,8 +80,19 @@ class Roles extends CRM_Controller {
             'public/assets/js/default/formulario.js',
             'public/assets/js/modules/roles/listar.js'
         ));
+
+
+        //$this->session->set_flashdata('mensaje', $mensaje);
+        //var_dump($this->session->set_flashdata('mensaje'));
+
+        if(!empty( $this->session->flashdata('mensaje')) ){
+            $mensaje = $this->session->flashdata('mensaje');
+        }else{
+            $mensaje = '';
+        }
         $data = array(
-            "estados" => field_enums('roles', 'estado')
+            "estados" => field_enums('roles', 'estado'),
+            "message" => $mensaje
         );
         $this->getSessionEmpresa();
         $this->template->agregar_titulo_header('Listado de Roles');
@@ -142,6 +158,33 @@ class Roles extends CRM_Controller {
                     $link_option = "";
                     $hidden_options = "";
                 }
+
+                //var_dump($row);
+
+                $hidden_options .= '<a class="btn btn-block btn-outline btn-success" data-rol="'. $row['id'] .'" id="menuSuperior" >Menu</a>';
+
+                $menus_permisos = Roles_menu_orm::where(['id_rol' => $row['id']])->get();
+                $arraymenu = array();
+                $j = 0;
+                if(count($menus_permisos)){
+                    foreach ($menus_permisos as $key => $value) {
+                       $arraymenu[$j] = $value['nombre_menu'];
+                       $j++;
+                    }
+                }
+
+                $opciones_menu  = '<form action="'.base_url().'roles/menu_superior/" id="menuSuperior" method="POST" autocomplete="off"><input type="hidden" name="erptkn" id="tkn_menu_'.$row['id'].'" value=""><input type="hidden" name="empresa_id" id="empresa_id" value="'.$row['empresa_id'].'"><input type="hidden" name="rol_id" id="rol_id" value="'.$row['id'].'">';
+                $menus = Menu_orm::lista_menu_superior();
+                foreach ($menus as $key => $menu) {
+                    if(in_array($menu['grupo'], $arraymenu)){
+                        $opciones_menu .= '<div class="col-xs-12 col-sm-4 col-md-4"><div class="checkbox checkbox-primary"><input type="checkbox" name="menu[]" id="ventas" class="menu2" checked value="'.$menu['grupo'].'" /><label for="'.$key.'">'.$menu['grupo'].'</label></div></div>';
+                    }else{
+                        $opciones_menu .= '<div class="col-xs-12 col-sm-4 col-md-4"><div class="checkbox checkbox-primary"><input type="checkbox" name="menu[]" id="ventas" class="menu2" value="'.$menu['grupo'].'" /><label for="'.$key.'">'.$menu['grupo'].'</label></div></div>';
+                    }
+                    
+                }
+                $opciones_menu .= '<div class="form-group col-xs-12 col-sm-12 col-md-12" style="text-align: right;"> <a class="btn btn-w-m btn-default cancelar_menu">Cancelar</a> <button type="submit" class="btn btn-w-m btn-primary submit">&nbsp;Guardar</button> </div></form>';
+
                 $response->rows[$i]["id"] = $row['id'];
                 $response->rows[$i]["cell"] = array(
                     $row["id"],
@@ -152,13 +195,53 @@ class Roles extends CRM_Controller {
                     $row["superuser"],
                     $row["default"],
                     $link_option,
-                    $hidden_options
+                    $hidden_options,
+                    $opciones_menu
                 );
                 $i++;
             }
         }
         echo json_encode($response);
         exit;
+    }
+
+
+    public function menu_superior(){
+
+        $menu = $this->input->post('menu');
+        $id_empresa = $this->input->post('empresa_id');
+        $id_rol = $this->input->post('rol_id');
+        
+        if($menu != null){
+
+            $menus = Roles_menu_orm::where(['id_rol' => $id_rol])->get();
+            foreach ($menus as $key => $value) {
+               $value->delete();
+            }
+            
+            foreach ($menu as $key => $value) {
+                $arraymenu['id_empresa'] = $id_empresa;
+                $arraymenu['id_rol'] = $id_rol;
+                $arraymenu['nombre_menu'] = $value;
+                $menus = Roles_menu_orm::create($arraymenu);
+            }
+        }else{
+
+            $menus = Roles_menu_orm::where(['id_rol' => $id_rol])->get();
+            foreach ($menus as $key => $value) {
+               $value->delete();
+            }
+        }
+
+        if($menus != null){
+            $mensaje = '<b>¡&Eacute;xito!</b> Se ha guardado correctamente';
+        }else{
+            $mensaje = '<b>¡&Error!</b>No Se guardado correctamente'; 
+        }
+        
+        //$mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente', 'titulo' => 'Menu Superios ');
+        $this->session->set_flashdata('mensaje', $mensaje);
+        redirect(base_url('roles/listar'));  
     }
     /**
      * Cargar Vista Parcial de Tabla
@@ -260,6 +343,7 @@ class Roles extends CRM_Controller {
                 redirect(base_url() . 'roles/editar-permisos/' . $id_rol);
             }
         }
+			
         //Build the data array
         $data = array(
             "rol_id" => $id_rol,

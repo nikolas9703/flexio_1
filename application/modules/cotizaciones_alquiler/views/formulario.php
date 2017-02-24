@@ -22,7 +22,7 @@
   <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 "><label></label>
       <div class="input-group">
           <span class="input-group-addon">$</span>
-          <input type="input-left-addon" disabled=""  v-model="formulario.saldo_pendiente" class="form-control debito">
+          <input name="solado_cobrar" type="input-left-addon" disabled=""  v-model="formulario.saldo_pendiente" class="form-control debito">
       </div>
       <label class="label-danger-text">Saldo por cobrar</label>
   </div>
@@ -30,7 +30,7 @@
   <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 "><label></label>
       <div class="input-group">
           <span class="input-group-addon">$</span>
-          <input type="input-left-addon" disabled="" v-model="formulario.credito_favor" class="form-control credito">
+          <input name="credito_favor" type="input-left-addon" disabled="" v-model="formulario.credito_favor" class="form-control credito">
       </div>
       <label class="label-success-text">Cr&eacute;dito a favor</label>
   </div>
@@ -39,7 +39,7 @@
       <label>Fecha de emisi&oacute;n <span required="" aria-required="true">*</span></label>
       <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-          <input type="input-left-addon" name="campo[fecha_desde]" id="fecha_desde" class="form-control" data-rule-required="true" v-model="formulario.fecha_desde" v-datepicker2="formulario.fecha_desde" :config="configDatepicker.fecha_desde">
+          <input id="fecha_desde" type="input-left-addon" name="campo[fecha_desde]" id="fecha_desde" class="form-control" data-rule-required="true" v-model="formulario.fecha_desde" v-datepicker2="formulario.fecha_desde" :config="configDatepicker.fecha_desde">
       </div>
       <label id="fecha_desde-error" class="error" for="fecha_desde"></label>
   </div>
@@ -48,14 +48,14 @@
       <label for="fecha_hasta">V&aacute;lido hasta <span required="" aria-required="true">*</span></label>
       <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-          <input type="input-left-addon" name="campo[fecha_hasta]" id="fecha_hasta" class="form-control" data-rule-required="true" v-model="formulario.fecha_hasta" v-datepicker2="formulario.fecha_hasta" :config="configDatepicker.fecha_hasta">
+          <input id="fecha_hasta" type="input-left-addon" name="campo[fecha_hasta]" id="fecha_hasta" class="form-control" data-rule-required="true" v-model="formulario.fecha_hasta" v-datepicker2="formulario.fecha_hasta" :config="configDatepicker.fecha_hasta">
       </div>
       <label id="fecha_hasta-error" class="error" for="fecha_hasta"></label>
   </div>
 
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
       <label for="creado_por">Vendedor <span required="" aria-required="true">*</span></label>
-      <select id="creado_por" data-placeholder="Seleccione" name="campo[creado_por]" class="form-control select2" data-rule-required="true" v-model="formulario.creado_por" :disabled="disabledEditar" v-select3="formulario.creado_por">
+      <select id="creado_por" data-placeholder="Seleccione" name="campo[creado_por]" class="form-control select2" data-rule-required="true" v-model="formulario.creado_por" :disabled="true" v-select3="formulario.creado_por">
           <option value="">Seleccione</option>
           <option value="{{vendedor.id}}" v-for="vendedor in catalogoFormulario.vendedores | orderBy 'nombre' 'apellido'">{{vendedor.nombre +' '+ vendedor.apellido}}</option>
       </select>
@@ -64,7 +64,7 @@
 
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3" ><!-- style='clear: both;' -->
       <label for="vendedor_id">Lista de precio de alquiler <span required="" aria-required="true">*</span></label>
-      <select data-placeholder="Seleccione" name="campo[lista_precio_alquiler_id]" class="form-control chosen-select" data-rule-required="true" v-model="formulario.lista_precio_alquiler_id" :disabled="disabledEditar">
+      <select id="lista_precio_alquiler_id" data-placeholder="Seleccione" name="campo[lista_precio_alquiler_id]" class="form-control chosen-select" data-rule-required="true" v-model="formulario.lista_precio_alquiler_id" :disabled="disabledEditar">
           <option value="">Seleccione</option>
           <option value="{{option.id}}" v-for="option in catalogoFormulario.lista_precio_alquiler" track-by="$index">{{option.nombre}}</option>
       </select>
@@ -85,7 +85,7 @@
 
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
       <label for="centro_facturacion_id">Centro de facturaci&oacute;n </label>
-      <select data-placeholder="Seleccione" name="campo[centro_facturacion_id]" class="form-control chosen-select" v-model="formulario.centro_facturacion_id" :disabled="centrofacturadisable">
+      <select id="centro_facturacion_id" data-placeholder="Seleccione" name="campo[centro_facturacion_id]" class="form-control chosen-select" v-model="formulario.centro_facturacion_id" :disabled="centrofacturadisable">
           <option value="">Seleccione</option>
           <option :value="centro_facturacion.id" v-for="centro_facturacion in catalogoFormulario.centro_facturable">{{centro_facturacion.nombre}}</option>
       </select>
@@ -93,7 +93,7 @@
 
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
       <label for="estado_id">Estado <span required="" aria-required="true">*</span></label>
-      <select data-placeholder="Seleccione" name="campo[estado]" class="form-control chosen-select" required="" data-rule-required="true" v-model="formulario.estado" :disabled="campoDisabled.estadoDisabled || disabledEditar">
+      <select id="estado" data-placeholder="Seleccione" name="campo[estado]" class="form-control chosen-select" required="" data-rule-required="true" v-model="formulario.estado" :disabled="campoDisabled.estadoDisabled || disabledEditar">
           <option value="">Seleccione</option>
           <option value="{{estado.etiqueta}}" v-for="estado in catalogoFormulario.estados">{{estado.valor}}</option>
       </select>

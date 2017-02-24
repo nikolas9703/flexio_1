@@ -17,4 +17,7 @@ class PagosCatalogos extends Model
     {
       return $query->where("tipo", "tipo_pago");
     }
+    public function estado($id = null){
+        return $this->where("id" , $id)->get();
+    }
 }

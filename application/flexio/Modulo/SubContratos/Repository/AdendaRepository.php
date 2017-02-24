@@ -11,12 +11,18 @@ class AdendaRepository
     public function create($create)
     {
         $aux = $this->findBy($create["adenda"]);
-        
+
 
         $array_monto = [];
         $adenda = (count($aux)) ? $aux : Adenda::create($create['adenda']);
-        
+
         $adenda_monto = $create['montos'];
+
+        //dd(collect($create["montos"])->sum('monto'));
+        // Si esta editando
+        if(!empty($aux) && !empty($aux->toArray())){
+          $aux->update(array("monto_adenda" => !empty($create["montos"]) ? collect($create["montos"])->sum('monto'): 0));
+        }
 
         $adenda->adenda_montos()->delete();
         foreach($adenda_monto as $monto)
@@ -26,11 +32,11 @@ class AdendaRepository
         $adenda->adenda_montos()->saveMany($array_monto);
         return $adenda;
     }
-    
+
     public function agregarComentario($modelId, $comentarios){
         $adenda     = Adenda::find($modelId);
         $comentario = new Comentario($comentarios);
-        
+
         $adenda->comentario()->save($comentario);
         return $adenda;
   }
@@ -53,17 +59,17 @@ class AdendaRepository
         if($limit != null) $subcontratos->skip($start)->take($limit);
         return $subcontratos->get();
     }
-    
+
     public function findBy($clause)
     {
         $adendas = Adenda::deEmpresa($clause["empresa_id"]);
-        
+
         //filtros
         $this->_filtros($adendas, $clause);
-        
+
         return $adendas->first();
     }
-    
+
     private function _filtros($adendas, $clause)
     {
         if(isset($clause["uuid_adenda"]) and !empty($clause["uuid_adenda"])){$adendas->deUuid($clause["uuid_adenda"]);}

@@ -8,15 +8,47 @@ var entrada = {
    },
    botones:{
      opciones: "button.viewOptions",
-     exportar: "#exportarEntradasList"
-   }, 
+     exportar: "#exportarEntradasList",
+     limpiar: $("#clearBtn"),
+     buscar: $("#searchBtn"),
+   },
    init:function(){
      tablaManual = this.settings;
      this.tablaGrid();
      this.redimencionar();
      this.eventos();
-   }, 
+   },
    eventos:function(){
+
+     this.botones.limpiar.click(function(e) {
+             $('#fecha_min').prop("value", "");
+             $('#fecha_max').prop("value", "");
+             $("#centro_contable").val(null).trigger("change");
+             entrada.recargar();
+      });
+      this.botones.buscar.click(function(e) {
+
+          var fecha1 = $('#fecha_min').val();
+          var fecha2 = $('#fecha_max').val();
+          var centros = $("#centro_contable").val();
+          var myPostData = tablaManual.gridObj.jqGrid('getGridParam', 'postData');
+          delete myPostData.campo.centro_contable;
+          if (fecha1 !== "" || fecha2 !== "" || centros !=="") {
+              //Reload Grid
+              tablaManual.gridObj.setGridParam({
+                  url: tablaManual.url,
+                  datatype: "json",
+                  postData: {
+                      campo:{
+                          centro_contable: centros,
+                          fecha_min: fecha1,
+                          fecha_max: fecha2,
+                      },
+                      erptkn: tkn
+                  }
+              }).trigger('reloadGrid');
+          }
+      });
      tablaManual.gridObj.on("click", this.botones.opciones, function(e){
 
       e.preventDefault();
@@ -48,34 +80,43 @@ var entrada = {
      tablaManual.gridObj.jqGrid({
      url: tablaManual.url,
      datatype: "json",
-     colNames: ['','No. de Entrada','Narración','Fecha de Entrada','Débito','Crédito','',''],
+     colNames: ['','N&uacute;mero de entrada manual','Fecha y hora','Usuario','&sum; Débito','&sum; Crédito','',''],
      colModel: [
                {name:'id', index:'id', hidedlg:true,key: true, hidden: true},
                 {name:'codigo', index:'codigo',sorttype:"text", sortable:true, width:150},
+                {name:'created_at',index:'created_at', sortable:true},
                 {name:'nombre',index:'nombre', sortable:true},
-                {name:'created_at',index:'created_at', formatter: 'date', formatoptions: { newformat: 'd/m/Y' }, sortable:true},
-                {name:'debito', index:'debito', formatter:'currency', formatoptions:{decimalSeparator:".", thousandsSeparator: ",", decimalPlaces: 2, prefix: "$ "}, sortable:true},
-                {name:'credito', index:'credito', formatter:'currency', formatoptions:{decimalSeparator:".", thousandsSeparator: ",", decimalPlaces: 2, prefix: "$ "}, sortable:true},
+                {name:'debito', index:'debito'},
+                {name:'credito', index:'credito',sortable:true},
                 {name:'opciones', index:'opciones', sortable:false, align:'center'},
                 {name:'link', index:'link', hidedlg:true, hidden: true}
               ],
      mtype: "POST",
-     postData: { erptkn:tkn},
-     sortorder: "asc",
+     postData: { campo:{},erptkn:tkn},
+     sortorder: "desc",
      hiddengrid: false,
      loadtext: '<p>Cargando...</p>',
      hoverrows: false,
      viewrecords: true,
      refresh: true,
      gridview: true,
-     multiselect: true,
+     multiselect: false,
      height: 'auto',
      page: 1,
      pager : tablaManual.gridId+"Pager",
      rowNum:10,
      autowidth: true,
-     rowList:[10,20,30],
+     rowList:[10,30,50],
      sortname: 'codigo',
+     subGrid: true,
+     subGridOptions: { "plusicon" : "ui-icon-triangle-1-e",
+                      "minusicon" :"ui-icon-triangle-1-s",
+                      "openicon" : "ui-icon-arrowreturn-1-e",
+                      "reloadOnExpand" : false,
+                      "selectOnExpand" : true },
+     subGridRowExpanded: function(subgrid_id, row_id) {
+       entrada.subgridJqgrid(subgrid_id, row_id);
+     },
      beforeProcessing: function(data, status, xhr){
        //Check Session
      if( $.isEmptyObject(data.session) === false){
@@ -89,31 +130,25 @@ var entrada = {
      loadComplete: function(data, status, xhr){
 
        //check if isset data
-     
+
        //Boton de Exportar Entradas
 		$('#exportarEntradasList').on("click", function(e){
-                    
+
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
+			if($('#tabla').is(':visible') === true){
 
-			if($('#tabla').is(':visible') == true){
-				
 				//Exportar Seleccionados del jQgrid
 				var ids = [];
-                                
-				ids = tablaManual.gridObj.jqGrid('getGridParam','selarrrow');
-				
-				//Verificar si hay seleccionados
-				if(ids.length > 0){
-					
-					$('#ids').val(ids);
-                                        console.log(ids);
-			        $('form#exportarEntradas').submit();
-			        $('body').trigger('click');
-				}
+
+				//ids = tablaManual.gridObj.jqGrid('getGridParam','selarrrow');
+
+			    $('form#exportarEntradas').submit();
+			    $('body').trigger('click');
+
 	        }
-		}); 
+		});
 
 
        if(tablaManual.gridObj.getGridParam('records') === 0 ){
@@ -121,10 +156,10 @@ var entrada = {
          $('#entradaManualGridNoRecords').empty().append('No se encontraron entradas.').css({"color":"#868686","padding":"30px 0 0"}).show();
        }
        else{
-         $('.entradaManualGrid').hide();
-         $('#entradaManualGridNoRecords').show();
+         $('#gbox_entradaManualGrid').show();
+         $('#entradaManualGridNoRecords').hide();
        }
-       
+
 
        //---------
        // Cargar plugin jquery Sticky Objects
@@ -141,6 +176,29 @@ var entrada = {
        $(this).find('tr#'+ id).removeClass('ui-state-highlight');
      }
     });
+   },
+   recargar: function() {
+
+         //Reload Grid
+         var myPostData = tablaManual.gridObj.jqGrid('getGridParam', 'postData');
+         delete myPostData.campo.centro_contable;
+         tablaManual.gridObj.setGridParam({
+             url: tablaManual.url,
+             datatype: "json",
+             postData: {
+                 campo:{
+                     centro_contable:[],
+                     fecha_min:'',
+                     fecha_max:'',
+                 },
+                 erptkn: tkn
+             }
+         }).trigger('reloadGrid');
+
+     },
+   subgridJqgrid:function(subgrid_id, row_id){
+       var transaccionGrid = new EntradaTransaccion(subgrid_id, row_id);
+       var tablaSubgrid = transaccionGrid.subgrid;
    }
 };
 $(document).ready(function(){

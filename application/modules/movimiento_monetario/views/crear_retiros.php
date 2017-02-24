@@ -25,7 +25,7 @@
 						</div>
 			        	<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
                                            
-                                            <select id="categoria" class="white-bg chosen-filtro">
+                                            <select id="categoria" class="white-bg chosen-filtro" data-placeholder="Seleccione">
 								<option value=""></option>
 								<?php foreach($cliente_proveedor as $row) {?>
                                                                 <option value="<?php echo $row['id_cat']; ?>"><?php echo $row['etiqueta']; ?></option>
@@ -49,7 +49,12 @@
                 		echo modules::run('movimiento_monetario/ocultoformularioretiros', $info);
                 	?>
                 </div>
-
+				<div class="row">
+				
+                    <?php 
+					$retiro_id = !empty($retiro_id) ? array("retiro_id" => $retiro_id) : array();
+					Subpanel::visualizar_grupo_subpanel($retiro_id); ?>
+               </div>
               <div class="row">
                 <?php
                   $comentario = !empty($comentario) ? array("comentario" => $comentario) : array();

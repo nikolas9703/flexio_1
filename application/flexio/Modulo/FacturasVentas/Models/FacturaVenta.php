@@ -16,6 +16,9 @@ use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\FacturasCompras\Models\FacturaCompra;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable;
+use Flexio\Modulo\Cotizaciones\Models\Cotizacion;
+use Flexio\Library\Util\GenerarCodigo;
+use Flexio\Modulo\Polizas\Models\Polizas;
 
 class FacturaVenta extends Model
 {
@@ -24,14 +27,15 @@ class FacturaVenta extends Model
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta'];
+    protected $keepRevisionOf = ['cotizacion_id', 'orden_venta_id', 'codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','lista_precio_alquiler_id','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta'];
 
     protected $table = 'fac_facturas';
 
-    protected $fillable = ['codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta'];
+    protected $fillable = ['cotizacion_id', 'orden_venta_id','codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','lista_precio_alquiler_id','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta'];
 
     protected $guarded = ['id','uuid_factura'];
     protected $appends =['icono','enlace'];
+    protected $empezables = ['Flexio\Modulo\OrdenesVentas\Models\OrdenVenta'=> 'orden_venta','Flexio\Modulo\Contratos\Models\Contrato' => 'contrato_venta','Flexio\Modulo\OrdenesAlquiler\Models\OrdenVentaAlquiler'=>'orden_alquiler'];
 
     public function __construct(array $attributes = array()) {
       $this->setRawAttributes(array_merge($this->attributes, array('uuid_factura' => Capsule::raw("ORDER_UUID(uuid())"))), true);
@@ -56,6 +60,11 @@ class FacturaVenta extends Model
     }
     public function getNumeroDocumentoAttribute() {
         return $this->codigo;
+    }
+
+    public function setCodigoAttribute($value){
+        $year = Carbon::now()->format('y');
+        return $this->attributes['codigo'] = GenerarCodigo::setCodigo('INV'.$year, $value);
     }
 
     function documentos() {
@@ -141,6 +150,23 @@ class FacturaVenta extends Model
         return $this->cliente->nombre;
     }
 
+    public function getEmpezableTypeAttribute($value){
+
+        if (count($this->empezable) == 0 || is_null($this->empezable)) {
+            return null;
+        }
+        $value = $this->empezable->first()->fac_facturable_type;
+        return $this->empezables[$value];
+
+    }
+
+    public function getEmpezableIdAttribute(){
+        if (count($this->empezable) == 0) {
+            return '';
+        }
+        return $this->empezable->first()->fac_facturable_id;
+    }
+
     public function setFechaDesdeAttribute($date) {
   		return  $this->attributes['fecha_desde'] = Carbon::createFromFormat('d/m/Y', $date, 'America/Panama');
     }
@@ -173,6 +199,12 @@ class FacturaVenta extends Model
     public function items() {
         return $this->morphMany(LineItem::class,'tipoable');
     }
+    public function items_venta() {
+        return $this->items()->where("item_adicional", 0);
+    }
+    public function items_alquiler() {
+          return $this->items()->where("item_adicional", 1);
+    }
     public function items2() {
         return $this->morphToMany('Flexio\Modulo\Inventarios\Models\Items', 'tipoable', 'lines_items', 'tipoable_id', 'item_id')
                 ->withPivot("item_id", "unidad_id", "precio_unidad", "cantidad", "precio_total");
@@ -186,6 +218,9 @@ class FacturaVenta extends Model
   		return $this->belongsTo(FacturaVentaCatalogo::class,'estado','etiqueta')->where('tipo','=','etapa');
   	}
 
+    public function empezable(){
+        return $this->hasMany(Facturable::class,'factura_venta_id');
+    }
 
     public function ordenes_ventas() {
       return $this->morphedByMany(OrdenVenta::class,'fac_facturable')->withPivot('empresa_id','items_facturados');
@@ -193,6 +228,10 @@ class FacturaVenta extends Model
 
     public function orden_venta() {
     	return $this->morphedByMany(OrdenVenta::class,'fac_facturable')->withPivot('empresa_id','items_facturados');
+    }
+
+    public function orden_alquiler() {
+    	return $this->morphedByMany('Flexio\Modulo\OrdenesAlquiler\Models\OrdenVentaAlquiler','fac_facturable')->withPivot('empresa_id','items_facturados');
     }
 
     public function contratos() {
@@ -277,8 +316,14 @@ class FacturaVenta extends Model
       return $this->hasOne(Devolucion::class,'factura_id');
     }
 
-    function nota_credito() {
-      return $this->hasOne(NotaCredito::class,'factura_id');
+    public function nota_credito()
+    {
+        return $this->hasOne(NotaCredito::class,'factura_id');
+    }
+
+    public function nota_credito_aprobada()
+    {
+        return $this->hasOne(NotaCredito::class,'factura_id')->where('venta_nota_creditos.estado', 'aprobado');
     }
 
     function relacion_cobros() {
@@ -307,18 +352,30 @@ class FacturaVenta extends Model
       }
     }
     public function comentario_timeline() {
-    	return $this->morphMany(Comentario::class,'comentable');
+		return $this->morphMany(Comentario::class,'comentable');
     }
-
     public function getIconoAttribute() {
-      return 'fa fa-line-chart';
+		return 'fa fa-line-chart';
     }
-    public function landing_comments() {
-       return $this->morphMany(Comentario::class,'comentable');
-     }
+	public function landing_comments() {
+		return $this->morphMany(Comentario::class,'comentable');
+	}
 
     public function present() {
        return new  \Flexio\Modulo\FacturasVentas\Presenter\FacturaVentaPresenter($this);
     }
 
+    public function cotizacion(){
+        return $this->ordenes_ventas()->cotizacion;
+    }
+
+	public function scopeDeFiltro($query, $campo)
+	{
+		$queryFilter = new \Flexio\Modulo\FacturasVentas\Services\FacturaVentaFilters;
+		return $queryFilter->apply($query, $campo);
+	}
+
+	public function poliza(){
+		return $this->hasOne(Polizas::class,'id_poliza');
+	}
 }

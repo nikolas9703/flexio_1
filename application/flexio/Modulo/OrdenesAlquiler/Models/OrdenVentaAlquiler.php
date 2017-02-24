@@ -12,6 +12,7 @@ use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerCatalogos;
 use Flexio\Modulo\OrdenesAlquiler\Models\OrdenVentaAlquilerCatalogo;
+use Flexio\Library\Util\GenerarCodigo;
 
 class OrdenVentaAlquiler extends Model
 {
@@ -21,10 +22,10 @@ class OrdenVentaAlquiler extends Model
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total','bodega_id','centro_contable_id','contrato_id','referencia','descuento','centro_facturacion_id' ,'formulario'];
+    protected $keepRevisionOf = ['codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','lista_precio_alquiler_id','subtotal','impuestos','total','bodega_id','centro_contable_id','contrato_id','referencia','descuento','centro_facturacion_id' ,'formulario'];
     protected $table = 'ord_ventas_alquiler';
 
-    protected $fillable = ['codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total','bodega_id','centro_contable_id','contrato_id','referencia','descuento','centro_facturacion_id' ,'formulario'];
+    protected $fillable = ['codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','lista_precio_alquiler_id','subtotal','impuestos','total','bodega_id','centro_contable_id','contrato_id','referencia','descuento','centro_facturacion_id' ,'formulario'];
 
     protected $guarded = ['id','uuid_venta'];
     protected $appends =['icono','enlace'];
@@ -71,6 +72,12 @@ class OrdenVentaAlquiler extends Model
         $html = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory);
         return $html->setType("HtmlA")->setAttrs($attrs)->setHtml($this->numero_documento)->getSalida();
     }
+
+    public function setCodigoAttribute($value){
+        $year = Carbon::now()->format('y');
+        return $this->attributes['codigo'] = GenerarCodigo::setCodigo('SOA'.$year, $value);
+    }
+
     public function getEnlaceAttribute()
     {
         return base_url("ordenes_ventas/ver/".$this->uuid_venta);
@@ -111,6 +118,13 @@ class OrdenVentaAlquiler extends Model
     public function getUbicacionAttribute()
     {
         return $this->bodega;
+    }
+
+    public function getClienteNombreAttribute(){
+      if (is_null($this->cliente)) {
+          return '';
+      }
+      return $this->cliente->nombre;
     }
 
   public function getUpdatedAtAttribute($value)
@@ -242,5 +256,10 @@ class OrdenVentaAlquiler extends Model
      }
      function documentos() {
     	return $this->morphMany(Documentos::class, 'documentable');
+    }
+    public function scopeDeFiltro($query, $campo)
+    {
+           $queryFilter = new \Flexio\Modulo\OrdenesAlquiler\Services\OrdenVentaAlquilerFilters;
+           return $queryFilter->apply($query, $campo);
     }
 }

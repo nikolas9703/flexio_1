@@ -18,6 +18,8 @@ use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\ConfiguracionRrhh\Repository\RrhhAreasRepository;
 use Flexio\Modulo\Planilla\Acciones\CrearPlanilla;
 use Flexio\Modulo\Vacaciones\Repository\VacacionesRepository as ModelVacacionRep;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaPlanillaRepository;
+
 
 //transacciones
 use Flexio\Modulo\Planilla\Transacciones\PagosPlanilla;
@@ -45,6 +47,7 @@ use Dompdf\Dompdf;
     protected $CrearPlanilla;
     protected $VacacionRepository;
     protected $ModelVacacionRep;
+    protected $CuentaPlanillaRepository;
 
     protected $RrhhAreasRepository;
     protected $Toast;
@@ -122,6 +125,7 @@ use Dompdf\Dompdf;
         $this->VacacionRepository = new VacacionRepository();
         $this->PagadasVacacionesRepository = new PagadasVacacionesRepository();
         $this->ModelVacacionRep = new ModelVacacionRep();
+        $this->CuentaPlanillaRepository = new CuentaPlanillaRepository();
   	}
 
 
@@ -131,6 +135,8 @@ use Dompdf\Dompdf;
      		$mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso');
      		$this->session->set_flashdata('mensaje', $mensaje);
      	}
+
+
 
        	$data = array();
 
@@ -202,8 +208,8 @@ use Dompdf\Dompdf;
      	$nombre_planilla = '';
 
      //	$data['lista_colaboradores'] = $this->colaboradoresRepository->getAll(["empresa_id"=>$this->empresa_id]);
-      $cuentas_debito = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->deTipoDeCuenta([2,5,6])->activas()->get();
-      $cuentas = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->deTipoDeCuenta([2])->activas()->get();
+      $cuentas_debito = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->deTipoDeCuenta([2,5,6])->activas()->orderBy('codigo')->get();
+      $cuentas = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->deTipoDeCuenta([2])->activas()->orderBy('codigo')->get();
      	$data['areas_negocio'] = $this->RrhhAreasRepository->getAll(["empresa_id"=>$this->empresa_id]);
      	$data['ciclos'] = $this->ModulosRepository->getCicloPlanilla();
      	$data['tipo_planilla'] = $this->ModulosRepository->getTipoPlanilla();
@@ -233,8 +239,8 @@ use Dompdf\Dompdf;
      		//Listado de catalogos en el subgrid
      		$data['recargos'] = Recargos_orm::listarRecargosPorEmpresa($this->empresa_id);
      		$data['beneficios'] = Beneficios_orm::listarBeneficiosPorEmpresa($this->empresa_id);
-     		$data['cuenta_costos'] = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->activas()->get();
-     		$data['cuenta_gastos'] = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->activas()->get();
+     		$data['cuenta_costos'] = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->activas()->orderBy('codigo')->get();
+     		$data['cuenta_gastos'] = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->activas()->orderBy('codigo')->get();
 
      		$nombre_planilla = $planilla_info->codigo;
      		$estado = $planilla_info->estado->valor;
@@ -350,6 +356,7 @@ use Dompdf\Dompdf;
             $breadcrumb["menu"]["opciones"]["#validaMultipleColab"] = "Validar todos";
      			}else if( $estado == 'validada' ){
      				$breadcrumb["menu"]["opciones"]["#pagarPlanilla"] = "Cerrar planilla";
+            $breadcrumb["menu"]["opciones"]["#agregarColaborador"] = "Agregar colaborador";
      				$breadcrumb["menu"]["opciones"]["#exportarPlanillaAbierta"] = "Exportar";
      			}
      			else if( $estado == 'cerrada'){
@@ -442,14 +449,24 @@ use Dompdf\Dompdf;
         $centro_contable_id = $this->input->post ('centro_contable_id', true);
         $ciclo_id           = $this->input->post ('ciclo_id', true);
         $area_negocio_id           = $this->input->post ('area_negocio_id', true);
+
+        $fecha_inicio_planilla           = $this->input->post ('fecha_inicio_planilla', true);
+        $fecha_final_planilla           = $this->input->post ('fecha_final_planilla', true);
+
+        $fecha_final_planilla= empty($fecha_final_planilla)?"": Carbon::parse(str_replace("/", "-", $fecha_final_planilla));
+
         if($centro_contable_id != '' || $ciclo_id != ''  || $area_negocio_id != '' ){
-          $colaboradores = $this->colaboradoresRepository->getAll(
-               ["empresa_id"=>$this->empresa_id,
-                "centro_contable_id"=>$centro_contable_id,
-                "departamento_id" =>!empty($area_negocio_id)?array($area_negocio_id):array(),
-                "ciclo_id" =>$ciclo_id
-              ]
-           );
+            $colaboradores = $this->colaboradoresRepository->getAll(
+                [
+                    "empresa_id" => $this->empresa_id,
+                    "centro_contable_id" => $centro_contable_id,
+                    "departamento_id" => !empty($area_negocio_id) ? array($area_negocio_id) : array(),
+                    "ciclo_id" => $ciclo_id,
+                    "fecha_inicio_planilla" => $fecha_inicio_planilla,
+                    "fecha_final_planilla" => $fecha_final_planilla,
+
+                ]
+            );
 
         }
 
@@ -679,16 +696,17 @@ use Dompdf\Dompdf;
 
      			$response->rows[$i]["cell"] = array(
      					$row['nombre'],
+     					number_format($row['acumulado_planilla'],2),
      					number_format($row['acumulado'],2),
      			);
-     			$total_calculo_restante += $row['acumulado'];
+     			//$total_calculo_restante += $row['acumulado'];
      			++$i;
      		}
 
-     		$response->rows[$i]["cell"] = array(
+     	/*	$response->rows[$i]["cell"] = array(
      				"<b>Total</b>",
      				"<b>".number_format($total_calculo_restante,2)."</b>"
-     		);
+     		);*/
      	}
      	echo json_encode($response);
      	exit;
@@ -835,10 +853,10 @@ use Dompdf\Dompdf;
      	$i = $total_calculo = 0;
       	$tabla = $this->session->userdata('tabla_ingresos');
 
-        if(preg_match("/ver-reporte-cerradas/i", $_SERVER['HTTP_REFERER'])){
+      /*  if(preg_match("/ver-reporte-cerradas/i", $_SERVER['HTTP_REFERER'])){
           $ingresos = collect($tabla)->flatten(1);
           $tabla = $ingresos->values()->all();
-        }
+        }*/
 
       	$response = new stdClass();
       	$response->records  = count($tabla);
@@ -847,7 +865,8 @@ use Dompdf\Dompdf;
 
      	if(!empty($tabla)){
      		foreach ($tabla AS $row){
-      			$response->rows[$i]["cell"] = array(
+
+       			$response->rows[$i]["cell"] = array(
      					$row['detalle'],
      					$row['cantidad_horas'],
      					number_format($row['rata'],2),
@@ -968,6 +987,7 @@ use Dompdf\Dompdf;
      	$fecha1 				= $this->input->post('fecha1', true);
      	$fecha2 				= $this->input->post('fecha2', true);
      	$area_negocio 			= $this->input->post('area_negocio', true);
+      $codigo 			= $this->input->post('codigo', true);
      	$clause["activo"] = 1;
      	$clause["empresa_id"] = $this->empresa_id;
 
@@ -991,7 +1011,9 @@ use Dompdf\Dompdf;
       	if( !empty($estado_id)){
      		$clause["estado_id"] = $estado_id;
      	}
-
+      if( !empty($codigo)){
+        $clause["codigo"] = $codigo;
+      }
      	list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
      	$count = Planilla_orm::listar($clause, NULL, NULL, NULL, NULL)->count();
      	list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
@@ -1075,13 +1097,13 @@ use Dompdf\Dompdf;
      			}
            $array_centros = array_pluck(array_pluck($row['centros_contables'],'centro_info'),'nombre');
       			$response->rows[$i]["id"] = $row['id'];
-     			$response->rows[$i]["cell"] = array(
+      			$response->rows[$i]["cell"] = array(
      					$row['id'],
      					$link_detalles,
      					$row['tipo']['etiqueta'],
      					$fecha_pago,
      					$rango1.$rango2,
-     					$array_centros,
+     					count($array_centros)<5? $array_centros: '<a href="javascript:;" title="'.implode("'",$array_centros).'">' .count($array_centros).' Centros seleccionados </a>',
      					$cantidad_acciones,
      					$estado,
      					$link_option,
@@ -1525,7 +1547,7 @@ use Dompdf\Dompdf;
       	if(!empty($result_horas)){
      		foreach ($result_horas AS $i => $row){
       			$fecha_ident =  date("d", strtotime($row->fecha));
-      			$horas_ingresadas[$row->id][$fecha_ident] = $row->horas;
+      			$horas_ingresadas[$row->id][$fecha_ident] = number_format($row->horas,2);
       			$horas_comentarios[$row->id][$fecha_ident] = !empty($row->comentario)?1:0;
      		}
      	}
@@ -1564,7 +1586,7 @@ use Dompdf\Dompdf;
        			$response->rows[$i]["id"] = $row['id'];
      			$response->rows[$i]["cell"] = array(
      					'',
-     					$centro_contable,
+     					$row['centro_contable']['nombre'],
      					$row['recargo']['nombre'],
      				  $cuenta_costo_nombre,
      					$row['beneficio']['nombre'],
@@ -1673,7 +1695,8 @@ use Dompdf\Dompdf;
      						"recargo_id" 			=> $_POST['Recargo'],
      						"cuenta_costo_id" 		=> $_POST['Cuenta_Costo'],
      						"beneficio_id" 			=> $_POST['Beneficio'],
-     						"cuenta_gasto_id" 			=> $_POST['CuentaGasto']
+     						"cuenta_gasto_id" 			=> $_POST['CuentaGasto'],
+                "centro_contable_id" 			=> $_POST['Centro_contable']
       				);
 
      				Ingreso_horas_orm::where('id', $ingresohoras_id)->update($field);
@@ -1735,6 +1758,7 @@ use Dompdf\Dompdf;
       						"cuenta_costo_id" 		=> $_POST['Cuenta_Costo'],
       						"beneficio_id" 			=> $_POST['Beneficio'],
       						"cuenta_gasto_id" 		=> $_POST['CuentaGasto'],
+                  "centro_contable_id" 			=> $_POST['Centro_contable'],
       						"fecha_creacion" 		=> date("Y-m-d"),
       						"id_planilla_colaborador" =>$id_planilla_colaborador,
       						"empresa_id" 			=> $empresa->id
@@ -2020,11 +2044,11 @@ use Dompdf\Dompdf;
               'colaboradores_pagadas.colaborador.cargo'
             ]
         );
-     $csvdata = $this->CalculosCerradoRepository->collecion_excel_cerrada_regular($planilla_info);
+      $csvdata = $this->CalculosCerradoRepository->collecion_excel_cerrada_regular($planilla_info);
       $csv = Writer::createFromFileObject(new SplTempFileObject());
       $csv->insertOne(['','','','Rango de Fechas:',$planilla_info->rango_fecha1.' - '.$planilla_info->rango_fecha2,'','Centro contable:','','','','','']);
       $csv->insertOne(['Planilla No.  ',$planilla_info->codigo,'','Fecha de pago:','','','Area de negocios:','','','','','']);
-      $csv->insertOne(['Centro Contable','Posición','Nombre','Cédula','Rata x Hora / Salario fijo','H.R.','H.E.','ISR','S.E.','S.S.','C.S.','Deducciones','Desc. Directo','Sal. Bruto','Sal. Neto']);
+      $csv->insertOne(['Centro Contable','Posición','Nombre','Cédula','Rata x Hora / Salario fijo','H.R.','H.E.','$H.R.','$H.E.','ISR','S.E.','S.S.','C.S.','Deducciones','Desc. Directo','Sal. Bruto','Sal. Neto']);
       $csv->insertAll($csvdata);
       $csv->output("planilla-". date('ymd') .".csv");
       exit;
@@ -2691,15 +2715,22 @@ public function ajax_pagar_vacacion() {
 
 	public function ajax_pagar_planilla() {
 
-  	if (! $this->input->is_ajax_request ()) {
-			return false;
-		}
+    	if (! $this->input->is_ajax_request ()) {
+  			return false;
+  		}
 
       $planilla_id	 = $this->input->post('planilla_id', true);
       $planilla_info = $this->planillaRepository->find($planilla_id);
 
       $validando_pagadas = $this->pagadasRepository->findBy(array('planilla_id'=>$planilla_id));
 
+      if($this->CuentaPlanillaRepository->tieneCuenta(["empresa_id"=>$this->empresa_id]) == false){
+        echo json_encode(array(
+            "response" => false,
+            "mensaje" => "Disculpe, usted no tiene configurado la cuenta de planilla para esta empresa."
+        ));
+        exit;
+      }
       if(count($validando_pagadas) > 0){
         echo json_encode(array(
             "response" => false,
@@ -2714,6 +2745,7 @@ public function ajax_pagar_vacacion() {
               'colaboradores_planilla.ingreso_horas.beneficio',
               'colaboradores_planilla.ingreso_horas.dias',
               'colaboradores_planilla.colaborador.cargo',
+              'colaboradores_planilla.colaborador.base_acumulados',
               'colaboradores_planilla.colaborador.descuentos_directos.acreedor',
               'colaboradores_planilla.colaborador.colaboradores_contratos',
               'colaboradores_planilla.colaborador.centro_contable',
@@ -2743,14 +2775,17 @@ public function ajax_pagar_vacacion() {
       }
 
 
-        $calculos_globales = $this->planillaRepository->reporte_colaborador($planilla_info);
-        		Capsule::beginTransaction();
- 		try {
+      $calculos_globales = $this->planillaRepository->reporte_colaborador($planilla_info);
 
+      Capsule::beginTransaction();
+ 		try {
+          $success = false;
           $planilla_creada = $this->pagadasRepository->crear($calculos_globales, $planilla_info);
+
           //Despues que sea crea la planilla, la informacion se debe halar de las tablas pagadas_*
           if(count($planilla_creada)){
                $planilla_pagada = $this->planillaRepository->find($planilla_creada->planilla_id);
+
                $planilla_pagada->load('deducciones2',
                "colaboradores_pagadas.colaborador",
                "colaboradores_pagadas.acumulados.acumulado_info",
@@ -2758,35 +2793,39 @@ public function ajax_pagar_vacacion() {
                "colaboradores_pagadas.descuentos.info_descuento",
                "colaboradores_pagadas.ingresos",
                "colaboradores_pagadas.calculos");
-                 $transaccion = $this->PagosPlanilla->haceTransaccion($planilla_pagada);
+
+               $success = true;
+              if($planilla_info->tipo_id == 79){ //Regular
+                     $this->PagosPlanilla->haceTransaccion($planilla_pagada);
+              }
+            }
+
+           if ($success == false) {
+               Capsule::rollback();
+               echo json_encode(array(
+                   'response' => false,
+                   'mensaje' => 'Hubo un error tratando de cambiar la planilla.',
+               ));
+               exit;
            }
 
-          if(count($planilla_creada)){
-              Capsule::commit();
-              $this->Toast->run("success",['CODIGO']);
-          }else{
-              Capsule::rollback();
-              $this->Toast->run("error");
-          }
 
-  		} catch(ValidationException $e){
+  		}
+      catch (\Exception $e) {
+          Capsule::rollback();
+          echo json_encode(array(
+              'response' => false,
+              "mensaje" => "Hubo un error tratando de cambiar el estado."
+          ));
+          exit;
+      }
+ Capsule::commit();
 
- 			Capsule::rollback();
- 			echo json_encode(array(
-					"response" => false,
-					"mensaje" => "Hubo un error tratando de cambiar el estado."
-			));
-			exit;
-		}
-
-
-
-
-		echo json_encode(array(
-				"response" => true,
-				"mensaje" => "Se ha actualizado con &eacute;xito los cambios."
-		));
-		exit;
+         echo json_encode(array(
+            "response" => true,
+            "mensaje" => "Se ha actualizado con &eacute;xito los cambios."
+        ));
+        exit;
 	}
 
 	function ajax_agregar_colaborador_planilla() {
@@ -2913,7 +2952,7 @@ public function exportar_csv_abierta2($planilla_id = NULL, $colaborador_id=NULL 
             $csv = Writer::createFromFileObject(new SplTempFileObject());
             $csv->insertOne(['','','','Rango de Fechas:',$planilla_info->rango_fecha1.' - '.$planilla_info->rango_fecha2,'','Centro contable:','','','','','']);
             $csv->insertOne(['Planilla No.  ',$planilla_info->codigo,'','Fecha de pago:','','','Area de negocios:','','','','','']);
-            $csv->insertOne(['Centro Contable','Posición','Nombre','Cédula','Rata x Hora / Salario fijo','H.R.','H.E.','ISR','S.E.','S.S.','C.S.','Deducciones','Desc. Directo','Sal. Bruto','Sal. Neto']);
+            $csv->insertOne(['Centro Contable','Posición','Nombre','Cédula','Rata x Hora / Salario fijo','H.R.','H.E.','$H.R.','$H.E.','ISR','S.E.','S.S.','C.S.','Deducciones','Desc. Directo','Sal. Bruto','Sal. Neto']);
             $csv->insertAll($csvdata);
             $csv->output("planilla-". date('ymd') .".csv");
             exit;
@@ -4818,6 +4857,7 @@ public function ajax_informacion_total_horas() {
           },
           'colaboradores_planilla.colaborador.descuentos_directos.acreedor',
           'colaboradores_planilla.colaborador.colaboradores_contratos',
+          'colaboradores_planilla.colaborador.base_acumulados',
           'colaboradores_planilla.colaborador.salarios_devengados' => function ($query)  {
                 $query->join('col_colaboradores_contrato', 'col_colaboradores_contrato.id', '=', 'pln_pagadas_colaborador.contrato_id');
            },
@@ -4827,10 +4867,12 @@ public function ajax_informacion_total_horas() {
     );
 
       $data['info'] = isset($planilla_info['colaboradores_planilla'][0]['colaborador'])?$planilla_info['colaboradores_planilla'][0]['colaborador']:array();
+
+
       $calculos_globales = $this->planillaRepository->reporte_colaborador($planilla_info);
 
+      $tabla = $this->planillaRepository->coleccion_tablas($calculos_globales); //Solo para ver detalles
 
-          $tabla = $this->planillaRepository->coleccion_tablas($calculos_globales); //Solo para ver detalles
     			$tablas_principales  = array(
 					'tabla_ingresos' => $tabla['ingresos'],
 					'tabla_deducciones' => $tabla['deducciones'],
@@ -4841,6 +4883,7 @@ public function ajax_informacion_total_horas() {
 					'total_devengado' =>  $tabla['calculos']['total_devengado']['monto'],
 					'indemnizacion_proporcional' => $tabla['calculos']['indemnizacion_proporcional']['monto']
 			);
+
 			$this->session->set_userdata($tablas_principales);
 
 		}
@@ -4855,7 +4898,7 @@ public function ajax_informacion_total_horas() {
 				//"cantidad_semanas" => $cantidad_semanas
 		));
  		$breadcrumb = array(
-				"titulo" => '<i class="fa fa-institution"></i> Reporte de colaborador ',
+				"titulo" => '<i class="fa fa-institution"></i> '.$planilla_info->codigo.' - Reporte de colaborador',
 				"filtro" => false,
 				"menu" => array(
 						"nombre" => 'Acci&oacute;n',
@@ -4886,7 +4929,7 @@ public function ajax_informacion_total_horas() {
 		/*if ($this->auth->has_permission('listar__exportarPlanilla', 'planilla/listar')){*/
 		$breadcrumb["menu"]["opciones"]["#ExportarExcelBtn2"] = "Exportar";
 		//$breadcrumb["menu"]["opciones"]["#ExportarBtnImprimir"] = "Imprimir";
-		$breadcrumb["menu"]["opciones"]["#ExportarBtnImprimirTalonario"] = "Imprimir PDF";
+	//	$breadcrumb["menu"]["opciones"]["#ExportarBtnImprimirTalonario"] = "Imprimir PDF";
 		/*}*/
 
 		$uuid_empresa = $this->session->userdata('uuid_empresa');
@@ -5244,7 +5287,7 @@ public function ajax_informacion_total_horas() {
 		));
 
     $breadcrumb = array(
-      "titulo" => '<i class="fa fa-institution"></i> Reporte de colaborador ',
+      "titulo" => '<i class="fa fa-institution"></i> '.$pagadas->planilla->codigo.' - Reporte de colaborador ',
       "filtro" => false,
       "menu" => array(
           "nombre" => 'Acci&oacute;n',

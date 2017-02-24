@@ -21,8 +21,8 @@ $(document).ready(function (e) {
     $('#fecha_devolucion').on('cancel.daterangepicker', function(ev, picker) {
         $(this).val('');
     });
-    
- 
+
+
     $(".select2").select2({
         theme: "bootstrap",
         width: "100%"

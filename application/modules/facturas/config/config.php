@@ -8,25 +8,25 @@ $config['modulo_config'] = array(
 	'version'		=> '1.0',
 	'tipo'			=> 'addon', // core, addon
 	'grupo'			=> 'Facturas de ventas',
-  'agrupador'		=> array(
-	  'Ventas' => array(
-	      "grupo_orden" => 0
-	  ),
+	'agrupador'		=> array(
+		'Ventas' => array(
+			"grupo_orden" => 0
+		),
 		'Alquileres' => array(
-	      "grupo_orden" => 5
-	  ),
-  ),
+			"grupo_orden" => 5
+		),
+	),
 	'prefijo'		=> 'fac',
 	'menu' => array(
 		'nombre' =>'Facturas de ventas' ,
 		'url' => 'facturas/listar',
 		'orden'=> 5
 	),
-        'permisos'		=> array(
+	'permisos'		=> array(
 		'acceso' => 'Acceso',
-    'listar__ver' => 'Listar',
-    'crear__editarPrecio' => 'Editar Precio',
-    'ver__editarPrecio' => 'Editar Precio',
-             //  'crear'  => 'Crear'
+		'listar__ver' => 'Listar',
+		'crear__editarPrecio' => 'Editar Precio',
+		'ver__editarPrecio' => 'Editar Precio',
+		//  'crear'  => 'Crear'
 	)
 );

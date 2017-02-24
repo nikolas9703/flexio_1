@@ -11,13 +11,13 @@ $config['modulo_config'] = array(
 	'prefijo'		=> 'seg',
 	'agrupador'		=> array(
         'Seguros' => array(
-            "grupo_orden" => 8
+            "grupo_orden" => 6
         ),
     ),
 	'menu' => array(
 		array(
 			'nombre' =>'Remesas entrantes' ,
-			'url' => 'remesas_entrantres/listar',
+			'url' => 'remesas_entrantes/listar',
 			'orden'=> 1
 		),	
 	),

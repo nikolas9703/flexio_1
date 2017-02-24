@@ -8,6 +8,8 @@ use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDeducciones;
 use Flexio\Modulo\Planilla\Models\Pagadas\PagadasAcumulados;
 use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDescuentos;
 use Flexio\Modulo\Planilla\Models\Pagadas\PagadasCalculos;
+use Flexio\Modulo\Colaboradores\Models\ColaboradoresContratos;
+use Flexio\Modulo\Colaboradores\Models\BaseAcumulados;
 use Flexio\Modulo\Planilla\Repository\PlanillaRepository;
 use Flexio\Modulo\DescuentosDirectos\Models\DescuentosDirectos;
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -19,6 +21,89 @@ protected $planillaRepository;
 	function __construct() {
         $this->planillaRepository = new PlanillaRepository();
   }
+	public function sacando_acumulados($info_general_planilla){
+
+
+		 $acumulado_decimo = $acumulado_vacacion = $acumulado_prima = $acumulado_asistencia = 'no';
+ 			if(count($info_general_planilla->acumulados2)){
+				foreach ($info_general_planilla->acumulados2 as  $value) {
+ 						if(preg_match('/XIII Mes proporcional/', $value->acumulado_info->nombre)){
+							   $acumulado_decimo = 'si';
+						}
+						if(preg_match('/Vacaciones proporcional/', $value->acumulado_info->nombre)){
+							  $acumulado_vacacion = 'si';
+						}
+						if(preg_match('/Prima de Antiguedad/',$value->acumulado_info->nombre)){
+							   $acumulado_prima = 'si';
+						}
+						if(preg_match('/Asistencia/', $value->acumulado_info->nombre)){
+							  $acumulado_asistencia = 'si';
+						}
+				}
+			}
+
+   			return [
+				'vacacion_acumulado'   =>  $acumulado_vacacion,
+				'decimo_tercermes'   =>  $acumulado_decimo,
+				'prima_antiguedad'   =>  $acumulado_prima,
+				'asistencia'   =>  $acumulado_asistencia
+			];
+
+	}
+	public function cambiando_estado_pagada($planilla_id){
+
+		$result = PagadasColaborador::where('planilla_id', $planilla_id)->update(['estado_pago' => 'pagado']);
+		return $result;
+
+	}
+
+
+
+	public function crear($info_planilla, $info_general_planilla){
+
+		  $error_rollback = [];
+			$lista_acumulados = $this->sacando_acumulados($info_general_planilla);
+
+		  $tipo_planilla = $info_general_planilla->tipo_id;
+			if(count($info_planilla)) {
+
+						try {
+
+							foreach($info_planilla as $info )
+							{
+													$info['fecha_cierre_planilla'] = $info_general_planilla->rango_fecha2; //Se usa mientras en págadas_colaborador
+													Capsule::beginTransaction();
+
+																$pagadasColaborador = PagadasColaborador::create($this->collection_tabla_pagadas_colaborador($info, $lista_acumulados));
+
+																$pagadasColaborador->ingresos()->saveMany($this->collection_tabla_ingresos($info, $tipo_planilla));
+																$pagadasColaborador->deducciones()->saveMany($this->collection_tabla_deducciones($info));
+																$pagadasColaborador->acumulados()->saveMany($this->collection_tabla_acumulados($info));
+																$pagadasColaborador->descuentos()->saveMany($this->collection_tabla_descuentos($info));
+																$pagadasColaborador->calculos()->saveMany($this->collection_tabla_calculos($info));
+
+
+																if(!count($pagadasColaborador)){
+																	$error_rollback[] = 1;
+																}
+
+
+							}
+ 							Planilla::where('id', $info_planilla[0]['planilla_id'])->update(['estado_id' => 14]);
+
+							if(count($error_rollback)>0){
+									Capsule::rollback();
+							}
+
+						}catch (\Exception $e) {
+ 								Capsule::rollback();
+						}
+					//	Capsule::commit();
+ 		 }
+
+		 return $pagadasColaborador;
+	}
+
 	public function findBy($clause = array())
 	{
 			$pagadas = PagadasColaborador::dePlanilla($clause["planilla_id"]);
@@ -32,14 +117,36 @@ protected $planillaRepository;
  function find($id) {
     return PagadasColaborador::find($id);
   }
+
+	private function guardandoBaseAcumulados($acumulado, $colaborador_id)
+	{
+  		$acumulado_base = BaseAcumulados::where('acumulado_id', $acumulado['id'])->where('colaborador_id',$colaborador_id)->first();
+ 			if(count($acumulado_base)){
+   			 $acumulado_base->acumulado_planilla =$acumulado_base->acumulado_planilla + $acumulado['acumulado_planilla'];
+				 $acumulado_base->save();
+ 			}
+  	}
+
+	private function guardandoVacaciones($salario_bruto, $contrato_id)
+	{
+ 			$vacacion = ColaboradoresContratos::where('id', $contrato_id)->get()->first();
+			$total_acumulado = $vacacion->vacacion_acumulado + $salario_bruto;
+			ColaboradoresContratos::where('id', $contrato_id)->update(['vacacion_acumulado' => $total_acumulado]);
+	}
+	private function guardandoDecimo($salario_bruto, $contrato_id)
+	{
+ 			$decimo_tercermes = ColaboradoresContratos::where('id', $contrato_id)->get()->first();
+			$total_acumulado = $decimo_tercermes->decimo_tercermes+$salario_bruto;
+			ColaboradoresContratos::where('id', $contrato_id)->update(['decimo_tercermes' => $total_acumulado]);
+	}
 	private function  collection_tabla_acumulados($info){
 
- 				 $acumulado_fila = [];
+ 				 $acumulado_fila = $acumulados = [];
 				 if(count($info['pagos'])){
 						 foreach ($info['pagos'] as $pago) {
-							 if(count($pago['acumulados'])){
+							 if(isset($pago['acumulados']) && count($pago['acumulados'])){
+ 								 foreach ($pago['acumulados'] as $acumulado) {
 
-								 foreach ($pago['acumulados'] as $acumulado) {
  									 $acumulado_fila = array(
 										 'acumulado_id'=>$acumulado['id'],
 										 'nombre'=>$acumulado['nombre'],
@@ -48,17 +155,35 @@ protected $planillaRepository;
 										 'saldo'=>0,
   									 );
 									 $acumulados[] 				= new PagadasAcumulados($acumulado_fila);
-									}
+
+
+									 if(preg_match('/Vacaciones proporcional/', $acumulado['nombre'])){
+										 if(isset($info['colaborador']['colaboradores_contratos'][0]['id'])){
+											 $this->guardandoVacaciones($info['salario_devengado_no_pagado'], $info['colaborador']['colaboradores_contratos'][0]['id']);
+										 }
+
+									 }
+									 if(preg_match('/XIII Mes proporcional/', $acumulado['nombre'])){
+										 if(isset($info['colaborador']['colaboradores_contratos'][0]['id']))
+									 	  	$this->guardandoDecimo($info['salario_devengado_no_pagado'], $info['colaborador']['colaboradores_contratos'][0]['id']);
+									 }
+
+									  if(count($acumulado) && !empty($info['colaborador_id']))
+												$this->guardandoBaseAcumulados($acumulado, $info['colaborador_id']);
+
+  									}
 							 }
 							}
 								return  $acumulados;
 				 }
-	}
+  	}
  private function  collection_tabla_deducciones($info){
 
-	 			$deducciones_fila = [];
+	 			$deducciones_fila =$deducciones =  [];
         if(count($info['pagos'])){
             foreach ($info['pagos'] as $pago) {
+
+
               if(count($pago['deducciones'])){
                 foreach ($pago['deducciones'] as $deduccion) {
 
@@ -66,6 +191,7 @@ protected $planillaRepository;
                     'deduccion_id'=>$deduccion['id'],
                     'nombre'=>$deduccion['nombre'],
                     'descuento'=>$deduccion['monto'],
+                    'descuento_patronal'=>$deduccion['monto_patronal'],
                     'saldo'=>0,
                   );
 									$deducciones[] 				= new PagadasDeducciones($deducciones_fila);
@@ -122,13 +248,11 @@ protected $planillaRepository;
 				return $calculos;
 		}
 private function  collection_tabla_descuentos($info){
-			$descuentos = [];
+ 		$descuentos = [];
        if(count($info['pagos'])){
-
-
-
 				   	try {
   							foreach ($info['pagos'] as $pago) {
+
 			             if(count($pago['descuentos'])){
 
  											if(isset($pago['descuentos']['monto_gran_total'])){
@@ -139,7 +263,7 @@ private function  collection_tabla_descuentos($info){
 			                   'codigo'=>$descuento['codigo'],
 			                   'acreedor'=>$descuento['acreedor'],
 			                   'monto_ciclo'=>$descuento['monto_ciclo'],
-			                   'saldo_restante'=>$descuento['monto_adeudado'],
+			                   'saldo_restante'=>$descuento['monto_adeudado']-$descuento['monto_ciclo'],
 			                   'descuento_id'=>$descuento['descuento_id'],
 			                   'descuento'=>$descuento['monto_ciclo'],
 			                   'tipo_descuento_id'=>$descuento['tipo_descuento_id'],
@@ -148,7 +272,8 @@ private function  collection_tabla_descuentos($info){
 
 											 //Afectacion de descuentos al momento de cerrar la planilla
 											 	$descuento_afectado = DescuentosDirectos::find($descuento['descuento_id']);
-												$monto_adeudado_nuevo =$descuento_afectado->inicial-$descuento['monto_ciclo'];
+
+												$monto_adeudado_nuevo =$descuento_afectado->monto_adeudado-$descuento['monto_ciclo'];
 												$descuento_afectado->monto_adeudado = $monto_adeudado_nuevo;
 							          $descuento_afectado->save();
 			               }
@@ -165,106 +290,87 @@ private function  collection_tabla_descuentos($info){
        }
 }
 
- private function  collection_tabla_pagadas_colaborador($info){
-     return  array(
+ private function  collection_tabla_pagadas_colaborador($info, $acumulados = []){
+
+      return  array(
       'salario_bruto' =>$info['colaborador']['salario_devengado_no_pagado'],
       'planilla_id' =>$info['planilla_id'],
       'uuid_colaborador' =>hex2bin($info['colaborador']['uuid_colaborador']),
       'colaborador_id' =>$info['colaborador']['id'],
-      //'rata' =>$info['colaborador']['rata_hora'],
       'salario_neto' => $info['colaborador']['salario_neto'],
-      'fecha_inicial' =>'0000-00-00',
-      'fecha_final' =>'0000-00-00',
       'fecha_pago' =>'0000-00-00',
       'contrato_id' =>isset($info['colaborador']['colaboradores_contratos'][0]['id'])?$info['colaborador']['colaboradores_contratos'][0]['id']:0,
-      'fecha_cierre_planilla' => date("Y-m-d"),
-      'estado_pago'   =>  'no_pagado'
+      'fecha_cierre_planilla' => $info['fecha_cierre_planilla'],
+      'estado_pago'   =>  'no_pagado',
+      'vacacion_acumulado'   =>  $acumulados['vacacion_acumulado'],
+      'decimo_tercermes'   =>  $acumulados['decimo_tercermes'],
+      'prima_antiguedad'   =>  $acumulados['prima_antiguedad'],
+      'asistencia'   =>  $acumulados['asistencia']
   );
  }
 
-private function  collection_tabla_ingresos($info){
+private function  collection_tabla_ingresos($info, $tipo_planilla){
+			$ingresos = [];
+			if($tipo_planilla == 79){
+				if($info['colaborador']['tipo_salario'] == 'Hora'){
+         foreach($info['ingreso_horas'] as $valor){
+					 $ingresos_separados = $this->planillaRepository->formula_calculo($valor, $info['colaborador']['rata_hora']);
+					 if(count($ingresos_separados)>0){
+						 foreach ($ingresos_separados as $key => $ingreso) {
+ 						 			$ingresos[] 				= new PagadasIngresos($ingreso);
+ 						}
+					 }
+           }
 
-       if($info['colaborador']['tipo_salario'] == 'Hora'){
-        foreach($info['ingreso_horas'] as $valor){
-          //$ingresos[] = $this->planillaRepository->formula_calculo($valor, $info['colaborador']['rata_hora']);
-					$ingresos[] 				= new PagadasIngresos($this->planillaRepository->formula_calculo($valor, $info['colaborador']['rata_hora']));
-        }
+					 		 $buscando_gasto_representacion = collect($info['pagos'])->filter(function($item) {
+					 		 	return $item['nombre'] == 'Gasto de representacion';
+					 		 })->first();
+					 		 if(!empty($buscando_gasto_representacion)){
+					 		  $ingreso =
+					 					 		 [
+					 					 			 "detalle" => "Gasto de representacion",
+					 					 				"calculo" => $buscando_gasto_representacion['monto'],
+					 					 				"recargo_monto" => $buscando_gasto_representacion['monto'],
+					 					 				"recargo_cuenta_id" => $info['colaborador']['cuenta_gasto_representacion_id'], // TODO PROBAR DATOS DE CAMPO DEBITO DE GASTO DE REPRESENTACION
+					 					 				//"fecha_transaccion" => "2017-01-07"
+					 					 		 ];
 
-      }else{
+					 					 		 $ingresos[] 				= new PagadasIngresos($ingreso);
+					 			 }
+         }else{
+           foreach($info['pagos'] as $pago){
+                  $ingresos_fila = array(
+                   "detalle" => $pago['nombre'],
+                   "cantidad_horas" => 0,
+                   "rata" =>0,
+                   "calculo" =>$pago['monto']
+               );
 
-          foreach($info['pagos'] as $pago){
+
+ 							$ingresos[] 				= new PagadasIngresos($ingresos_fila);
+
+             }
+
+       }
 
 
-                $ingresos_fila = array(
-                  "detalle" => $pago['nombre'],
-                  "cantidad_horas" => 0,
-                  "rata" =>0,
-                  "calculo" =>$pago['monto']
-              );
-							$ingresos[] 				= new PagadasIngresos($ingresos_fila);
+			}
+			else{
+				foreach($info['pagos'] as $pago){
+							 $ingresos_fila = array(
+								"detalle" => 'Decimo tercer mes',
+								"cantidad_horas" => 0,
+								"rata" =>0,
+								"calculo" =>$pago['monto']
+						);
+					 $ingresos[] 				= new PagadasIngresos($ingresos_fila);
 
-            }
-      }
-      return  $ingresos;
+					}
+			}
+       return  $ingresos;
 }
-   public function collection_transacciones($pagadasColaborador){
-		$informacion =[];
 
 
-		dd($pagadasColaborador->toArray());
-		/*$i = 0;
-		 foreach ($calculos_globales as  $colaborador) {
-
- 					$debitos[$i] 	= $this->collection_debitos($colaborador);
- 					$creditos[$i] = $this->collection_creditos($colaborador);
-					++$i;
-		 }
-		 $informacion =
-		 [
-			 	 "debitos" 				=> $debitos,
-				 "creditos" 			=> $creditos,
-				 "id" 						=>$planilla->id,
-				 "empresa_id" 		=>$planilla->empresa_id,
-				 "codigo" 				=>$planilla->codigo,
-				 'linkable_id'		=>$planilla->id,
-				 'linkable_type'	=> get_class($planilla)
-	 	];*/
-		return $informacion;
-	}
-  public function crear($info_planilla){
-
-      if(count($info_planilla)) {
-        foreach($info_planilla as $info )
-        {
-              $pagadasColaborador = PagadasColaborador::create($this->collection_tabla_pagadas_colaborador($info));
-    					$pagadasColaborador->ingresos()->saveMany($this->collection_tabla_ingresos($info));
-					 	  $pagadasColaborador->deducciones()->saveMany($this->collection_tabla_deducciones($info));
-							$pagadasColaborador->acumulados()->saveMany($this->collection_tabla_acumulados($info));
-							$pagadasColaborador->descuentos()->saveMany($this->collection_tabla_descuentos($info));
-							$pagadasColaborador->calculos()->saveMany($this->collection_tabla_calculos($info));
-         }
-  					Planilla::where('id', $info_planilla[0]['planilla_id'])->update(['estado_id' => 14]);
-     }
-
-		 return $pagadasColaborador;
-  }
-
-  /*public function findBy($clause)
-  {
-      $PagadaColaborador = PagadasColaborador::where(function($query) use ($clause){
-
-          $this->_filtros($query, $clause);
-
-      });
-
-      return $PagadaColaborador->first();
-  }*/
-
-  /*private function _filtros($query, $clause)
-  {
-      if(isset($clause['planilla_id']) and !empty($clause['planilla_id'])){$query->wherePlanillaId($clause['planilla_id']);}
-      if(isset($clause['colaborador_id']) and !empty($clause['colaborador_id'])){$query->whereColaboradorId($clause['colaborador_id']);}
-  }*/
 
  private function set_pagadas_colaborador($objetoPlanilla = array(), $data = array()) {
 

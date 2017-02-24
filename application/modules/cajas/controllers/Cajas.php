@@ -501,6 +501,7 @@ class Cajas extends CRM_Controller {
             'public/assets/js/default/jquery.inputmask.bundle.min.js',
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/modules/cajas/formulario.controller.js',
+            'public/assets/js/default/toast.controller.js'
         ));
 
         $this->template->agregar_titulo_header('Cajas');
@@ -869,7 +870,7 @@ class Cajas extends CRM_Controller {
     }
      public function guardar_transferir_desde()
     {
-         
+
     	if(empty($_POST)){
     		return false;
     	}
@@ -915,9 +916,9 @@ class Cajas extends CRM_Controller {
                  if( $_POST['empezable_type'] == 'caja' ){
                      $this->caja->cambiandoSaldo($hasta_caja ,$this->TransferirCajaRepository->subiendoCaja($transferencia_creado, $hasta_caja) );
                  }
-                
+
                  $this->transaccionCaja->hacerTransaccion($transferencia, $transferencia_creado->numero);
-                
+
 
 
     		$this->session->set_flashdata('mensaje', "La transferencia a caja fue guarda con exito.");
@@ -948,7 +949,7 @@ class Cajas extends CRM_Controller {
 
     public function ajax_guardar_transferencia()
     {
-        
+
     	if(empty($_POST)){
     		return false;
     	}

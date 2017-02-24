@@ -63,6 +63,15 @@
         font-size: 10px;
         padding-top: 10px;
     }
+    
+    #tablaauth {
+        page-break-before: always;
+    }
+    
+    #tablaitems {
+        page-break-inside: always;
+    }
+    
 
 </style>
 <?php
@@ -151,7 +160,7 @@ $ruta = empty($empresa->logo)?$this->config->item('base_url')."public/themes/erp
         <tr>
             <td colspan="2">
 
-                <table style="width: 100%;" class="tabla_items">
+                <table style="width: 100%;" class="tabla_items" id="tablaitems">
                     <thead>
                         <tr class="titulo2">
                             <th>Item</th>
@@ -160,13 +169,17 @@ $ruta = empty($empresa->logo)?$this->config->item('base_url')."public/themes/erp
                         </tr>
                     </thead>
                     <tbody>
-                      <?php $i=0; ?>
+                      <?php $i=0;  ?>
+                        
                       <?php foreach($items_entregados as $info){
                         
                         $j=0;
-                        foreach($info->contrato_alquiler->contratos_items as $row){                       
-                        $itemsEntregados = !empty($row["contratos_items_detalles_entregas"]) ? $row["contratos_items_detalles_entregas"] : "";
-                        $series = collect($itemsEntregados)->pluck('serie')->reject(function ($name, $j) { return empty($name[$j]); });
+                        foreach($info->contrato_alquiler->contratos_items as $row){  
+                            
+                        $itemsEntregados = !empty($row["contratos_items_detalles_entregas"]) ? $row["contratos_items_detalles_entregas"] : typeof($row["contratos_items_detalles_entregas"])!='undefined'? $row["contratos_items_detalles_entregas"] : "";
+                        
+                        $series = collect($itemsEntregados)->pluck('serie')/*->reject(function ($name, $j) { return empty($name[$j]); })*/;
+                        //dd($series);
                         $nombre = $row->item->nombre;
                         $codigo = $row->item->codigo;
                        
@@ -209,7 +222,7 @@ $ruta = empty($empresa->logo)?$this->config->item('base_url')."public/themes/erp
     </table>
     <br /><br />
      <!-- ************************************************************************************************************************************** -->
-     <table style="width:100%; border:1px solid;">
+     <table style="width:100%; border:1px solid;" id="tablaauth">
        <tr>
        	<td class="titulo4">Autorizado por:</td>
           <td class="titulo4">Observaciones:</td>

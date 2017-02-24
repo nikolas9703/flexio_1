@@ -60,13 +60,15 @@ class DepreciacionActivosFijosTransacciones {
         //sumatoria agrupada por tipos de impuestos
         foreach($depreciacion_activo_fijo->items  as $item)
         {
-            $cuenta = $this->_getCuentaDebito($item);
+            
+            //$cuenta = $this->_getCuentaDebito($item);
             $asientos[] = new AsientoContable([
                 'codigo'        => $depreciacion_activo_fijo->codigo,
                 'nombre'        => $depreciacion_activo_fijo->codigo. ' - '.$item->item->codigo,
                 'debito'        => $item->monto_depreciado,
-                'cuenta_id'     => $cuenta->id,
-                'empresa_id'    => $depreciacion_activo_fijo->empresa_id
+                'cuenta_id'     => $depreciacion_activo_fijo->cuenta_id_debito,
+                'empresa_id'    => $depreciacion_activo_fijo->empresa_id,
+                'centro_id'     => $depreciacion_activo_fijo->centro_contable_id
             ]);
         }
         
@@ -79,13 +81,14 @@ class DepreciacionActivosFijosTransacciones {
         
         foreach ($depreciacion_activo_fijo->items as $item)
         {
-            $cuenta     = $this->_getCuentaIdCredito($item);
+            //$cuenta     = $this->_getCuentaIdCredito($item);
             $asientos[] = new AsientoContable([
                 'codigo'        => $depreciacion_activo_fijo->codigo,
                 'nombre'        => $depreciacion_activo_fijo->codigo. " - " .$item->item->codigo,
                 'credito'       => $item->monto_depreciado,
-                'cuenta_id'     => $cuenta->id,
-                'empresa_id'    => $depreciacion_activo_fijo->empresa_id
+                'cuenta_id'     => $depreciacion_activo_fijo->cuenta_id_credito,
+                'empresa_id'    => $depreciacion_activo_fijo->empresa_id,
+                'centro_id'     => $depreciacion_activo_fijo->centro_contable_id
             ]);
         }
         

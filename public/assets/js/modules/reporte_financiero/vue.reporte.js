@@ -10,7 +10,9 @@ var reporteFinanciero = new Vue({
         },
         tituloReporte: '',
         dataReporte: {},
-        reporte: ''
+        reporte: '',
+        isModulo: window.modulo === 1? true:false,
+        disabledCabecera:false
     },
     ready: function() {
         var context = this;
@@ -18,18 +20,24 @@ var reporteFinanciero = new Vue({
             return query.etiqueta == context.cabecera.reporte_actual;
         });
         this.tituloReporte = reporte_catalogo.valor;
+        if(this.isModulo)this.disabledCabecera = true;
+        $('#imprimirReporte').css('display', 'none'); //Inhabilita la impresion que solo sirve para reporte ITBMS
     },
     components: {
         'balance-situacion': reporteBalanceSituacion,
         'ganancias-perdidas': reporteGananciasPerdidas,
         'estado-cuenta-proveedor': formularioEstadoCuentaProveedor,
+        'costo-por-centro-compras': formularioCostoPorCentroCompras,
+        'transacciones-por-centro-contable': formularioTransaccionesPorCentroContable,
         'cuenta-por-pagar-por-antiguedad': formCuentaPorPagarAntiguedad,
         'cuenta-por-cobrar-por-antiguedad': formCuentaPorCobrarAntiguedad,
         'estado-de-cuenta-de-cliente': formularioEstadoCuentaCliente,
         'impuestos-sobre-ventas':formularioImpuestoSobreVenta,
         'flujo-efectivo':formularioFlujoEjectivo,
         'formulario-43':formulario43,
-        'formulario-433':formulario433
+        'formulario-433':formulario433,
+        'reporte-caja': formularioReporteCaja,
+        'impuestos-sobre-itbms':formularioImpuestoSobreItbms
     },
     methods: {
         seleccionarAplicar: function(componente) {
@@ -42,6 +50,7 @@ var reporteFinanciero = new Vue({
                 return query.etiqueta == _.snakeCase(context.reporteActual);
             });
             context.tituloReporte = reporte_catalogo.valor;
+            $('#imprimirReporte').css('display', 'none'); //Inhabilita la impresion que solo sirve para reporte ITBMS
         }
 
     }

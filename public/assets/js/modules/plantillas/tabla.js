@@ -1,6 +1,6 @@
 //Tabla Accion de Personal
 var tablaAccionPersonal = (function () {
- 
+
     var url = 'plantillas/ajax-listar';
     var grid_id = "tablaPlantillasGrid";
     var grid_obj = $("#tablaPlantillasGrid");
@@ -16,8 +16,9 @@ var tablaAccionPersonal = (function () {
     };
 
     var tabla = function () {
-        
-        var ocultar_opciones = false; 
+
+        var ocultar_opciones = false;
+
         //icialización de jqgrid de plantilla
         grid_obj.jqGrid({
             url: phost() + url,
@@ -25,7 +26,7 @@ var tablaAccionPersonal = (function () {
             colNames: [
                 'No. de plantilla',
                 'Nombre de plantilla',
-                'Fecha de creaci&oacute;n',                
+                'Fecha de creaci&oacute;n',
                 '',
                 ''
             ],
@@ -40,7 +41,7 @@ var tablaAccionPersonal = (function () {
             postData: {
                 erptkn: tkn,
                 colaborador_id : colaborador_id != 'undefined' ? colaborador_id : ''
-                
+
             },
             height: "auto",
             autowidth: true,

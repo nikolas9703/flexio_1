@@ -182,9 +182,9 @@ class Depreciacion_activos_fijos extends CRM_Controller{
     //$this->assets->agregar_css(array('public/assets/css/modules/stylesheets/animacion.css'));
     $this->_js();
     $this->assets->agregar_js(array(
-      'public/assets/js/default/vue.js',
+      //'public/assets/js/default/vue.js',
       'public/assets/js/default/vue-validator.min.js',
-      'public/assets/js/default/vue-resource.min.js',
+      //'public/assets/js/default/vue-resource.min.js',
       'public/assets/js/modules/depreciacion/vue.funcion.guardar.js',
       'public/assets/js/modules/depreciacion/componente.vue.js',
       'public/assets/js/modules/depreciacion/vue.crear.formulario.js',
@@ -197,7 +197,7 @@ class Depreciacion_activos_fijos extends CRM_Controller{
                                    ->orWhere('etiqueta', 'Activos fijos con serie')
                                    ->get(array('id_cat', 'etiqueta'));
     
-    $cuenta_transaccionales = Cuentas::transaccionalesDeEmpresa($this->empresa_id)->activas()
+    $cuenta_transaccionales = Cuentas::transaccionalesDeEmpresa($this->empresa_id)->activas() ->orderBy("codigo")
     		->get(array('id', 'uuid_cuenta', 'nombre', 'codigo', Capsule::raw("HEX(uuid_cuenta) AS uuid")))->toArray();
     
     $cta = array();
@@ -280,7 +280,7 @@ class Depreciacion_activos_fijos extends CRM_Controller{
                                    ->orWhere('etiqueta', 'Activos fijos con serie')
                                    ->get(array('id_cat', 'etiqueta'));
     
-    $cuenta_transaccionales = Cuentas::transaccionalesDeEmpresa($this->empresa_id)->activas()
+    $cuenta_transaccionales = Cuentas::transaccionalesDeEmpresa($this->empresa_id)->activas() ->orderBy("codigo")
     		->get(array('id', 'uuid_cuenta', 'nombre', 'codigo', Capsule::raw("HEX(uuid_cuenta) AS uuid")))->toArray();
     
     $cta = array();
@@ -397,10 +397,10 @@ class Depreciacion_activos_fijos extends CRM_Controller{
     if(isset($_POST['categoria'])){
         $clause['categoria'] = $this->input->post('categoria');
     }
-    
+
     $items_activo_fijo = $this->activoFijo->activo_fijo($clause);
     
-    $data = ItemTransform::transform($items_activo_fijo);
+    @$data = ItemTransform::transform($items_activo_fijo);
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
         ->set_output(json_encode($data['data']))->_display();
     exit;

@@ -17,7 +17,7 @@ var tablaFacturasCompras = (function(){
     };
 
     var tabla = function(){
-    	
+
     	var scaja_id = '';
         if(typeof caja_id != 'undefined'){
             scaja_id = caja_id;
@@ -26,21 +26,21 @@ var tablaFacturasCompras = (function(){
        if(typeof pedidos_id != 'undefined'){
             pedidosid = pedidos_id;
         }
-    	
+
         gridObj.jqGrid({
             url: tablaUrl,
             mtype: "POST",
             datatype: "json",
-            colNames:['N&uacute;mero','Fecha','Proveedor','No. contrato','Centro','Estado','Monto','Saldo','', ''],
+            colNames:['No. Factura','Fecha','Proveedor','No. contrato','Monto','Saldo','Centro contable','Estado','', ''],
             colModel:[
 		{name:'Numero', index:'codigo', width:50, sortable:true},
 		{name:'Fecha', index:'created_at', width:50, sortable:true},
 		{name:'Proveedor', index:'proveedor_id', width:70,  sortable:false, },
 		{name:'No.contrato', index:'no_contrato', width:50,  sortable:false, },
-		{name:'Centro', index:'centro_id', width: 70,  sortable:false},
-		{name:'Estado', index:'estado_id', width: 55,  sortable:false},
-		{name:'Monto', index:'monto', width: 50,  sortable:false},
+                {name:'Monto', index:'monto', width: 50,  sortable:false},
 		{name:'Saldo', index:'saldo', width: 50,  sortable:false},
+		{name:'Centro', index:'centro_id', width: 70,  sortable:false},
+		{name:'Estado', index:'estado_id', width: 55,  sortable:false, align:'center'},
                 {name:'options', index:'options',width: 40},
 		{name:'link', index:'link', width:50, align:"center", sortable:false, resizable:false,hidden: true, hidedlg:true}
             ],
@@ -95,7 +95,7 @@ var tablaFacturasCompras = (function(){
                     });
                     $('#jqgh_'+gridId+ "_cb").css("text-align","center");
                 }
-                
+
             },
             onSelectRow: function(id){
                 $(this).find('tr#'+ id).removeClass('ui-state-highlight');
@@ -121,8 +121,36 @@ var tablaFacturasCompras = (function(){
             opcionesModal.find('.modal-footer').empty();
             opcionesModal.modal('show');
         });
-
     };
+    //Documentos Modal en  DETALLE
+    $('#optionsModal').on("click", ".subirArchivoBtn", function(e){
+        e.preventDefault();
+        e.returnValue=false;
+        e.stopPropagation();
+        console.log("Documento");
+        //Cerrar modal de opciones
+        $('#optionsModal').modal('hide');
+
+        var factura_id = $(this).attr("data-id");
+        console.log(factura_id);
+        //Inicializar opciones del Modal
+        $('#documentosModal').modal({
+            backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+            show: false
+        });
+
+        var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
+        scope.safeApply(function(){
+            scope.campos.factura_id = factura_id;
+        });
+        $('#documentosModal').modal('show');
+        $('.guardarDocBoton').on("click", function(e){
+            console.log("entrara");
+            setTimeout(function(){
+                $('#tablaDocumentosGrid').trigger( 'reloadGrid' );
+            }, 500);
+        });
+    });
     $(botones.limpiar).click(function(e){
         e.preventDefault();
         e.returnValue=false;
@@ -146,11 +174,12 @@ var tablaFacturasCompras = (function(){
         var monto1 = $('#monto1').val();
         var monto2 = $('#monto2').val();
         var centro_contable = $('#centro_contable').val();
+        var numero_factura = $('#numero_factura').val();
         //var tipo = '19';
         var tipo = $('#tipo').val();
         console.log(tipo);
 
-        if (fecha1 !== "" || fecha2 !== "" || proveedor !== "" || estado !== "" || monto1 !== "" || monto2 !== "" || centro_contable !== "" || tipo !== "") {
+        if (fecha1 !== "" || fecha2 !== "" || proveedor !== "" || estado !== "" || monto1 !== "" || monto2 !== "" || centro_contable !== "" || tipo !== "" || numero_factura !== "") {
             //Reload Grid
             gridObj.setGridParam({
                 url: tablaUrl,
@@ -164,6 +193,7 @@ var tablaFacturasCompras = (function(){
                     monto2: monto2,
                     centro_contable: centro_contable,
                     tipo: tipo,
+                    numero_factura: numero_factura,
                     erptkn: tkn
                 }
             }).trigger('reloadGrid');
@@ -196,6 +226,7 @@ var tablaFacturasCompras = (function(){
                 monto2: '',
                 centro_contable: '',
                 tipo: '',
+                numero_factura:'',
                 erptkn: tkn
             }
         }).trigger('reloadGrid');

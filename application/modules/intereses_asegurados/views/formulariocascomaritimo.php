@@ -105,7 +105,7 @@ $formAttr = array(
                                         ?>" class="form-control porcentaje_acreedor_maritimo"></div>
                                 </div>      
                             </div>
-                            <div class="row">
+                            <div class="row" id="observa">
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-6 "><label>Observaciones</label>
                                     <textarea name="campo[observaciones]" class="form-control" id="observaciones_maritimo"><?php
                                         if (isset($campos['datos']['observaciones'])) {
@@ -118,118 +118,117 @@ $formAttr = array(
                                     <label>Estado </label>
                                     <select class="form-control estado_casco" name="campo2[estado]">
                                         <?php
-
-                                        $activo="";
-                                        $inactivo="";
-                                        if(isset($campos['estado']) && $campos['estado']=="Activo") 
-                                            $activo="selected";
-                                        if(isset($campos['estado']) && $campos['estado']=="Inactivo") 
-                                            $inactivo="selected";
-
-                                        if($campos['politicas_general'] >0 && isset($campos['estado']))
-                                        {                                            
-
-                                            if( in_array(19, $campos['politicas']) || in_array(20, $campos['politicas']) )
-                                            {
-                                                if($campos['estado']=="Activo")
-                                                {
-                                                    if(in_array(19, $campos['politicas'])) {
-                                                        ?>
-                                                        <option value='Activo' <?php echo $activo ?> >Activo</option>
-                                                        <option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
-                                                        <?php
-                                                    }
-                                                    else
-                                                    {
-                                                        ?>
-                                                        <option value='Activo' <?php echo $activo ?> >Activo</option>
-                                                        <?php
-                                                    }
-                                                }
-                                                else if($campos['estado']=="Inactivo")
-                                                {
-                                                    if(in_array(20, $campos['politicas'])) {
-                                                        ?>
-                                                        <option value='Activo' <?php echo $activo ?> >Activo</option>
-                                                        <option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
-                                                        <?php
-                                                    }
-                                                    else
-                                                    {
-                                                        ?>
-                                                        <option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
-                                                        <?php
-                                                    }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                ?>
-                                                <option value='<?php echo $campos['estado']?>'><?php echo $campos['estado']?></option>
-                                                <?php
-                                            }
-                                        }
-                                        else
-                                        {
+                                        $activo = "";
+                                        $inactivo = "";
+                                        if (isset($campos['estado']) && $campos['estado'] == "Activo")
+                                            $activo = "selected";
+                                        if (isset($campos['estado']) && $campos['estado'] == "Inactivo")
+                                            $inactivo = "selected";
+                                         if (isset($campos['estado'])) {
+											
+											if($campos['superadmin']==0)
+											{
+												if (count($campos['politicas_generales'] > 0)) {
+													if ($campos['estado'] == "Activo") {
+														if (((in_array(19, $campos['politicas']) === true) && (in_array(19, $campos['politicas_generales']) === true)) || ((in_array(19, $campos['politicas_generales']) === false)) ) {
+															?>
+															<option value='Activo' <?php echo $activo ?> >Activo</option>
+															<option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
+															<?php
+														} else {
+															?>
+															<option value='Activo' <?php echo $activo ?> >Activo</option>
+															<?php
+														}
+													} else if ($campos['estado'] == "Inactivo") {
+														
+														if (((in_array(20, $campos['politicas']) === true) && (in_array(20, $campos['politicas_generales']) === true)) || ((in_array(20, $campos['politicas_generales']) === false)) ) {
+															?>
+															<option value='Activo' <?php echo $activo ?> >Activo</option>
+															<option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
+															<?php
+															}
+															else
+															{
+															?>
+														  <option value='Inactivo' <?php  echo $inactivo ?> >Inactivo</option>
+															<?php
+														}
+														
+													}
+												} else {
+													?>
+													<option value='Activo' >Activo</option>
+													<option value='Inactivo' >Inactivo</option>
+													<?php
+												}
+											}
+											else {
+													?>
+													<option value='Activo' >Activo</option>
+													<option value='Inactivo' >Inactivo</option>
+													<?php
+												}
+                                        } else {
                                             ?>
                                             <option value='Activo' <?php echo $activo ?> >Activo</option>
                                             <?php
                                         }
                                         ?>
-                                    </select>
+                                    </select>  
                                 </div>
                             </div>
                             <!--<div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3" > </div>
                             <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12 div1_persona">	
                             </div> -->
-                                        <?php
-                                        if (!isset($campos['datos']['uuid_casco_maritimo'])) {
-                                            ?>
-                                <div class="row" id="doc_entregados">
-                                <div class=" col-xs-12 col-sm-12 col-md-12 col-lg-12 documentos_entregados" >
-                                    <h5>Documentos entregados</h5><br><br>
-                                    <label>Nombre del documento</label>
-                                    <div class='file_upload_maritimo' id='fmaritimo1'>
-                                        <input class="form-control" style="width: 300px!important; float: left;" name="nombre_documento[]" type="text" id="nombre_documento" /><input style="width: 300px!important; float: left;" class="form-control" name='file[]' type='file'/>
-                                        <br><br>
-                                    </div>
-                                    <div id='file_tools_maritimo' style="width: 90px!important; float: left;">
-                                        <button type="button" class="btn btn-default btn-block" style="float: left; width: 40px; margin-right:5px;" id="add_file_maritimo"><i class="fa fa-plus"></i>
-                                        </button>
-                                        <button type="button" style="float: left; width: 40px; margin-top:0px!important;" class="btn btn-default btn-block" id="del_file_maritimo"><i class="fa fa-trash"></i>
-                                        </button>
+                            <?php
+                            if (!isset($campos['datos']['uuid_casco_maritimo'])) {
+                                ?>
+                                <div class="row">
+                                    <div class=" col-xs-12 col-sm-12 col-md-12 col-lg-12 documentos_entregados" id="doc_entregados">
+                                        <h5>Documentos entregados</h5><br><br>
+                                        <label>Nombre del documento</label>
+                                        <div class='file_upload_maritimo' id='fmaritimo1'>
+                                            <input class="form-control" style="width: 300px!important; float: left;" name="nombre_documento[]" type="text" id="nombre_documento" /><input style="width: 300px!important; float: left;" class="form-control" name='file[]' type='file'/>
+                                            <br><br>
+                                        </div>
+                                        <div id='file_tools_maritimo' style="width: 90px!important; float: left;">
+                                            <button type="button" class="btn btn-default btn-block" style="float: left; width: 40px; margin-right:5px;" id="add_file_maritimo"><i class="fa fa-plus"></i>
+                                            </button>
+                                            <button type="button" style="float: left; width: 40px; margin-top:0px!important;" class="btn btn-default btn-block" id="del_file_maritimo"><i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-<?php } ?>                            
+                            <?php } ?>                            
                             <br><br>
                             <div class="row detalleinteres_maritimo" style="display:none">
                                 <input type="hidden" name="detalleunico" value="<?php echo strtotime('now'); ?>"> 
-                                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" >
+                                <div class="col-xs-12 col-sm-3 col-md-12 col-lg-12" >
                                     <h5>Detalle interés asegurado</h5>
                                     <br>
                                     <hr>
-                                    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                    <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                         <label>No. Certificado</label>
                                         <div class="input-group">
                                             <input type="text" name="campodetalle[certificado]" id="certificadodetalle_maritimo" class="form-control">
                                         </div>                                      
                                     </div>
-                                    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                    <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                         <label>Suma asegurada<span required="" aria-required="true">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-addon">$</span>
                                             <input type="text" name="campodetalle[suma_asegurada]" id="sumaaseguradadetalle_maritimo" class="form-control">
                                         </div>
                                     </div>                                  
-                                    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                    <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                         <label>Prima neta<span required="" aria-required="true">*</span></label>
                                         <div class="input-group">
                                             <span class="input-group-addon">$</span>
                                             <input type="text" name="campodetalle[prima_anual]" id="primadetalle_maritimo" class="form-control">
                                         </div>                                      
                                     </div>
-                                    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                    <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                         <label>Deducible</label>
                                         <div class="input-group">
                                             <span class="input-group-addon">$</span>
@@ -237,9 +236,10 @@ $formAttr = array(
                                         </div>
                                     </div>
                                 </div>
-                                </div>
+                            </div>
 
-                                <input type="hidden" name="campodesde[desde]" class="campodesde" value="">
+                            <input type="hidden" name="campodesde[desde]" class="campodesde" value="">
+                            <input type="hidden" name="campodesde[indcolec]" class="indcolec" value="">
 
                             <div class="row botones">
                                 <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
@@ -254,12 +254,12 @@ $formAttr = array(
 
                             <div class="tabladetalle_maritimo" style="display:none">
                                 <!-- JQGRID -->
-                                <?php echo modules::run('intereses_asegurados/ocultotablamaritimo',$campos); ?>
+                                <?php echo modules::run('intereses_asegurados/ocultotablamaritimo', $campos); ?>
                                 <!-- /JQGRID -->
                             </div>
                         </div>
                     </div>
-                            <?php echo form_close(); ?>
+                    <?php echo form_close(); ?>
                 </div>
             </div>
         </div>

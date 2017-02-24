@@ -5,8 +5,11 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use \Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Documentos\Models\Documentos;
+use Flexio\Modulo\Atributos\Models\Atributos;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Flexio\Politicas\PoliticableTrait;
+use Flexio\Library\Util\FlexioSession;
+use Flexio\Notifications\Notify;
 //utilities
 use Carbon\Carbon as Carbon;
 
@@ -14,15 +17,16 @@ class OrdenesCompra extends Model
 {
     use PoliticableTrait;
     use RevisionableTrait;
+    use Notify;
     // propiedad de politica
     protected $politica = 'orden_compra';
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['referencia', 'numero', 'uuid_centro', 'uuid_lugar', 'uuid_pedido', 'uuid_proveedor', 'modo_pago_id', 'dias', 'id_estado', 'creado_por', 'id_empresa', 'monto', 'termino_pago'];
+    protected $keepRevisionOf = ['referencia', 'numero', 'uuid_centro', 'uuid_lugar', 'uuid_pedido', 'uuid_proveedor', 'modo_pago_id', 'dias', 'id_estado', 'creado_por', 'aprobado_por', 'id_empresa', 'monto', 'termino_pago'];
     protected $prefijo      = 'OC';
     protected $table        = 'ord_ordenes';
-    protected $fillable     = ['referencia', 'numero', 'uuid_centro', 'uuid_lugar', 'uuid_pedido', 'uuid_proveedor', 'modo_pago_id', 'dias', 'id_estado', 'creado_por', 'id_empresa', 'monto', 'termino_pago'];
+    protected $fillable     = ['referencia', 'numero', 'uuid_centro', 'uuid_lugar', 'uuid_pedido', 'uuid_proveedor', 'modo_pago_id', 'dias', 'id_estado', 'creado_por', 'aprobado_por', 'id_empresa', 'monto', 'termino_pago'];
     protected $guarded      = ['id','uuid_orden'];
     public $timestamps      = false;
     protected $appends =['icono','codigo','enlace','valido_hasta'];
@@ -46,6 +50,9 @@ class OrdenesCompra extends Model
             parent::boot();
            static::updating(function($orden) {
                 $cambio = $orden->getDirty();
+                if(isset($cambio['id_estado'])){
+                $orden->sendNotify($cambio['id_estado']);
+                }
                 $original = $orden->getOriginal();
                   if(isset($cambio['id_estado'])){
                     $catalogo = OrdenesCompraCat::where("id_cat","=",$original['id_estado'])->get();
@@ -62,9 +69,10 @@ class OrdenesCompra extends Model
                   else{
                     $descripcion = "Se ha actualizado la Orden";
                 }
+                $creado_por = FlexioSession::now();
                 $create = [
                       'codigo' => $orden->numero,
-                      'usuario_id' => $orden->creado_por,
+                      'usuario_id' => $creado_por->usuarioId(),
                       'empresa_id' => $orden->id_empresa,
                       'orden_id'=> $orden->id,
                       'tipo'   => "actualizado",
@@ -72,7 +80,7 @@ class OrdenesCompra extends Model
                 ];
                 OrdenesHistorial::create($create);
 
-                $comentario_texto = ['comentario'=>$descripcion,'usuario_id'=>$orden->creado_por];
+                $comentario_texto = ['comentario'=>$descripcion,'usuario_id' => $creado_por->usuarioId()];
                 $comentario = new Comentario($comentario_texto);
                 $orden->comentario()->save($comentario);
 
@@ -80,6 +88,10 @@ class OrdenesCompra extends Model
            });
 
            static::created(function($orden){
+               $cambio = $orden->getDirty();
+            if(isset($cambio['id_estado'])){
+                $orden->sendNotify($cambio['id_estado']);
+            }
                 $comentario_texto = ['comentario'=>"Se ha creado la orden.",'usuario_id'=>$orden->creado_por];
                 $comentario = new Comentario($comentario_texto);
                 $orden->comentario()->save($comentario);
@@ -297,6 +309,12 @@ class OrdenesCompra extends Model
 
     }
 
+    public function proveedor_relacion() {
+
+        return $this->belongsTo('Flexio\Modulo\Proveedores\Models\Proveedores', "uuid_proveedor", "uuid_proveedor");
+
+    }
+
     public function externo()
     {
         return $this->proveedor();
@@ -312,6 +330,12 @@ class OrdenesCompra extends Model
 
         return $this->belongsTo('Flexio\Modulo\CentrosContables\Models\CentrosContables', "uuid_centro_bin", "uuid_centro");
 
+    }
+
+    //only use for filters
+    public function centro_contable_query()
+    {
+        return $this->belongsTo('Flexio\Modulo\CentrosContables\Models\CentrosContables', "uuid_centro", "uuid_centro");
     }
 
     public function getUuidCentroBinAttribute(){
@@ -346,10 +370,9 @@ class OrdenesCompra extends Model
             ->withPivot('id', 'uuid_line_item', 'categoria_id', 'empresa_id', 'cantidad', 'unidad_id', 'precio_unidad', 'impuesto_id', 'descuento', 'cuenta_id', 'precio_total', 'impuesto_total', 'descuento_total', 'observacion', 'cantidad2','atributo_id','atributo_text');
     }
 
-    public function lines_items(){
-
+    public function lines_items()
+    {
         return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems', 'tipoable');
-
     }
 
     public function pedido(){
@@ -364,9 +387,18 @@ class OrdenesCompra extends Model
 
     }
 
+    public function getModuloNotificacionesAttribute() {
+        return '\Flexio\Modulo\OrdenesCompra\Notifications\OrdenesUpdated';
+    }
+
     public function comprador()
     {
         return $this->belongsTo('Flexio\Modulo\Usuarios\Models\Usuarios', 'creado_por');
+    }
+
+    public function aprobadopor()
+    {
+        return $this->belongsTo('Flexio\Modulo\Usuarios\Models\Usuarios', 'aprobado_por');
     }
 
     function documentos(){
@@ -388,8 +420,25 @@ class OrdenesCompra extends Model
       return new \Flexio\Modulo\OrdenesCompra\Presenter\OrdenCompraPresenter($this);
     }
 
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\OrdenesCompra\Services\OrdenCompraFilters;
+        return $queryFilter->apply($query, $campo);
+    }
+
     public function anticipos()
     {
         return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable');
     }
+
+    public function anticipos_aprobados()
+    {
+        return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->where('atc_anticipos.estado','aprobado');
+    }
+
+    public function anticipos_no_anulados()
+    {
+        return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->whereIn('estado',['por_aprobar','aprobado']);
+    }
+
 }

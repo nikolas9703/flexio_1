@@ -55,7 +55,7 @@
                       </div>
                       <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                           <label for="">Proveedor</label>
-                            <select name="cliente" class="form-control select2" id="cliente">
+                            <select name="proveedor_id" class="form-control select2" id="proveedor_id">
                               <option value="">Seleccione</option>
                               <?php foreach($proveedores as $cliente) {?>
                               <option value="<?php echo $cliente->id?>"><?php echo $cliente->nombre?></option>
@@ -144,3 +144,10 @@
 </div><!-- cierra #wrapper -->
 
 <?php echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->
+<?php echo Modal::config(array(
+  "id" => "documentosModal",
+  "size" => "lg",
+  "titulo" => "Subir Documentos",
+  "contenido" => modules::run("documentos/formulario", array())
+))->html(); ?>  <!-- modal subir documentos -->
+

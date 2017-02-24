@@ -40,6 +40,8 @@ class TransaccionesRepository{
         
         foreach($trasacciones as $transaccion)
         {
+            
+            
             $aux[] = [
                 "id"                    => $transaccion->id,
                 "numero"                => $transaccion->codigo,
@@ -47,6 +49,7 @@ class TransaccionesRepository{
                 "transaccion"           => $transaccion->nombre,
                 "monto"                 => $transaccion->monto,
                 "color"                 => $transaccion->color,
+                "cuenta_id"             => $transaccion->cuenta_id,
                 "balance_verificado"    => [
                     "monto"     => 0,//es el monto al momento de marcar el checkbox
                     "checked"   => false,

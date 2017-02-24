@@ -32,8 +32,9 @@ class Remesa extends Model
       $remesas = self::LeftJoin('seg_aseguradoras as asg','asg.id','=','seg_remesas.aseguradora_id')
       ->LeftJoin('usuarios as us','us.id','=','seg_remesas.usuario')
       ->LeftJoin('pol_polizas as pol' ,'pol.id','=','seg_remesas.poliza')
+      ->LeftJoin('seg_ramos as ramo' ,'ramo.id','=','pol.ramo_id')
       ->LeftJoin('cob_cobros as cob','cob.num_remesa','=','seg_remesas.remesa')
-      ->select('seg_remesas.*','asg.nombre',Capsule::raw('concat(us.nombre," ",us.apellido) as fullname'),'pol.numero', 'pol.uuid_polizas',Capsule::raw('count(cob.num_remesa) as cantidadRecibos'))
+      ->select('seg_remesas.*','asg.nombre',Capsule::raw('concat(us.nombre," ",us.apellido) as fullname'),'pol.numero', 'pol.uuid_polizas',Capsule::raw('count(cob.num_remesa) as cantidadRecibos'),'ramo.nombre as ramoNombre')
       ->groupBy('seg_remesas.id')
       ->where(function($query) use($clause,$sidx,$sord,$limit,$start){
 
@@ -61,7 +62,8 @@ class Remesa extends Model
 
       if($sidx=="nombre"){
 
-        $remesas->orderByRaw('FIELD(seg_remesas.estado,"En Proceso","Pagada","Anulado") ');
+        $remesas->orderByRaw('FIELD(seg_remesas.estado,"En Proceso","Por pagar","Pagada","Anulado") ');
+        $remesas->orderBy('remesa','DESC');
 
       }elseif($sidx!=NULL && $sord!=NULL){
 

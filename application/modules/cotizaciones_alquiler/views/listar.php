@@ -74,6 +74,26 @@
                                         </div>
 
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Centro contable</label>
+                                            <select name="centro_contable_id" class="form-control select2" id="centro_contable_id">
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($centros as $centro): ?>
+                                                    <option value="<?php echo $centro->id ?>"><?php echo $centro->nombre ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Creado por</label>
+                                            <select name="creado_por" class="form-control select2" id="creado_por">
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($usuarios as $usuario): ?>
+                                                    <option value="<?php echo $usuario->id ?>"><?php echo $usuario->nombre." ".$usuario->apellido ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Estado</label>
                                             <select name="estado_id" class="form-control select2" id="etapa">
                                                 <option value="">Seleccione</option>
@@ -112,5 +132,13 @@
         </div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
+<?php
+$formAttr = array('method' => 'POST', 'id' => 'exportarCotizaciones', 'autocomplete' => 'off');
+echo form_open(base_url('cotizaciones_alquiler/exportar'), $formAttr);
+?>
+<input type="hidden" name="ids" id="ids" value="" />
+<?php
+echo form_close();
+?>
 
 <?php echo Modal::config(array("id" => "optionsModal", "size" => "sm"))->html(); ?> <!-- modal opciones -->

@@ -6,7 +6,7 @@ var formulario_adenda = new Vue({
     disabledMonto: true,
     tablaDatos:[{cuenta_id:'',descripcion:'',monto:'0.00'}],
     campo:{
-      fecha:moment().format('DD/MM/YYYY'), centro_id:'', monto_adenda:"0.00",referencia:'',comentario:'',subcontrato_id:'',historial:{usuario:'',hora:'',time_ago:''}
+      fecha:moment().format('DD/MM/YYYY'), centro_id:'', monto_adenda:"0.00",referencia:'',comentario:'',subcontrato_id:'',adenda_id:'',historial:{usuario:'',hora:'',time_ago:''}
     },
     vista_comments:"",
     comentarios:[],
@@ -29,6 +29,7 @@ var formulario_adenda = new Vue({
                     monto:ele.monto
                 };
             });
+            this.campo.adenda_id = adenda.id;
             this.vista_comments ="comments";
             this.$nextTick(function(){
                 CKEDITOR.replace('tcomentario',
@@ -67,12 +68,12 @@ var formulario_adenda = new Vue({
           $("input#monto_adenda").removeAttr("disabled");
           $("#fecha").removeAttr("disabled");
           $("#guardar_adendaBtn").prop("disabled",true);
-          
+
           if(vm.vista == 'editar')
           {
               $("#campo\\[codigo\\]").removeAttr("disabled");
           }
-          
+
           form.submit();
         }
       });

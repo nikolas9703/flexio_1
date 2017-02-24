@@ -6,6 +6,7 @@ var formularioCrear = new Vue({
         codigo_remesa: codigo,
         bancos: bancos,
         cobros:[],
+        ver: ver,
 	},
 	methods: {
         getRemesas: function () {
@@ -14,16 +15,19 @@ var formularioCrear = new Vue({
             var id_aseguradora = $('#aseguradora').val();
             var fecha_inicio = $('#fecha_desde').val();
             var fecha_final = $('#fecha_hasta').val();
-            var id_ramos = $('#ramos').val();
+            var id_ramos = $('#ramos').val(); 
+            if(id_ramos[0] == "todos"){
+                id_ramos = $('#ramos2').val();
+            }
             var codigo_remesa = $('#codigo_remesa').val();
             var vista = $('#vista').val();
 
-            console.log(id_aseguradora);
+            /*console.log(id_aseguradora);
             console.log(fecha_inicio);
             console.log(fecha_final);
             console.log(id_ramos);
             console.log(codigo_remesa);
-            console.log(vista);
+            console.log(vista);*/
             
             this.$http.post({
                 url: phost() + 'remesas/ajax_get_remesa_saliente',
@@ -36,10 +40,11 @@ var formularioCrear = new Vue({
 
                 if (!_.isEmpty(response.data)) {
 
-                    console.log(response.data.datos);
-                    if(response.data.datos == 0){
+                    console.log(response.data.idCobros);
+                    if(response.data.idCobros == 0){
 
                         $('#tabla_remesas').empty().append('No se encontraron datos.').css({"color": "#868686", "padding": "30px 0 0"}).removeClass('hidden').addClass('text-center lead').append('<input type="hidden" name="remesas[codigo_remesa]" id="codigo_remesa" value="'+response.data.codigoRemesa+'">');
+                        
                     }else{
                         
                         $('#tabla_remesas').removeClass('hidden');
@@ -55,19 +60,37 @@ var formularioCrear = new Vue({
                         $("#id_ramos1").val(id_ramos);
 
                         if(response.data.guardar == 1){
-                            self.$set('disabledGuardar', false);
-                            self.$set('disabledPagar', false);
-                            self.$set('disabledcancelar', false);
-                            self.$set('disabledActualizar', false);
+
+                            if(ver == 1){
+
+                                self.$set('disabledGuardar', true);
+                                self.$set('disabledPagar', true);
+                                self.$set('disabledcancelar', true);
+                                self.$set('disabledActualizar', true);
+
+                            }else{
+
+                                self.$set('disabledGuardar', false);
+                                self.$set('disabledPagar', false);
+                                self.$set('disabledcancelar', false);
+                                self.$set('disabledActualizar', false); 
+                            }  
                         }else{
-                            self.$set('disabledGuardar', true);
-                            self.$set('disabledPagar', true);
-                            self.$set('disabledcancelar', true);
-                            self.$set('disabledActualizar', true);
+
+                            if(vista == "editar"){
+
+                                self.$set('disabledGuardar', true);
+                                self.$set('disabledPagar', true);
+                                //self.$set('disabledcancelar', true);
+                                self.$set('disabledActualizar', true);
+                            }else{
+                                self.$set('disabledGuardar', true);
+                                //self.$set('disabledPagar', true);
+                                //self.$set('disabledcancelar', true);
+                                self.$set('disabledActualizar', true);
+                            }
                         }
-
                     }
-
                 }
             });
         }
@@ -137,6 +160,21 @@ $("#pagar_remesa").click( function(e){
 
 });
 
+$("#ramos").change(function(){
+    if($(this).val()=="todos"){
+      //$("#ramos option[value='todos']").remove();
+      $("#ramos2 > option").each(function() {
+        if (this.value!="todos"){
+          $(this).prop("selected","selected");
+        }
+        $('#ramos2').trigger('chosen:updated');
+      });
+
+    }
+})
+
+
+
 $(document).ready(function(){
 
     $("#fecha_desde").change(function(){
@@ -152,12 +190,13 @@ $(document).ready(function(){
     });
      
     if(vista == "editar"){
-        var prueba = ramos_id.split(",");
-        console.log(prueba);
-        $('#ramos').val(prueba).trigger("chosen:updated");
+        var datosRamos = ramos_id.split(",");
+        console.log(datosRamos);
+        $('#ramos').val(datosRamos).trigger("chosen:updated");
 
         formularioCrear.getRemesas();
     }
+    $('#remesa_pagar').validate().form();
 
 });
 
@@ -177,11 +216,6 @@ $("#imprimirRemesaBtn").click(function(){
     console.log(fecha_hasta);
     console.log(ramos);
 
-
-
     window.open('../imprimirRemesa/'+codigo_remesa+'/'+id_aseguradora+'/'+fecha_desde+'/'+fecha_hasta); 
-
-
-
-
 });
+

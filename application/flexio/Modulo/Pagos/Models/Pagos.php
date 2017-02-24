@@ -1,6 +1,7 @@
 <?php
 namespace Flexio\Modulo\Pagos\Models;
 
+use Flexio\Modulo\Pagos\Observer\PagosObserver;
 use \Illuminate\Database\Eloquent\Model as Model;
 use Carbon\Carbon;
 use Flexio\Modulo\Comentario\Models\Comentario;
@@ -10,7 +11,8 @@ use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Flexio\Politicas\PoliticableTrait;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Library\Util\GenerarCodigo;
-
+use Flexio\Modulo\Historial\Models\Historial;
+use Flexio\Modulo\Proveedores\Models\Proveedores;
 
 class Pagos extends Model
 {
@@ -30,11 +32,17 @@ class Pagos extends Model
     public $timestamps      = true;
 
     //otros
-    protected $depositables = ['banco' => 'Flexio\\Modulo\\Contabilidad\\Models\\Cuentas', 'caja' => 'Flexio\\Modulo\\Cajas\\Models\\Cajas'];
+    protected $depositables = [
+      'banco' => 'Flexio\\Modulo\\Contabilidad\\Models\\Cuentas',
+      'cuenta_contable' => 'Flexio\\Modulo\\Contabilidad\\Models\\Cuentas2',
+      'caja' => 'Flexio\\Modulo\\Cajas\\Models\\Cajas'
+    ];
     protected $empezables = [
         'factura' => 'Flexio\\Modulo\\FacturasCompras\\Models\\FacturaCompra',
         'proveedor' => 'Flexio\\Modulo\\Proveedores\\Models\\Proveedores',
-        'subcontrato' => 'Flexio\\Modulo\SubContratos\\Models\\SubContrato'
+        'subcontrato' => 'Flexio\\Modulo\SubContratos\\Models\\SubContrato',
+        'anticipo' => 'Flexio\\Modulo\\Anticipos\\Models\\Anticipo',
+        'movimiento_monetario' => 'Flexio\\Modulo\\MovimientosMonetarios\\Models\\MovimientosRetiros'
     ];
 
     public function __construct(array $attributes = array()){
@@ -53,6 +61,7 @@ class Pagos extends Model
 
     public static function boot() {
         parent::boot();
+        Pagos::observe(PagosObserver::class);
     }
     //GETS
     public function getUuidPagoAttribute($value)
@@ -98,6 +107,11 @@ class Pagos extends Model
         return $this->empezables[$this->empezable_type];
     }
 
+    public function getDepositableTypeModelAttribute($value)
+    {
+        return $this->depositables[$this->depositable_type];
+    }
+
     public function setDepositableTypeAttribute($value)
     {
         $this->attributes['depositable_type'] = $this->depositables[$value];
@@ -121,9 +135,19 @@ class Pagos extends Model
     }
 
     //Relaciones
-    public function facturas()
+    public function facturas() {
+        return $this->morphedByMany('Flexio\Modulo\FacturasCompras\Models\FacturaCompra', 'pagable', 'pag_pagos_pagables', 'pago_id')
+                        ->withPivot('monto_pagado', 'pagable_id', 'pagable_type', 'empresa_id')->withTimestamps();
+    }
+
+    public function movimientos_monetarios() {
+        return $this->morphedByMany('Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros', 'pagable', 'pag_pagos_pagables', 'pago_id')
+                        ->withPivot('monto_pagado', 'pagable_id', 'pagable_type', 'empresa_id')->withTimestamps();
+    }
+
+    public function transferencias()
     {
-        return $this->morphedByMany('Flexio\Modulo\FacturasCompras\Models\FacturaCompra','pagable', 'pag_pagos_pagables','pago_id')
+        return $this->morphedByMany('Flexio\Modulo\Cajas\Models\Transferencias','pagable', 'pag_pagos_pagables','pago_id')
                 ->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
 
@@ -141,6 +165,14 @@ class Pagos extends Model
                 ->where("pagable_type", "Flexio\Modulo\Planilla\Models\Planilla")
                 ->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
+
+    public function retiros()
+    {
+        return $this->belongsToMany('Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros', 'pag_pagos_pagables', 'pago_id', 'pagable_id')
+                ->where("pagable_type", "Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros")
+                ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+    }
+
     public function pagos_extraordinarios()
     {
         return $this->belongsToMany('Flexio\Modulo\Comisiones\Models\Comisiones', 'pag_pagos_pagables', 'pago_id', 'pagable_id')
@@ -154,6 +186,10 @@ class Pagos extends Model
                 ->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
 
+    public function empezable()
+    {
+       return $this->morphTo();
+    }
 
     public function proveedor()
     {
@@ -181,6 +217,11 @@ class Pagos extends Model
     }
 
     //scopes
+    public function scopeDeCodigo($query, $codigo)
+    {
+        return $query->where("codigo", $codigo);
+    }
+
     public function scopeDeEmpresa($query, $empresa_id)
     {
         return $query->where("empresa_id", $empresa_id);
@@ -215,8 +256,6 @@ class Pagos extends Model
         $this->save();
     }
 
-
-
     public function comentario_timeline() {
         return $this->morphMany(Comentario::class,'comentable');
     }
@@ -234,6 +273,9 @@ class Pagos extends Model
     }
     public function getIconoAttribute(){
         return 'fa fa-shopping-cart';
+    }
+    public function historial(){
+        return $this->morphMany(Historial::class,'historiable');
     }
    /* public function getCodigoAttribute(){
         return $this->codigo;

@@ -24,6 +24,10 @@ use Flexio\Modulo\Cobros_seguros\HttpRequest\FormGuardar;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Cliente\Repository\ClienteRepository as ClienteRepository;
 use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros as Cobros_seg;
+use Flexio\Modulo\Polizas\Models\Polizas as Polizas;
+use Flexio\Modulo\Cobros_seguros\Models\CobroFactura;
+use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
+
 
 class Cobros_seguros extends CRM_Controller {
   private $empresa_id;
@@ -118,6 +122,35 @@ class Cobros_seguros extends CRM_Controller {
 		$jqgrid = new Flexio\Modulo\Cobros_seguros\Services\CobroJqgrid;
 		$clause['empresa'] = $this->empresa_id;
 		$clause['formulario'] = 'seguros';
+		
+		if($this->input->post("uuid_poliza")!=""){
+			$poliza=Polizas::where('uuid_polizas',hex2bin($this->input->post("uuid_poliza")))->first();
+			if($poliza->id!="")
+				$clause['empezable_id'] = $poliza->id;
+		}
+		
+		if($this->input->post("codigo")!=""){
+			$clause['codigo'] = $this->input->post("codigo");
+		}
+		
+		if($this->input->post("cliente")!=""){
+			$clause['clientenombre'] = $this->input->post("cliente");
+		}
+		
+		if($this->input->post("estado")!=""){
+			if($this->input->post("estado")!="0")
+			{
+				$clause['estado'] = $this->input->post("estado");
+			}
+		}
+		
+		if($this->input->post("metodo_pago")!=""){
+			if($this->input->post("metodo_pago")!="0")
+			{
+				$clause['metodoPago'] = $this->input->post("metodo_pago");
+			}
+		}
+		
 		if ($this->input->post("cliente_id") <> ''){
 			$client_id = (new ClienteRepository)->findByUuid($this->input->post("cliente_id"))->id;
 			$clause['cliente'] = $client_id;
@@ -127,7 +160,7 @@ class Cobros_seguros extends CRM_Controller {
 			$factura = (new FacturaVentaRepository)->findByUuid($_POST['factura_id']);
 			$clause['factura'] = $factura->id;
 		}
-		
+		//var_dump($clause);
 		$response = $jqgrid->listar($clause);
 
 		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
@@ -138,6 +171,27 @@ class Cobros_seguros extends CRM_Controller {
 	function ocultotabla($uuid_orden_venta=null) {
 		$this->assets->agregar_js(array(
 			'public/assets/js/modules/cobros_seguros/tabla.js'
+		));
+
+		if (!empty($uuid_orden_venta)) {
+			if(preg_match("/(=)/", $uuid_orden_venta)){
+				$aux = explode('=', $uuid_orden_venta);
+				$this->assets->agregar_var_js(array(
+					$aux[0] => $aux[1]
+				));
+			}else{
+				$this->assets->agregar_var_js(array(
+					"uuid_orden_venta" => $uuid_orden_venta
+				));
+			}
+		}
+
+		$this->load->view('tabla');
+	}
+	
+	function ocultotablatab($uuid_orden_venta=null) {
+		$this->assets->agregar_js(array(
+			'public/assets/js/modules/cobros_seguros/tablatab.js'
 		));
 
 		if (!empty($uuid_orden_venta)) {
@@ -178,6 +232,7 @@ class Cobros_seguros extends CRM_Controller {
 		$this->assets->agregar_var_js(array(
 			"vista" => 'crear',
 			"acceso" => $acceso == 0? $acceso : $acceso,
+			"regreso" =>''
 		));
 		$this->desde_empezables();
 		$data['mensaje'] = $mensaje;
@@ -214,6 +269,20 @@ class Cobros_seguros extends CRM_Controller {
 			$acceso = 0;
 			$mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud','clase'=>'alert-danger');
 		}
+		
+		$regreso='';
+		
+		if(isset($_GET['reg']))
+		{
+			if($_GET['reg']=='com')
+			{
+				$regreso='com';
+			}
+			else
+			{
+				$regreso='';
+			}	
+		}
 
 		$this->_Css();
 		$this->assets->agregar_css(array(
@@ -236,7 +305,8 @@ class Cobros_seguros extends CRM_Controller {
 		$this->assets->agregar_var_js(array(
 			"vista"     => 'ver',
 			"acceso"    => $acceso == 0? $acceso : $acceso,
-			"hex_cobro" => $cobro->uuid_cobro
+			"hex_cobro" => $cobro->uuid_cobro,
+			"regreso" =>$regreso
 		));
 		$this->desde_empezables();
 		$data['mensaje'] = $mensaje;
@@ -271,6 +341,61 @@ class Cobros_seguros extends CRM_Controller {
 			$accion = new FormGuardar();
 			try {
 				$cobro = $accion->guardar();
+				
+				$cobrosfacturas=CobroFactura::where('cobro_id',$cobro->id)->get();
+		
+				foreach($cobrosfacturas as $key => $value)
+				{
+					if($value->facturas->formulario=='facturas_seguro')
+					{
+						//Generar la comision por cada factura del cobro
+						$comision['uuid_comision']=Capsule::raw("ORDER_UUID(uuid())");
+						$countcomision = ComisionesSeguros::where('id_empresa',$this->empresa_id)->count();
+						$codigo = Util::generar_codigo('COM'.$this->empresa_id, ($countcomision+1) );
+						
+						$comision['no_comision']=$codigo;
+						$comision['id_cobro']=$cobro->id;
+						$comision['fecha']=date('Y-m-d');
+						$comision['monto_recibo']=$value->monto_pagado;
+						$comision['id_factura']=$value->cobrable_id;
+						$comision['id_aseguradora']=$value->facturas->polizas->aseguradora_id;
+						$comision['id_poliza']=$value->facturas->polizas->id;
+						$comision['id_cliente']=$value->facturas->cliente->id;
+						$comision['id_ramo']=$value->facturas->polizas->ramo_id;
+						$comision['comision']=$value->facturas->polizas->comision;
+						$comision['impuesto']=$value->facturas->porcentaje_impuesto;
+						$comision['impuesto_pago']=($value->monto_pagado*($value->facturas->porcentaje_impuesto/100));
+						$comision['pago_sobre_prima']=$comision['monto_recibo']-$comision['impuesto_pago'];
+						$comision['monto_comision']=($comision['pago_sobre_prima']*($value->facturas->polizas->comision/100));
+						$comision['sobre_comision']=$value->facturas->polizas->porcentaje_sobre_comision;
+						$comision['monto_scomision']=($comision['pago_sobre_prima']*($value->facturas->polizas->porcentaje_sobre_comision/100));
+						//$comision['comision_pendiente']=0;
+						//$comision['id_remesa']=$id_remesa;
+						$comision['lugar_pago']=$value->facturas->polizas->primafk->sitio_pago;
+						$comision['estado']='por_liquidar';
+						$comision['created_at']=date('Y-m-d H:i:s');
+						$comision['updated_at']=date('Y-m-d H:i:s');
+						$comision['id_empresa']=$this->empresa_id;
+						
+						if($value->facturas->polizas->des_comision=='si')
+						{
+							$comision['comision_descontada']=($valor_real*($value->facturas->polizas->comision/100));
+							$comision['scomision_descontada']=($valor_real*($value->facturas->polizas->porcentaje_sobre_comision/100));
+						}
+						else
+						{
+							$comision['comision_descontada']=0;
+							$comision['scomision_descontada']=0;
+						}
+						
+						$comision['comision_pagada']=($comision['monto_comision']-$comision['comision_descontada'])+($comision['monto_scomision']-$comision['scomision_descontada']);
+						
+						$comision['comision_pendiente']=($comision['monto_comision']-$comision['comision_descontada'])+($comision['monto_scomision']-$comision['scomision_descontada']);
+						
+						$comision_creada=ComisionesSeguros::create($comision);
+					}
+				}
+				
 				$mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente ' . $cobro->codigo);
 			} catch (\Exception $e) {
 				log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
@@ -315,23 +440,18 @@ class Cobros_seguros extends CRM_Controller {
 			return false;
 		}
 		$deposito = ["Flexio\Modulo\Contabilidad\Models\Cuentas"=>'banco','Flexio\Modulo\Cajas\Models\Cajas'=>'caja'];
-		$empezar = ['cliente'=>'Flexio\Modulo\Cliente\Models\Cliente','polizas'=>'Flexio\Modulo\Polizas\Models\Polizas','factura'=>'Flexio\Modulo\FacturasVentas\Models\FacturaVenta' ];
+		$empezar = ['cliente'=>'Flexio\Modulo\Cliente\Models\Cliente','polizas'=>'Flexio\Modulo\Polizas\Models\Polizas','factura'=>'Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro' ];
 		$empz = array_flip($empezar);
 		$uuid = $this->input->post('uuid');
 		//$cobro = $this->cobroRepository->select("cob_corbos.")->findByUuid($uuid);
 		$cobro = $this->cobroRepository->findByUuid($uuid);
+		$cobro->load('metodo_cobro','cliente','cobros_facturas','empezable','landing_comments');
 		
-		/*if($cobro->count()!=0){
-			$cobro = new Cobros_seg;
-			$cobro->select("cob_cobros.id","cob_cobro_facturas.*")->rightJoin("cob_cobro_facturas","cob_cobro_facturas.cobro_id","=","cob_cobros.id")->where('cob_cobros.uuid_cobro',hex2bin($uuid))->get();
-			
-		}*/
-		
-		$cobro->load('metodo_cobro','cliente','cobros_facturas','empezable','landing_comments')->join("fac_facturas","fac_facturas.id","=", "fac_facturas_cobros.factura_id");
 		$cobro->load(['factura_cobros.cobros'=>function($cob){
 			$cob->where('estado','aplicado');
 		}]);
 		
+		//var_dump($cobro->cliente);
 		
 		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output($cobro)->_display();
 		exit;
@@ -356,6 +476,7 @@ class Cobros_seguros extends CRM_Controller {
 		$clause = [];
 		$facturasObj = new Flexio\Modulo\FacturasSeguros\Repository\FacturaSeguroRepositorio;
 		$id = $this->input->post('id');
+		
 		if(empty($id)){
 			$faturas = $facturasObj->getFacturas($this->empresa_id)->conClienteActivo()->fetch();
 		}else{
@@ -380,7 +501,6 @@ class Cobros_seguros extends CRM_Controller {
 				'ordenes_ventas' => $fac->ordenes_ventas->where('estado','facturado_completo')
 			]);
 		});
-
 		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
 		exit();
 	}
@@ -472,7 +592,7 @@ class Cobros_seguros extends CRM_Controller {
 				'numero_poliza' => $fac->numero_poliza,
 				'fecha_desde' => $fac->fecha_desde,
 				'fecha_hasta' => $fac->fecha_hasta,
-				'total' => $fac->total,
+				'total' => $fac->saldo,
 				'cobros'=> $fac->cobros,
 				'cliente'=> $fac->cliente,
 				'ordenes_ventas' => $fac->ordenes_ventas->where('estado','facturado_completo')
@@ -522,7 +642,7 @@ class Cobros_seguros extends CRM_Controller {
 	private function desde_empezables(){
 		$request = Illuminate\Http\Request::capture();
 		if($request->has('factura')){
-			$facturasObj = new Flexio\Modulo\FacturasVentas\Repository\FacturaVentaRepositorio;
+			$facturasObj = new Flexio\Modulo\FacturasSeguros\Repository\FacturaSeguroRepositorio;
 			$factura = $facturasObj->getFacturas($this->empresa_id)->conUUID($request->input('factura'))->fetch()->first();
 
 			if(!is_null($factura)){

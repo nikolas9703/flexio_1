@@ -10,7 +10,7 @@ trait Refactory{
     	$titulo 		= '<i class="fa fa-line-chart"></i> Factura: Crear';
     	$titulo_header 	= 'Crear Factura';
         $acceso = 1;
-    	if (!$this->auth->has_permission('acceso')) {
+    	if (!$this->auth->has_permission('acceso','facturas/crear')) {
     		$acceso = 0;
     		$mensaje = array('estado' => 500, 'mensaje' => '<b>Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
     		$this->session->set_flashdata('mensaje', $mensaje);
@@ -79,15 +79,53 @@ trait Refactory{
         );
     }
 
+    function navegacionFacturasEditar(){
+        return  array(
+            "ruta" => array(
+                  0 => [
+                      "nombre" => "Ventas",
+                      "activo" => false,
+                  ],
+                1 => [
+                    "nombre" => "Facturas",
+                    "activo" => false,
+                    "url" => 'facturas/listar'
+                ],
+                2=> [
+                    "nombre" => '<b>Editar</b>',
+                    "activo" => true
+                ]
+            ),
+        );
+    }
+
     function ajax_formulario_catalogos()
     {
         if(!$this->input->is_ajax_request()) {
           return false;
         }
         $catalogoFormulario = new Flexio\Modulo\FacturasVentas\Catalogo\CatalogoFormularioFacturaVenta($this->empresa_id);
-        $catalogos = ["clientes","cuentas","termino_pago","vendedor","lista_precio", "lista_precio_alquiler", "centros_contables", "estados", "categorias", "impuestos"];
+        $catalogos = [
+            // "clientes",
+            "cuentas","termino_pago","vendedor","lista_precio", "lista_precio_alquiler", "centros_contables", "estados", "categorias", "impuestos"];
 
         $catalogoForm = $catalogoFormulario->catalogos($catalogos);
+        $catalogoForm['clientes'] = [];
+
+        if(isset($_POST['factura_id'])) {
+            $factura = $this->facturaVentaRepository->findByUuid($this->input->post('factura_id'));
+            $cliente = $factura->cliente;
+            $catalogoForm['clientes'] = [collect([
+                'id' => $cliente->id,
+                'nombre' => "{$cliente->codigo} - {$cliente->nombre}",
+                'cliente_id' => $cliente->id,
+                'saldo_pendiente' => $cliente->saldo_pendiente,
+                'credito_favor'=>$cliente->credito_favor,
+                'centro_facturable' => $cliente->centro_facturable,
+
+            ])];
+        }
+
 
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
           ->set_output(collect($catalogoForm))->_display();
@@ -114,10 +152,8 @@ trait Refactory{
         $data = [];
     	$mensaje = [];
     	$breadcrumb = [];
-    	$titulo 		= '<i class="fa fa-line-chart"></i> Factura: Editar';
-    	$titulo_header 	= 'Editar Factura';
         $acceso = 1;
-    	if (!$this->auth->has_permission('facturas/editar/(:any)')) {
+    	if (!$this->auth->has_permission('acceso','facturas/editar/(:any)')) {
     		$acceso = 0;
     		$mensaje = array('estado' => 500, 'mensaje' => '<b>Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
     		$this->session->set_flashdata('mensaje', $mensaje);
@@ -129,6 +165,9 @@ trait Refactory{
     	}
 
         $factura = $this->facturaVentaRepository->findByUuid($uuid);
+    	
+		$titulo 		= '<i class="fa fa-line-chart"></i> Factura de venta: # '.$factura->codigo;
+    	$titulo_header 	= 'Editar Factura';
 
         if (is_null($uuid) || is_null($factura)) {
             $mensaje = array('estado' => 500, 'mensaje' => '<strong>Error!</strong> Su solicitud no fue procesada');
@@ -153,7 +192,7 @@ trait Refactory{
             'public/assets/js/plugins/ckeditor/ckeditor.js',
             'public/assets/js/plugins/ckeditor/adapters/jquery.js',
             'public/assets/js/default/vue/directives/new-select2.js',
-            'public/resources/compile/modulos/facturas_seguros/formulario1.js'
+            'public/resources/compile/modulos/facturas/formulario1.js'
     	));
 
         $usuario_id = $this->id_usuario;
@@ -164,7 +203,7 @@ trait Refactory{
             "hex_factura" => $factura->uuid_factura
         ));
         $data['mensaje'] = $mensaje;
-        $breadcrumb = $this->navegacionFacturasCrear();
+        $breadcrumb = $this->navegacionFacturasEditar();
     	$breadcrumb["titulo"] = $titulo;
     	$this->template->agregar_titulo_header($titulo_header);
     	$this->template->agregar_breadcrumb($breadcrumb);

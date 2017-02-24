@@ -40,7 +40,7 @@
 
                     <div class="ibox-content" style="display:block;">
                         <?php
-                        echo modules::run('facturas_compras/ocultoformulario', []);
+                        echo modules::run('facturas_compras/ocultoformulario', ['vista'=>"ver", "factura"=>$factura_obj]);
                         ?>
                     </div>
                 </div>

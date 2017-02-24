@@ -12,7 +12,8 @@ $config['modulo_config'] = array(
                 'Contratos',
 		'Ventas',
 		'Alquileres',
-		'Servicios'
+		'Servicios',
+		'Seguros'
      ],
 	'menu' => array(
 		'nombre' => 'Clientes Potenciales' ,

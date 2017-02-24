@@ -821,4 +821,23 @@ class Bodegas extends CRM_Controller
     	$this->template->visualizar();
     }
 
+    public function ajax_catalogo(){
+        if(!isset($_POST) )
+            exit;
+
+        $clause=$_POST;
+        $clause['empresa_id']=$this->id_empresa;
+        $usuarios = $this->bodegasRep->search($clause)->map(function($bodega){
+            return [
+                'id' => $bodega->id,
+                'nombre' => $bodega->nombre,
+                'bodega_id' => $bodega->id,
+                'uuid_bodega' => $bodega->uuid_bodega
+            ];
+        });
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($usuarios))->_display();
+        exit;
+    }
+
 }

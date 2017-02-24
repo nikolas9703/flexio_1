@@ -576,11 +576,10 @@ class Cotizaciones extends CRM_Controller {
             $data['mensaje'] = $mensaje;
 
             $empezable = collect([
-                "{$cotizacion->cliente_tipos}" => [0 => ['id' => $cotizacion->cliente_id, 'nombre' => $cotizacion->cliente->nombre]],
+                "{$cotizacion->cliente_tipo}s" => [0 => ['id' => $cotizacion->cliente_id, 'nombre' => $cotizacion->cliente->nombre]],
                 "id" => $cotizacion->cliente_id,
                 "type" => $cotizacion->cliente_tipo
             ]);
-
 
             $this->assets->agregar_var_js(array(
                 "vista" => "editar",

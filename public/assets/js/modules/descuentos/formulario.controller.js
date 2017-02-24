@@ -372,7 +372,8 @@ bluapp.controller("formularioDescuentoController", function($rootScope, $scope, 
 			//Establecer porcentaje de Capacidad
             setTimeout(function () {
             	$rootScope.safeApply(function () {
-					$scope.descuento.porcentaje_capacidad = json.data['result']['capacidad'];
+								console.log("entrando");
+					$scope.descuento.porcentaje_capacidad = parseFloat(json.data['result']['capacidad']).toFixed(2);
 				});
 
             	//Verificar limite de Capacidad
@@ -494,9 +495,9 @@ bluapp.controller("formularioDescuentoController", function($rootScope, $scope, 
 
     		//verificar que alla seleccionado
     		//un colaborador de la barra de filtro
-    		if(colaboradorid == "" || colaboradorid == undefined){
-
-    			toastr.warning('Debe seleccionar un colaborador.');
+    		if(colaboradorid == "" || colaboradorid == undefined)
+				{
+					toastr.warning('Debe seleccionar un colaborador.');
     			return false;
     		}
 
@@ -524,7 +525,7 @@ bluapp.controller("formularioDescuentoController", function($rootScope, $scope, 
     		//Estado de guardando en boton
     		$scope.guardarBtn = '<i class="fa fa-circle-o-notch fa-spin"></i> Guardando...';
     		$scope.disabledBtn = 'disabled';
-
+				$(formulario).find('input[id="campo[guardar]"]').attr('disabled','disabled');
     		//Verificar si ha seleccionado
     		//o no algun archivo
     		if(filesList.length == 0){

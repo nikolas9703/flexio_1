@@ -76,7 +76,7 @@ class Cheques extends CRM_Controller
 
   function listar(){
     $data = array();
-    if (!$this->auth->has_permission ('acceso')) {
+    if (!$this->auth->has_permission ('acceso', 'cheques/listar')) {
       $mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud');
       $this->session->set_flashdata('mensaje', $mensaje);
       //redirect('/');
@@ -269,7 +269,7 @@ class Cheques extends CRM_Controller
 
         $acceso     = 1;
         $mensaje    = array();
-        if(!$this->auth->has_permission('acceso')){
+        if(!$this->auth->has_permission('acceso','cheques/crear')){
             $acceso = 0;
             $mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud','clase'=>'alert-danger');
             $this->session->set_flashdata('mensaje', $mensaje);
@@ -329,7 +329,7 @@ class Cheques extends CRM_Controller
     public function ver($uuid_cheque){
         $acceso = 1;
         $mensaje = array();
-        if(!$this->auth->has_permission('acceso')){
+        if(!$this->auth->has_permission('acceso', "cheques/ver/(:any)")){
             $acceso = 0;
             $mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud','clase'=>'alert-danger');
             $this->session->set_flashdata('mensaje', $mensaje);

@@ -100,7 +100,7 @@ if ($().chosen) {
         });
     }
 }
-$("#verCoberturas,#IndCoberturas").on('click', '.addCobertura', function(){
+$("#verCoberturas").on('click', '.addCobertura', function(){
    $(".moneda").inputmask('currency',{
       prefix: "",
       autoUnmask : true,
@@ -686,6 +686,7 @@ function OnloadFunction(valid, tablaTipo) {
         $('.chek_solicitudes').addClass('hidden');
         $('#cantidad').val($("div > #total_agentes_participantes").length);
         formularioCrear.sumatotal();
+		
     }
 
     if (observaciones != 'undefined') {

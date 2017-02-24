@@ -19,6 +19,7 @@ $route['facturas/crear2'] = 'facturas/crear2';
 $route['facturas/ajax-guardar-comentario'] = 'facturas/ajax_guardar_comentario';
 $route['facturas/ajax-seleccionar-items'] = 'facturas/ajax_seleccionar_items';
 $route['facturas/ajax-cliente-info'] = 'facturas/ajax_cliente_info';
+$route['facturas/catalogo/lista-precio'] = 'facturas/catalogo_lista_precios';
 
 //editar
 $route['facturas/editar/(:any)'] = 'facturas/editar/$1';

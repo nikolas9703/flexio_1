@@ -181,7 +181,7 @@ class Entregas_alquiler extends CRM_Controller
         if (isset($entrega_alquiler['info'])){$data['info'] = $entrega_alquiler['info'];}
 
         $categorias = $this->ItemsCategoriasRepository->get(['empresa_id'=>$this->empresa_id,'conItems'=>true]);
-        $categorias->load('items_contratos_alquiler');
+        //$categorias->load('items_contratos_alquiler');
 
         $aux = array_map(function($row){
             return [

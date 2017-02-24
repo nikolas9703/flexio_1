@@ -222,7 +222,7 @@ class Facturas_compras_contratos_orm extends Model {
     public function getSaldoAttribute()
     {
         $nota_debito_total = $this->nota_debito()->where('compra_nota_debitos.estado','aprobado')->sum('compra_nota_debitos.total');
-        if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto == 'no' && $this->total > 500){
+        if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto == 'no' && $this->total > 0){
             return $this->total - $this->items_factura->sum('retenido') - $this->pagos_aplicados_suma - $nota_debito_total;
         }
         return $this->total - $this->pagos_aplicados_suma - $nota_debito_total;

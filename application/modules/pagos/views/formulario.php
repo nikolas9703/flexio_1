@@ -1,6 +1,6 @@
 
 
-<detalle :config.sync="config" :detalle.sync="detalle" :catalogos="catalogos"></detalle>
+<detalle :config.sync="config" :detalle.sync="detalle" :empezable.sync="empezable" :catalogos="catalogos"></detalle>
 
 <pagables :config.sync="config" :detalle.sync="detalle"></pagables>
 

@@ -19,11 +19,21 @@ class FacturaCompraQueryFilters extends QueryFilters{
     public function q($q)
     {
         return $this->builder->where(function($query) use ($q){
-            $query->where('factura_proveedor', 'like', "%q%");
+            $query->where('factura_proveedor', 'like', "%$q%");
             $query->orWhereHas('proveedor', function($proveedor) use ($q){
                 $proveedor->where('nombre', 'like', "%$q%");
             });
         });
+    }
+
+    public function uuid($uuid)
+    {
+        return $this->builder->where('uuid_factura', hex2bin($uuid));
+    }
+
+    public function id($id)
+    {
+        return $this->builder->where('id', $id);
     }
 
   function empresa($empresa){

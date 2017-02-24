@@ -18,7 +18,7 @@
         <a href="<?php echo base_url('facturas_compras/listar')?>" class="btn btn-default form-control">Cancelar </a>
     </div>
     <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">{{desHabilitandoPorCantidad}}
-        <input type="submit" value="Guardar " class="btn btn-primary form-control" :disabled="config.disableDetalle || disabledPorPolitica">
+        <input type="submit" value="Guardar " class="btn btn-primary form-control" :disabled="config.disableDetalle || disabledPorPolitica || validacionPorContrato">
         <input type="hidden" name="campo[id]" value="{{detalle.id}}">
     </div>
 </div>

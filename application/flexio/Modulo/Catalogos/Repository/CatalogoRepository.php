@@ -3,9 +3,17 @@ namespace Flexio\Modulo\Catalogos\Repository;
 
 //models
 use Flexio\Modulo\Catalogos\Models\Catalogo;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Library\Util\FormRequest;
+use Flexio\Library\Util\FlexioSession;
 
 class CatalogoRepository
 {
+    protected $session;
+
+    function __construct(){
+        $this->session = new FlexioSession;
+    }
 
     private function _filtros($query, $clause)
     {
@@ -24,4 +32,35 @@ class CatalogoRepository
         })->get();
     }
 
+    function crear($fieldset){
+
+        if(empty($fieldset["etiqueta"])){
+          $fieldset["etiqueta"] = str_replace(" ","_",strtolower($fieldset["valor"]));
+        }
+
+        return Capsule::transaction(function() use($fieldset){
+            $response = Catalogo::create($fieldset);
+            return $response;
+        });
+    }
+
+    function actualizar($fieldset){
+
+        if(empty($fieldset["activo"])){
+          $fieldset["activo"] = "0";
+        }
+        if(empty($fieldset["con_acceso"])){
+          $fieldset["con_acceso"] = "0";
+        }
+        return Capsule::transaction(function() use($fieldset){
+            $catalogo = Catalogo::find($fieldset['id']);
+            $response = $catalogo->update($fieldset);
+            return $response;
+        });
+    }
+    public function estado($etiqueta = null, $modulo = null){
+        return Catalogo::where("etiqueta" , $etiqueta)
+            ->where("modulo", $modulo)
+            ->get();
+    }
 }

@@ -31,9 +31,8 @@ class ProveedoresRepository{
 
     public function getCollectionProveedoresPago($proveedores)
     {
-        return $proveedores->filter(function($proveedor){
-            return count($proveedor->facturasPorPagar) > 0;
-        })->map(function($proveedor){
+        return $proveedores->map(function ($proveedor) {
+
             return [
                 'id' => $proveedor->id,
                 'saldo_pendiente' => $proveedor->saldo_pendiente,
@@ -41,9 +40,10 @@ class ProveedoresRepository{
                 'nombre' => $proveedor->nombre,
                 'proveedor_id' => $proveedor->id,
                 'retiene_impuesto' => $proveedor->retiene_impuesto,
+                'forma_pago' => $proveedor->forma_de_pago,
                 'banco_id' => $proveedor->id_banco,
                 'numero_cuenta' => $proveedor->numero_cuenta,
-                'pagables' => $proveedor->facturasPorPagar->map(function($factura){
+                'pagables' => $proveedor->facturasPorPagar->map(function ($factura) {
                     return [
                         'pagable_id' => $factura->id,
                         'pagable_type' => get_class($factura),
@@ -63,7 +63,9 @@ class ProveedoresRepository{
     public function get($clause = array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL)
     {
 
-         $proveedores = Proveedores::deEmpresa($clause["empresa_id"])->where("estado", "!=", "por_aprobar");
+
+        $proveedores = Proveedores::deEmpresa($clause["empresa_id"])->where("estado", "!=", "por_aprobar")->where("estado", "!=", "inactivo");
+
         //filtros
         $this->_filtros($proveedores, $clause);
 
@@ -125,6 +127,8 @@ class ProveedoresRepository{
     private function _filtros($proveedores, $clause)
     {
         if(isset($clause["uuid_proveedores"]) and !empty($clause["uuid_proveedores"])){$proveedores->deUuids($clause["uuid_proveedores"]);}
+        if(isset($clause['nombre']) && !empty($clause['nombre']))$proveedores->where("nombre",'like',"%".$clause['nombre']."%");
+        //if(isset($clause['estado']) && !empty($clause['estado']))$proveedores->where("estado",'=', $clause['estado']);
     }
 
     public function find($proveedor_id){
@@ -136,12 +140,45 @@ class ProveedoresRepository{
         return Proveedores::where('uuid_proveedor',bin2hex($uuid))->first();
     }
     function findByUuid($uuid) {
-    return Proveedores::where('uuid_proveedor',hex2bin($uuid))->first();
-  }
+        return Proveedores::where('uuid_proveedor',hex2bin($uuid))->first();
+    }
+    function findByid($id) {
+        return Proveedores::where('id', ($id))->get();
+    }
     function agregarComentario($id, $comentarios) {
         $proveedor = Proveedores::find($id);
         $comentario = new Comentario($comentarios);
         $proveedor->comentario_timeline()->save($comentario);
         return $proveedor;
+    }
+
+    /**
+     * @param $datos
+     * @return bool
+     */
+    public function existDNI($datos)
+    {
+        dd($datos);
+        switch ($datos['campo']['tipo_identificacion']) {
+            case 'natural':
+                $typeValues = $datos['natural'];
+                return Proveedores::where('provincia', $typeValues['provincia'])
+                    ->where("letra", $typeValues['letra'])
+                    ->where("tomo_rollo", $typeValues['tomo'])
+                    ->first() != null;
+                break;
+            case 'juridico':
+                $typeValues = $datos['juridico'];
+                return Proveedores::where('digito_verificador', $typeValues['verificador'])
+                    ->where("asiento_ficha", $typeValues['asiento'])
+                    ->where("folio_imagen_doc", $typeValues['folio'])
+                    ->where("tomo_rollo", $typeValues['tomo'])
+                    ->first() != null;
+                break;
+            case 'pasaporte':
+                return Proveedores::where('pasaporte', $datos['campo']['pasaporte'])->first() != null;
+                break;
+        }
+        return false;
     }
 }

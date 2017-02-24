@@ -55,62 +55,112 @@ class SubContratoRepository
 
         if(empty($subcontrato['id']))
         {
-            $model_subcontrato = SubContrato::create($subcontrato);
-            //Montos
-            foreach($subcontrato_montos as $monto)
-            {
-                $array_monto[] = new SubContratoMonto($monto);
-            }
-            $model_subcontrato->subcontrato_montos()->saveMany($array_monto);
-
-            //movimientos
-            foreach($subcontrato_movimientos as $movimiento)
-            {
-                $array_movimiento[] = new SubContratoTipo($movimiento);
-            }
-            $model_subcontrato->tipo()->saveMany($array_movimiento);
+             $model_subcontrato = SubContrato::create($subcontrato);
         }
         else
         {
-            $model_subcontrato = SubContrato::find($subcontrato['id']);
-            $model_subcontrato = $model_subcontrato->update($subcontrato);
+          $model_subcontrato = SubContrato::find($subcontrato['id']);
+          $model_subcontrato->subcontrato_montos()->delete();
+          $model_subcontrato->tipo()->delete();
+
+          $model_subcontrato->update($subcontrato);
+         }
+
+        if(count($subcontrato_montos) > 0){
+          foreach($subcontrato_montos as $monto)
+          {
+              $array_monto[] = new SubContratoMonto($monto);
+          }
+          $model_subcontrato->subcontrato_montos()->saveMany($array_monto);
         }
+
+        if(count($subcontrato_movimientos) > 0){
+          //movimientos
+          foreach($subcontrato_movimientos as $movimiento)
+          {
+              $array_movimiento[] = new SubContratoTipo($movimiento);
+          }
+          $model_subcontrato->tipo()->saveMany($array_movimiento);
+        }
+
 
         return $model_subcontrato;
     }
 
-    public function update($update){
+  public function update($update){
 
     }
 
     public function getCollectionSubcontrato($subcontrato)
     {
+        $monto_adenda = $subcontrato->adenda->sum(function($adenda){
+          return $adenda->adenda_montos->sum('monto');
+        });
+
         return Collect(array_merge(
             $subcontrato->toArray(),
             [
                 'movimientos' => $subcontrato->tipo,
                 'montos' => $subcontrato->subcontrato_montos,
-                'monto_adenda' => $subcontrato->adenda()->sum('monto_adenda')
+                "proveedor" => count($subcontrato->proveedor)?$this->formatProveedor($subcontrato->proveedor):[],
+                'monto_adenda' => $monto_adenda
             ]
         ));
     }
+
 
     public function getCollectionSubcontratos($subcontratos){
 
         return $subcontratos->map(function($subcontrato){
 
-            $articulo = new \Flexio\Library\Articulos\SubcontratoArticulo;
+            return $this->getSubContrato($subcontrato);
+
+        });
+
+    }
+
+    public function getCollectionSubcontratosAjax($subcontratos){
+
+        return $subcontratos->map(function($subcontrato){
 
             return [
                 'id' => $subcontrato->id,
-                'nombre' => $subcontrato->proveedor->nombre .' - '.$subcontrato->codigo,
-                'proveedor_id' => $subcontrato->proveedor_id,
-                'centro_contable_id' => $subcontrato->centro_id,
-                "saldo_proveedor" => 0,
-                "credito_proveedor" => 0,
-                'articulos' => $articulo->get([], null)
+                'nombre' => $subcontrato->proveedor->nombre .' - '.$subcontrato->codigo
             ];
+
         });
+
+    }
+
+    public function getSubContrato($subcontrato)
+    {
+        $articulo = new \Flexio\Library\Articulos\SubcontratoArticulo;
+
+        return [
+            'id' => $subcontrato->id,
+            'nombre' => $subcontrato->proveedor->nombre .' - '.$subcontrato->codigo,
+            'proveedor_id' => $subcontrato->proveedor_id,
+            'centro_contable_id' => $subcontrato->centro_id,
+            "porcentaje_retencion" => isset($subcontrato->tipo_retenido[0])?$subcontrato->tipo_retenido[0]->porcentaje:0,
+            "saldo_proveedor" => 0,
+            "credito_proveedor" => 0,
+            'articulos' => $articulo->get([], null),
+            "proveedor" => count($subcontrato->proveedor)? $this->formatProveedor($subcontrato->proveedor):[],
+            "por_facturar" => $subcontrato->por_facturar()
+        ];
+    }
+
+     public function formatProveedor($proveedor){
+
+        return [
+                'id' => $proveedor->uuid_proveedor,
+                'saldo_pendiente' => $proveedor->saldo_pendiente,
+                'credito' => $proveedor->credito,
+                'nombre' => $proveedor->nombre,
+                'proveedor_id' => $proveedor->id,
+                'retiene_impuesto' => $proveedor->retiene_impuesto,
+                'estado' => $proveedor->estado
+            ];
 
     }
 
@@ -145,8 +195,36 @@ class SubContratoRepository
 
     }
 
+    public function getCollectionSubcontratosPagoRetenido($subcontratos){
+
+        return $subcontratos->map(function($subcontrato){
+
+            return [
+                'id' => $subcontrato->id,
+                'proveedor_id' => $subcontrato->proveedor_id,
+                'depositable_type' => "cuenta_contable",
+                'depositable_id' => count($subcontrato->tipo_retenido) ? $subcontrato->tipo_retenido[0]->cuenta_id : '',
+                'pagables' => $subcontrato->facturas_habilitadas->map(function($factura) use ($subcontrato){
+                    return [
+                        'pagable_id' => $factura->id,
+                        'pagable_type' => get_class($factura),
+                        'monto_pagado' => 0,//editable form
+                        'numero_documento' => $factura->codigo,
+                        'fecha_emision' => $factura->fecha_desde,
+                        'total' => $factura->retencion,//monto retenido
+                        'pagado' => $factura->retenido_pagado,//retenido pagado
+                        'saldo' => $factura->retenido_por_pagar//retenido por pagar
+                    ];
+                })
+            ];
+
+        });
+
+    }
+
     public function findByUuid($uuid)
     {
+      //$registro->with(array('comentario_timeline', 'adenda.adenda_montos'));
         return SubContrato::where('uuid_subcontrato', hex2bin($uuid))->first();
     }
 
@@ -163,6 +241,7 @@ class SubContratoRepository
             if(isset($clause['codigo']))         $query->where('codigo','=',$clause['codigo']);
             if(isset($clause['centro_id']))      $query->where('centro_id','=',$clause['centro_id']);
             if(isset($clause['estado']))      $query->where('estado','=',$clause['estado']);
+            if(isset($clause["campo"]) and !empty($clause["campo"])){$query->deFiltro($clause["campo"]);}
         })->count();
     }
 
@@ -182,6 +261,7 @@ class SubContratoRepository
             //bool -> true and false
             if(isset($clause["facturables"]) and $clause["facturables"]){$query->facturables($clause["empresa_id"]);}
             if(isset($clause["pagables"]) and $clause["pagables"]){$query->pagables($clause["empresa_id"]);}
+            if(isset($clause["campo"]) and !empty($clause["campo"])){$query->deFiltro($clause["campo"]);}
         });
         if($sidx !== null && $sord !== null) $subcontratos->orderBy($sidx, $sord);
         if($limit != null) $subcontratos->skip($start)->take($limit);

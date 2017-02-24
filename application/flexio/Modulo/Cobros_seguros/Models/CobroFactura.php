@@ -4,6 +4,7 @@ use Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon as Carbon;
 use Flexio\Library\Util\FlexioSession;
+use Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro;
 
 class CobroFactura extends Model
 {
@@ -41,6 +42,10 @@ class CobroFactura extends Model
 
     function cobros(){
       return $this->belongsTo(Cobro::class,'cobro_id');
+    }
+	
+	function datosFactura(){
+      return $this->belongsTo(FacturaSeguro::class,'factura_id');
     }
 
     public static function register($attributes)

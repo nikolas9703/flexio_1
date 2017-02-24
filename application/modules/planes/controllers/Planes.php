@@ -17,7 +17,7 @@ use League\Csv\Writer as Writer;
 use Carbon\Carbon;
 use Flexio\Modulo\Planes\Repository\PlanesRepository as PlanesRepository;
 use Flexio\Modulo\Planes\Models\Planes as PlanesModel;
-use Flexio\Modulo\Planes\Models\Planes_orm as PlanesFormModel;
+use Flexio\Modulo\Planes\Models\Planes_orm as Planes_orm;
 use Flexio\Modulo\Usuarios\Models\Usuarios as Usuarios;
 use Flexio\Modulo\Roles\Models\Roles as Roles;
 use Flexio\Modulo\aseguradoras\Repository\AseguradorasRepository as AseguradorasRepository;
@@ -75,7 +75,7 @@ class Planes extends CRM_Controller
         $this->load->model('catalogos/Ramos_orm');
         $this->load->model('contactos/Contacto_orm');
         $this->load->model('catalogos/Aseguradoras_orm');
-        $this->load->model('catalogos/Planes_orm');
+        //$this->load->model('catalogos/Planes_orm');
         $this->load->model('catalogos/Coberturas_orm');
         $this->load->model('catalogos/Deducibles_orm');
         $this->load->model('usuarios/usuario_orm');
@@ -989,29 +989,36 @@ function guardar() {
         //$clause = array('id_aseguradora' => $id_aseguradora);
         $clause['id'] = $id;
                 
-        $planes = Planes_orm::listarplanes($clause, null, null, null, null);
+        $planes = Planes_orm::listarplanesexportar($clause, null, null, null, null);
         if(empty($planes)){
             return false;
         }
         $i=0;
         foreach ($planes AS $row)
         {
+            if ($row->comision == "") { $comi = "0"; }else{ $comi = $row->comision; }
+            if ($row->sobre_comision == "") { $sobrecomi = "0"; }else{ $sobrecomi = $row->sobre_comision; }
+
             $csvdata[$i]['nombre'] = $row->plan;
 			$csvdata[$i]["nombre_aseguradora"] = utf8_decode(Util::verificar_valor($row->nombre_aseguradora));
             $csvdata[$i]["producto"] = utf8_decode(Util::verificar_valor($row->producto));
             $csvdata[$i]["ramo"] = utf8_decode(Util::verificar_valor($row->ramo));
-            $csvdata[$i]["comision"] = utf8_decode(Util::verificar_valor($row->comision));
-            $csvdata[$i]["sobrecomision"] = utf8_decode(Util::verificar_valor($row->sobre_comision));
+            $csvdata[$i]["inicio_comision"] = utf8_decode(Util::verificar_valor($row->inicio_comision));
+            $csvdata[$i]["fin_comision"] = utf8_decode(Util::verificar_valor($row->fin_comision));
+            $csvdata[$i]["comision"] = $comi;
+            $csvdata[$i]["sobrecomision"] = $sobrecomi;
             $csvdata[$i]["desccomision"] = utf8_decode(Util::verificar_valor($row->desc_comision));
             $i++;
         }
         //we create the CSV into memory
         $csv = Writer::createFromFileObject(new SplTempFileObject());
         $csv->insertOne([
-            'Nombre',
+            'Nombres',
 			'Aseguradora',
             'Producto',
             'Ramo',
+            'Inicio',
+            'Fin',
             'Comision',
             'Sobre Comision',
             'Desc Comision'

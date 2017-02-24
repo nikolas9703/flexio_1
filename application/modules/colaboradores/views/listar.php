@@ -1,27 +1,28 @@
 <div id="wrapper">
-    <?php 
-	Template::cargar_vista('sidebar'); 
+    <?php
+	Template::cargar_vista('sidebar');
 	?>
     <div id="page-wrapper" class="gray-bg row">
-    
+
 	    <?php Template::cargar_vista('navbar'); ?>
 		<div class="row border-bottom"></div>
 	    <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
 
     	<div class="col-lg-12">
         	<div class="wrapper-content">
-	            <div class="row">
-	                <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
-	                    <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
-	                    <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
-	                </div>
-	            </div>
-	
+            <div class="row" ng-controller="toastController">
+             <?php //$mensaje = self::$ci->session->flashdata('mensaje'); ?>
+               <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
+                   <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
+                   <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
+               </div>
+           </div>
+
 				<div role="tabpanel">
 				 	<!-- Tab panes -->
 				  	<div class="row tab-content">
 				    	<div role="tabpanel" class="tab-pane active" id="tabla">
-				    	
+
 							<!-- BUSCADOR -->
 							<div class="ibox border-bottom">
 								<div class="ibox-title">
@@ -32,10 +33,10 @@
 								</div>
 								<div class="ibox-content" style="display:none;">
 									<!-- Inicia campos de Busqueda -->
-							     	
+
 							     	<?php
 			                        $formAttr = array(
-			                            'method'        => 'POST', 
+			                            'method'        => 'POST',
 			                            'id'            => 'buscarColaboradorForm',
 			                            'autocomplete'  => 'off'
 			                          );
@@ -73,12 +74,12 @@
 												<input type="input" id="fecha_contratacion_hasta" readonly="readonly" class="form-control" value="" />
 								    		</div>
 										</div>
-										
+
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	<label for="">&Aacute;rea de Negocio</label>
 							            	<select class="form-control chosen-select" id="departamento_id">
 			                                	<option value="">Seleccione</option>
-			                                	<?php 
+			                                	<?php
 			                                	if(!empty($lista_departamentos))
 			                                	{
 			                                		foreach ($lista_departamentos AS $departamento){
@@ -96,7 +97,7 @@
 							            	<label for="">Estado</label>
 							            	<select class="form-control chosen-select" id="estado_id">
 			                                	<option value="">Seleccione</option>
-			                                	<?php 
+			                                	<?php
 			                                	if(!empty($estados))
 			                                	{
 			                                		foreach ($estados AS $estado){
@@ -117,13 +118,13 @@
 										</div>
 									</div>
 									<?php echo form_close(); ?>
-									
+
 								<!-- Termina campos de Busqueda -->
 								</div>
 							</div>
 							<!-- /BUSCADOR -->
-		
-				    	
+
+
 				    		<!-- JQGRID -->
 				    		<?php echo modules::run('colaboradores/ocultotabla'); ?>
 				    		<!-- /JQGRID -->
@@ -131,11 +132,11 @@
 						<div role="tabpanel" class="tab-pane" id="grid">
 				            <?php echo Grid::set()->html(); ?>
 				    	</div>
-				    	
+
 				  	</div>
 				</div>
         	</div>
-        	
+
     	</div><!-- cierra .col-lg-12 -->
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
@@ -146,9 +147,9 @@ echo form_open(base_url('colaboradores/exportar'), $formAttr);
 <input type="hidden" name="ids" id="ids" value="" />
 <?php echo form_close(); ?>
 
-<?php 
+<?php
 echo Modal::config(array(
-	"id" => "opcionesModal",  
+	"id" => "opcionesModal",
 	"size" => "sm"
 ))->html();
 
@@ -168,6 +169,6 @@ echo form_open(base_url('plantillas/crear/carta-de-trabajo-sencilla/1'), $formAt
 echo form_close();
 
 $formAttr = array('method' => 'POST', 'id' => 'crearDescuentoForm','autocomplete'  => 'off');
-echo form_open(base_url('descuentos/crear'), $formAttr); 
+echo form_open(base_url('descuentos/crear'), $formAttr);
 echo form_close();
 ?>

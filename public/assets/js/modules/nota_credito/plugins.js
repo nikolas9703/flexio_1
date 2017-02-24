@@ -25,4 +25,13 @@ $(function(){
 
     $(":input").inputmask();
 
+	var modulo = localStorage.getItem("ms-selected");
+	if(modulo=="seguros"){
+		$("ol.breadcrumb > li").each(function(i){
+			if($(this).text() == "Ventas"){
+				$(this).text("Seguros");
+			}
+		});
+	}
+	
 });

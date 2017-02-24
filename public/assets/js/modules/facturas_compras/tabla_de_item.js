@@ -1,3 +1,6 @@
+
+var multiselect = window.location.pathname.match(/facturas_compras/g) ? true : false;
+
 var tablaFacturasCompras = (function(){
 
     var tablaUrl = phost() + 'facturas_compras/ajax-listar-de-item';
@@ -50,7 +53,7 @@ var tablaFacturasCompras = (function(){
             viewrecords: true,
             refresh: true,
             gridview: true,
-            multiselect: true,
+            multiselect: multiselect,
             sortname: 'codigo',
             sortorder: "DESC",
             beforeProcessing: function(data, status, xhr){
@@ -73,20 +76,27 @@ var tablaFacturasCompras = (function(){
                     $('#'+gridId+'NoRecords').empty();
                 }
 
-                //---------
-                // Cargar plugin jquery Sticky Objects
-                //----------
-                //add class to headers
-                gridObj.closest("div.ui-jqgrid-view").find("div.ui-jqgrid-hdiv").attr("id","gridHeader");
-                //floating headers
-                $('#gridHeader').sticky({
-                    getWidthFrom: '.ui-jqgrid-view',
-                    className:'jqgridHeader'
-                });
+                if(multiselect)
+                {
 
-                //Arreglar tamaño de TD de los checkboxes
-                //FALTA ADAPTAR EL CODIGO PARA QUE LOS CHECKBOX SE VEAN BIEN
-                $('#jqgh_'+gridId+ "_cb").css("text-align","center");
+                    //---------
+                    // Cargar plugin jquery Sticky Objects
+                    //----------
+                    //add class to headers
+                    gridObj.closest("div.ui-jqgrid-view").find("div.ui-jqgrid-hdiv").attr("id","gridHeader");
+                    //floating headers
+                    $('#gridHeader').sticky({
+                        getWidthFrom: '.ui-jqgrid-view',
+                        className:'jqgridHeader'
+                    });
+
+                    //Arreglar tamaño de TD de los checkboxes
+                    //FALTA ADAPTAR EL CODIGO PARA QUE LOS CHECKBOX SE VEAN BIEN
+                    $('#jqgh_'+gridId+ "_cb").css("text-align","center");
+
+                }
+
+
             },
             onSelectRow: function(id){
                 $(this).find('tr#'+ id).removeClass('ui-state-highlight');

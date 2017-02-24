@@ -19,11 +19,13 @@ class OrdenesVentaPresenter extends Presenter{
   ];
   
   private $labelMonto = [
-    1 => 'outline-warning',
-    2 => 'outline-danger',
-    3 => 'outline-warning',  
-    4 => 'outline-success',
-    5 => 'outline-dark'
+    'facturado_parcial' => 'outline-warning',
+    'por_facturar' => 'outline-danger',
+    'por_aprobar' => 'outline-warning', 
+      'abierta' => 'outline-warning', 
+      'ganado' => 'outline-warning', 
+    'facturado_completo' => 'outline-success',
+    'anulada' => 'outline-dark'
   ];
 
   public function __construct($ordenVenta){
@@ -61,7 +63,9 @@ class OrdenesVentaPresenter extends Presenter{
         } else if ($total > 5000) {
             $color_id = 5;
         }
-    $color = $this->labelMonto[$color_id];
+        
+    $color = $this->labelMonto[$this->ordenVenta->estado];
+    
      return '<label class="label-outline '.$color.'">$' . FormatoMoneda::numero($this->ordenVenta->total) . '</label>';
      }catch(\Exception $e){
       return '<label class="label-outline">$' . FormatoMoneda::numero($this->ordenVenta->total) . '</label>';

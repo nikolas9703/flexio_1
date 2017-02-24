@@ -38,6 +38,11 @@ $config['modulo_config'] = array(
             'nombre' => 'Reporte de caja',
             'url' => 'reportes_financieros/reporte/reporte_caja?modulo=compras',
             'orden' => 3
+        ),
+        array(
+            'nombre' => 'Reporte de retención de I.T.B.M.S. por proveedor',
+            'url' => 'reportes_financieros/reporte/impuestos_sobre_itbms?modulo=compras',
+            'orden' => 5
         )
     ),
     'prefijo'		=> 'repro',

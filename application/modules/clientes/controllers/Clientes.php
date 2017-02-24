@@ -18,6 +18,7 @@ use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\FormularioDocumentos AS FormularioDocumentos;
 use League\Csv\Writer as Writer;
 use Carbon\Carbon;
+use Flexio\Modulo\Cliente\Models\Cliente as ClienteModel;
 use Flexio\Modulo\Cliente\Repository\ClienteRepository;
 use Flexio\Modulo\Cliente\HttpRequest\ClienteRequest;
 use Flexio\Modulo\CentroFacturable\Repository\CentroFacturableRepository;
@@ -31,6 +32,8 @@ use Flexio\Modulo\ClientesPotenciales\Repository\ClientesPotencialesRepository;
 use Flexio\Modulo\Inventarios\Repository\PreciosRepository;
 use Flexio\Modulo\Modulos\Repository\ModulosRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
+use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados as AseguradosModel;
+use Flexio\Modulo\InteresesAsegurados\Models\InteresesPersonas as PersonasModel;
 
 //utils
 use Flexio\Library\Util\FlexioAssets;
@@ -59,6 +62,8 @@ class Clientes extends CRM_Controller {
     protected $PreciosRepository;
     protected $ModulosRepository;
     protected $UsuariosRepository;
+	protected $AseguradosModel;
+	protected $PersonasModel;
 
     function __construct() {
         parent::__construct();
@@ -96,6 +101,8 @@ class Clientes extends CRM_Controller {
         $this->PreciosRepository = new PreciosRepository;
         $this->ModulosRepository = new ModulosRepository;
         $this->UsuariosRepository = new UsuariosRepository;
+		$this->AseguradosModel=new AseguradosModel();
+		$this->PersonasModel=new PersonasModel();
 
         $this->FlexioAssets = new FlexioAssets;
         $this->FlexioSession = new FlexioSession;
@@ -151,10 +158,18 @@ class Clientes extends CRM_Controller {
         $data['info']['estado'] = Catalogo_orm::where('tipo', '=', 'estado')->get(array('valor', 'etiqueta'));
         $data['info']['identificacion'] = Catalogo_orm::where('tipo', '=', 'identificacion')->get(array('valor', 'etiqueta'));
        // dd($data);
+
+        $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
+                            var capitalize = str[0].toUpperCase()+str.substring(1);
+                            document.write(capitalize);
+                        </script>";        
+        $breadcrumbUrl =base_url("/");
+        $brModulo="<a href='$breadcrumbUrl'>$nombreModuloBr</a>";
+
         $breadcrumb = array("titulo" => '<i class="fa fa-line-chart"></i> Clientes',
             "ruta" => array(
                 0 => array(
-                    "nombre" => "Ventas",
+                    "nombre" => $brModulo,
                     "activo" => false
                 ),
                 1 => array(
@@ -328,6 +343,7 @@ class Clientes extends CRM_Controller {
         $categoria           = $this->input->post('categoria');
         $estado              = $this->input->post('estado');
         $tipo_identificacion = $this->input->post('identificacion');
+		$modulo= $this->input->post('modulo');
 
         $clause = [];
         $clause = array('empresa_id' => $this->empresaObj->id);
@@ -388,10 +404,21 @@ class Clientes extends CRM_Controller {
                 $hidden_options .= '<a href="' . base_url('cotizaciones/crear/cliente' . $row->id) .'" data-id="' . $row->uuid_cliente . '" class="btn btn-block btn-outline btn-success">Nueva Cotizaci&oacute;n</a>';
                // $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Registrar Actividad</a>'; //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
                 $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documento</a>';
+				
                 //$hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Agregar Caso</a>'; //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
                 if($row->estado == 'activo'){
                 $hidden_options .= '<a href="' . base_url('anticipos/crear/?cliente=' . $row->uuid_cliente) .'" class="btn btn-block btn-outline btn-success">Crear anticipo</a>';
                 }
+				if($modulo=='seguros')
+				{
+					if(($row->tipo_identificacion=='cedula' || $row->tipo_identificacion=='pasaporte') && $row->estado!='bloqueado')
+					{
+						if ($this->auth->has_permission('listar__convertirInteres', 'clientes/listar') == true) 
+						{
+							$hidden_options .= '<a href="'.base_url('intereses_asegurados/crear/persona?datcli=' . $row->uuid_cliente) .'" data-id="' . $row->uuid_cliente . '" class="convertirInteres btn btn-block btn-outline btn-success">Convertir a bien asegurado</a>';
+						}
+					}
+				}
                 $saldo = empty($row->saldo) ? "0.00" : $row->saldo;
                 $response->rows[$i]["id"] = $row->uuid_cliente;
                 $response->rows[$i]["cell"] = array(
@@ -460,21 +487,97 @@ class Clientes extends CRM_Controller {
         //permisos
         $acceso = $this->auth->has_permission('acceso', 'clientes/crear/(:any)');
         $this->Toast->runVerifyPermission($acceso);
-
-        //assets
+		
+		//assets
         $this->FlexioAssets->run();//css y js generales
         $this->FlexioAssets->add('vars', [
             "vista" => 'crear',
             "acceso" => $acceso ? 1 : 0,
             "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0',
             "desde_modal_cliente_ref" => $this->input->get("ref") ? $this->input->get("ref") : '0',
+
         ]);
+		
+		if(isset($_GET['datint']))
+		{
+			$datos=$this->AseguradosModel->where('uuid_intereses',hex2bin($_GET['datint']))->first();
+			
+			$datos_interes=$this->PersonasModel->find($datos->interesestable_id);
+			
+			 $str = $datos_interes->identificacion;
+			 $provinciaVal='';
+			 $letraVal='';
+			 $tomo='';
+			 $asiento='';
+			 $pasaporte = '';
+			if (substr_count($str, '-'))
+			{
+				$separateId = explode("-", $str);
+				if (count($separateId) == 3) {
+					if(!is_numeric($separateId[0])){
+						$letraVal =$separateId[0];
+						$provinciaVal ="";
+					}else{
+						$provinciaVal =$separateId[0];           
+						$letraVal = "0";
+					}
+					$tomo = $separateId[1];
+					$asiento = $separateId[2];
+				} else {
+					$provinciaVal = '';
+					$letraVal = $separateId[0];
+					$tomo = $separateId[1];
+					$asiento = $separateId[2];
+				}
+				$tipo_identificacion = "cedula";
+			}
+			else
+			{
+				$tipo_identificacion = "pasaporte";
+				$pasaporte = $str;
+			}
+								
+			$this->FlexioAssets->add('vars', [
+				"datos_interes"=>$datos_interes,
+				"interes"=>'si',
+				"tipo_identificacion"=>$tipo_identificacion,
+				"provinciaVal"=>$provinciaVal,
+				"letraVal"=>$letraVal,
+				"tomo"=>$tomo,
+				"asiento"=>$asiento,
+				"pasaporte"=>$pasaporte
+			]);
+		}
+		else
+		{
+			$this->FlexioAssets->add('vars', [
+				"datos_interes"=>'',
+				"interes"=>'no',
+				"tipo_identificacion"=>'',
+				"provinciaVal"=>'',
+				"letraVal"=>'',
+				"tomo"=>'',
+				"asiento"=>'',
+				"pasaporte"=>''
+			]);
+		}
+
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/clientes/validarcreacion.js'
+        ));
+
+        $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
+                            var capitalize = str[0].toUpperCase()+str.substring(1);
+                            document.write(capitalize);
+                        </script>";        
+        $breadcrumbUrl =base_url("/");
+        $brModulo="<a href='$breadcrumbUrl'>$nombreModuloBr</a>";
 
         //breadcrumb
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Clientes',
             "ruta" => [
-                ["nombre" => "Ventas", "activo" => false],
+                ["nombre" => $brModulo, "activo" => false],
                 ["nombre" => "Clientes", "activo" => false, "url" => 'clientes/listar'],
                 ["nombre" => '<b>Crear</b>',"activo" => true]
             ]
@@ -530,24 +633,43 @@ class Clientes extends CRM_Controller {
             $cliente = '';
             //creo que estas lineas revisan sin proviene desde un cliente potencial
             //de manera de inactivarlo -> pendiente de integrar en el refactory
-            $cp_id = $this->input->post('id_cp', true);
-            if (!empty($cp_id)) {
-                Clientes_potenciales_orm::upDateClientePotencial($cp_id);
+
+            $campos = $_POST['campo'];
+
+            $tipoidentificacion = $campos['tipo_identificacion'];
+            $identificacion = $campos['identificacion'];
+            $empresa = $this->id_empresa;
+
+            if ($this->auth->has_permission('crear__validarDuplicado', 'clientes/crear/(:any)') ==  true) {
+                $cli = ClienteModel::where("tipo_identificacion", $tipoidentificacion)->where("identificacion", $identificacion)->where("empresa_id", $empresa)->count();
+            }else{
+                $cli=0;
             }
 
-            try {
-                $total = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->count();
-                $cliente_request = new ClienteRequest;
-                $codigo = $total + 1;
-                $registro = $cliente_request->guardar($this->id_empresa, $codigo, $this->id_usuario);
-            } catch (\Exception $e) {
-                log_message('error', $e);
-                $this->Toast->setUrl('clientes/listar')->run("exception",[$e->getMessage()]);
+            if ($cli>0) {
+                $registro = " ";
+                $cliente = "con_identificacion";
+            }else{
+                $cp_id = $this->input->post('id_cp', true);
+                if (!empty($cp_id)) {
+                    Clientes_potenciales_orm::upDateClientePotencial($cp_id);
+                }
+
+                try {
+                    $total = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->count();
+                    $cliente_request = new ClienteRequest;
+                    $codigo = $total + 1;
+                    $registro = $cliente_request->guardar($this->id_empresa, $codigo, $this->id_usuario);
+                } catch (\Exception $e) {
+                    log_message('error', $e);
+                    $this->Toast->setUrl('clientes/listar')->run("exception",[$e->getMessage()]);
+                }
             }
+            
 
             if(!is_null($registro)){
                 if ($cliente == 'con_identificacion'){
-                    $this->Toast->run("error",['<strong>¡Error!</strong> Su solicitud no fue procesada. El n&uacute;mero de identificaci&oacute;n ya existe.']);
+                    $this->Toast->run("error",['<strong>¡Error!</strong> Su solicitud no fue procesada. El n&uacute;mero de identificaci&oacute;n ya existe para esta empresa.']);
                 }else{
                     $this->Toast->run("success",[$registro->codigo]);
                 }
@@ -565,7 +687,7 @@ class Clientes extends CRM_Controller {
         }
     }
 
-    public function ver($uuid = NULL)
+    public function ver($uuid = NULL, $opcion = NULL)
     {
         //permisos
         $acceso = $this->auth->has_permission('acceso', 'clientes/ver/(:any)');
@@ -584,11 +706,18 @@ class Clientes extends CRM_Controller {
             "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0'
         ]);
 
+        $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
+                            var capitalize = str[0].toUpperCase()+str.substring(1);
+                            document.write(capitalize);
+                        </script>";        
+        $breadcrumbUrl =base_url("/");
+        $brModulo="<a href='$breadcrumbUrl'>$nombreModuloBr</a>";
+
         //breadcrumb
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Clientes',
             "ruta" => [
-                ["nombre" => "Ventas", "activo" => false],
+                ["nombre" => $brModulo, "activo" => false],
                 ["nombre" => "Clientes", "activo" => false, "url" => 'clientes/listar'],
                 ["nombre" => '<b>Detalle</b>',"activo" => true]
             ],
@@ -845,6 +974,31 @@ class Clientes extends CRM_Controller {
             ->set_status_header(200)
             ->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function existsIdentificacion() {
+
+        $campos = $_POST['campo'];
+        $response = new stdClass();
+
+            $tipoidentificacion = $campos['tipo_identificacion'];
+            $identificacion = $campos['identificacion'];
+            $empresa = $this->id_empresa;
+        
+        if ($this->auth->has_permission('crear__validarDuplicado', 'clientes/crear/(:any)') ==  true) {
+            $cli = ClienteModel::where("tipo_identificacion", $tipoidentificacion)->where("identificacion", $identificacion)->where("empresa_id", $empresa)->count();
+        }else{
+            $cli=0;
+        }
+
+        if($cli > 0){
+            $response->existe =  true;
+        }else{
+            $response->existe =  false;
+        }
+
+        echo json_encode($response);
         exit;
     }
 

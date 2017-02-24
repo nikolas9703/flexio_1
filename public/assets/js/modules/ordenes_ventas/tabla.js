@@ -5,20 +5,20 @@ var tablaOrdenesVentas = (function(){
 		if(typeof cliente_id === 'undefined'){
 				 cliente_id="";
 		}
-		/* if(typeof uuid_venta === 'undefined'){
-			 uuid_venta="";
-		}*/
+		
+
 
 	var tablaUrl = phost() + 'ordenes_ventas/ajax_listar_by_client';
 	var gridId = "tablaOrdenesVentasGrid";
 	var gridObj = $("#tablaOrdenesVentasGrid");
-	var opcionesModal = $('#optionsModal');
+	var opcionesModal = $('#opcionesModal, #optionsModal');
 	var formularioBuscar = '';
 
 	var botones = {
 		opciones: ".viewOptions",
 		buscar: "#searchBtn",
-		limpiar: "#clearBtn"
+		limpiar: "#clearBtn",
+		exportar: "#exportarListaOrdenesVenta",
 	};
 
  var tabla = function(){
@@ -42,7 +42,11 @@ var tablaOrdenesVentas = (function(){
  	   postData: {
                 erptkn: tkn,
                 cliente_id: cliente_id,
-                cotizacion_id: (typeof window.sp_cotizacion_id !== 'undefined') ? window.sp_cotizacion_id : '' 
+                vista: (typeof(this.vista) == "undefined") ? '': this.vista,
+                factura_id:(typeof(this.infofactura) == "undefined") ? '':this.infofactura.id,
+                cotizacion_id: (typeof(this.infofactura)  == "undefined") ? (typeof(this.sp_cotizacion_id) == "undefined") ? '': this.sp_cotizacion_id : this.infofactura.cotizacion_id,
+                orden_venta_id: (typeof(this.infofactura)  == "undefined") ? '' : this.infofactura.orden_venta_id,
+				campo: typeof window.campo  !== "undefined" ? window.campo : {}
             },
 			height: "auto",
 	 		autowidth: true,
@@ -52,7 +56,7 @@ var tablaOrdenesVentas = (function(){
 	 		pager: gridId+"Pager",
 	 		loadtext: '<p>Cargando...',
 	 		hoverrows: false,
-                        
+
 	 	  viewrecords: true,
 	 	  refresh: true,
 	 	  gridview: true,
@@ -69,6 +73,32 @@ var tablaOrdenesVentas = (function(){
 	      $(this).closest("div.ui-jqgrid-view").find("#tablaClientesGrid_cb, #jqgh_tablaClientesGrid_link").css("text-align", "center");
 	    },
 			loadComplete: function(data, status, xhr){
+
+
+				                              //Boton de Exportar Facturas
+				                              $(botones.exportar).on("click", function (e) {
+
+				                                  e.preventDefault();
+				                                  e.returnValue = false;
+				                                  e.stopPropagation();
+
+				                                  if ($('#tabla').is(':visible') == true) {
+
+				                                      //Exportar Seleccionados del jQgrid
+				                                      var ids = [];
+
+				                                      ids = gridObj.jqGrid('getGridParam', 'selarrrow');
+
+				                                      //Verificar si hay seleccionados
+				                                      if (ids.length > 0) {
+
+				                                          $('#ids').val(ids);
+				                                          console.log(ids);
+				                                          $('form#exportarOrdenesVenta').submit();
+				                                          $('body').trigger('click');
+				                                      }
+				                                  }
+				                              });
 
         if(gridObj.getGridParam('records') === 0 ){
           $('#gbox_'+gridId).hide();
@@ -115,7 +145,7 @@ var tablaOrdenesVentas = (function(){
 		});
 
 	};
-        
+
         //Documentos Modal
     $("#optionsModal").on("click", ".subirArchivoBtn", function(e){
             e.preventDefault();
@@ -140,7 +170,7 @@ var tablaOrdenesVentas = (function(){
         });
             $('#documentosModal').modal('show');
     });
-        
+
 	$(botones.limpiar).click(function(e){
 		e.preventDefault();
 		e.returnValue=false;
@@ -165,15 +195,18 @@ var tablaOrdenesVentas = (function(){
 
 		if (cliente !== "" || desde !== "" || hasta !== "" || etapa !== "" || vendedor !== "") {
 			//Reload Grid
+			gridObj.setGridParam({postData:null});
 			gridObj.setGridParam({
 				url: tablaUrl,
 				datatype: "json",
 				postData: {
-					cliente: cliente,
-					desde: desde,
-					hasta: hasta,
-					etapa: etapa,
-					vendedor: vendedor,
+					campo:{
+						cliente: cliente,
+						desde: desde,
+						hasta: hasta,
+						etapa: etapa,
+						vendedor: vendedor
+					},
 					erptkn: tkn
 				}
 			}).trigger('reloadGrid');
@@ -184,15 +217,12 @@ var tablaOrdenesVentas = (function(){
 	var recargar = function(){
 
 		//Reload Grid
+		gridObj.setGridParam({postData:null});
 		gridObj.setGridParam({
 			url: tablaUrl,
 			datatype: "json",
 			postData: {
-				cliente: '',
-				desde: '',
-				hasta: '',
-				etapa: '',
-				vendedor: '',
+				campo:{},
 				erptkn: tkn
 			}
 		}).trigger('reloadGrid');

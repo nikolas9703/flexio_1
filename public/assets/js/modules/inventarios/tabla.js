@@ -151,7 +151,7 @@ var tablaItems = (function(){
                 'No. Item',
                 'Nombre',
                 'Categor&iacute;a',
-                'Costo promedio',
+                //'Costo promedio',
                 'En Pedido',
                 'Disponible',
                 'No Disponible',
@@ -164,7 +164,7 @@ var tablaItems = (function(){
                 {name:'Codigo', index:'codigo', width:60},
                 {name:'Nombre', index:'nombre', width:60,  sortable:false},
                 {name:'Categoria', index:'categoria', width:80,  sortable:false},
-                {name:'Costo promedio', index:'costo_promedio', width:70,  sortable:false},
+                //{name:'Costo promedio', index:'costo_promedio', width:70,  sortable:false},
                 {name:'Pedido', index:'pedido', width: 50, sortable:false, align:'right'},
                 {name:'Disponible', index:'disponible', width: 50,sortable:false, align:'right'},
                 {name:'No Disponible', index:'monto', width: 50,sortable:false, align:'right'},
@@ -176,6 +176,7 @@ var tablaItems = (function(){
             mtype: "POST",
             postData: {
                 erptkn: tkn,
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,

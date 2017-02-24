@@ -7,10 +7,14 @@ use Flexio\Modulo\SubContratos\Models\SubContratoMonto as SubContratoMonto;
 use Flexio\Modulo\SubContratos\Models\SubContratoTipo  as SubContratoTipo;
 use Flexio\Modulo\SubContratos\Models\Adenda           as Adenda;
 use Flexio\Modulo\Proveedores\Models\Proveedores       as Proveedores;
+use Flexio\Modulo\Catalogos\Models\Catalogo;
 use Carbon\Carbon                                      as Carbon;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Cliente\Models\Asignados;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\Documentos\Models\Documentos;
+use Flexio\Modulo\Historial\Models\Historial;
+use Flexio\Modulo\SubContratos\Observer\SubContratoObserver;
 
 class SubContrato extends Model
 {
@@ -44,13 +48,15 @@ class SubContrato extends Model
     protected $fillable = [
         'codigo',
         'proveedor_id',
+        'tipo_subcontrato_id',
         'empresa_id',
         'fecha_inicio',
         'fecha_final',
         'referencia',
         'centro_id',
         'monto_subcontrato',
-        'estado'
+        'estado',
+        'creado_por'
     ];
 
     protected $casts = [
@@ -79,6 +85,7 @@ class SubContrato extends Model
      */
     public static function boot() {
         parent::boot();
+        SubContrato::observe(SubContratoObserver::class);
     }
 
     public function getUuidSubcontratoAttribute($value)
@@ -114,6 +121,12 @@ class SubContrato extends Model
                         })->pluck("id")->toArray();
 
         return count($array_ids) > 0;
+    }
+
+    public function getTipoSubcontratoAttribute()
+    {
+        $tipo_subcontrato = $this->tipo_subcontrato()->first();
+        return !empty($tipo_subcontrato) && $tipo_subcontrato != null ? $tipo_subcontrato->valor : "";
     }
 
     public function getFechaInicioAttribute($date)
@@ -205,6 +218,11 @@ class SubContrato extends Model
         return $this->hasMany(SubContratoTipo::class, 'subcontrato_id', 'id');
     }
 
+    public function tipo_subcontrato()
+    {
+        return $this->hasMany(Catalogo::class, 'id', 'tipo_subcontrato_id');
+    }
+
     public function tipo_abono()
     {
         return $this->hasMany(SubContratoTipo::class, 'subcontrato_id', 'id')->where('tipo', '=', 'abono');
@@ -234,6 +252,15 @@ class SubContrato extends Model
     public function facturas()
     {
         return $this->morphMany('Flexio\Modulo\FacturasCompras\Models\FacturaCompra', 'faccom_facturas', 'operacion_type', 'operacion_id');
+    }
+
+    public function pagos_retenido()
+    {
+        return $this->morphMany('Flexio\Modulo\Pagos\Models\Pagos', 'pag_pagos','empezable_type','empezable_id');
+    }
+
+    public function adenda_cuenta(){
+        return $this->hasManyThrough(AdendaMonto::class, Adenda::class,'subcontrato_id','adenda_id','id');
     }
 
     public function facturas_por_pagar()
@@ -267,7 +294,7 @@ class SubContrato extends Model
 
     public function monto_adenda()
     {
-        return $this->adenda()->sum('monto_adenda');
+        return (float)$this->adenda()->sum('monto_adenda');
     }
 
     //por facturar deberia ser la sumatoria del saldo de las facturas asociadas
@@ -276,10 +303,10 @@ class SubContrato extends Model
         return $this->monto_subcontrato - $this->facturado();
     }
 
-    //facturado deberia ser igual al total de la factura
+    //facturado debe ser el subtotal de facturas
     public function facturado()
     {
-        return $this->facturas_habilitadas()->sum('total');
+        return $this->facturas_habilitadas()->join('faccom_facturas_items','faccom_facturas.id', '=', 'faccom_facturas_items.factura_id')->sum('faccom_facturas_items.subtotal');
     }
 
     public function comentario_timeline() {
@@ -309,5 +336,26 @@ class SubContrato extends Model
    {
        return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable');
    }
+   public function anticipos_aprobados()
+   {
+       return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->where('atc_anticipos.estado','aprobado');
+   }
+   public function anticipos_no_anulados()
+   {
+       return $this->morphToMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'empezable')->whereIn('estado',['por_aprobar','aprobado']);
+   }
+   function documentos(){
+    	return $this->morphMany(Documentos::class, 'documentable');
+   }
+
+   public function scopeDeFiltro($query, $campo)
+   {
+       $queryFilter = new \Flexio\Modulo\SubContratos\Services\SubContratoQueryFilters;
+       return $queryFilter->apply($query, $campo);
+   }
+
+    public function historial(){
+        return $this->morphMany(Historial::class,'historiable');
+    }
 
 }

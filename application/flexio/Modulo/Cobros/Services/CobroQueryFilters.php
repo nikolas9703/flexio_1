@@ -32,5 +32,9 @@ class CobroQueryFilters extends QueryFilters{
   function estado($estado){
       return $this->builder->where('estado',$estado);
   }
+  
+  function factura($factura_id) {
+      return $this->builder->where('empezable_id', $factura_id)->where('empezable_type','Flexio\Modulo\FacturasVentas\Models\FacturaVenta');
+  }
 
 }

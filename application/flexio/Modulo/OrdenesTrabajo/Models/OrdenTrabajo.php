@@ -12,6 +12,7 @@ use Flexio\Modulo\Cotizaciones\Models\LineItem as LineItem;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Modulo\Talleres\Models\EquipoTrabajo;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable;
+use Flexio\Modulo\Documentos\Models\Documentos;
 
 class OrdenTrabajo extends Model
 {
@@ -49,6 +50,48 @@ class OrdenTrabajo extends Model
      */
     public static function boot() {
         parent::boot();
+        static::updating(function($odt) {
+            $cambio = $odt->getDirty();
+            $original = $odt->getOriginal();
+            if(isset($cambio['estado_id'])){
+                $catalogo_anterior = OrdenesTrabajoCatalogo::where("id","=",$original['estado_id'])->get();
+                $catalogo_actual = OrdenesTrabajoCatalogo::where("id","=",$cambio['estado_id'])->get();
+
+                $descripcion = "<b style='color:#0080FF; font-size:15px;'>Cambio de estado en la orden de trabajo</b></br></br>";
+                $descripcion .= "Estado actual: ".$catalogo_actual[0]->etiqueta.'</br></br>';
+                $descripcion .= "Estado anterior: ".$catalogo_anterior[0]->etiqueta;
+
+                $update = [
+                    'codigo' => $odt->numero,
+                    'usuario_id' => $odt->creado_por,
+                    'empresa_id' => $odt->empresa_id,
+                    'odt_id'=> $odt->id,
+                    'tipo'   => "actualizado",
+                    'descripcion' => $descripcion,
+                    'antes' => $catalogo_anterior[0]->id,
+                    'despues' => $catalogo_actual[0]->id
+                ];
+                OrdenesTrabajoHistorial::create($update);
+                return $odt;
+            }
+
+        });
+        static::created(function($odt){
+           // dd($odt);
+
+            $create = [
+                'codigo' => $odt->codigo,
+                'usuario_id' => $odt->creado_por,
+                'empresa_id' => $odt->empresa_id,
+                'odt_id'=> $odt->id,
+                'tipo'   => "creado",
+                'descripcion' => "<b style='color:#0080FF; font-size:15px;'>Se creó la orden de trabajo</b></br></br>No. ".$odt->codigo."</br></br>Estado: Por agendar",
+                'antes' => '',
+                'despues' => 11
+            ];
+            OrdenesTrabajoHistorial::create($create);
+            return $odt;
+        });
     }
 
     /**
@@ -139,15 +182,21 @@ class OrdenTrabajo extends Model
     function cobros(){
         return $this->morphMany('Flexio\Modulo\Cobros\Models\Cobro','empezable');
     }
-    
+
     public function vendedor() {
   		return $this->belongsTo(Usuarios::class,'creado_por');
   	}
     public function equipoTrabajo() {
     	return $this->hasMany(EquipoTrabajo::class, 'id', 'equipo_trabajo_id');
     }
-    
+
     public function centro_fact() {
-        return $this->hasMany(CentroFacturable::class, 'id', 'facturable_id');
+        return $this->hasMany(CentroFacturable::class, 'id', 'centro_facturable_id');
+    }
+    function documentos(){
+    	return $this->morphMany(Documentos::class, 'documentable');
+    }
+    public function historial(){
+        return $this->hasMany(OrdenesTrabajoHistorial::class,'odt_id');
     }
 }

@@ -6,7 +6,7 @@ use \Illuminate\Database\Eloquent\Model as Model;
 class LinesItems extends Model
 {
     protected $table        = 'lines_items';
-    protected $fillable     = ['*'];
+    protected $fillable     = ['categoria_id','tipoable_id','tipoable_type','item_id','cantidad'];
     protected $guarded      = ['id'];
     public $timestamps      = false;
 

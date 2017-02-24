@@ -134,6 +134,7 @@ function register_user_aereo()
             })              
         }
 $(document).ready(function(){
+     $('.estado_aereo').attr('disabled', 'disabled');
 	var counter = 2;
     $('#del_file_aereo').hide();
     $('#add_file_aereo').click(function(){

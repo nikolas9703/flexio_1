@@ -32,10 +32,10 @@ var tablaIngresos = (function(){
  			   'C&aacute;lculo'
   			],
 		   	colModel:[
-		   	    {name:'Dia', index:'dia' },
-		   	    {name:'justificacion', index:'justificacion',  sortable:false,},
-		   	    {name:'justificacion', index:'justificacion',   sortable:false},
-  				{name:'justificacion', index:'justificacion',   sortable:false},
+		   	    {name:'detalle', index:'detalle',width:80 },
+		   	    {name:'Cantidad', index:'Cantidad',  sortable:false,width:40},
+		   	    {name:'Rata', index:'Rata',   sortable:false,width:40},
+  				{name:'calculo', index:'calculo',   sortable:false,width:40},
 
  		   	],
 			mtype: "POST",

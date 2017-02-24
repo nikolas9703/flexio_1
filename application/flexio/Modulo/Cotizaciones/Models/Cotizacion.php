@@ -13,6 +13,7 @@ use Flexio\Modulo\CentroFacturable\Models\CentroFacturable;
 use Flexio\Modulo\Cliente\Models\Cliente;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\CentrosContables\Models\CentrosContables;
 
 class Cotizacion extends Model {
     use RevisionableTrait;
@@ -44,7 +45,45 @@ class Cotizacion extends Model {
 
         parent::boot();
         static::updating(function($cotizacion) {
-            //	dd($cotizacion);
+
+            $cambio = $cotizacion->getDirty();
+            $original = $cotizacion->getOriginal();
+            //dd($cambio, $original);
+            if(isset($cambio['estado'])){
+                $catalogo_anterior = CotizacionCatalogo::where("etiqueta","=",$original['estado'])->get();
+                $catalogo_actual = CotizacionCatalogo::where("etiqueta","=",$cambio['estado'])->get();
+                //$cotizacion->load('estados');
+                //dd($catalogo_anterior[0]->valor, $catalogo_actual[0]->valor);
+                $descripcion = "<b style='color:#0080FF; font-size:15px;'>Cambio de estado en la cotización</b></br></br>";
+                $descripcion .= "Estado actual: ".$catalogo_actual[0]->valor.'</br></br>';
+                $descripcion .= "Estado anterior: ".$catalogo_anterior[0]->valor;
+
+                $create = [
+                    'codigo' => $cotizacion->codigo,
+                    'usuario_id' => $cotizacion->creado_por,
+                    'empresa_id' => $cotizacion->empresa_id,
+                    'cotizacion_id'=> $cotizacion->id,
+                    'tipo'   => "actualizado",
+                    'descripcion' => $descripcion
+                ];
+                //dd($create);
+                CotizacionHistorial::create($create);
+                return $cotizacion;
+            }
+
+        });
+        static::created(function($cotizacion){
+
+            $create = [
+                'codigo' => $cotizacion->codigo,
+                'usuario_id' => $cotizacion->creado_por,
+                'empresa_id' => $cotizacion->empresa_id,
+                'cotizacion_id'=> $cotizacion->id,
+                'tipo'   => "creado",
+                'descripcion' => "<b style='color:#0080FF; font-size:15px;'>Se creó la cotización</b></br></br>No. ".$cotizacion->codigo."</br></br>Estado: Por aprobar"
+            ];
+            CotizacionHistorial::create($create);
+            return $cotizacion;
         });
     }
 
@@ -136,6 +175,10 @@ class Cotizacion extends Model {
         return $this->hasOne(OrdenVenta::class, 'cotizacion_id');
     }
 
+    public function ordenes_de_ventas(){
+        return $this->hasMany(OrdenVenta::class, 'cotizacion_id');
+    }
+
     public function scopeDeOrdenVenta($query, $orden_venta_id){
 
         return $query->whereHas('orden_venta',function($orden_venta) use ($orden_venta_id){
@@ -208,6 +251,27 @@ class Cotizacion extends Model {
     	return $this->morphMany(Documentos::class, 'documentable');
     }
 
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Cotizaciones\Services\CotizacionFilters;
+        return $queryFilter->apply($query, $campo);
+    }
 
+    public function centro_contable() {
+        return $this->belongsTo(CentrosContables::class,'centro_contable_id');
+    }
+
+    public function estados()
+    {
+        return $this->belongsTo(CotizacionCatalogo::class, 'estado');
+    }
+
+    public function historial(){
+        return $this->hasMany(CotizacionHistorial::class,'cotizacion_id');
+    }
+    public function getEnlaceBitacoraAttribute()
+    {
+        return base_url('cotizaciones/historial/'.$this->uuid_cotizacion);
+    }
 
 }

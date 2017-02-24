@@ -27,6 +27,7 @@ class DevolucionesAlquilerRepository
         if(isset($clause['contrato_alquiler_id']) and !empty($clause['contrato_alquiler_id'])){$query->deContratoAlquiler($clause['contrato_alquiler_id']);}
         if(isset($clause['entrega_alquiler_id']) and !empty($clause['entrega_alquiler_id'])){$query->deEntregaAlquiler($clause['entrega_alquiler_id']);}
         if(isset($clause['item_id']) and !empty($clause['item_id'])){$query->deItem($clause['item_id']);}
+        if(isset($clause['campo']) and !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
     }
 
     private function _getHiddenOptions($devolucion_alquiler, $auth) {
@@ -96,20 +97,23 @@ class DevolucionesAlquilerRepository
     public function getCollectionCell($devolucion_alquiler, $auth) {
 
         $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $devolucion_alquiler->uuid_devolucion_alquiler .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+        $entregable=null;
         if($devolucion_alquiler->tipo_contrato == 0){
-            $entregable = $devolucion_alquiler->entregas()->first()->entregable;
-         }
+            $entregas=$devolucion_alquiler->entregas()->first();
+            if($entregas)
+                $entregable = $entregas->entregable;
+        }
         else{
             $entregable = $devolucion_alquiler->contratos->first();
-         }
+        }
 
-          return [
+        return [
             $devolucion_alquiler->uuid_devolucion_alqquiler,
             $devolucion_alquiler->numero_documento_enlace,
             $devolucion_alquiler->fecha_devolucion->format('d/m/Y'),
-            $entregable->numero_documento_enlace,
-            $entregable->cliente->nombre_completo_enlace,
-            count($entregable->centro_facturacion)?$entregable->centro_facturacion->nombre:'',
+            $entregable!=null?$entregable->numero_documento_enlace:'',
+            $entregable!=null?$entregable->cliente->nombre_completo_enlace:'',
+            $entregable!=null?count($entregable->centro_facturacion)?$entregable->centro_facturacion->nombre:'':"",
             $devolucion_alquiler->estado->nombre_span,
             $link_option,
             $this->_getHiddenOptions($devolucion_alquiler, $auth)
@@ -153,15 +157,22 @@ class DevolucionesAlquilerRepository
         ];
 
         $entrega_alquiler->entregable_type = $entregables[$campo['empezar_desde_type']];*/
-
-        $devolucion_alquiler->fecha_devolucion = $campo['fecha_devolucion'];
-        $devolucion_alquiler->cliente_id = $campo['cliente_id'];
-        $devolucion_alquiler->estado_id = $campo['estado_id'];
-        $devolucion_alquiler->recibido_id = $campo['recibido_id'];
-        $devolucion_alquiler->vendedor_id = $campo['vendedor_id'];
-        $devolucion_alquiler->created_by = $campo['vendedor_id'];
-        $devolucion_alquiler->observaciones = $campo['observaciones'];//falta en database
-        $devolucion_alquiler->save();
+        if(!empty($post['campo']['id'])){
+          $devolucion_alquiler->fecha_devolucion = $campo['fecha_devolucion'];
+          $devolucion_alquiler->vendedor_id = $campo['vendedor_id'];
+          $devolucion_alquiler->estado_id = $campo['estado_id'];
+          $devolucion_alquiler->observaciones = $campo['observaciones'];
+          $devolucion_alquiler->save();
+        }else{
+          $devolucion_alquiler->fecha_devolucion = $campo['fecha_devolucion'];
+          $devolucion_alquiler->cliente_id = $campo['cliente_id'];
+          $devolucion_alquiler->estado_id = $campo['estado_id'];
+          $devolucion_alquiler->recibido_id = $campo['recibido_id'];
+          $devolucion_alquiler->vendedor_id = $campo['vendedor_id'];
+          $devolucion_alquiler->created_by = $campo['vendedor_id'];
+          $devolucion_alquiler->observaciones = $campo['observaciones'];
+          $devolucion_alquiler->save();
+        }
     }
 
     public function create($post) {
@@ -225,18 +236,19 @@ class DevolucionesAlquilerRepository
 
     public function save($post) {
 
-        $campo = $post['campo'];
-        $retorno_alquiler = DevolucionesAlquiler::find($post['campo']['id']);
-
+        $retorno_alquiler = DevolucionesAlquiler::find($post['campo']['id'] );
+        //dd($post);
         $this->_save($retorno_alquiler, $post);
-        //$this->_setItems($retorno_alquiler, $post);
 
-        if($campo['empezar_desde_type'] == "Contrato de alquiler")
-            $this->_setItemsContratos($retorno_alquiler, $post);
-         else
-             $this->_setItems($retorno_alquiler, $post);
-
-        return $retorno_alquiler;
+        if($retorno_alquiler->estado_id == '2')//retornado
+        {
+            foreach ($retorno_alquiler->lines_items as $line_item) {
+                foreach ($line_item->seriales as $serie) {
+                    $serie->estado = 'disponible';
+                    $serie->save();
+                };
+            }
+        }
 
     }
 
@@ -264,7 +276,13 @@ class DevolucionesAlquilerRepository
         {
             foreach($items as $item)
             {
-                if($contrato_item->categoria_id == $item['categoria_id'] && $contrato_item->item_id == $item['item_id'])
+                if(
+                    $contrato_item->categoria_id == $item['categoria_id'] &&
+                    $contrato_item->item_id == $item['item_id'] &&
+                    ((count($contrato_item->item->atributos) && $contrato_item->atributo_id == $item['atributo_id']) || (!count($contrato_item->item->atributos) && $contrato_item->atributo_text == $item['atributo_text']))  &&
+                    $contrato_item->ciclo_id == $item['ciclo_id'] &&
+                    $contrato_item->precio_unidad == $item['tarifa']
+                )
                 {
                     $aux = [];
                     foreach($item['detalles'] as $detalle)
@@ -319,7 +337,13 @@ class DevolucionesAlquilerRepository
        {
               foreach($items as $item)
             {
-                 if($contrato_item->categoria_id == $item['categoria_id'] && $contrato_item->item_id == $item['item_id'])
+                if(
+                    $contrato_item->categoria_id == $item['categoria_id'] &&
+                    $contrato_item->item_id == $item['item_id'] &&
+                    ((count($contrato_item->item->atributos) && $contrato_item->atributo_id == $item['atributo_id']) || (!count($contrato_item->item->atributos) && $contrato_item->atributo_text == $item['atributo_text']))  &&
+                    $contrato_item->ciclo_id == $item['ciclo_id'] &&
+                    $contrato_item->precio_unidad == $item['tarifa']
+                )
                 {
                      $aux = [];
                     foreach($item['detalles'] as $detalle)

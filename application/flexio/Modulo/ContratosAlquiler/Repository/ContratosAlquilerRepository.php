@@ -5,6 +5,9 @@ use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerHistorial;
 use Flexio\Modulo\ContratosAlquiler\Repository\ContratosAlquilerCatalogosRepository;
+//Para traer nombres
+use Flexio\Modulo\CentrosContables\Models\CentrosContables;
+use Flexio\Modulo\Usuarios\Models\Usuarios;
 
 class ContratosAlquilerRepository
 {
@@ -18,16 +21,43 @@ class ContratosAlquilerRepository
 
     private function _filtros($query, $clause)
     {
-      
+
         if(isset($clause['empresa_id']) and !empty($clause['empresa_id'])){$query->whereEmpresaId($clause['empresa_id']);}
         //falta relacion de contratos y if(isset($clause['cotizacion_alquiler_id']) and !empty($clause['cotizacion_alquiler_id'])){$query->whereEmpresaId($clause['cotizacion_alquiler_id']);}
         if(isset($clause['codigo']) and !empty($clause['codigo'])){$query->deCodigo($clause['codigo']);}
-        if(isset($clause['cliente_id']) and !empty($clause['cliente_id'])){$query->whereClienteId($clause['cliente_id']);}
-        if(isset($clause['fecha_desde']) and !empty($clause['fecha_desde'])){$query->desde($clause['fecha_desde']);}
-        if(isset($clause['fecha_hasta']) and !empty($clause['fecha_hasta'])){$query->hasta($clause['fecha_hasta']);}
         if(isset($clause['estado_id']) and !empty($clause['estado_id'])){$query->whereEstadoId($clause['estado_id']);}
         if(isset($clause['uuid_contrato_alquiler']) and !empty($clause['uuid_contrato_alquiler'])){$query->whereUuidContratoAlquiler(hex2bin($clause['uuid_contrato_alquiler']));}
         if(isset($clause['id']) and !empty($clause['id'])){$query->where("id", $clause['id']);}
+        if(isset($clause['creado_por']) and !empty($clause['creado_por'])){$query->where("created_by", $clause['creado_por']);}
+        if(isset($clause['centro_contable_id']) and !empty($clause['centro_contable_id'])){$query->where("centro_contable_id", $clause['centro_contable_id']);}
+
+		if(isset($clause['fecha_desde']) and !empty($clause['fecha_desde'])){
+			//$query->desde($clause['fecha_desde']);
+			$query->whereDate("fecha_inicio",">=",$clause['fecha_desde']);
+		}
+        if(isset($clause['fecha_hasta']) and !empty($clause['fecha_hasta'])){
+			//$query->hasta($clause['fecha_hasta']);
+			$query->whereDate("fecha_fin","<=",$clause['fecha_hasta']);
+		}
+        if(isset($clause['cliente_id']) and !empty($clause['cliente_id'])){
+			if(is_array($clause["cliente_id"]) and count($clause["cliente_id"])>0 ){
+				if($clause["cliente_id"][0]!=""){
+					$query->whereIn("cliente_id",$clause['cliente_id']);
+				}
+			}
+		}
+        if(isset($clause['categoria']) and !empty($clause['categoria'])){
+			if(is_array($clause["categoria"]) and count($clause["categoria"])>0 ){
+				if($clause["categoria"][0]!=""){
+					$categs = implode(",",$clause["categoria"]);
+					$query->whereRaw("id in (SELECT contratable_id FROM contratos_items WHERE contratable_type = 'Flexio\\\Modulo\\\ContratosAlquiler\\\Models\\\ContratosAlquiler' AND categoria_id IN (".$categs.")) ");
+				}
+			}
+		}
+        if(isset($clause['centro_contable_id']) and !empty($clause['centro_contable_id'])){
+			$query->where("centro_contable_id",$clause['centro_contable_id']);
+		}
+
     }
 
     private function _getHiddenOptions($contrato_alquiler, $auth)
@@ -80,7 +110,7 @@ class ContratosAlquilerRepository
             'corte_facturacion_id' => $contrato_alquiler->corte_facturacion_id,
             'calculo_costo_retorno_id' => $contrato_alquiler->calculo_costo_retorno_id,
             'lista_precio_alquiler_id' => $contrato_alquiler->lista_precio_alquiler_id,
-            'dia_corte' => $contrato_alquiler->dia_corte ? : '',
+            'dia_corte' => $contrato_alquiler->dia_corte ? : '0',
             'vendedor_id' => $contrato_alquiler->created_by,
             'estado_id' => $contrato_alquiler->estado_id,
             'observaciones' => $contrato_alquiler->observaciones,
@@ -144,14 +174,20 @@ class ContratosAlquilerRepository
     {
         $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $contrato_alquiler->uuid_contrato_alquiler .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
+		$centro = CentrosContables::find($contrato_alquiler->centro_contable_id);
+		$usuario = Usuarios::find($contrato_alquiler->created_by);
+
         return [
             $contrato_alquiler->uuid_contrato_alqquiler,
             $contrato_alquiler->numero_documento_enlace,
             $contrato_alquiler->cliente->nombre_completo_enlace,
             count($contrato_alquiler->centro_facturacion) ? $contrato_alquiler->centro_facturacion->nombre : '',
             $contrato_alquiler->fecha_inicio->format('d/m/Y'),
+            ($contrato_alquiler->fecha_fin != "") ? $contrato_alquiler->fecha_fin->format('d/m/Y') : "",
             $contrato_alquiler->saldo_facturar_label,
             $contrato_alquiler->total_facturado_label,
+            $centro->nombre,
+            $usuario->nombre." ".$usuario->apellido,
             $contrato_alquiler->estado->nombre_span,
             $link_option,
             $this->_getHiddenOptions($contrato_alquiler, $auth),
@@ -186,10 +222,14 @@ class ContratosAlquilerRepository
                 $contrato_alquiler->numero_documento,
                 utf8_decode($contrato_alquiler->cliente->nombre),
                 count($contrato_alquiler->centro_facturacion) ? utf8_decode($contrato_alquiler->centro_facturacion->nombre) : '',
+                count($contrato_alquiler->centro_contable) ? utf8_decode($contrato_alquiler->centro_contable->nombre) : '',
                 $contrato_alquiler->fecha_inicio->format('d/m/Y'),
+                ($contrato_alquiler->fecha_fin!="") ? $contrato_alquiler->fecha_fin->format('d/m/Y') : "",
                 $contrato_alquiler->saldo_facturar_currency,
                 $contrato_alquiler->total_facturado_currency,
-                $contrato_alquiler->estado->nombre,
+                count($contrato_alquiler->centro_contable) ? utf8_decode($contrato_alquiler->centro_contable->nombre) : '',
+                utf8_decode($contrato_alquiler->usuario->nombre." ".$contrato_alquiler->usuario->apellido),
+                utf8_decode($contrato_alquiler->estado->nombre)
             ];
         }
 
@@ -210,7 +250,9 @@ class ContratosAlquilerRepository
     private function _setItems($contrato_alquiler, $items)
     {
          $ciclos_tarifarios = $this->ContratosAlquilerCatalogosRepository->get(['tipo'=>'tarifa']);
+
          $contrato_alquiler->contratos_items()->whereNotIn('id',array_pluck($items,'id'))->delete();
+
          foreach($items as $item){
 
                  $contrato_item_id = (isset($item['id']) and !empty($item['id'])) ? $item['id'] : '';
@@ -237,6 +279,7 @@ class ContratosAlquilerRepository
                  $contrato_item->comentario = $item["comentario"];
                  $contrato_item->impuesto_total = $item["impuesto_total"];
                  $contrato_item->descuento_total = $item["descuento_total"];
+
                  $contrato_item->save();
          }
     }
@@ -253,7 +296,9 @@ class ContratosAlquilerRepository
         $contrato_alquiler->facturar_contra_entrega_id = $campo['facturar_contra_entrega_id'];
         $contrato_alquiler->calculo_costo_retorno_id = $campo['calculo_costo_retorno_id'];
         $contrato_alquiler->lista_precio_alquiler_id = $campo['lista_precio_alquiler_id'];
+        if(isset($campo['dia_corte'])){
         $contrato_alquiler->dia_corte = $campo['dia_corte'];
+        }
         $contrato_alquiler->fecha_inicio = $campo['fecha_inicio'];
         $contrato_alquiler->fecha_fin = $campo['fecha_fin'];
         $contrato_alquiler->created_by = $campo['vendedor_id'];
@@ -270,10 +315,10 @@ class ContratosAlquilerRepository
 
         $contrato_alquiler->codigo = $campo['codigo'];
         $contrato_alquiler->empresa_id = $campo['empresa_id'];
-        $contrato_alquiler->tipo = ($post['empezable_type'] == 'cliente')?'cliente':'cotizacion'.$post['empezable_id'];
-
+        $contrato_alquiler->tipo = ($post['empezable_type'] == 'cliente')?'cliente':'cotizacion-'.$post['empezable_id'];
+        $contrato_alquiler->tipoid = $post['empezable_id'];
         $this->_save($contrato_alquiler, $post);
-        $this->_setItems($contrato_alquiler, $post['items']);
+        $this->_setItems($contrato_alquiler, $post['items_alquiler']);
 
         return $contrato_alquiler;
     }
@@ -283,7 +328,7 @@ class ContratosAlquilerRepository
         $contrato_alquiler = ContratosAlquiler::find($post['campo']['id']);
 
         $this->_save($contrato_alquiler, $post);
-        $this->_setItems($contrato_alquiler, $post['items']);
+        $this->_setItems($contrato_alquiler, $post['items_alquiler']);
 
         return $contrato_alquiler;
     }

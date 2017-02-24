@@ -22,7 +22,8 @@
         <td>
           <div class="input-group">
                <span class="input-group-addon">$</span>
-               <input type="text" v-model="item.monto" name="components[{{$index}}][monto]" id="acomponents_subcontrato_monto{{$index}}" class="form-control" data-rule-required="true" data-rule-number="true">
+               <!--  //v-model="item.monto" -->
+               <input type="text" name="components[{{$index}}][monto]" id="acomponents_subcontrato_monto{{$index}}" class="form-control" data-rule-required="true" data-rule-number="true" v-model="item.monto" :value="item.monto" />
           </div>
         </td>
         <td>

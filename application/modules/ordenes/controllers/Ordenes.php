@@ -32,6 +32,7 @@ use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\OrdenesCompra\Repository\OrdenesCompraCatRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
+use Flexio\Library\Util\AuthUser;
 
 //utils
 use Flexio\Library\Util\FlexioSession;
@@ -243,7 +244,7 @@ class Ordenes extends CRM_Controller
                 //IMPORTANTE A MODO DE DESARROLLO ANADI LA CONDICION OR 1
                 //PARA QUE TODAS LAS CONDICIONES DIERAN TRUE
 
-                if(1 OR $this->auth->has_permission('acceso', 'orden/ver/(:any)')){
+                if($this->auth->has_permission('acceso', 'orden/ver/(:any)')){
                     $hidden_options .= '<a href="'. base_url('orden/ver/'. $row->uuid_orden) .'" class="btn btn-block btn-outline btn-success">Ver Orden</a>';
                 }
 
@@ -283,18 +284,7 @@ class Ordenes extends CRM_Controller
                                 ->get();
             $clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true];
             $data["centros"] = $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause));
-            /* $data["centros"]    = Centros_orm::deEmpresa($this->id_empresa)
-                                 ->activa()
-                                 ->deMasJuventud($this->id_empresa)
-                                 ->orderBy("nombre", "ASC")
-                                 ->get();*/
 
-            /*$data["proveedores"]    = Proveedores_orm
-                                    ::where("id_empresa", "=", $this->id_empresa)
-                                    ->where("estado", 'activo')
-                                    ->orderBy("nombre", "ASC")
-                                    ->skip(0)->take(200)
-                                    ->get();*/
             $data["proveedores"] = collect([]);
             $clause = ['empresa_id' => $this->id_empresa];
             $data["usuarios"]    =  $this->UsuariosRepository->get($clause, 'nombre', 'ASC');
@@ -302,8 +292,19 @@ class Ordenes extends CRM_Controller
             $clause = ['empresa_id'=>$this->id_empresa,'ordenables'=>true,'transaccionales'=>true,'conItems'=>true, 'estado != por_aprobar'];
             $data["categorias"]  = $this->ItemsCategoriasRepository->getCollectionCategorias($this->ItemsCategoriasRepository->get($clause));
 
+            // filtro de categoria
+            $categorias_items = AuthUser::usuarioCategoriaItems();
 
+            $columns = ['id', 'nombre'];
+            $categorias = $this->ItemsCategoriasRepository->getAll(['empresa_id'=>$this->id_empresa], $columns);
+            $categoria = $categorias->filter(function($categoria) use($categorias_items){
+                if(!in_array('todos', $categorias_items)){
+                  return in_array($categoria->id, $categorias_items);
+                }
+                return $categoria;
+            });
 
+            $data["categorias"]  = $categoria;
 
             $data           = array_merge($data,$camposGrid);
         }
@@ -333,7 +334,7 @@ class Ordenes extends CRM_Controller
         }
 
         //Verificar si tiene permiso de Exportar
-        if ($this->auth->has_permission('listar__exportar', 'ordenes/listar')){
+        if ($this->auth->has_permission('listar__exportarOrdenes', 'ordenes/listar')){
             $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
         }
 
@@ -620,6 +621,7 @@ class Ordenes extends CRM_Controller
             $fecha_hasta     = $this->input->post('fecha_hasta', true);
             $centro     = $this->input->post('centro', true);
             $estado     = $this->input->post('estado', true);
+            $estado     = !empty($estado) ? (is_array($estado) ? $estado : array($estado)) : array();
             $creado_por = $this->input->post('creado_por', true);
             $numero     = $this->input->post('numero', true);
             $proveedor  = $this->input->post('proveedor', true);
@@ -628,7 +630,7 @@ class Ordenes extends CRM_Controller
 
             $pedido_id     = $this->input->post('pedido_id', true);
             $categoria_id     = $this->input->post('categoria_id', true);
-
+ 		        $categoria_id     = !empty($categoria_id) ? (is_array($categoria_id) ? $categoria_id : array($categoria_id)) : array();
 
             //subpanels
             $factura_compra_id = $this->input->post('factura_compra_id', true);
@@ -709,9 +711,9 @@ class Ordenes extends CRM_Controller
                 $registros          = $registros->where("uuid_proveedor", "=", hex2bin(strtolower($proveedor)));
                 $registros_count    = $registros_count->where("uuid_proveedor", "=", hex2bin(strtolower($proveedor)));
             }
-            if(!empty($estado)){
-                $registros          = $registros->where("id_estado", "=", $estado);
-                $registros_count    = $registros_count->where("id_estado", "=", $estado);
+            if(!empty(array_filter($estado))){
+              $registros          = $registros->whereIn("id_estado", $estado);
+              $registros_count    = $registros_count->where("id_estado", "=", $estado);
             }
           /*  if(!empty($referencia)){
                 $registros          = $registros->where("referencia", "like", "%$referencia%");
@@ -733,6 +735,15 @@ class Ordenes extends CRM_Controller
 
               $registros_count    = $registros_count->deCategoria($categoria_id);
 
+            }
+            else{
+                //filtro de facturas por la categoria del usuario
+                $categorias_items = AuthUser::usuarioCategoriaItems();
+                if(!in_array('todos', $categorias_items)){
+
+                     $registros          = $registros->deCategoria($categorias_items);
+                    $registros_count    = $registros_count->deCategoria($categorias_items);
+                }
             }
 
 
@@ -817,7 +828,7 @@ class Ordenes extends CRM_Controller
 
                     }
 
-
+                    $hidden_options .= '<a  href="'. base_url('ordenes/imprimir/'.$row->uuid_orden) .'" class="btn btn-block btn-outline btn-success" data-dismiss="modal" >Imprimir</a>';
 //dd($row);
                     //Si no tiene acceso a ninguna opcion
                     //ocultarle el boton de opciones
@@ -1081,6 +1092,7 @@ class Ordenes extends CRM_Controller
 
     	//If ajax request
     	$this->assets->agregar_js(array(
+        'public/assets/js/modules/ordenes/funtions.js',
     		'public/assets/js/modules/ordenes/tabla.js'
     	));
 
@@ -1090,7 +1102,9 @@ class Ordenes extends CRM_Controller
     public function ocultotablaV2($sp_string_var = '') {
 
         $this->assets->agregar_js(array(
+            'public/assets/js/modules/ordenes/funtions.js',
             'public/assets/js/modules/ordenes/tabla.js'
+
         ));
 
         $sp_array_var = explode('=', $sp_string_var);
@@ -1114,6 +1128,7 @@ class Ordenes extends CRM_Controller
         }
 
     	$this->assets->agregar_js(array(
+        'public/assets/js/modules/ordenes/funtions.js',
     		'public/assets/js/modules/ordenes/tabla.js'
     	));
 
@@ -1184,6 +1199,7 @@ class Ordenes extends CRM_Controller
         }
 
     	$this->assets->agregar_js(array(
+        'public/assets/js/modules/ordenes/funtions.js',
     		'public/assets/js/modules/ordenes/tabla.js'
     	));
 
@@ -1210,7 +1226,7 @@ class Ordenes extends CRM_Controller
             'public/assets/js/modules/ordenes/components/detalle.js',
             'public/assets/js/default/vue/directives/pop_over_precio.js',
             'public/assets/js/default/vue/directives/pop_over_cantidad.js',
-            'public/resources/compile/modulos/ordenes/formulario.js'
+            'public/resources/compile/modulos/ordenes/formulario2.js',
     	));
 
         //catalogos
@@ -1224,7 +1240,7 @@ class Ordenes extends CRM_Controller
             'estados' => $this->OrdenesCompraCatRepository->get(['campo_id'=>7]),
             'terminos_pago' => $this->FacturaVentaCatalogoRepository->getTerminoPago(),
             'categorias' => $this->ItemsCategoriasRepository->getCollectionCategorias($this->ItemsCategoriasRepository->get($clause)),
-            'cuentas' => $this->CuentasRepository->get($clause),
+            'cuentas' => collect([]),
             'impuestos' => $this->ImpuestosRepository->get($clause),
             'usuarios' => $this->UsuariosRepository->get($clause)->map(function($usuario){return ['id'=>$usuario->id,'nombre'=>$usuario->nombre_completo];}),
             'usuario_id' => $this->id_usuario,
@@ -1347,7 +1363,7 @@ class Ordenes extends CRM_Controller
                     $post['campo']['codigo'] = $this->_generar_codigo();
                     $orden_compra = $this->ordenesCompraRep->create($post);
                 } else {
-
+                    $orden_original = $this->ordenesCompraRep->find($campo['id']);
                     $orden_compra = $this->ordenesCompraRep->save($post);
 
 
@@ -1358,16 +1374,22 @@ class Ordenes extends CRM_Controller
                        $mensaje_correo = ($correo_resultado == 1)?' Enviado el correo al proveedor.':'No se envió el correo.';
                     }
                 }
-                 //ACTUALIZO EL ESTADO DEL PEDIDO -> pendiente refactory
-                $uuid_pedido = count($orden_compra->pedido) ? $orden_compra->pedido->uuid_pedido : '';
+
+                if (isset($campo['estado']) && $campo['estado'] == 2) {
+                    $pedido = $this->PedidosRepository->find($orden_compra->pedido->id); //Version en DESARROLLO
+                    if (count($pedido)) {
+                        $this->PedidosRepository->actualizarEstadoPedido($pedido, $orden_compra, $orden_original);//ACTUALIZO EL ESTADO DEL PEDIDO
+                    }
+                }
+
+                 //version vieja de cambiar el estado a pedidos
+                /*$uuid_pedido = count($orden_compra->pedido) ? $orden_compra->pedido->uuid_pedido : '';
                 $pedido = Pedidos_orm::findByUuid($uuid_pedido); //Version Vieja
-                //$pedido = $this->PedidosRepository->find( $orden_compra->pedido->id); //Version en DESARROLLO
-
-
                 if(count($pedido)){
                      //$this->PedidosRepository->actualizarEstadoPedido($pedido, $orden_compra);//Version en DESARROLLO
                      $pedido->comp_actualizarEstado();//ACTUALIZO EL ESTADO DEL PEDIDO, version vieja
-                 }
+                 }*/
+                  //terminado version vieja de cambiar el estado a pedidos
              } catch (Illuminate\Database\QueryException $e) {
                 log_message('error', __METHOD__ . " ->" . ", Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
                 Capsule::rollback();
@@ -1561,7 +1583,6 @@ class Ordenes extends CRM_Controller
           if($orden->id_estado == 2){
                $breadcrumb["menu"]["opciones"]["#EnviarAProveedor"] = "Enviar a proveedor";
           }
-
 
           $empezable = collect([
               'type' => count($orden->pedido) ? 'pedido' : '',

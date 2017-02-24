@@ -17,20 +17,20 @@ use Flexio\Library\Util\FormRequest;
 
 class Agentes extends CRM_Controller
 {
-	private $id_empresa;
-	private $id_usuario;
-	private $empresaObj;
+    private $id_empresa;
+    private $id_usuario;
+    private $empresaObj;
 
-	protected $politicas;
+    protected $politicas;
 
-	protected $roles;
+    protected $roles;
 
-	protected $request;
-	
-	/**
-	 * @var array
-	 */
-	protected $politicas_general;
+    protected $request;
+    
+    /**
+     * @var array
+     */
+    protected $politicas_general;
 
     protected $AgentesModel;
     protected $AgentesRamosModel;
@@ -40,7 +40,7 @@ class Agentes extends CRM_Controller
     protected $ramoRepository;
 
 
-	function __construct() {
+    function __construct() {
         parent::__construct();
         
         
@@ -63,34 +63,40 @@ class Agentes extends CRM_Controller
 
         //Cargar Clase Util de Base de Datos
         $this->load->dbutil();
-		$uuid_empresa = $this->session->userdata('uuid_empresa');
-		//$this->empresaObj  = Empresa_orm::findByUuid($uuid_empresa);
-		$empresaObj  = new Buscar(new Empresa_orm,'uuid_empresa');
-		$this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
-		$this->id_usuario   = $this->session->userdata("huuid_usuario");
-		$this->id_empresa   = $this->empresaObj->id;
+        $uuid_empresa = $this->session->userdata('uuid_empresa');
+        //$this->empresaObj  = Empresa_orm::findByUuid($uuid_empresa);
+        $empresaObj  = new Buscar(new Empresa_orm,'uuid_empresa');
+        $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
+        $this->id_usuario   = $this->session->userdata("huuid_usuario");
+        $this->id_empresa   = $this->empresaObj->id;
 
-		$this->roles=$this->session->userdata("roles");
-		//$roles=implode(",", $this->roles);
-		
-		$clause['empresa_id']=$this->id_empresa;
-		$clause['modulo']='agentes';
-		$clause['usuario_id']=$this->id_usuario;
-		$clause['role_id']=$this->roles;
+        $this->roles=$this->session->userdata("roles");
+        //$roles=implode(",", $this->roles);
+        
+        $clause['empresa_id']=$this->id_empresa;
+        $clause['modulo']='agentes';
+        $clause['usuario_id']=$this->id_usuario;
+        $clause['role_id']=$this->roles;
 
-		$politicas_transaccion=$this->PoliticasRepository->getAllPoliticasRoles($clause);
+        $politicas_transaccion=$this->PoliticasRepository->getAllPoliticasRoles($clause);
+        
+        $politicas_transaccion_general=count($this->PoliticasRepository->getAllPoliticasRolesModulo($clause));
+        $this->politicas_general=$politicas_transaccion_general;
 		
-		$politicas_transaccion_general=count($this->PoliticasRepository->getAllPoliticasRolesModulo($clause));
-		$this->politicas_general=$politicas_transaccion_general;
-		
-		$estados_politicas=array();
-		foreach($politicas_transaccion as $politica_estado)
-		{
-			$estados_politicas[]=$politica_estado->politica_estado;
-		}
-		
-		$this->politicas=$estados_politicas;
-
+        $politicas_transaccion_general2 = $this->PoliticasRepository->getAllPoliticasRolesModulo($clause);
+        
+        $estados_politicas=array();
+        foreach($politicas_transaccion as $politica_estado)
+        {
+            $estados_politicas[]=$politica_estado->politica_estado;
+        }
+        $estados_politicasgenerales = array();
+        foreach ($politicas_transaccion_general2 as $politica_estado_generales) {
+            $estados_politicasgenerales[] = $politica_estado_generales->politica_estado;
+        }
+        
+        $this->politicas=$estados_politicas;
+        $this->politicas_generales = $estados_politicasgenerales;
     }
 
 
@@ -111,35 +117,35 @@ class Agentes extends CRM_Controller
             "flexio_mensaje" => collect($mensaje)
         ));
 
-    	$data = array();
+        $data = array();
 
-    	$this->assets->agregar_css(array(
+        $this->assets->agregar_css(array(
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
             'public/assets/css/default/ui/base/jquery-ui.css',
             'public/assets/css/default/ui/base/jquery-ui.theme.css',
-			'public/assets/css/modules/stylesheets/agentes.css',
+            'public/assets/css/modules/stylesheets/agentes.css',
             'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
-    	));
-    	$this->assets->agregar_js(array(
+        ));
+        $this->assets->agregar_js(array(
             'public/assets/js/default/jquery-ui.min.js',
             'public/assets/js/plugins/jquery/jquery.sticky.js',
             'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
             'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
             'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
             'public/assets/js/plugins/bootstrap/bootstrap-tagsinput.js',
-    		'public/assets/js/modules/agentes/listar_agentes.js',
-			'public/assets/js/default/formulario.js',
+            'public/assets/js/modules/agentes/listar_agentes.js',
+            'public/assets/js/default/formulario.js',
             //'public/assets/js/default/grid.js',
-    	));       
+        ));       
 
-    	//Breadcrum Array
-    	$breadcrumb = array(
-    		"titulo" => '<i class="fa fa-child"></i> Agentes',
+        //Breadcrum Array
+        $breadcrumb = array(
+            "titulo" => '<i class="fa fa-child"></i> Agentes',
             //"filtro" => true,
             "menu" => array(
                 'nombre' => "Crear",
-				'url' => "agentes/crear",
+                'url' => "agentes/crear",
                 "opciones" => array(
                     "#exportarBtn" => "Exportar",
                 )
@@ -150,21 +156,21 @@ class Agentes extends CRM_Controller
             ),
             "filtro"    => false,
             "menu"      => array()
-    	);
+        );
         $breadcrumb["menu"] = array(
-    		"url"	=> 'agentes/crear',
-    		"clase" => 'crearBoton',
-    		"nombre" => "Crear"
-    	);
+            "url"   => 'agentes/crear',
+            "clase" => 'crearBoton',
+            "nombre" => "Crear"
+        );
         $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
         $breadcrumb["menu"]["opciones"]["#cambiarEstadosBtn"] = "Cambiar Estados";
         
         $data['mensaje'] = $this->session->flashdata('mensaje');
-    	$this->template->agregar_contenido($data);
-    	$this->template->agregar_titulo_header('Listado de Agentes');
-    	$this->template->agregar_breadcrumb($breadcrumb);
-    	$this->template->agregar_contenido($data);
-    	$this->template->visualizar($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->agregar_titulo_header('Listado de Agentes');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar($breadcrumb);
     }
 
 
@@ -173,7 +179,7 @@ class Agentes extends CRM_Controller
      $FormRequest = new Flexio\Modulo\Agentes\Models\GuardarAgentesEstados;
 
      try {
-     		$Agentes = $FormRequest->guardar();
+            $Agentes = $FormRequest->guardar();
             //formatear el response
             /*$res = $Agentes->map(function($ant) {
                 return[
@@ -192,21 +198,21 @@ class Agentes extends CRM_Controller
 
     /**
      * Se usa en propiedades
-     * @access	public
+     * @access  public
      * @param
-     * @return	tabla
+     * @return  tabla
      */
     public function ajax_seleccionar_porcentaje() {
-    	//Si es una peticion AJAX
-    	if($this->input->is_ajax_request()){
-    		$uuid_agente = $this->input->post('uuid_agente', true);
-    		$response = $this->agentes_model->seleccionar_informacion_agente($uuid_agente);
-    		 
-    		$json = '{"results":['.json_encode($response).']}';
-    		echo $json;
-    		exit;
-    		 
-    	}
+        //Si es una peticion AJAX
+        if($this->input->is_ajax_request()){
+            $uuid_agente = $this->input->post('uuid_agente', true);
+            $response = $this->agentes_model->seleccionar_informacion_agente($uuid_agente);
+             
+            $json = '{"results":['.json_encode($response).']}';
+            echo $json;
+            exit;
+             
+        }
     }
     public function ajax_listar() {
         //$uuid_usuario = $this->session->userdata('huuid_usuario');
@@ -219,7 +225,7 @@ class Agentes extends CRM_Controller
 
         $clause = array(
             "nombre"    => $this->input->post("nombre"),
-			"apellido"  => $this->input->post("nombre"),
+            "apellido"  => $this->input->post("nombre"),
             "telefono"  => $this->input->post("telefono"),
             "correo"    => $this->input->post("correo"),
             "identificacion"    => $this->input->post("identificacion"),
@@ -259,15 +265,23 @@ class Agentes extends CRM_Controller
                     $spanStyle='label label-successful';
                 else
                     $spanStyle='label label-warning';
+				
+				if($row['principal']==1)
+				{
+					$principal="<label class='label label-warning'>Principal</label>";
+				}
+				else{
+					$principal="";
+				}
 
                 $hidden_options = "<a href=". base_url('agentes/ver/'.strtoupper($row['uuid_agente'])) ." class='btn btn-block btn-outline btn-success'>Ver Agente</a>";
-                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
+                $hidden_options .= '<a href="#" id="cambiarAgentePrincipal" class="btn btn-block btn-outline btn-success cambiarAgentePrincipal" data-id="'.$row['id'].'">Asignar como principal</a>';
                  $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'.$row['id'].'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $response->rows[$i]["id"] = $row['id'];
-				$nombre_agente =  $row["nombre"] ." ".$row["apellido"];
+                $nombre_agente =  $row["nombre"] ." ".$row["apellido"];
                 $response->rows[$i]["cell"] = array(
                     $row['id'],
-                    "<a href='" . base_url('agentes/ver/'.($row['uuid_agente'])) . "'>" . $nombre_agente  . "</a>",
+                    "<a href='" . base_url('agentes/ver/'.($row['uuid_agente'])) . "'>" . $nombre_agente  . "</a> ".$principal,
                     $row['identificacion'],
                     $row['telefono'],
                     $row['correo'],
@@ -286,26 +300,26 @@ class Agentes extends CRM_Controller
     }
     
     public function exportar() {        
-    	if(empty($_POST)){
-    		exit();
-    	}
-    	$ids =  $this->input->post('ids', true);
-		$id = explode(",", $ids);
-	
-		if(empty($id)){
-			return false;
-		}
-		$csv = array();
-		$clause = array();
+        if(empty($_POST)){
+            exit();
+        }
+        $ids =  $this->input->post('ids', true);
+        $id = explode(",", $ids);
+    
+        if(empty($id)){
+            return false;
+        }
+        $csv = array();
+        $clause = array();
         $clause['ids'] = $id;
                 
-		$agentes = AgentesModel::exportaragentes($clause, NULL, NULL, NULL, NULL);
-		if(empty($agentes)){
-			return false;
-		}
-		$i=0;
-		foreach ($agentes AS $row)
-		{
+        $agentes = AgentesModel::exportaragentes($clause, NULL, NULL, NULL, NULL);
+        if(empty($agentes)){
+            return false;
+        }
+        $i=0;
+        foreach ($agentes AS $row)
+        {
 
             $agtram = AgentesRamosModel::where('id_agente', $row->id)->get();
             $agtramos = $agtram->toArray();
@@ -316,25 +330,25 @@ class Agentes extends CRM_Controller
             $partramos=trim($partramos,', ');
 
 
-			$csvdata[$i]['nombre'] = $row->nombre . " " . $row->apellido;
-			$csvdata[$i]["cedula"] = utf8_decode(Util::verificar_valor($row->identificacion));
-			$csvdata[$i]["telefono"] = utf8_decode(Util::verificar_valor($row->telefono));
-			$csvdata[$i]["email"] = utf8_decode(Util::verificar_valor($row->correo));
-			$csvdata[$i]["participacion"] = utf8_decode(Util::verificar_valor($partramos));
-			$i++;
-		}
-		//we create the CSV into memory
-		$csv = Writer::createFromFileObject(new SplTempFileObject());
-		$csv->insertOne([
-			'Nombre',
-			'Cedula',
-			'Telefono',
-			'Email',
-			'Participacion'
-		]);                
-		$csv->insertAll($csvdata);
-		$csv->output("agentes-". date('ymd') .".csv");
-		exit();
+            $csvdata[$i]['nombre'] = $row->nombre . " " . $row->apellido;
+            $csvdata[$i]["cedula"] = utf8_decode(Util::verificar_valor($row->identificacion));
+            $csvdata[$i]["telefono"] = utf8_decode(Util::verificar_valor($row->telefono));
+            $csvdata[$i]["email"] = utf8_decode(Util::verificar_valor($row->correo));
+            $csvdata[$i]["participacion"] = utf8_decode(Util::verificar_valor($partramos));
+            $i++;
+        }
+        //we create the CSV into memory
+        $csv = Writer::createFromFileObject(new SplTempFileObject());
+        $csv->insertOne([
+            'Nombre',
+            'Cedula',
+            'Telefono',
+            'Email',
+            'Participacion'
+        ]);                
+        $csv->insertAll($csvdata);
+        $csv->output("agentes-". date('ymd') .".csv");
+        exit();
     }
 
     public function exportarPolizas() {        
@@ -393,17 +407,17 @@ class Agentes extends CRM_Controller
      * @return void
      */
     public function ocultotabla() {
-    	//If ajax request
-    	$this->assets->agregar_js(array(
-    		'public/assets/js/modules/agentes/tabla.js'
-    	));
-    	
-    	$this->load->view('tabla');
+        //If ajax request
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/agentes/tabla.js'
+        ));
+        
+        $this->load->view('tabla');
     }    
 
     function crear() {
-    	$data = array();
-    	$mensaje = array();
+        $data = array();
+        $mensaje = array();
 
         if ($this->auth->has_permission('acceso', 'agentes/crear') == false) {
             redirect(base_url('agentes/listar'));
@@ -419,16 +433,16 @@ class Agentes extends CRM_Controller
             "flexio_mensaje" => collect($mensaje)
         ));
 
-    	$this->assets->agregar_js(array(
-    		'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
-    		'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
+        $this->assets->agregar_js(array(
+            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
+            'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
-    		'public/assets/js/default/formulario.js',
+            'public/assets/js/default/formulario.js',
             'public/assets/js/modules/agentes/crear.js'
 
-    	));
+        ));
 
         $this->assets->agregar_css(array(
             'public/assets/css/plugins/jquery/chosen/chosen.min.css',
@@ -454,7 +468,8 @@ class Agentes extends CRM_Controller
         $data['info']['ramos'] = Ramos::where('padre_id','<>','0')->get();
 
         $data['info']['politicas']=$this->politicas;
-        $data['info']['politicas_general']=$this->politicas_general;
+        $data['info']['politicasgeneral']=$this->politicas_general;
+        $data['info']['politicasgenerales']= $this->politicas_generales;
         $data['info']['guardar']=1;
 
         if ($this->auth->has_permission('ver__estadoAgente', 'agentes/ver/(:any)') ==  true) {
@@ -462,47 +477,53 @@ class Agentes extends CRM_Controller
         }else{
             $data['info']['estadoAgente'] = 0;
         }
-    	 
-    	$this->template->agregar_titulo_header('Nuevo Agente');
-    	$this->template->agregar_breadcrumb(array(
-    		"titulo" => '<i class="fa fa-child"></i> Agentes',
-    		"ruta" => array(
-    			0 => array(
-    				"nombre" => "Seguros",
-    				"activo" => false
-    			),
-    			1 => array(
-    				"nombre" => 'Agentes',
-    				"url"	=> 'agentes/listar',
-    				"activo" => false
-    			),
-    			2 => array(
-    				"nombre" => '<b>Crear</b>',
-    				"activo" => true
-    			)
-    		)
-    	));
+         
+        $this->template->agregar_titulo_header('Nuevo Agente');
+        $this->template->agregar_breadcrumb(array(
+            "titulo" => '<i class="fa fa-child"></i> Agentes',
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Seguros",
+                    "activo" => false
+                ),
+                1 => array(
+                    "nombre" => 'Agentes',
+                    "url"   => 'agentes/listar',
+                    "activo" => false
+                ),
+                2 => array(
+                    "nombre" => '<b>Crear</b>',
+                    "activo" => true
+                )
+            )
+        ));
         $data['mensaje'] = $this->session->flashdata('mensaje');
-    	$this->template->agregar_contenido($data);
-    	$this->template->visualizar();
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar();
     }
 
     public function obtener_politicas(){
-    	echo json_encode($this->politicas);
-    	exit;
+        echo json_encode($this->politicas);
+        exit;
     }
 
     public function obtener_politicas_general(){
-    	echo json_encode($this->politicas_general);
-    	exit;
+        echo json_encode($this->politicas_general);
+        exit;
+    }
+     public function obtener_politicasgenerales() {
+        echo json_encode($this->politicas_generales);
+        exit;
     }
 
-	function guardar() {
+    function guardar() {
             
             if($_POST){
-			unset($_POST["campo"]["guardar"]);
+            unset($_POST["campo"]["guardar"]);
                         
-			$campo = Util::set_fieldset("campo");                     
+            $campo = Util::set_fieldset("campo");   
+            $camporamo = $this->input->post('camporamo');   
+
 
             if($campo['tipo_identificacion'] == 'natural'){
                 //formato de identificacion
@@ -534,79 +555,100 @@ class Agentes extends CRM_Controller
             }
 
             
-			if(!isset($campo['uuid'])){
-				$campo['id_empresa'] = $campo['empresa_id'];
+            if(!isset($campo['uuid'])){
+                $campo['id_empresa'] = $campo['empresa_id'];
                 $campo['fecha_creacion'] = date('Y-m-d H:i:s');
-				$campo['estado'] = 'Por Aprobar';
-			}
+                $campo['estado'] = 'Por Aprobar';
+            }
             
-			Capsule::beginTransaction();
-			try {
-				if(!isset($campo['uuid'])){//crear agente
+            Capsule::beginTransaction();
+            try {
+                if(!isset($campo['uuid'])){//crear agente
                     $agente = AgentesModel::create($campo);
                     $fieldset = array();
-                    if($this->input->post('ramos')!=NULL){
+                    if($camporamo != NULL && $camporamo != "" ){
+                        $camporamo = trim($camporamo, "-");
+                        $ramoindex = explode("-", $camporamo);
                         $participacion = $this->input->post('porcentaje_participacion');
-                        foreach ($this->input->post('ramos') as $key => $value) {
-                            if ($value!="" AND $value!=NULL) {
-                                $fieldset['id_ramo'] = $value;
-                                $fieldset["id_agente"] = $agente->id;
-                                //$fieldset["created_at"] = date('Y-m-d H:i:s');
-                                $fieldset["participacion"] = $participacion[$key];
-                                AgentesRamosModel::create($fieldset);
+
+                        foreach ($ramoindex as $key => $value) {
+                            if ($value!="" AND $value!=NULL AND !empty($value)) {
+
+                                $value = trim($value, ",");
+                                $ramoval = explode(",", $value);
+
+                                foreach ($ramoval as $k => $v) {
+                                    $fieldset['id_ramo'] = $v;
+                                    $fieldset["id_agente"] = $agente->id;
+                                    $fieldset["participacion"] = $participacion[$key];
+                                    AgentesRamosModel::create($fieldset);
+                                }                                        
                             }                                
                         }
+
                     }
-				}else{
+                }else{
+                    //Actualizar Agente
                     $agenteObj  = new Buscar(new AgentesModel(),'uuid_agente');
                     $agente = $agenteObj->findByUuid($campo['uuid']);
                     if(is_null($agente)){
-					       $mensaje = array('tipo' =>'error', 'mensaje' =>' Su solicitud no fue procesada', 'titulo'=>'<strong>¡Error!</strong>');
-					       $this->session->set_flashdata('mensaje', $mensaje);
+                           $mensaje = array('tipo' =>'error', 'mensaje' =>' Su solicitud no fue procesada', 'titulo'=>'<strong>¡Error!</strong>');
+                           $this->session->set_flashdata('mensaje', $mensaje);
                             redirect(base_url('agentes/listar'));
                     }else{
-					    unset($campo['uuid']);
+                        unset($campo['uuid']);
                         $agente->update($campo);
                         if (isset($agente)) {
                             AgentesRamosModel::where('id_agente', $agente->id)->delete();
                             $fieldset = array();
-                            if($this->input->post('ramos')!=NULL){
+                            if($camporamo != NULL && $camporamo != "" ){
+                                $camporamo = trim($camporamo, "-");
+                                $ramoindex = explode("-", $camporamo);
                                 $participacion = $this->input->post('porcentaje_participacion');
-                                foreach ($this->input->post('ramos') as $key => $value) {
-                                    if ($value!="" AND $value!=NULL) {
-                                        $fieldset['id_ramo'] = $value;
-                                        $fieldset["id_agente"] = $agente->id;
-                                        //$fieldset["created_at"] = date('Y-m-d H:i:s');
-                                        $fieldset["participacion"] = $participacion[$key];
-                                        AgentesRamosModel::create($fieldset);
+
+                                foreach ($ramoindex as $key => $value) {
+                                    if ($value!="" AND $value!=NULL AND !empty($value)) {
+
+                                        $value = trim($value, ",");
+                                        $ramoval = explode(",", $value);
+
+                                        foreach ($ramoval as $k => $v) {
+                                            $fieldset['id_ramo'] = $v;
+                                            $fieldset["id_agente"] = $agente->id;
+                                            //$fieldset["created_at"] = date('Y-m-d H:i:s');
+                                            $fieldset["participacion"] = $participacion[$key];
+                                            AgentesRamosModel::create($fieldset);
+                                        }                                        
                                     }                                
                                 }
+                                
                             }
                         }
                     }
-				}
-				Capsule::commit();
-			}catch(ValidationException $e){
-				log_message('error', $e);
-				Capsule::rollback();
-			}
+                }
+                Capsule::commit();
+            }catch(ValidationException $e){
+                log_message('error', $e);
+                Capsule::rollback();
+            }
 
-			if(!is_null($agente)){
-				//$mensaje = array('clase' =>'alert-success', 'contenido' =>'<b>¡&Eacute;xito!</b> Se ha guardado correctamente '.$agente->nombre);
+
+            if(!is_null($agente)){
+                //$mensaje = array('clase' =>'alert-success', 'contenido' =>'<b>¡&Eacute;xito!</b> Se ha guardado correctamente '.$agente->nombre);
                 $mensaje = array('tipo' =>'success', 'mensaje' =>' Se ha guardado correctamente '.$agente->nombre, 'titulo'=>'<b>¡&Eacute;xito!</b>');
-			}else{
-				$mensaje = array('tipo' =>'error', 'mensaje' =>' Su solicitud no fue procesada', 'titulo' => '<strong>¡Error!</strong>');
-			}
+            }else{
+                $mensaje = array('tipo' =>'error', 'mensaje' =>' Su solicitud no fue procesada', 'titulo' => '<strong>¡Error!</strong>');
+            }
 
 
-		}else{
-			$mensaje = array('tipo' =>'error', 'mensaje' =>' Su solicitud no fue procesada', 'titulo' => '<strong>¡Error!</strong>');
-		}
+        }else{
+            $mensaje = array('tipo' =>'error', 'mensaje' =>' Su solicitud no fue procesada', 'titulo' => '<strong>¡Error!</strong>');
+        }
 
-		$this->session->set_flashdata('mensaje', $mensaje);
-		redirect(base_url('agentes/listar'));
+        $this->session->set_flashdata('mensaje', $mensaje);
+        redirect(base_url('agentes/listar'));
 
-	}
+    }
 
     public function existsIdentificacion() {
             $campo = Util::set_fieldset("campo");
@@ -694,7 +736,7 @@ class Agentes extends CRM_Controller
     }   
 
     function ver($uuid=NULL) {
-		$data=array();
+        $data=array();
 
         /*if ($this->auth->has_permission('acceso', 'agentes/ver-agente/(:any)') == false) {
             redirect(base_url('agentes/listar'));
@@ -703,37 +745,34 @@ class Agentes extends CRM_Controller
             redirect(base_url('agentes/listar'));
         }
 
-    	$this->assets->agregar_css(array(
-    		'public/assets/css/default/ui/base/jquery-ui.css',
-    		'public/assets/css/default/ui/base/jquery-ui.theme.css',
-    		'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
-    		'public/assets/css/plugins/jquery/switchery.min.css',
+        $this->assets->agregar_css(array(
+            'public/assets/css/default/ui/base/jquery-ui.css',
+            'public/assets/css/default/ui/base/jquery-ui.theme.css',
+            'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
+            'public/assets/css/plugins/jquery/switchery.min.css',
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
             'public/assets/css/modules/stylesheets/agentes.css',
             'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
-    	));
-    	$this->assets->agregar_js(array(
-    		'public/assets/js/plugins/ckeditor/ckeditor.js',
+            'public/assets/css/plugins/jquery/chosen/chosen.min.css',
+        ));
+        $this->assets->agregar_js(array(
+            'public/assets/js/plugins/ckeditor/ckeditor.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
-    		'public/assets/js/plugins/ckeditor/adapters/jquery.js',
-    		'public/assets/js/plugins/bootstrap/bootstrap-tagsinput.js',
-    		'public/assets/js/plugins/jquery/switchery.min.js',
-    		'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
-    		'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
-    		'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
-    		'public/assets/js/default/formulario.js',
+            'public/assets/js/plugins/ckeditor/adapters/jquery.js',
+            'public/assets/js/plugins/bootstrap/bootstrap-tagsinput.js',
+            'public/assets/js/plugins/jquery/switchery.min.js',
+            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
+            'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
+            'public/assets/js/default/formulario.js',
             'public/assets/js/modules/agentes/ver.js',
             'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js'
-    	));
+            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+            'public/assets/js/plugins/jquery/chosen.jquery.min.js',
+        ));
 
-    	//Agregra variables PHP como variables JS
-    	$this->assets->agregar_var_js(array(
-    		"id_agente" => $uuid,
-    		"permiso_editar_agente" => $this->auth->has_permission('ver__editarAgente', 'agentes/ver/(:any)') == true ? 'true' : 'false',
-    	));
 
         if ($this->auth->has_permission('ver__estadoAgente', 'agentes/ver/(:any)') ==  true) {
             $data['info']['estadoAgente'] = 1;
@@ -753,9 +792,9 @@ class Agentes extends CRM_Controller
         if($this->auth->has_permission('ver__editarAgente', 'agentes/ver/(:any)')==true){ $guardar =1; } else { $guardar =0; }
 
         $data['info']['politicas']=$this->politicas;
-        $data['info']['politicas_general']=$this->politicas_general;
+        $data['info']['politicasgeneral']=$this->politicas_general;
+        $data['info']['politicasgenerales']= $this->politicas_generales;
         $data['info']['guardar']=$guardar;
-
 
         if(is_null($uuid)){
             //$mensaje = array('clase' =>'alert-warning', 'contenido' =>'<strong>¡Error!</strong> Su solicitud no fue procesada');
@@ -777,6 +816,7 @@ class Agentes extends CRM_Controller
                 $data['info']['agente']['letraUnica']= $agente['letra'];
                 $identificacion = $agente['identificacion'];
 
+				
                 if ($agente['tipo_identificacion']=="natural") {
                     if($agente['letra'] == '0' || empty($agente['letra']) || !isset($agente['letra'])){
                         list($provincia, $tomo, $asiento) =  explode("-", $identificacion);
@@ -813,9 +853,25 @@ class Agentes extends CRM_Controller
                     $data['info']['agente']['tipo_identificacion'] = "pasaporte";
                 }
 
-                $agtramos = AgentesRamosModel::where('id_agente','=', $agente->id)->get(array('id_ramo','participacion'));
+                $agtramos = AgentesRamosModel::where('id_agente','=', $agente->id)->orderBy("participacion", "ASC")->get(array('id_ramo','participacion'));
+                $agtramos2 = AgentesRamosModel::where('id_agente','=', $agente->id)->groupBy("participacion")->orderBy("participacion", "ASC")->get(array('id_ramo','participacion'));
+
+                $arr = array();
+                
+
+                foreach ($agtramos as $value) {
+                    $p = $value['participacion'];
+                    if ( !isset($arr[''.$p.''])) {
+                        $arr[''.$p.''] = array();
+                    }
+                    array_push($arr[''.$p.''], $value['id_ramo']);
+                }
+                $data['info']['agente']['ramosp'] = $arr;
+
+
                 $data['info']['agente']['ramos'] = $agtramos->toArray();
                 $data['info']['agente']['countramos'] = AgentesRamosModel::where('id_agente','=', $agente->id)-> count();
+                $data['info']['agente']['ramosgroup'] = $agtramos2->toArray();
                 $data['info']['menu_crearramos'] = $this->ramoRepository->listar_cuentas($clause);
                  $data['info']['menu_crear'] = Ramos::where('padre_id','<>','0')
                 ->where('padre_id','<>','"id"')
@@ -825,6 +881,14 @@ class Agentes extends CRM_Controller
             }
         }
         $data['uuid_agente'] = $agente['uuid_agente'];
+
+
+        //Agregra variables PHP como variables JS
+        $this->assets->agregar_var_js(array(
+            "id_agente" => $uuid,
+            "permiso_editar_agente" => $this->auth->has_permission('ver__editarAgente', 'agentes/ver/(:any)') == true ? 'true' : 'false',
+            "countramos" => AgentesRamosModel::where('id_agente','=', $agente->id)-> count(),
+        ));
       
 
         $menubreadcrumb = array(
@@ -836,30 +900,51 @@ class Agentes extends CRM_Controller
 
 
         $this->template->agregar_breadcrumb(array(
-    		"titulo" => '<i class="fa fa-child"></i> '.$data['info']['agente']['nombre']." ".$data['info']['agente']['apellido'],
-    		"ruta" => array(
-    			0 => array(
-    				"nombre" => "Seguros",
-    				"activo" => false
-    			),
-    			1 => array(
-    				"nombre" => 'Agentes',
-    				"url"	=> 'agentes/listar',
-    				"activo" => false
-    			),
-    			2 => array(
-    				"nombre" => $data['info']['agente']['nombre']." ".$data['info']['agente']['apellido'],
-    				"activo" => true
-    			)
-    		),
+            "titulo" => '<i class="fa fa-child"></i> '.$data['info']['agente']['nombre']." ".$data['info']['agente']['apellido'],
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Seguros",
+                    "activo" => false
+                ),
+                1 => array(
+                    "nombre" => 'Agentes',
+                    "url"   => 'agentes/listar',
+                    "activo" => false
+                ),
+                2 => array(
+                    "nombre" => $data['info']['agente']['nombre']." ".$data['info']['agente']['apellido'],
+                    "activo" => true
+                )
+            ),
             "menu" => $menubreadcrumb
-    	));
+        ));
         
-		$data["subpanels"] = [];
-		
-    	$this->template->agregar_contenido($data);
-    	$this->template->visualizar();
+        $data["subpanels"] = [];
+        
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar();
     }
+	
+	function ajax_cambiar_agente_principal(){
+		$id=$this->input->post('id');
+
+		$principal['principal']=0;
+		$agentes_no_principales=$this->AgentesModel->where('id_empresa',$this->empresa_id)->update($principal);
+		$agente=$this->AgentesModel->find($id);
+		$agente->principal=1;
+		$agente->save();
+		
+		
+		$agente_actualizado=$agente->toArray();
+		$resources['datos']=$agente_actualizado;
+		/*$resources['datos']['uuid_contacto']=bin2hex($contacto['uuid_contacto']);
+		$resources['datos']['nombre_aseguradora']=$nombre_aseguradora;
+		$resources['datos']['principal']=1;*/
+		
+		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($resources))->_display();
+		exit;
+	}
+
 
     private function _js() {
         $this->assets->agregar_js(array(

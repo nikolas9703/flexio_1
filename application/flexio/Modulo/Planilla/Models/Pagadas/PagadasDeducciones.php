@@ -7,7 +7,7 @@ use Flexio\Modulo\ConfiguracionPlanilla\Models\Deducciones;
 class PagadasDeducciones extends Model
 {
 	protected $table = 'pln_pagadas_deducciones';
-	protected $fillable = ['planilla_pagada_id', 'deduccion_id','nombre','descuento','saldo','fecha_creacion'];
+	protected $fillable = ['planilla_pagada_id', 'deduccion_id','nombre','descuento','descuento_patronal','saldo','fecha_creacion'];
 	protected $guarded = ['id'];
 	public $timestamps = false;
 

@@ -10,10 +10,11 @@ use Flexio\Modulo\FacturasVentas\Models\FacturaVenta;
 use Flexio\Modulo\Comentario\Models\Comentario as Comentario;
 use Flexio\Modulo\Historial\Models\Historial;
 use Flexio\Modulo\FacturasCompras\Observer\FacturaComprasObserver;
+use Flexio\Notifications\Notify;
 
 class Facturas_compras_orm extends Model
 {
-
+    use Notify;
     protected $table = 'faccom_facturas';
     protected $fillable = ['codigo', 'proveedor_id', 'empresa_id', 'fecha_hasta', 'fecha_desde', 'factura_proveedor', 'estado', 'created_by', 'comentario', 'termino_pago', 'fecha_termino_pago', 'item_precio_id', 'subtotal', 'impuestos', 'total', 'bodega_id', 'centro_contable_id', 'cotizacion_id', 'referencia', 'orden_venta_id', 'porcentaje_retencion'];
     protected $guarded = ['id', 'uuid_factura'];
@@ -305,11 +306,13 @@ class Facturas_compras_orm extends Model
 
     public function scopeDeEstado($query, $estado_id)
     {
+        if(is_array($estado_id))return $query->whereIn("estado_id", array_filter($estado_id));
         return $query->where("estado_id", $estado_id);
     }
 
     public function scopeDeCentroContable($query, $centro_contable_id)
     {
+
         return $query->where("centro_contable_id", $centro_contable_id);
     }
 
@@ -341,15 +344,12 @@ class Facturas_compras_orm extends Model
 
     public function scopeDeTipo($query, $tipo_id)
     {
-        //18 - tipo compra
-        //19 - tipo subcontrato
-
-        //$aux = $tipo_id == "18" ? "Ordenes_orm" : "Flexio\\Modulo\\SubContratos\\Models\\SubContrato";
-        if ($tipo_id == "18")
-            $aux = array("Ordenes_orm", "");
-        else
-            $aux = array("Flexio\\Modulo\\SubContratos\\Models\\SubContrato");
-        return $query->whereIn("operacion_type", $aux);
+        if ($tipo_id == "19"){
+            return $query->where("operacion_type", "Flexio\Modulo\SubContratos\Models\SubContrato");
+        }elseif ($tipo_id == "18") {
+            return $query->whereRaw("operacion_type IN ('Ordenes_orm', '')");
+        }
+        return $query;
     }
 
     public function scopeDeMontoMayorIgual($query, $monto)
@@ -420,6 +420,12 @@ class Facturas_compras_orm extends Model
 
     }
 
+    public function creditos_aplicados()
+    {
+        return $this->hasMany('Flexio\Modulo\CreditosAplicados\Models\CreditoAplicado', 'acreditable_id')
+        ->where('cre_creditos_aplicados.acreditable_type', 'Flexio\Modulo\FacturasCompras\Models\FacturaCompra');
+    }
+
     public function getSaldoAttribute()
     {
         $nota_debito_total = $this->nota_debito()->where('compra_nota_debitos.estado', 'aprobado')->sum('compra_nota_debitos.total');
@@ -429,15 +435,23 @@ class Facturas_compras_orm extends Model
         if (!empty($this->empresa) && !empty($this->proveedor)) {
             if($this->empresa->retiene_impuesto == "si"
             && $this->proveedor->retiene_impuesto == 'no'
-            && $this->total > 500){
-               
-              $aux = round($this->total,2,PHP_ROUND_HALF_UP) - (round($this->facturas_items->sum('retenido') ,2,PHP_ROUND_HALF_UP) + $this->pagos_aplicados_suma) - $nota_debito_total - $this->retencion;
+            && $this->total > 0){
+
+              $aux = round($this->total,2,PHP_ROUND_HALF_UP)
+              - (round($this->facturas_items->sum('retenido') ,2,PHP_ROUND_HALF_UP) + $this->pagos_aplicados_suma)
+              - $nota_debito_total
+              - $this->retencion
+              - $this->creditos_aplicados->sum('total');
               return $aux < 0 ? 0 : round($aux,2,PHP_ROUND_HALF_UP);
             }
         }
 
     //     dd( "$this->total - $this->pagos_aplicados_suma - $nota_debito_total - $this->retencion");
-        $aux = $this->total - $this->pagos_aplicados_suma - $nota_debito_total - $this->retencion;
+        $aux = $this->total
+        - $this->pagos_aplicados_suma
+        - $nota_debito_total
+        - $this->retencion
+        - $this->creditos_aplicados->sum('total');
 
 
         return $aux < 0 ? 0 : $aux;
@@ -460,5 +474,15 @@ class Facturas_compras_orm extends Model
     }
     public function historial(){
         return $this->morphMany(Historial::class,'historiable');
+    }
+    public function getModuloNotificacionesAttribute() {
+        return '\Flexio\Modulo\FacturasCompras\Notifications\FacturasUpdated';
+    }
+    public function getModuloIdAttribute()
+    {
+        return 36;//table modulos(id)
+    }
+    public function getIconoAttribute(){
+      return 'fa fa-shopping-cart';
     }
 }

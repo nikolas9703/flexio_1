@@ -13,7 +13,7 @@ class FacturaVentaRepositorio{
 
     function getFacturas($empresa_id){
 
-       $this->builder->where('empresa_id',$empresa_id);
+       $this->builder->where('empresa_id',$empresa_id)->where("formulario","!=","facturas_seguro");
        return $this;
     }
 

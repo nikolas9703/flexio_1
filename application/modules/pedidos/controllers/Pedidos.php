@@ -25,10 +25,14 @@ use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\Inventarios\Repository\UnidadesRepository;
 use Flexio\Modulo\Inventarios\Repository\ItemsCatRepository;
 use Flexio\Modulo\OrdenesCompra\Repository\OrdenesCompraRepository;
+use Flexio\Library\Util\AuthUser;
+use Flexio\Modulo\Contabilidad\Models\CuentasCentro;
+use Flexio\Modulo\Busqueda\Repository\BusquedaRepository;
+use Flexio\Modulo\Politicas\Repository\PoliticasRepository;
+use Flexio\Modulo\Politicas\Models\PoliticasCatalogo;
 
 //utils
 use Flexio\Library\Util\FlexioSession;
-
 use Carbon\Carbon;
 
 
@@ -49,7 +53,8 @@ class Pedidos extends CRM_Controller
     protected $UnidadesRepository;
     protected $ItemsCatRepository;
     protected $OrdenesCompraRepo;
-
+    protected $BusquedaRepository;
+    protected $PoliticasRepository;
     //utils
     protected $FlexioSession;
 
@@ -93,6 +98,8 @@ class Pedidos extends CRM_Controller
         $this->UnidadesRepository = new UnidadesRepository;
         $this->ItemsCatRepository = new ItemsCatRepository;
         $this->OrdenesCompraRepo = new OrdenesCompraRepository;
+        $this->BusquedaRepository = new BusquedaRepository;
+        $this->PoliticasRepository = new PoliticasRepository;
         //utils
         $this->FlexioSession = new FlexioSession;
 
@@ -147,7 +154,7 @@ class Pedidos extends CRM_Controller
             'public/assets/js/plugins/jquery/fileinput/fileinput_locale_es.js',
             'public/assets/js/default/grid.js',
             'public/assets/js/default/subir_documento_modulo.js',
-
+            'public/assets/js/default/lodash.min.js',
             /* Archivos js para la vista de Crear Actividades */
             //'public/assets/js/plugins/ckeditor/ckeditor.js',
             //'public/assets/js/plugins/ckeditor/adapters/jquery.js',
@@ -164,6 +171,7 @@ class Pedidos extends CRM_Controller
 
             /* Archivos js del propio modulo*/
             'public/assets/js/modules/pedidos/listar.js',
+            'public/assets/js/default/parametros_busqueda.js'
         ));
 
     	/*
@@ -317,17 +325,42 @@ class Pedidos extends CRM_Controller
             $breadcrumb["menu"]["url"] = "pedidos/crear/";
         }
 
+        $breadcrumb["menu"]["opciones"]["#convertirOrdenBtn"] = "Convertir a orden de compra";
+
         //Verificar si tiene permiso de Exportar
         if ($this->auth->has_permission('listar__exportarPedidos', 'pedidos/listar')){
             $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
+            $breadcrumb["menu"]["opciones"]["#cambiarEstado"] = "Cambiar de estado";
         }
 
+       $data["modulo"] = $this->FlexioSession->uri()->segment(1);
+       $data['menu_busqueda'] = $this->BusquedaRepository->get([
+         'busquedable_type' =>  $this->FlexioSession->uri()->segment(1)
+      ]);
+      //politicas para cambio de estado en modal
+      $politicas = PoliticasCatalogo::where('tipo', 'pedido')->pluck('estado2')->toArray();      
+      $estados = Pedidos_estados_orm::whereIn('id_cat', $politicas)->orderBy("id_cat", "ASC")->get();
+      $labelEstado = $estados[0]->labelEstado;      
+      $this->assets->agregar_var_js(array(
+        "estados" => $estados,
+        "label_estados" => json_encode($labelEstado),
+      ));
     	$this->template->agregar_titulo_header('Listado de Pedidos');
     	$this->template->agregar_breadcrumb($breadcrumb);
     	$this->template->agregar_contenido($data);
     	$this->template->visualizar($breadcrumb);
 
     }
+
+    public function ajax_get_cuentas_contables(){
+               if(!$this->input->is_ajax_request()){
+                  return false;
+              }
+              $centro = $this->CentrosContablesRepository->findByUuid($this->input->post('uuid_centro'));
+              $response = CuentasCentro::where("centro_id",$centro->id)->where('empresa_id',$this->id_empresa)->get()->load('cuentas_info');
+              $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+              exit();
+      }
 
     public function ajax_obtener_item()
     {
@@ -472,6 +505,7 @@ class Pedidos extends CRM_Controller
             $fecha2     = $this->input->post('fecha2', true);
             $centro     = $this->input->post('centro', true);
             $estado     = $this->input->post('estado', true);
+            $estado     = !empty($estado) ? (is_array($estado) ? $estado : array($estado)) : array();
             $referencia = $this->input->post('referencia', true);
             $numero     = $this->input->post('numero', true);
 
@@ -517,9 +551,9 @@ class Pedidos extends CRM_Controller
                 $registros          = $registros->where("ped_pedidos.uuid_centro", "=", hex2bin(strtolower($centro)));
                 $registros_count    = $registros_count->where("ped_pedidos.uuid_centro", "=", hex2bin(strtolower($centro)));
             }
-            if(!empty($estado)){
-                $registros          = $registros->where("ped_pedidos.id_estado", "=", $estado);
-                $registros_count    = $registros_count->where("ped_pedidos.id_estado", "=", $estado);
+            if(!empty(array_filter($estado))){
+                $registros          = $registros->whereIn("ped_pedidos.id_estado", array_filter(array_unique($estado)));
+                $registros_count    = $registros_count->whereIn("ped_pedidos.id_estado", array_filter(array_unique($estado)));
             }
             if(!empty($referencia)){
                 $registros          = $registros->where("ped_pedidos.referencia", "like", "%$referencia%");
@@ -531,7 +565,12 @@ class Pedidos extends CRM_Controller
                 $registros          = $registros->where("ped_pedidos.numero", "like", "%$numero%");
                 $registros_count    = $registros_count->where("ped_pedidos.numero", "like", "%$numero%");
             }
-
+            //filtro de pedidos por la categoria del usuario
+            $categorias_items = AuthUser::usuarioCategoriaItems();
+            if(!in_array('todos', $categorias_items)){
+                  $registros=$registros->deCategoria($categorias_items);
+                  $registros_count=$registros_count->deCategoria($categorias_items);
+            }
 
             /**
              * Total rows found in the query.
@@ -620,20 +659,21 @@ class Pedidos extends CRM_Controller
                     }
 
                     if($row->estado->id_cat == 4){
-                        $enlace_estado = '<span class="label label-information" style="background-color:#5cb85c; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
+                        $enlace_estado = '<span class="label label-information cambiarEstado" data-id="'.$row->id.'" style="background-color:#5cb85c; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
                     }
                     elseif($row->estado->id_cat == 5){
-                        $enlace_estado = '<span class="label label-information" style="background-color:red; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
+                        $enlace_estado = '<span class="label label-information cambiarEstado" data-id="'.$row->id.'" style="background-color:red; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
                     }
                     else{
-                        $enlace_estado = '<span class="label label-information" style="background-color:#1C84C6; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
+                        $enlace_estado = '<span class="label label-information cambiarEstado" data-id="'.$row->id.'" style="background-color:#1C84C6; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
                     }
                     $validado = $row->validado == 'si'?'  <span class="btn btn-info btn-circle"><i class="fa fa-check"></i></span>':'';
 
                     if( $row->validado == 'no' )
-                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success validarPedido" >Validar</a>';
-
-
+                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success validarPedido" >Validar</a>';                        
+                    if($this->auth->has_permission('acceso', 'pedidos/ver/(:any)')){
+                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success cambiarEstado" >Cambiar estado</a>';    
+                    }
                     //Si no tiene acceso a ninguna opcion
                     //ocultarle el boton de opciones
                     if($hidden_options == ""){
@@ -649,6 +689,8 @@ class Pedidos extends CRM_Controller
                         $enlace_estado,
                         $link_option,
                         $hidden_options,
+                        count($row->centro) ? $row->centro->id : '',
+                        count($row->bodega) ? $row->bodega->id : ''
                     );
                     $i++;
                 }
@@ -847,19 +889,30 @@ class Pedidos extends CRM_Controller
             'public/resources/compile/modulos/pedidos/formulario.js'
         ));
 
-        //catalogos
-        //$clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true, 'conItems' => true, 'comprador' => true, 'tipo_cuenta_id' => 5];
+        if(!empty($data)){
+                   $pedido = $this->PedidoRepository->find($data->id);
+                   $centro = $this->CentrosContablesRepository->findByUuid($pedido->uuid_centro);
+        }
+
         $clause = ['empresa_id'=>$this->id_empresa,'ordenables'=>true,'transaccionales'=>true,'conItems'=>true, 'estado != por_aprobar']; // Requerimiento: listar todas las cuentas
+        $usuario_id=$this->id_usuario;
+        $compradores = collect([]);
+        if ($data == null || empty($data)) {
+            $compradores = Usuario_orm::findById($this->FlexioSession->usuarioId())->get();
+        } else {
+            $compradores = Usuario_orm::where('id', $data->creado_por)->get();
+            $usuario_id=$data->creado_por;
+        }
         $this->assets->agregar_var_js(array(
             'bodegas' => $this->BodegasRepository->getCollectionBodegas($this->BodegasRepository->get($clause)),
-            'usuario_id' => $this->id_usuario,
+            'usuario_id' => $usuario_id,
             'compradores' => $this->UsuariosRepository->getCollectionUsuarios($this->UsuariosRepository->get($clause)),
             'centros_contables' => $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause)),
             'estados' => $this->PedidosCatRepository->get(['campo_id'=>'7']),
             'tipos_item' => $this->ItemsCatRepository->get(['valor'=>'tipo']),
             'unidades' => $this->UnidadesRepository->get($clause),
             'categorias' => $this->ItemsCategoriasRepository->getCollectionCategorias($this->ItemsCategoriasRepository->get($clause)),
-            'cuentas' => $this->CuentasRepository->get($clause),
+            'cuentas' => Collect([]),
             'impuestos' => $this->ImpuestosRepository->get($clause)
         ));
 
@@ -1004,9 +1057,24 @@ class Pedidos extends CRM_Controller
             'politica_transaccion' => collect([])
         ));
 
-    	$breadcrumb = array(
-            "titulo" => '<i class="fa fa-shopping-cart"></i> Crear pedido'
-    	);
+        $breadcrumb = array(
+                "titulo" => '<i class="fa fa-shopping-cart"></i> Crear pedido',
+      	         "ruta" => array(
+                        0 => array(
+                          "nombre" => "Compras",
+                          "activo" => false,
+                        ),
+                         1 => array(
+                           "nombre" => "Pedidos",
+                             "activo" => false,
+                               "url" => 'pedidos/listar'
+                          ),
+                          2 => array(
+                              "nombre" => "<b>Crear</b>",
+                              "activo" => true,
+                           )
+                 ),
+            );
 
         $data['mensaje'] = $mensaje;
         $this->template->agregar_titulo_header('Pedidos');
@@ -1045,7 +1113,7 @@ class Pedidos extends CRM_Controller
     	//para mostrarlo en caso de haber error
     	$data["message"] = $mensaje;
 
- 
+
       $breadcrumb = array(
           "titulo" => '<i class="fa fa-shopping-cart"></i> Pedido '.$pedido->numero,
           "ruta" => array(
@@ -1066,10 +1134,11 @@ class Pedidos extends CRM_Controller
 
           ),
       );
-   
+
         $breadcrumb["menu"]["opciones"]["pedidos/historial/" . $pedido->uuid_pedido] = "Ver bit&aacute;cora";
         //Importante -> para subpanel -> cambiar por id...
         $data["pedido_id"] = $pedido->id;
+        $data["pedido_obj"] = $pedido;
         $this->template->agregar_titulo_header('Pedidos');
     	$this->template->agregar_breadcrumb($breadcrumb);
     	$this->template->agregar_contenido($data);
@@ -1146,6 +1215,68 @@ class Pedidos extends CRM_Controller
       $this->template->agregar_contenido($data);
       $this->template->visualizar();
 
+    }
+    function ajax_cambiar_estado() {
+        if(empty($_POST)){
+            return false;
+        }
+          
+        $id = $this->input->post('pedido_id', true);        
+        $estado_id = $this->input->post('estado_id', true);  
+        $empresa_id = $this->id_empresa;
+        $id = explode(',', $id);
+        if (count($id) > 1){
+        foreach ($id as &$row)
+        {
+            $row = hex2bin(strtolower($row));
+        }             
+        $id  = Pedidos_orm::whereIn("uuid_pedido", $id)->get()->pluck('id')->toArray(); 
+        foreach($id as $id_pedido){
+	                try {
+	                    $pedido = $this->PedidoRepository->guardarEstado($id_pedido, $estado_id, $empresa_id);
+	                } catch (\Exception $e) {
+	            echo json_encode(array(
+                'response' => false,
+                'mensaje' => $e->getMessage(),
+            ));
+            exit;
+	                }   
+        }                
+        }else{
+        $id = $id[0];    
+        
+        try { 
+        $pedido = $this->PedidoRepository->guardarEstado($id, $estado_id, $empresa_id);
+        } catch (\Exception $e) {
+            echo json_encode(array(
+                'response' => false,
+                'mensaje' => $e->getMessage(),
+            ));
+            exit;
+        }
+        }
+        echo json_encode(array(
+            'response' => true,
+            'mensaje' => 'Se actualiz&oacute; el estado correctamente.',
+        ));
+        exit;       
+
+    }
+
+    public function ajax_convetir_a_orden() {
+
+      if(!$this->input->is_ajax_request()){
+        return false;
+      }
+
+      $pedidos = $this->input->post("pedido_id", true);
+
+      //verificar si existe $pedido_id
+      if(empty($pedidos)){
+        return false;
+      }
+
+      $pedido = $this->PedidoRepository->convetir_a_orden($pedidos);
     }
 
 }

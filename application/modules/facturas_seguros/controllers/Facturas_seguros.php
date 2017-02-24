@@ -1304,8 +1304,12 @@ private function _sync_items($factura, $items){
         $imp = Impuesto::where("id", $id_impuesto)->first();
 
         $polizas_val = array("aseguradora"=>$aseguradora, "pagador" => $pagador, "metodopago" => $metodopago, "sitiopago" => $sitiopago, "frecuenciapago" => $frecuenciapago, "ramo" => $ramo, "ramo_id" => $idramo, "numeropoliza" => $numeropoliza, "iniciovigencia" => $iniciovigencia, "finvigencia" => $finvigencia, "primaneta" => $primaneta, "cantidadpagos" => $cantidadpagos, "primabruta" => $primabruta);
-
-        $porcentajedescuento = (($factura->descuento)/(($factura->subtotal)+($factura->otros)))*100;
+        if($factura->subtotal == 0 && $factura->otros == 0){
+            $porcentajedescuento = 0;
+        }else{
+            $porcentajedescuento = (($factura->descuento)/(($factura->subtotal)+($factura->otros)))*100;
+        }
+        
         $porcentajedescuento = number_format($porcentajedescuento, 2);
 
         $fac = FacturaSeguro::where("empresa_id", $this->empresa_id)->where("formulario", "facturas_seguro")->where("id_poliza", $factura->id_poliza)->orderBy("id", "ASC")->get();

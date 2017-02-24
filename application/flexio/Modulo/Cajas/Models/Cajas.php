@@ -5,6 +5,8 @@ use \Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Cliente\Models\Asignados;
 use Flexio\Modulo\Documentos\Models\Documentos;
+use Flexio\Modulo\Usuarios\Models\Usuarios;
+
 class Cajas extends Model
 {
     protected $table    = 'ca_cajas';
@@ -50,5 +52,11 @@ class Cajas extends Model
     }
     function documentos(){
     	return $this->morphMany(Documentos::class, 'documentable');
+    }
+    public function getModuloAttribute(){
+        return 'Caja';
+    }
+    function responsable2() {
+        return $this->belongsTo(Usuarios::class, 'responsable_id');
     }
 }

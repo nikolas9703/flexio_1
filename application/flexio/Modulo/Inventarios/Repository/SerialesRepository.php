@@ -10,7 +10,7 @@ use Flexio\Modulo\Inventarios\Models\Items as Items;
 use Flexio\Modulo\Inventarios\Repository\ItemsRepository;
 
 class SerialesRepository{
-
+    //SerialesRepo
     protected $ItemsRepository;
 
     public function __construct()
@@ -23,7 +23,6 @@ class SerialesRepository{
         $seriales = Seriales::where(function($query) use ($clause){
             $this->_filtro($query, $clause);
         });
-
         return $seriales->count();
     }
 
@@ -35,7 +34,6 @@ class SerialesRepository{
 
         if($sidx!=NULL && $sord!=NULL){$seriales->orderBy($sidx, $sord);}
         if($limit!=NULL){$seriales->skip($start)->take($limit);}
-
         return $seriales->get();
     }
 
@@ -80,6 +78,7 @@ class SerialesRepository{
 
         $this->_filtro($seriales, $clause);
 
+        //dd($seriales->get()->toArray(), $clause);
         return $seriales->delete();
     }
 
@@ -93,14 +92,20 @@ class SerialesRepository{
         if(isset($clause["nombre"]) and !empty($clause["nombre"])){$seriales->whereNombre($clause["nombre"]);}
         if(isset($clause["item_id"]) and !empty($clause["item_id"])){$seriales->whereItemId($clause["item_id"]);}
         if(isset($clause["empresa_id"]) and !empty($clause["empresa_id"])){$seriales->whereEmpresaId($clause["empresa_id"]);}
-
+        if(isset($clause['campo']) and !empty($clause['campo']))$seriales->DeFiltro($clause['campo']);
         if(isset($clause["buscar_en"]) and $clause["buscar_en"] == 'bodega')
         {
             if(isset($clause["bodega_id"]) and !empty($clause["bodega_id"])){$seriales->whereBodegaId($clause["bodega_id"]);}
         }
+        elseif(isset($clause["buscar_en"]) and $clause["buscar_en"] == 'cliente')
+        {
+            if(isset($clause["clientes"]) and !empty($clause["clientes"])){$seriales->whereIn('cliente_id', explode(",", $clause['clientes']));}
+            if(isset($clause["centros_facturacion"]) and !empty($clause["centros_facturacion"])){$seriales->whereIn('centro_facturacion_id', explode(",", $clause['centros_facturacion']));}
+        }
+
     }
 
-    public function save($item, $registro_aux = null){
+    public function save($item, $registro_aux = null, $estado = 'disponible'){
 
         SerialesLineas::where("line_id", $item["id_entrada_item"])->delete();
         $itemA = is_numeric($item["item"]) ? Items::find($item["item"]) : Items::findByUuid($item["item"]);
@@ -114,7 +119,8 @@ class SerialesRepository{
                     $registro->nombre = $serial;
                     $registro->item_id = $itemA->id;
                     $registro->empresa_id = $registro ? $registro_aux->empresa_id : 0;
-                    $registro->bodega_id = $registro_aux->operacion->bodega->id;
+                    $this->_setBodegaOrCliente($registro, $registro_aux);
+                    $registro->estado = $estado;
                     $registro->save();
 
                     $serialLinea            = new SerialesLineas();
@@ -123,6 +129,23 @@ class SerialesRepository{
                     $serialLinea->save();
                 }
             }
+        }
+    }
+
+    private function _setBodegaOrCliente($serie, $class)
+    {
+        //class = salida | entrada | ajuste (class format)
+        if(in_array($class->operacion->modulo, ['Orden de venta']))
+        {
+            $serie->cliente_id = $class->operacion->cliente_id;
+            $serie->centro_facturacion_id = $class->operacion->centro_facturacion_id;
+            $serie->bodega_id = 0;
+        }
+        else
+        {
+            $serie->cliente_id = 0;
+            $serie->centro_facturacion_id = 0;
+            $serie->bodega_id = ($class->modulo !== 'Ajuste') ? $class->operacion->bodega->id : $class->bodega->id;
         }
     }
 
@@ -143,7 +166,7 @@ class SerialesRepository{
                     'modulo' => $serie->ultimo_movimiento->modulo,
                     'numero' => $serie->ultimo_movimiento->numero_documento_enlace,
                     'nombre' => $serie->ultimo_movimiento->modulo != 'Ajuste' ? $serie->ultimo_movimiento->externo->nombre : $serie->ultimo_movimiento->ultimo_movimiento_nombre,
-                    'ubicacion' => $serie->ultimo_movimiento->ubicacion->nombre,
+                    'ubicacion' => isset($serie->ultimo_movimiento->ubicacion) ? $serie->ultimo_movimiento->ubicacion->nombre : '',
                     'fecha_hora' => $serie->ultimo_movimiento->fecha_hora,
                 ],
                 'item' => $this->ItemsRepository->getCollectionCampo($serie->items)
@@ -158,16 +181,13 @@ class SerialesRepository{
 
             $hidden_options = $row->hidden_options;
             $link_option = $row->link_option;
-
+            
             $rows[$i]["id"] = $row->id;
             $rows[$i]["cell"] = [
                 $row->numero_documento_enlace,
                 $row->items->nombre_completo,
-                $row->present()->adquisicion,
-                $row->present()->otros_costos,
-                $row->present()->valor_actual,
                 $row->ultimo_movimiento->numero_documento_enlace,
-                count($row->ultimo_movimiento->ubicacion) ? $row->ultimo_movimiento->ubicacion->nombre : 'undefined',
+                $this->_get_ultimo_movimiento($row),
                 $row->present()->estado,//falta migracion
                 $link_option,
                 $hidden_options
@@ -175,5 +195,17 @@ class SerialesRepository{
         }
 
         return $rows;
+    }
+
+    private function _get_ultimo_movimiento($row)
+    {   
+        if(preg_match('/devoluciones_alquiler/', $row->ultimo_movimiento->enlace) && $row->ultimo_movimiento->estado_id == 2)
+        {
+            return count($row->bodega) ? $row->bodega->nombre : '';
+        } else if(preg_match('/ajustes/', $row->ultimo_movimiento->enlace)){
+            return count($row->bodega) ? $row->bodega->nombre : '';
+        }
+
+        return count($row->ultimo_movimiento->ubicacion) ? $row->ultimo_movimiento->ubicacion->nombre : 'undefined';
     }
 }

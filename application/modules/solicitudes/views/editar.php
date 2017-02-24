@@ -1,3 +1,8 @@
+<style type="text/css">
+    body {
+        padding-right: 0px !important;
+    }
+</style>
 <div id="wrapper">
     <?php
     Template::cargar_vista('sidebar');
@@ -127,17 +132,63 @@
         </div>
     </div>
 </div>
+<div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12 individual"  style="display:none;" id="indCoverageCtrl">
+<div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <label>Coberturas</label>    
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <label>Valor</label>    
+        </div>
+        <div id="indCoveragefields">
 
+
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddCoverage">
+            <button class="btn btn-default btn-block addCobertura"><i class="fa fa-plus"></i></button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <label>Deducible</label>    
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <label>Valor</label>    
+        </div>
+        <br>
+        <div  id="indDeductiblefields">
+
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddDeductible">
+            <button class="btn btn-default btn-block addCobertura"><i class="fa fa-plus"></i></button>
+        </div>
+
+    </div>
+    <div class="row btnIndidualCoverage" style="display:none;">
+        <div class="form-group col-xs-12 col-sm-6 col-md-6">
+            <button id="closeModal" class="btn btn-w-m btn-default btn-block" data-dismiss="modal"  type="button" >Cancelar</button>
+        </div>
+        <div class="form-group col-xs-12 col-sm-6 col-md-6">
+            <button id="saveIndividualCoveragebtn" class="btn btn-w-m btn-primary btn-block" type="button">Guardar</button>
+
+        </div>
+
+    </div>
+</div>
 
 <!-- 
     Termina Modal de coberuras y deducciones 
 -->
+
 <?php
 echo Modal::config(array(
     "id" => "verCoberturas",
     "size" => "lg"
 ))->html();
-
+echo Modal::config(array(
+    "id" => "IndCoberturas",
+    "size" => "lg"
+    ))->html();
 echo Modal::config(array(
     "id" => "optionsModal",
     "size" => "sm"

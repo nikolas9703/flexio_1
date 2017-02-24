@@ -2,6 +2,7 @@
 
 $route['pagos/listar'] = 'pagos/listar';
 $route['pagos/crear'] = 'pagos/crear';
+//$route['pagos/listar/(:any)'] = 'pagos/listar/$1';
 //no se para que se usa crear2
 $route['pagos/crear2']                          = 'pagos/crear2';
 $route['pagos/guardar']                         = 'pagos/guardar';
@@ -48,4 +49,11 @@ $route['pagos/ajax-aprobar-pago']       = 'pagos/ajax_aprobar_pago';
 $route['pagos/ajax-aplicar-pago']       = 'pagos/ajax_aplicar_pago';
 
 //Confirmaciocion para anular pago
-$route['pagos/ajax-anular-pago']       = 'pagos/ajax_anular_pago';
+$route['pagos/ajax-anular-pago'] = 'pagos/ajax_anular_pago';
+
+//others
+$route['pagos/ajax-get-empezables'] = 'pagos/ajax_get_empezables';
+$route['pagos/ajax-get-empezable'] = 'pagos/ajax_get_empezable';
+
+//Obtinene los agentes y los provedores 
+$route['pagos/ajax_agentes_proovedores'] = 'pagos/ajax_agentes_proovedores';

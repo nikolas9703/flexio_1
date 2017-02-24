@@ -35,12 +35,12 @@ class Consumos extends Model
     {
         return $this->prefijo.$this->numero;
     }
-    
+
     public function getNumeroAttribute($value)
     {
         return sprintf('%08d', $value);
     }
-    
+
     public function getUuidConsumoAttribute($value)
     {
         return strtoupper(bin2hex($value));
@@ -59,7 +59,7 @@ class Consumos extends Model
             "href"  => $this->enlace,
             "class" => "link"
         ];
-        
+
         $html = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory);
         return $html->setType("HtmlA")->setAttrs($attrs)->setHtml($this->numero_documento)->getSalida();
     }
@@ -85,8 +85,8 @@ class Consumos extends Model
             "style" => "float:right;color:#0070BA;"
         ];
         $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
-        
-        return $html->setType("htmlSpan")->setAttrs($attrs)->setHtml("Consumo")->getSalida(); 
+
+        return $html->setType("htmlSpan")->setAttrs($attrs)->setHtml("Consumo")->getSalida();
     }
     public function getTipoFaAttribute()
     {
@@ -117,6 +117,32 @@ class Consumos extends Model
     public function colaborador() {
         return $this->belongsTo('Flexio\Modulo\Colaboradores\Models\Colaboradores', "uuid_colaborador", "uuid_colaborador");
     }
+
+    public function externo()
+    {
+        return $this->belongsTo('Flexio\Modulo\Colaboradores\Models\Colaboradores', "uuid_colaborador", "uuid_colaborador");
+    }
+
+    public function getModuloAttribute()
+    {
+        return 'Consumo';
+    }
+
+    public function getEdadAttribute()
+    {
+        return Carbon::createFromFormat("d-m-Y", $this->created_at)->diffForHumans();
+    }
+
+    public function getFechaHoraAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->updated_at)->format('d/m/Y @ H:i');
+    }
+
+    public function lines_items()
+    {
+        return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems', 'tipoable');
+    }
+
     public function origen() {
         return $this->belongsTo('Flexio\Modulo\Bodegas\Models\Bodegas', "uuid_bodega", "uuid_bodega");
     }
@@ -130,13 +156,13 @@ class Consumos extends Model
     public function items2() {
         return $this->items();
     }
-    
+
     public function consumos_items(){
-        
+
         return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems','tipoable');
-        
+
     }
-    
+
     //scopes
     public function scopeDeEmpresa($qurey, $empresa_id)
     {

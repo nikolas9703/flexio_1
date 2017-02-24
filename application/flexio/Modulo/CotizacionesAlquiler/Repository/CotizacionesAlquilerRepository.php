@@ -9,12 +9,17 @@ class CotizacionesAlquilerRepository
     private function _filtros($query, $clause)
     {
         if(isset($clause['empresa_id']) and !empty($clause['empresa_id'])){$query->whereEmpresaId($clause['empresa_id']);}
-//        if(isset($clause['codigo']) and !empty($clause['codigo'])){$query->deCodigo($clause['codigo']);}
-//        if(isset($clause['cliente_id']) and !empty($clause['cliente_id'])){$query->whereClienteId($clause['cliente_id']);}
-//        if(isset($clause['fecha_desde']) and !empty($clause['fecha_desde'])){$query->desde($clause['fecha_desde']);}
-//        if(isset($clause['fecha_hasta']) and !empty($clause['fecha_hasta'])){$query->hasta($clause['fecha_hasta']);}
-//        if(isset($clause['estado_id']) and !empty($clause['estado_id'])){$query->whereEstadoId($clause['estado_id']);}
-        if(isset($clause['uuid_cotizacion']) and !empty($clause['uuid_cotizacion'])){$query->whereUuidCotizacion(hex2bin($clause['uuid_cotizacion']));}
+//      if(isset($clause['codigo']) and !empty($clause['codigo'])){$query->deCodigo($clause['codigo']);}
+//      if(isset($clause['cliente_id']) and !empty($clause['cliente_id'])){$query->whereClienteId($clause['cliente_id']);}
+//      if(isset($clause['fecha_desde']) and !empty($clause['fecha_desde'])){$query->desde($clause['fecha_desde']);}
+//      if(isset($clause['fecha_hasta']) and !empty($clause['fecha_hasta'])){$query->hasta($clause['fecha_hasta']);}
+//		if(isset($clause['estado_id']) and !empty($clause['estado_id'])){$query->whereEstadoId($clause['estado_id']);}
+		if(isset($clause['uuid_cotizacion']) and !empty($clause['uuid_cotizacion'])){
+			$query->whereUuidCotizacion(hex2bin($clause['uuid_cotizacion']));
+		}
+        if(isset($clause['ids']) and !empty($clause['ids'])){
+			$query->whereIn('id',$clause["ids"]);
+		}
     }
 
 //    private function _getHiddenOptions($cotizacion_alquiler, $auth)
@@ -96,25 +101,37 @@ class CotizacionesAlquilerRepository
 //
 //    }
 
-//    public function getCollectionExportar($cotizaciones_alquiler)
-//    {
-//        $aux = [];
-//
-//        foreach ($cotizaciones_alquiler as $cotizacion_alquiler)
-//        {
-//            $aux[] = [
-//                $cotizacion_alquiler->numero_documento,
-//                utf8_decode($cotizacion_alquiler->cliente->nombre),
-//                count($cotizacion_alquiler->centro_facturacion) ? utf8_decode($cotizacion_alquiler->centro_facturacion->nombre) : '',
-//                $cotizacion_alquiler->fecha_inicio->format('d/m/Y'),
-//                $cotizacion_alquiler->saldo_facturar_currency,
-//                $cotizacion_alquiler->total_facturado_currency,
-//                $cotizacion_alquiler->estado->nombre,
-//            ];
-//        }
-//
-//        return $aux;
-//    }
+	/*public function getCollectionExportar_bo($cotizaciones_alquiler)
+	{
+		$aux = [];
+
+		foreach ($cotizaciones_alquiler as $cotizacion_alquiler)
+		{
+			$aux[] = [
+				$cotizacion_alquiler->numero_documento,
+				utf8_decode($cotizacion_alquiler->cliente->nombre),
+				$cotizacion_alquiler->fecha_desde,
+				$cotizacion_alquiler->fecha_hasta,
+				$cotizacion_alquiler->centro_contable_id,
+				$cotizacion_alquiler->creado_por,
+				$cotizacion_alquiler->estado,
+			];
+		}
+
+		return $aux;
+	}*/
+	
+	public function getCollectionExportar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
+	//filtros
+		if(is_array($clause["ids"])){
+			$polizas = CotizacionesAlquiler::whereIn('id',$clause["ids"]);
+		}else{
+			$polizas = CotizacionesAlquiler::where('id',$clause["ids"]);
+		}
+	
+		
+		return $polizas->get();
+	}
 
     public function count($clause = array())
     {
@@ -191,6 +208,7 @@ class CotizacionesAlquilerRepository
     function getCotizacionAbierta($clause) {
         return $cotizacion = CotizacionesAlquiler::where(function($query) use($clause) {
                     $query->where('empresa_id', '=', $clause['empresa_id']);
+                    $query->where('tipo', '=', 'alquiler');
                     $query->whereIn('estado', array('aprobado'));
                 })->get();
     }
@@ -203,6 +221,8 @@ class CotizacionesAlquilerRepository
                     if(isset($clause['cotizacion_id']) && !empty($clause['cotizacion_id'])){$query->orWhere('id', $clause['cotizacion_id']);}
                 })->get();
     }
+    
+    
 
      public function getCollectionCotizacionEnContrato($cotizacion){
 

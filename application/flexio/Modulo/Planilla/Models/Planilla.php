@@ -7,8 +7,15 @@ use Flexio\Modulo\Liquidaciones\Models\Liquidacion;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Cliente\Models\Asignados;
 use Flexio\Modulo\Planilla\Models\Pagadas\PagadasColaborador;
-use Flexio\Modulo\Planilla\Models\PlanillaDeducciones;
+use Flexio\Modulo\Planilla\Models\Abiertas\PlanillaDeducciones;
 use Flexio\Modulo\Planilla\Models\Abiertas\PlanillaAcumulados;
+use Flexio\Modulo\Planilla\Models\Abiertas\PlanillaColaborador;
+use Flexio\Modulo\Planilla\Models\Abiertas\PlanillaCentros;
+use Flexio\Modulo\Planilla\Models\Abiertas\PlanillaVacacion;
+use Flexio\Modulo\Vacaciones\Models\Vacaciones;
+
+//use Flexio\Modulo\ConfiguracionPlanilla\Models\Deducciones;  //Este lo agregue para sacar directamnete la deduccion de gastos de representacion
+//
 //Deducciones
 //PagadasColaborador
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
@@ -20,23 +27,24 @@ class Planilla extends Model
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf = ['identificador','semana','ano','secuencial','uuid_planilla','nombre', 'fecha_pago', 'rango_fecha1', 'rango_fecha2', 'monto', 'descuentos', 'colaboradores', 'estado_id','ciclo_colaboradores','activo','empresa_id','centro_contable_id','sub_centro_contable_id','area_negocio','pasivo_id','fecha_creacion','ciclo_id','tipo_id'];
+    protected $keepRevisionOf = [
+      'identificador',
+      'semana','ano','secuencial','uuid_planilla','nombre', 'fecha_pago', 'rango_fecha1', 'rango_fecha2', 'monto', 'descuentos', 'colaboradores', 'estado_id','ciclo_colaboradores',
+    'activo','empresa_id','centro_contable_id','sub_centro_contable_id','area_negocio','pasivo_id','fecha_creacion','ciclo_id','tipo_id','cuenta_debito_id'];
 
     protected $table = 'pln_planilla';
-	protected $fillable = ['id','identificador','semana','ano','secuencial','uuid_planilla','nombre', 'fecha_pago', 'rango_fecha1', 'rango_fecha2', 'monto', 'descuentos', 'colaboradores', 'estado_id','ciclo_colaboradores','activo','empresa_id','centro_contable_id','sub_centro_contable_id','area_negocio',
-  'pasivo_id','fecha_creacion','ciclo_id','tipo_id','total_colaboradores','pagadas_colaboradores','codigo'];
-	protected $guarded = ['id'];
-    protected $appends      = ['icono','codigo','enlace','salario_bruto','salario_neto'];
-	public $timestamps = false;
-
-	//Funciones aprobadas
+	  protected $fillable = ['id','identificador','semana','ano','secuencial','uuid_planilla','nombre', 'fecha_pago', 'rango_fecha1', 'rango_fecha2', 'monto', 'descuentos', 'colaboradores', 'estado_id','ciclo_colaboradores','activo','empresa_id','centro_contable_id','sub_centro_contable_id','area_negocio',
+      'pasivo_id','fecha_creacion','ciclo_id','tipo_id','total_colaboradores','pagadas_colaboradores','codigo','cuenta_debito_id'];
+	  protected $guarded = ['id'];
+    protected $appends      = ['icono','codigo','enlace','salario_bruto','salario_neto' ];
+	  public $timestamps = true;
 
 
-    /**
-     * Register any other events for your application.
-     *
-     * @return void
-     */
+    public function __construct(array $attributes = array()){
+        $this->setRawAttributes(array_merge($this->attributes, array('uuid_planilla' => Capsule::raw("ORDER_UUID(uuid())"))), true);
+        parent::__construct($attributes);
+    }
+
     public static function boot() {
         parent::boot();
     }
@@ -88,30 +96,39 @@ class Planilla extends Model
 	{
 		$this->attributes['uuid_planilla'] = Capsule::raw("ORDER_UUID(uuid())");
 	}
-  //Funcion obsoleta
-	public function acumulados()
-	{
-		return $this->hasMany('Planilla_acumulados_orm', 'planilla_id');
-	}
+/*
+public function deduccionISLRGastoRepresentacion()
+{
+    //Debe ir aqui para halar la deduccion de ISRL, habria q hacer los mismo para SS
+}*/
+
   public function acumulados2()
 	{
 		return $this->hasMany(PlanillaAcumulados::class, 'planilla_id');
 	}
+  public function deducciones2(){
+       return $this->hasMany(PlanillaDeducciones::class, 'planilla_id');
+ }
+
+
   //Funcion obsoleta
 	public function deducciones()
 	{
 		return $this->hasMany('Planilla_deducciones_orm', 'planilla_id');
 	}
 
-  public function deducciones2(){
-       return $this->hasMany(PlanillaDeducciones::class, 'planilla_id');
- }
+  //Funcion obsoleta
+  public function acumulados()
+  {
+    return $this->hasMany('Planilla_acumulados_orm', 'planilla_id');
+  }
+
+
 
 	public function deducciones_info()
 	{
   		return $this->belongsToMany('Deducciones_orm', 'pln_planilla_deducciones', 'planilla_id', 'deduccion_id');
  	}
-
 
  	public function acumulados_info()
  	{
@@ -150,14 +167,29 @@ class Planilla extends Model
 		return $this->belongsToMany('Vacaciones_orm', 'pln_planilla_vacacion', 'planilla_id', 'vacacion_id');
 	}
 
+  public function vacaciones2(){
+    return $this->belongsToMany(Vacaciones::Class, 'pln_planilla_vacacion', 'planilla_id', 'vacacion_id');
+  }
+
+
 	public function licencias(){
 		return $this->belongsToMany('Licencias_orm', 'pln_planilla_licencia', 'planilla_id', 'licencia_id');
 	}
 
-	public function colaboradores_planilla()
-	{
-	   return $this->hasMany('Planilla_colaborador_orm', 'planilla_id');
-	}
+
+  public function colaboradores_planilla()
+  {
+     return $this->hasMany(PlanillaColaborador::Class, 'planilla_id');
+  }
+  public function vacaciones_planilla()
+  {
+     return $this->hasMany(PlanillaVacacion::Class, 'planilla_id');
+  }
+  public function centros_contables()
+  {
+    return $this->hasMany(PlanillaCentros::class, 'planilla_id');
+
+   }
 
 	public function tipo(){
 		return $this->hasOne('Catalogo_orm', 'id_cat', 'tipo_id');

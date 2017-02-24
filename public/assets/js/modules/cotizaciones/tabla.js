@@ -8,11 +8,13 @@ var tablaCotizaciones = (function () {
     var opcionesModal = $('#optionsModal');
     var formularioBuscar = '';
     var multiselect = window.location.pathname.match(/cotizaciones/g) ? true : false;
+    var cotizaciones_alquiler_url = window.location.pathname.match(/cotizaciones_alquiler/g) ? true : false;
 
     var botones = {
         opciones: ".viewOptions",
         buscar: "#searchBtn",
-        limpiar: "#clearBtn"
+        limpiar: "#clearBtn",
+        exportar: "#exportarListaCotizaciones",
     };
 
     var tabla = function () {
@@ -35,8 +37,10 @@ var tablaCotizaciones = (function () {
             postData: {
                 erptkn: tkn,
                 sp_orden_venta_id: (typeof window.sp_orden_venta_id !== 'undefined') ? _.toString(window.sp_orden_venta_id) : '',
-                cliente_id: (typeof window.cliente_id !== 'undefined') ? window.cliente_id : ''
-                //factura_id: (typeof window.factura_id !== 'undefined') ? window.factura_id : ''
+                cliente_id: (typeof window.cliente_id !== 'undefined' && window.cliente_id != '[object HTMLSelectElement]') ? _.toString(window.cliente_id) : '',
+                campo: typeof window.campo !== 'undefined' ? window.campo : {},
+                factura_id: (typeof(this.infofactura) !== 'undefined') ? _.toString(this.infofactura.id) : '',
+                tipoFiltro: cotizaciones_alquiler_url ? 'cotizaciones_alquiler' : ''
             },
             height: "auto",
             autowidth: true,
@@ -63,6 +67,35 @@ var tablaCotizaciones = (function () {
             },
             loadComplete: function (data, status, xhr) {
 
+
+
+                              //Boton de Exportar Facturas
+                              $(botones.exportar).on("click", function (e) {
+
+                                  e.preventDefault();
+                                  e.returnValue = false;
+                                  e.stopPropagation();
+
+                                  if ($('#tabla').is(':visible') == true) {
+
+                                      //Exportar Seleccionados del jQgrid
+                                      var ids = [];
+
+                                      ids = gridObj.jqGrid('getGridParam', 'selarrrow');
+
+                                      //Verificar si hay seleccionados
+                                      if (ids.length > 0) {
+
+                                          $('#ids').val(ids);
+                                          console.log(ids);
+                                          $('form#exportarCotizaciones').submit();
+                                          $('body').trigger('click');
+                                      }
+                                  }
+                              });
+
+
+
                 if (gridObj.getGridParam('records') === 0) {
                     $('#gbox_' + gridId).hide();
                     $('#' + gridId + 'NoRecords').empty().append('No se encontraron Cotizaciones.').css({"color": "#868686", "padding": "30px 0 0"}).show();
@@ -77,7 +110,7 @@ var tablaCotizaciones = (function () {
                 //add class to headers
                 gridObj.closest("div.ui-jqgrid-view").find("div.ui-jqgrid-hdiv").attr("id", "gridHeader");
                 //floating headers
-                if (multiselect == true){
+                if (multiselect === true){
                 $('#gridHeader').sticky({
                     getWidthFrom: '.ui-jqgrid-view',
                     className: 'jqgridHeader'

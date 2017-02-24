@@ -29,6 +29,6 @@ class NotaDebitoItem extends Model{
   }
 
   public function impuesto(){
-    return $this->belongsTo(Impuestos::class,'impuesto_id')->select(['uuid_impuesto','impuesto','id','cuenta_id','nombre']);
+    return $this->belongsTo(Impuestos::class,'impuesto_id')->select(['uuid_impuesto','impuesto','id','cuenta_id','nombre','cuenta_retenida_id','porcentaje_retenido']);
   }
 }

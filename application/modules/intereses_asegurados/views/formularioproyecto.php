@@ -158,7 +158,7 @@ $formAttr = array(
                                     <input type="text" class="form-control validez_fianza_opcional" name="campo[validez_fianza_opcional]" id="validez_fianza_opcional" disabled="" <?php if (isset($campos['datos']['validez_fianza_opcional'])) { ?> value="<?php echo $campos['datos']['validez_fianza_opcional'] ?>"  <?php } ?> />
                                 </div>    
                             </div>
-                            <div class="row">
+                            <div class="row" id="observa">
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-6 "><label>Observaciones</label>
                                     <textarea name="campo[observaciones]"
                                               class="form-control" id="observaciones_proyecto" ><?php
@@ -178,45 +178,58 @@ $formAttr = array(
                                             $activo = "selected";
                                         if (isset($campos['estado']) && $campos['estado'] == "Inactivo")
                                             $inactivo = "selected";
-
-                                        if ($campos['politicas_general'] > 0 && isset($campos['estado'])) {
-
-                                            if (in_array(19, $campos['politicas']) || in_array(20, $campos['politicas'])) {
-                                                if ($campos['estado'] == "Activo") {
-                                                    if (in_array(19, $campos['politicas'])) {
-                                                        ?>
-                                                        <option value='Activo' <?php echo $activo ?> >Activo</option>
-                                                        <option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
-                                                        <?php
-                                                    } else {
-                                                        ?>
-                                                        <option value='Activo' <?php echo $activo ?> >Activo</option>
-                                                        <?php
-                                                    }
-                                                } else if ($campos['estado'] == "Inactivo") {
-                                                    if (in_array(20, $campos['politicas'])) {
-                                                        ?>
-                                                        <option value='Activo' <?php echo $activo ?> >Activo</option>
-                                                        <option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
-                                                        <?php
-                                                    } else {
-                                                        ?>
-                                                        <option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
-                                                        <?php
-                                                    }
-                                                }
-                                            } else {
-                                                ?>
-                                                <option value='<?php echo $campos['estado'] ?>'><?php echo $campos['estado'] ?></option>
-                                                <?php
-                                            }
+                                         if (isset($campos['estado'])) {
+											
+											if($campos['superadmin']==0)
+											{
+												if (count($campos['politicas_generales'] > 0)) {
+													if ($campos['estado'] == "Activo") {
+														if (((in_array(19, $campos['politicas']) === true) && (in_array(19, $campos['politicas_generales']) === true)) || ((in_array(19, $campos['politicas_generales']) === false)) ) {
+															?>
+															<option value='Activo' <?php echo $activo ?> >Activo</option>
+															<option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
+															<?php
+														} else {
+															?>
+															<option value='Activo' <?php echo $activo ?> >Activo</option>
+															<?php
+														}
+													} else if ($campos['estado'] == "Inactivo") {
+														
+														if (((in_array(20, $campos['politicas']) === true) && (in_array(20, $campos['politicas_generales']) === true)) || ((in_array(20, $campos['politicas_generales']) === false)) ) {
+															?>
+															<option value='Activo' <?php echo $activo ?> >Activo</option>
+															<option value='Inactivo' <?php echo $inactivo ?> >Inactivo</option>
+															<?php
+															}
+															else
+															{
+															?>
+														  <option value='Inactivo' <?php  echo $inactivo ?> >Inactivo</option>
+															<?php
+														}
+														
+													}
+												} else {
+													?>
+													<option value='Activo' >Activo</option>
+													<option value='Inactivo' >Inactivo</option>
+													<?php
+												}
+											}
+											else {
+													?>
+													<option value='Activo' >Activo</option>
+													<option value='Inactivo' >Inactivo</option>
+													<?php
+												}
                                         } else {
                                             ?>
                                             <option value='Activo' <?php echo $activo ?> >Activo</option>
                                             <?php
                                         }
                                         ?>
-                                    </select>
+                                    </select>                    
                                 </div>
                             </div>
                             <!--                            <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12" > </div>
@@ -254,35 +267,37 @@ $formAttr = array(
                             <?php
                         }
                         ?>
-                        <br><br>
+                        <div id="espac">
+                            <br><br>
+                        </div>
 
                         <div class="row detalleinteres_proyecto" style="display:none">
                             <input type="hidden" name="detalleunico" value="<?php echo strtotime('now'); ?>"> 
-                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" >
+                            <div class="col-xs-12 col-sm-3 col-md-12 col-lg-12" >
                                 <h5>Detalle interés asegurado</h5>
                                 <br>
                                 <hr>
-                                <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                     <label>No. Certificado</label>
                                     <div class="input-group">
                                         <input type="text" name="campodetalle[certificado]" id="certificadodetalle_proyecto" class="form-control">
                                     </div>                                      
                                 </div>
-                                <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                     <label>Suma asegurada<span required="" aria-required="true">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-addon">$</span>
                                         <input type="text" name="campodetalle[suma_asegurada]" id="sumaaseguradadetalle_proyecto" class="form-control">
                                     </div>
                                 </div>                                  
-                                <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                     <label>Prima neta<span required="" aria-required="true">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-addon">$</span>
                                         <input type="text" name="campodetalle[prima_anual]" id="primadetalle_proyecto" class="form-control">
                                     </div>                                      
                                 </div>
-                                <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
                                     <label>Deducible</label>
                                     <div class="input-group">
                                         <span class="input-group-addon">$</span>
@@ -293,6 +308,7 @@ $formAttr = array(
                         </div>
 
                         <input type="hidden" name="campodesde[desde]" class="campodesde" value="">
+                        <input type="hidden" name="campodesde[indcolec]" class="indcolec" value="">
 
                         <div class="row botones">
                             <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>

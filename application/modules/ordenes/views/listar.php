@@ -126,7 +126,7 @@
 
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="estado">Estado</label><br>
-                                            <select id="estado" class="form-control" data-placeholder=" ">
+                                            <select id="estado" class="form-control" multiple="true" data-placeholder=" ">
                                                 <option value=""> </option>
                                                 <?php foreach($estados as $estado):?>
                                                 <option value="<?php echo $estado->id_cat?>"><?php echo $estado->etiqueta?></option>

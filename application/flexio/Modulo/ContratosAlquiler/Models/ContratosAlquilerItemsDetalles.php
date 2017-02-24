@@ -5,11 +5,13 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\ContratosAlquiler\Traits\Bitacora;
 
 
 class ContratosAlquilerItemsDetalles extends Model
 {
     use RevisionableTrait;
+    use Bitacora;
 
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
@@ -28,6 +30,9 @@ class ContratosAlquilerItemsDetalles extends Model
     }
     public static function boot() {
         parent::boot();
+        static::creating(function($row){
+            $row->createBitacora($row->toArray(), $row->getDirty());
+        });
     }
 
     public function operacion()

@@ -10,8 +10,15 @@ $(function(){
         singleDatePicker: true
     }).val('');
 
-    $(".chosen-select").chosen({width: "100%"});
-
+    $(".chosen-select").chosen({
+        width: "100%",
+        allow_single_deselect: true
+    });
+    //ELEMENTOS DE TIPO CHOSEN
+    $("#tipo, #categoria").chosen({
+        width: '100%',
+        allow_single_deselect: true 
+    });
     //funcionalidad de exportacion
     var gridObj = $("#tablaPagosGrid");
 	  var aplicarPagosModal = $('#aplicarPagosModal');
@@ -121,7 +128,7 @@ $(function(){
          $("div.modal-content").find('#cambiarEstadoModalBtn').attr('disabled', true);
 
           $.ajax({
-              url: phost() + 'pagos/aplicar_pagos',
+              url: phost() + 'pagos/ajax_aplicar_pagos',
               data: $('#aplicarPagosForm').serialize(),
               type: "POST",
               dataType: "json",
@@ -148,8 +155,28 @@ $(function(){
                 tablaPagos.recargar();
         });
   });
-
-
+     /*valicación para cuando se accede desde seguros */
+     if(localStorage['ms-selected'] == "seguros") {
+      $("a.btn.btn-primary").each(function(index, el) {
+        if($(this).html() == "Crear") {
+          $(this).replaceWith('<label class="btn" >Acción</label>');
+        }
+      });
+      $(".breadcrumb").html($(".breadcrumb").html().replace("Compras","Seguros"));
+      $("label").each(function(index, el) {
+        if($(this).html() == "Proveedor"){
+          $(this).html("Pago a");
+        }
+        else if($(this).html() == "Categoría(s) de Proveedor"){
+          $(this).parent().remove();//obtenemos nodo padre eliminamos todo el nodo donde esta categoria
+        }
+      });
+      $('#tipo').html('<option value="">Seleccione</option>'+
+        ' <option value="compras">Compras</option> '+
+        ' <option value="planilla">Planilla</option> '+
+        ' <option value="participacion">Participación</option> '+
+        ' <option value="remesa">Remesa</option>').trigger('chosen:updated');
+     }
 
 
     $("#moduloOpciones").on("click", "#generarMultiplesACH", function(){

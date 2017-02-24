@@ -10,6 +10,7 @@ class CajasRepository{
         $clientes = Caja::where(function($query) use ($clause){
 
             $query->where('empresa_id', '=', $clause['empresa_id']);
+            if(isset($clause['q']) && !empty($clause['q'])){$query->where('nombre', 'like', '%'.$clause['q'].'%');}
 
         });
 
@@ -130,4 +131,7 @@ class CajasRepository{
         $caja->comentario_timeline()->save($comentario);
         return $caja;
     }
+
+
+
 }

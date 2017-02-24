@@ -11,6 +11,7 @@ class TransaccionCobro implements InterfaceTransaccion{
 
     $modelo->load('cobros_facturas','metodo_cobro');
     $encontrar = $modelo->sistema_transaccion->count();
+
     //nueva instancia de SysTransaccion
     if($encontrar == 0){
     $sysTransaccion = new SysTransaccion;
@@ -21,7 +22,7 @@ class TransaccionCobro implements InterfaceTransaccion{
     Capsule::transaction(function() use($modelo, $sysTransaccion, $infoSysTransaccion) {
       $modeloSysTransaccion =  $sysTransaccion->create($infoSysTransaccion);
       $modeloSysTransaccion->transaccion()->saveMany($this->transacciones($modelo));
-
+      //dd($modeloSysTransaccion->toArray());
       if(is_null($modeloSysTransaccion)){
         throw new \Exception('No se pudo hacer la transacción');
       }
@@ -45,7 +46,7 @@ class TransaccionCobro implements InterfaceTransaccion{
     }
 
 
-    foreach($modelo->cobros_facturas->where('transaccion',0) as $cobro_factura){
+    foreach($modelo->cobros_facturas->where('transaccion',1) as $cobro_factura){
       $factura = $cobro_factura->facturas;
 
       foreach($modelo->metodo_cobro as $metodo){
@@ -67,12 +68,12 @@ class TransaccionCobro implements InterfaceTransaccion{
     $asientos = array();
     $cuenta_id = $modelo->empresa->cuenta_por_cobrar->cuenta_id;
 
-    foreach($modelo->cobros_facturas->where('transaccion',0) as $cobro_factura){
+    foreach($modelo->cobros_facturas->where('transaccion',1) as $cobro_factura){
       $factura = $cobro_factura->facturas;
       $asientos[] = new AsientoContable(['codigo'=>$modelo->codigo,'nombre'=>$modelo->codigo. '-'.$factura->codigo,
       'credito'=> $cobro_factura->monto_pagado,'cuenta_id'=>$cuenta_id,'empresa_id'=>$modelo->empresa_id]);
-      $cobro_factura->transaccion = 1;
-      $cobro_factura->save();
+      //$cobro_factura->transaccion = 1;
+      //$cobro_factura->save();
     }
 
     return $asientos;

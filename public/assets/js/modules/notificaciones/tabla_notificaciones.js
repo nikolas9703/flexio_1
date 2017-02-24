@@ -46,6 +46,7 @@ var tablaNotificaciones = (function(){
         }
     };
     var muestra_tabla = function(){
+        var empresa_id = window.empresa_id;
         dom.jqGrid.jqGrid({
             url: phost() + 'notificaciones/ajax-listar',
             datatype: "json",
@@ -78,6 +79,7 @@ var tablaNotificaciones = (function(){
             mtype: "POST",
             postData: {
                 erptkn: tkn,
+                empresa_id:empresa_id
             },
             height: "auto",
             autowidth: true,
@@ -110,7 +112,7 @@ var tablaNotificaciones = (function(){
                 //check if isset data
                 if( data['total'] == 0 ){
                     $('#gbox_' + st.jqGrid).hide();
-                    dom.noRecords.empty().append('No se encontraron Items.').css({"color":"#868686","padding":"30px 0 0"}).show();
+                    //dom.noRecords.empty().append('No se encontraron Items.').css({"color":"#868686","padding":"30px 0 0"}).show();
                 }
                 else{
                     //dom.noRecords.hide();

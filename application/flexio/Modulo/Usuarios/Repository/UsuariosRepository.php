@@ -1,4 +1,6 @@
-<?php namespace Flexio\Modulo\Usuarios\Repository;
+<?php
+
+namespace Flexio\Modulo\Usuarios\Repository;
 
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 
@@ -24,6 +26,21 @@ class UsuariosRepository{
         return $usuario;
     }
 
+    public function getCollectionNotifications($notifications)
+    {
+        return $notifications->map(function($notification){
+            return [
+                'href' => $notification->data['href'],
+                'class' => $notification->data['class'],
+                'text' => $notification->data['text'],
+                'data' => $notification->data,
+                'read_at' => $notification->read_at,
+                'diff_horas' => "hace {$notification->created_at->diffInHours()}h",
+                'diff' => "{$notification->created_at->diffForHumans()} | {$notification->created_at->format('h:i A - d/m/Y')}"
+            ];
+        });
+    }
+
 
     private function _filtros($query, $clause)
     {
@@ -44,18 +61,38 @@ class UsuariosRepository{
         if($limit != null){$usuarios->skip($start)->take($limit);}
         return $usuarios->get();
     }
-    
+    public function search($search=array(), $clause = array(), $sidx = null, $sord = null, $limit = null, $start = null)
+    {
+        $usuarios = Usuarios::where(function($query) use ($clause){
+
+            $this->_filtros($query, $clause);
+
+        });
+        if($sidx !== null && $sord !== null){$usuarios->orderBy($sidx, $sord);}
+        if($limit != null){$usuarios->skip($start)->take($limit);}
+
+        if(isset($search['id'])){
+            $usuarios->where("id", "=",$search['id']);
+        }else if(isset($search['q'])){
+            $usuarios->orWhere("nombre", "like","%".$search['q']."%");
+            $usuarios->orWhere("apellido", "like","%".$search['q']."%");
+        }
+
+
+        return $usuarios->get();
+    }
+
     public function getCollectionUsuarios($usuarios){
-        
+
         return $usuarios->map(function($usuario){
-            
+
             return [
                 'id' => $usuario->id,
                 'nombre' => $usuario->nombre_completo
             ];
-            
+
         });
-        
+
     }
 
     public function validar_token($clause){
@@ -79,8 +116,14 @@ class UsuariosRepository{
       })->activo()->get(['id','nombre','apellido']);
     }
 
+
+    function find($id) {
+        return Usuarios::find($id);
+      }
+
     public function findIds($ids=null){
         return Usuarios::whereIn('id',$ids)->get();
+
     }
 
 }

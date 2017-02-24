@@ -15,6 +15,7 @@ use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 use Flexio\Modulo\Ramos\Repository\RamoRepository as RamoRepository;
 use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
+use Flexio\Modulo\Ramos\Models\Ramos;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros as cobros;
 use Flexio\Modulo\FacturasSeguros\Repository\FacturaSeguroRepository as facturaRepository;
@@ -95,16 +96,30 @@ class Remesas extends CRM_Controller
 
     public function listar(){
 
-        if (!is_null($this->session->flashdata('mensaje'))) {
-            $mensaje = $this->session->flashdata('mensaje');
+        /*if(!$this->auth->has_permission('acceso', 'remesas/crear')){
+
+            $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡Error!</b> Usted no tiene permisos para listar', 'titulo' => 'Remesas ');
+            $this->session->set_flashdata('mensaje', $mensaje);
+            redirect(base_url(''));
+        }*/
+
+        if (is_null($this->session->flashdata('mensaje')) ) {
+           $mensaje = []; 
         } else {
-            $mensaje = [];
+            $mensaje = $this->session->flashdata('mensaje');
         }
 
+        
         $this->_css();
         $this->_js();
 
+        $this->assets->agregar_var_js(array(
+            "flexio_mensaje" => collect($mensaje)
+        ));
+
         $data = array();
+        $data['mensaje'] = $mensaje;
+
         $data['userData'] = $this->session->userdata('empresa_id');
         $data['usuarios'] = Usuarios::join('usuarios_has_roles', 'usuario_id', '=', 'usuarios.id')
         ->where('usuarios_has_roles.empresa_id', '=', $this->empresa_id)
@@ -112,6 +127,7 @@ class Remesas extends CRM_Controller
         ->select('usuarios.id', 'nombre','apellido')
         ->groupBy('usuarios.id')
         ->get();
+
         $data['aseguradoras'] = Aseguradoras::where('empresa_id',$this->empresa_id)
         ->where('estado','Activo')->get();
         $breadcrumb = array(
@@ -131,8 +147,9 @@ class Remesas extends CRM_Controller
             );
         //$menuOpciones["#cambiarEstadoSolicitudesLnk"] = "Cambiar estado";
         //$menuOpciones["#imprimirCartaSolicitudesLnk"] = "Imprimir carta";
-        $menuOpciones["#exportarRemesasBtn"] = "Exportar";
+        
         $menuOpciones["#cambiarEstadosBtn"]= "Cambiar estado";
+        $menuOpciones["#exportarRemesasBtn"] = "Exportar";
         $breadcrumb["menu"]["opciones"] = $menuOpciones;
 
         $this->template->agregar_titulo_header('Listado de Remesas');
@@ -178,7 +195,7 @@ class Remesas extends CRM_Controller
         $response->total    = $total_pages;
         $response->record  = $count;
         $i=0;
-        $estados = array("#f8ac59"=>"En Proceso","black"=>"Anulado","#5cb85c"=>"Pagada");
+        $estados = array("#f8ac59"=>"En Proceso","black"=>"Anulado","#5cb85c"=>"Pagada","#5bc0de"=>"Por pagar");
         
         if(!empty($cuentas)){
             foreach ($cuentas as  $row){
@@ -190,7 +207,8 @@ class Remesas extends CRM_Controller
                    if($row['estado']!=$option){
                     $estado .='<button class="btn btn-block  modal-std" data-id="'.$id.'" data-estado="'.$option.'" style="color:white;background-color:'.$key.'">'.$option.'</button>';
                 }else{
-                   $labelClass='<label class="label updateState" data-id="'.$id.'" data-estado="'.$option.'" style="color:white;background-color:'.$key.'">'.$option.'</label>';
+                   $updateState = $row['estado'] == "Pagada" ? "" : "updateState" ;
+                   $labelClass='<button class="btn btn-xs btn-block '.$updateState.'" data-id="'.$id.'" data-estado="'.$option.'" style="color:white;background-color:'.$key.'">'.$option.'</button>';
                }
            } 
            $hidden_options = "";
@@ -202,8 +220,8 @@ class Remesas extends CRM_Controller
            $url = base_url("remesas/editar/$uuid_remesa");
            $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-sm hidden-xs">Opciones</span></button>';
            $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarRemesa" >Ver detalle</a>';
-           $hidden_options.= '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success estadoCuenta" >Estado de cuenta</a>';
-           $hidden_options.= '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success descargarRemesa" >Descargar</a>';
+           $hidden_options.= '<a data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success descargarRemesa" >Descargar</a>';
+
            $level = substr_count($row['nombre'],".");
            $response->rows[$i] = array("id" => $row['id'], 'cell' => array(
             'id' => $row['id'],
@@ -233,7 +251,18 @@ class Remesas extends CRM_Controller
    echo json_encode($response);
    exit;
 }
+
 public function crear(){
+
+    if (!$this->auth->has_permission('acceso', 'remesas/crear')) {
+        // No, tiene permiso, redireccionarlo.
+        $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡Error!</b> Usted no tiene permisos para crear', 'titulo' => 'Remesas ');
+        $this->session->set_flashdata('mensaje', $mensaje);
+        redirect(base_url('remesas/listar'));
+    } else {
+        $mensaje = [];
+    }
+
 
     $this->assets->agregar_js(array(
         'public/assets/js/modules/remesas/plugins.js',
@@ -243,8 +272,9 @@ public function crear(){
     $this->_js();
 
     $this->assets->agregar_var_js(array(
-        "vista" => 'crear'
-        ));
+        "vista" => 'crear',
+        "flexio_mensaje" => collect($mensaje)
+    ));
 
     $data = array();
     $data['vista'] = "crear";
@@ -262,6 +292,8 @@ public function crear(){
 
     $data['rolesArray'] = array();
     $data['usuariosArray'] = array();
+    $data['mensaje'] = $mensaje;
+
     $i = 0;
     foreach ($ramosRoles AS $value) {
         foreach ($value->ramos AS $valuee) {
@@ -278,7 +310,8 @@ public function crear(){
     $this->assets->agregar_var_js(array( 
         'codigo' => $codigo,
         'bancos' => $bancos,
-        ));
+        "ver" => 0,
+    ));
 
     $breadcrumb = array(
         "titulo" => '<i class="fa fa-archive"></i> Remesas Salientes: crear',
@@ -292,10 +325,10 @@ public function crear(){
         );
 
     $breadcrumb["menu"] = array(
-        "url" => 'remesas/crear',
+        "url" => '',
         "clase" => 'modalOpcionesCrear',
         "nombre" => "Crear"
-        );
+    );
 
         //$menuOpciones["#cambiarEstadoSolicitudesLnk"] = "Cambiar estado";
         //$menuOpciones["#imprimirCartaSolicitudesLnk"] = "Imprimir carta";
@@ -340,10 +373,22 @@ public function exportar() {
     $i = 0;
     foreach ($contactos AS $row) {
         $csvdata[$i]['remesa'] = $row->remesa;
-        $csvdata[$i]['recibos_remesados'] = $row->recibos_remesados;
+        $csvdata[$i]['rango_fechas'] = "desde: ".$row->fecha_desde ." hasta: " .$row->fecha_hasta;
+        $csvdata[$i]['recibos_remesados'] = $row->cantidadRecibos;
         $csvdata[$i]['nombre'] = $row->nombre;
         $csvdata[$i]['monto'] = $row->monto;
         $csvdata[$i]['fecha'] = $row->fecha;
+        $ramos = explode(',', $row->ramos_id);
+        $ramosString = "";
+        foreach ($ramos as $key => $value) {
+            # code...
+             $query=Ramos:: where('id',$value)
+             ->select('nombre')
+             ->first();
+             if(count($query))
+             $ramosString .= $query->nombre."-";
+        }
+        $csvdata[$i]['ramo'] = $ramosString;
         $csvdata[$i]['fullname'] = $row->fullname;
         $csvdata[$i]['estado'] =   $row->estado;
         $i++;
@@ -352,10 +397,12 @@ public function exportar() {
     $csv = Writer::createFromFileObject(new SplTempFileObject());
     $headers = [
     'No.  remesa',
+    'Rango de Fecha',
     'Recibos remesados',
     'Aseguradora',
     'Monto',
     'Fecha',
+    'Ramos',
     'Usuario',
     'Estado',
     ];
@@ -384,30 +431,30 @@ public function ajax_get_remesa_saliente() {
     $response->datos = 0;
     $response->codigoRemesa = $codigo_remesa;
 
-    $Remesas = Remesa::where(['aseguradora_id' => $id_asegurado])->get();
+    $Remesas = Remesa::where(['aseguradora_id' => $id_asegurado, 'remesa' => $codigo_remesa])->get();
+
     if(count($Remesas) > 0){
-        foreach ($Remesas as $key => $value) {
 
-            if($value->estado == "En Proceso" ){
+        foreach ($Remesas AS $value) {
 
-                if($value->remesa == $codigo_remesa){
+            if($value->estado == "En Proceso" || $value->estado == "Por pagar" ){
+
+                //if($value->remesa == $codigo_remesa){
+
                     $estado = $value->estado;
                     $response->guardar = 1; 
                     break;
-                }else{
-                    $estado = $value->estado;
+                //}else{
+                    /*$estado = $value->estado;
                     $response->guardar = 0; 
-                    break;
-                }
+                    break;*/
+                //}
 
             }elseif($value->estado == "Pagada"){
 
                 $estado = $value->estado;
-                $response->guardar = 0; 
+                $response->guardar = 1; 
                 break;
-            }else{
-
-                $response->guardar = 1;
             }
         }
     }else{
@@ -417,64 +464,76 @@ public function ajax_get_remesa_saliente() {
     $total_pago = 0;
     foreach($id_ramos as $key => $info){
             //$cobros = cobros::whereRaw("DATE(fecha_pago) between '".$fecha_inicial."' and '".$fecha_final."'")->where(['num_remesa' => '', 'estado' => 'aplicado', 'empresa_id' => $this->id_empresa ])->get();
-        if( ($vista == "crear") || ($vista == "editar" && $estado == "En Proceso") ){
+        if( ($vista == "crear") || ($vista == "editar" && ($estado == "En Proceso" || $estado == "Por pagar") ) ){
 
             $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
+
         }elseif($vista == "editar" && $estado == "Pagada" ){
 
             $cobros = CobroFactura::whereRaw("cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '".$codigo_remesa."' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
             $response->guardar = 0;
-
         }
 
 
         $sub_total_comision = 0;
-        $sub_total_sobre_comision = 0;
+        //$sub_total_sobre_comision = 0;
         $sub_total_valorSobre_comision = 0;
         $sub_total_aseguradora = 0;
         $nombre_ramo = '';
 
         foreach ($cobros as $key => $value) {
 
-            $factura = $this->FacturaSeguro->GetFacturas($value->cobrable_id, $id_asegurado);
+            $factura = $this->FacturaSeguro->GetFacturasRemesasSalientes($value->cobrable_id, $id_asegurado);
 
             if($factura != NULL){
-
-                array_push($response->idCobros, array('id_cobro' => $value->cobro_id));
                 $response->datos = 1;
 
-                $planes = $this->Planes->PlanesGet($factura['plan_id']);
+                array_push($response->idCobros, array('id_cobro' => $value->cobro_id));
 
-                if($planes['desc_comision'] == "si"){
+                $prima_neta = number_format(($value->monto_pagado - $factura['impuestos']), 2, '.', '');
 
-                    $comision = $planes->comisiones['comision'];
-                    $valor_comision = $value->monto_pagado * ($comision/100);
-                    $sobre_comision = $planes->comisiones['sobre_comision'];
-                    $valor_sobreComision = $value->monto_pagado * ($sobre_comision/100);
-                    $total_aseguradora = $value->monto_pagado - ($valor_comision + $valor_sobreComision);
+                if($factura['desc_comision'] == 'si'){
+
+                    $valor_comision =   round(($prima_neta * ($factura['comision']/100)),4); //round(($value->monto_pagado * ($factura['comision']/100)),4);
+                    $valor_sobreComision = round(($prima_neta * ($factura['porcentaje_sobre_comision']/100)),2);//round(($value->monto_pagado * ($factura['porcentaje_sobre_comision']/100)),2);
+                    $total_aseguradora = round(($value->monto_pagado - $valor_comision + $valor_sobreComision),2);
 
                 }else{
-                    $comision = "";
-                    $valor_comision = "";
-                    $sobre_comision = "";
-                    $valor_sobreComision = "";
-                    $total_aseguradora = $value->monto_pagado;
+
+                    $valor_comision = "0.00";
+                    $valor_sobreComision = "0.00";
+                    $total_aseguradora = round($value->monto_pagado,2);
                 }
+                
+                $comision = $factura['comision'];
+                $sobre_comision = $factura['porcentaje_sobre_comision'];
 
                 $sub_total_comision = $sub_total_comision + $valor_comision;
-                $sub_total_sobre_comision = $sub_total_sobre_comision + $sobre_comision;
                 $sub_total_valorSobre_comision = $sub_total_valorSobre_comision + $valor_sobreComision;
                 $sub_total_aseguradora = $sub_total_aseguradora + $total_aseguradora;
                 $nombre_ramo = $factura['ramo'];
 
-                array_push($response->inter, array("id" => $value->id, "codigo" => $value->codigo, "numero_poliza" => $factura['numero'] , 'nombre_ramo' => $factura['ramo'], 'id_ramo' =>$factura['ramo_id'], 'nombre_aseguradora' => $factura['nombre'], 'inicio_vigencia' => date($factura["fecha_desde"]), 'fin_vigencia' => date($factura["fecha_hasta"]), 'prima_total' => $value->monto_pagado, 'impuesto' => $factura['impuestos'], 'prima_neta' => $factura['prima_anual'] ,'desc_comision' => $comision, 'valor_descuento' => $valor_comision, 'sobre_comision' => $sobre_comision, 'valor_sobreComision' => $valor_sobreComision, 'total_aseguradora' => $total_aseguradora, 'estilos' => 'font-weight: normal' ));
+                $valor_comision = number_format($valor_comision, 2, '.', '');
+                $valor_sobreComision = number_format($valor_sobreComision, 2, '.', '');
+                $total_aseguradora = number_format($total_aseguradora, 2, '.', '');
+
+                
+
+                array_push($response->inter, array("id" => $value->id, "codigo" => $value->codigo, "numero_poliza" => $factura['numero'] , 'nombre_ramo' => $factura['ramo'], 'id_ramo' =>$factura['ramo_id'], 'nombre_aseguradora' => $factura['nombre'], 'inicio_vigencia' => date($factura["fecha_desde"]), 'fin_vigencia' => date($factura["fecha_hasta"]), 'prima_total' => '$'.number_format($value->monto_pagado, 2, '.', ''), 'impuesto' => '$'.$factura['impuestos'], 'prima_neta' => '$'.$prima_neta/*$factura['prima_anual']*/ ,'desc_comision' => $comision.'%', 'valor_descuento' => '$'.$valor_comision, 'sobre_comision' => $sobre_comision.'%', 'valor_sobreComision' => '$'.$valor_sobreComision, 'total_aseguradora' => '$'.$total_aseguradora, 'estilos' => 'font-weight: normal' ));
             }
         }
-        array_push($response->inter, array("id" => '', "codigo" => '', "numero_poliza" => '', 'nombre_ramo' => '', 'id_ramo' => '', 'nombre_aseguradora' => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => '', 'impuesto' => '', 'prima_neta' => '' ,'desc_comision' => 'Subtotal '.$nombre_ramo , 'valor_descuento' => $sub_total_comision, 'sobre_comision' => $sub_total_sobre_comision, 'valor_sobreComision' => $sub_total_valorSobre_comision, 'total_aseguradora' => $sub_total_aseguradora, 'estilos' => 'font-weight: bold; background-color:#efefef;' ));
-        $total_pago = $total_pago + $sub_total_aseguradora;
-    }
+        if($response->datos == 1){
+            $sub_total_comision = number_format($sub_total_comision, 2, '.', '');
+            $sub_total_valorSobre_comision = number_format($sub_total_valorSobre_comision, 2, '.', '');
+            $sub_total_aseguradora = number_format($sub_total_aseguradora, 2, '.', '');
 
-    array_push($response->inter, array("id" => '', "codigo" => '', "numero_poliza" => '', 'nombre_ramo' => '', 'id_ramo' => '', 'nombre_aseguradora' => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => '', 'impuesto' => '', 'prima_neta' => '' ,'desc_comision' => 'Total ' , 'valor_descuento' => '', 'sobre_comision' => '', 'valor_sobreComision' => '', 'total_aseguradora' => $total_pago, 'estilos' => 'font-weight: bold; background-color:#cccccc;'));
+            array_push($response->inter, array("id" => '', "codigo" => '', "numero_poliza" => '', 'nombre_ramo' => '', 'id_ramo' => '', 'nombre_aseguradora' => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => '', 'impuesto' => '', 'prima_neta' => '' ,'desc_comision' => 'Subtotal '.$nombre_ramo , 'valor_descuento' => '$'.$sub_total_comision, 'sobre_comision' => '', 'valor_sobreComision' => '$'.$sub_total_valorSobre_comision, 'total_aseguradora' => '$'.$sub_total_aseguradora, 'estilos' => 'font-weight: bold; background-color:#efefef;' ));
+            $total_pago = $total_pago + $sub_total_aseguradora;
+        }
+        $response->datos = 0;
+    }
+    $total_pago =  number_format($total_pago, 2, '.', '');
+    array_push($response->inter, array("id" => '', "codigo" => '', "numero_poliza" => '', 'nombre_ramo' => '', 'id_ramo' => '', 'nombre_aseguradora' => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => '', 'impuesto' => '', 'prima_neta' => '' ,'desc_comision' => 'Total ' , 'valor_descuento' => '', 'sobre_comision' => '', 'valor_sobreComision' => '', 'total_aseguradora' => '$'.$total_pago, 'estilos' => 'font-weight: bold; background-color:#cccccc;'));
     $response->monto = $total_pago;
 
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
@@ -495,9 +554,8 @@ public function guardar(){
     $datosRemesas['uuid_remesa'] = Capsule::raw("ORDER_UUID(uuid())");;
     $datosRemesas['remesa'] = $remesas["codigo_remesa"];
     $datosRemesas['fecha'] = date('Y-m-d');
-
-    if($remesas["vista"] == "guardar"){ $datosRemesas['aseguradora_id'] = $remesas["id_aseguradora_guardar"]; }else{ $datosRemesas['aseguradora_id'] = $remesas["id_aseguradora_pagar"]; }
-    if($remesas["vista"] == "guardar"){ $datosRemesas['monto'] = $remesas["monto_guardar"]; }else{ $datosRemesas['monto'] = $remesas["monto_pagar"]; }
+    $datosRemesas['aseguradora_id'] = $remesas["id_aseguradora"]; 
+    $datosRemesas['monto'] = $remesas["monto_remesa"];
 
     $datosRemesas['recibos_remesados'] = count(array_unique($cobros));
     $datosRemesas['usuario'] = $this->usuario_id;
@@ -511,54 +569,20 @@ public function guardar(){
     $datosRemesas['ramos_id'] = $remesas['ramos'];
 
 
-    if($remesas["vista"] == "guardar"){
-
+    if(isset($remesas["guardar"])){
         $datosRemesas['estado'] = "En Proceso";
-
-    }elseif($remesas["vista"] == "pagar"){
-
-        $datosRemesas['forma_pago'] = $remesas["forma_pago"];
-        $datosRemesas['estado'] = "Pagada";
-
-        if(isset($remesas['forma_pago']) && $remesas['forma_pago'] == "Transferencia"){
-            $datosRemesas['id_banco'] = $remesas["banco"]; 
-        }elseif(isset($remesas['forma_pago']) && $remesas['forma_pago'] == "Cheque" ){
-            $datosRemesas['id_banco'] = $remesas["banco"]; 
-            $datosRemesas['numero_cheque'] = $remesas["numero_cheque"];
-        }
-
-        $cobros = array_unique($cobros);
-        $arrayRamos = explode(",", $remesas['ramos']);
-
-        foreach ($cobros as $key => $value) {
-            $cobros = cobros::find($value);
-            $cobros->update(['num_remesa' => $remesas["codigo_remesa"]]);
-            var_dump($value);
-            echo "<br><br>";
-
-            $cobroFactura = CobroFactura::where(['cobro_id' => $value])->get();
-            foreach ($cobroFactura as $key => $value) {
-
-                if(in_array($value->id_ramo, $arrayRamos) ){
-
-                    $factura = FacturaSeguro::find($value->cobrable_id);
-                    $factura->update(['remesa_saliente' => $remesas["codigo_remesa"] ]);
-                }
-                
-            }
-
-        }
+    }elseif(isset($remesas["pagar"])){
+        $datosRemesas['estado'] = "Por Pagar";
     }
 
+    
     $remesas = Remesa::where(['remesa' => $remesas["codigo_remesa"]])->first();
-    $codigo = $remesas["codigo_remesa"];
-
     if($remesas == null){
         $remesas = Remesa::create($datosRemesas);
     }else{
         $remesas = Remesa::find($remesas->id)->update($datosRemesas);
     }
-
+    $codigo = $remesas->remesa;
 
 
         //}catch (ValidationException $e) {
@@ -575,6 +599,20 @@ public function guardar(){
 
 public function editar($uuid = null){
 
+    if( !$this->auth->has_permission('acceso', 'remesas/ver/(:any)') && !$this->auth->has_permission('acceso', 'remesas/editar/(:any)') ) { 
+        // No, tiene permiso, redireccionarlo.
+        $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡Error!</b> Usted no tiene permisos para editar', 'titulo' => 'Remesas ');
+        $this->session->set_flashdata('mensaje', $mensaje);
+        redirect(base_url('remesas/listar'));
+
+    }elseif($this->auth->has_permission('acceso', 'remesas/editar/(:any)')) {
+        $ver = 0;
+        $mensaje = [];
+    }else{
+        $ver = 1;
+        $mensaje = [];
+    }
+
     $this->assets->agregar_js(array(
         'public/assets/js/modules/remesas/plugins.js',
             //'public/assets/js/modules/remesas/crear.vue.js',
@@ -582,10 +620,16 @@ public function editar($uuid = null){
 
     $data = array();
     $data['vista'] = "editar";
-
+    
 
     $Remesas = Remesa::where(['uuid_remesa' => hex2bin(strtolower($uuid))])->first();
     $codigo = $Remesas->remesa;
+
+    if($Remesas->estado == 'Por pagar'){
+        $ver = 1;
+    }
+    $data['ver'] = $ver;
+
 
     $data['aseguradora_id'] = $Remesas->aseguradora_id; 
     $ramos_id = explode(",", $Remesas->ramos_id);
@@ -626,7 +670,8 @@ public function editar($uuid = null){
         "ramos_id" => $Remesas->ramos_id,
         "codigo" => $codigo,
         "bancos" => $bancos,
-        ));
+        "ver" => $ver,
+    ));
 
     $breadcrumb = array(
         "titulo" => '<i class="fa fa-archive"></i> Remesas Salientes: '.$codigo,
@@ -673,50 +718,57 @@ public function imprimirRemesa($codigo_remesa = null, $id_aseguradora = null , $
         $estado = '';
     }
 
+    
     foreach ($id_ramos as $key => $value) {
-        $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '".$estado."' AND cob_cobro_facturas.id_ramo = ".$value."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get(); 
+
+        $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '".$estado."' AND cob_cobro_facturas.id_ramo = ".$value)->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get(); 
 
         $sub_total_comision = 0;
         $sub_total_sobre_comision = 0;
         $sub_total_valorSobre_comision = 0;
         $sub_total_aseguradora = 0;
         $nombre_ramo = '';
+        $cont = 0;
 
         foreach ($cobros as $key => $info) {
-            $factura = $this->FacturaSeguro->GetFacturas($info->cobrable_id, $id_aseguradora);
-
+            $factura = $this->FacturaSeguro->GetFacturasRemesasSalientes($info->cobrable_id, $id_aseguradora);
+            
             if($factura != NULL){
-                $planes = $this->Planes->PlanesGet($factura['plan_id']);
 
-                if($planes['desc_comision'] == "si"){
+                $cont = 1;
+                $prima_neta = number_format(($info->monto_pagado - $factura['impuestos']), 2, '.', '');
+                if($factura['desc_comision'] == 'si'){
 
-                    $comision = $planes->comisiones['comision'];
-                    $valor_comision = $info->monto_pagado * ($comision/100);
-                    $sobre_comision = $planes->comisiones['sobre_comision'];
-                    $valor_sobreComision = $info->monto_pagado * ($sobre_comision/100);
-                    $total_aseguradora = $info->monto_pagado - ($valor_comision + $valor_sobreComision);
+                    $valor_comision = round(($prima_neta * ($factura['comision']/100)),4);//round(($info->monto_pagado * ($factura['comision']/100)),2);
+                    $valor_sobreComision = round(($prima_neta * ($factura['porcentaje_sobre_comision']/100)),2);//round(($info->monto_pagado * ($factura['porcentaje_sobre_comision']/100)),2);
+                    $total_aseguradora = round(($info->monto_pagado - $valor_comision + $valor_sobreComision),2);
+                    $sub_total_comision = number_format(($sub_total_comision + $valor_comision), 2, '.', '');
+                    $sub_total_valorSobre_comision = number_format(($sub_total_valorSobre_comision + $valor_sobreComision), 2, '.', '');
 
                 }else{
-                    $comision = "";
-                    $valor_comision = "";
-                    $sobre_comision = "";
-                    $valor_sobreComision = "";
-                    $total_aseguradora = $info->monto_pagado;
+
+                    $valor_comision = "0.00";
+                    $valor_sobreComision = "0.00";
+                    $total_aseguradora = round($info->monto_pagado,2);
+                    $sub_total_comision = "0.00";
+                    $sub_total_valorSobre_comision = "0.00";  
                 }
-
-                $sub_total_comision = $sub_total_comision + $valor_comision;
-                $sub_total_sobre_comision = $sub_total_sobre_comision + $sobre_comision;
-                $sub_total_valorSobre_comision = $sub_total_valorSobre_comision + $valor_sobreComision;
-                $sub_total_aseguradora = $sub_total_aseguradora + $total_aseguradora;
+                $valor_comision = number_format($valor_comision, 2, '.', '');
+                $valor_sobreComision = number_format($valor_sobreComision, 2, '.', '');
+                $sub_total_aseguradora = number_format($sub_total_aseguradora + $total_aseguradora, 2, '.', '');
+                $total_aseguradora = number_format($total_aseguradora, 2, '.', '');
+                $monto_pagado = number_format($info->monto_pagado, 2, '.', '');
                 $nombre_ramo = $factura['ramo'];
-
-                array_push($datosRemesa, array("codigo" => $info->codigo, "numero_poliza" => $factura['numero'], 'inicio_vigencia' => date($factura["fecha_desde"]), 'fin_vigencia' => date($factura["fecha_hasta"]), 'prima_total' => $info->monto_pagado, 'valor_descuento' => $valor_comision, 'valor_sobreComision' => $valor_sobreComision, 'total_aseguradora' => $total_aseguradora, 'estilos' => 'font-weight: normal; text-align:center;' ));
+                array_push($datosRemesa, array("codigo" => $info->codigo, "numero_poliza" => $factura['numero'], 'inicio_vigencia' => date($factura["fecha_desde"]), 'fin_vigencia' => date($factura["fecha_hasta"]), 'prima_total' => '$ '.$monto_pagado, 'valor_descuento' => '$ '.$valor_comision, 'valor_sobreComision' => '$ '.$valor_sobreComision, 'total_aseguradora' => '$ '.$total_aseguradora, 'estilos' => 'font-weight: normal; text-align:center;' ));
             }
         }
-        array_push($datosRemesa, array("codigo" => '', "numero_poliza" => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => 'Subtotal '.$nombre_ramo , 'valor_descuento' => $sub_total_comision, 'valor_sobreComision' => $sub_total_valorSobre_comision, 'total_aseguradora' => $sub_total_aseguradora, 'estilos' => 'font-weight: bold; background-color:#efefef; text-align:center;' ));
-        $total_pago = $total_pago + $sub_total_aseguradora;
+        if($cont == 1){
+            array_push($datosRemesa, array("codigo" => '', "numero_poliza" => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => 'Subtotal '.$nombre_ramo , 'valor_descuento' => '$ '.$sub_total_comision, 'valor_sobreComision' => '$'.$sub_total_valorSobre_comision, 'total_aseguradora' => '$'.$sub_total_aseguradora, 'estilos' => 'font-weight: bold; background-color:#efefef; text-align:center;' ));
+            $total_pago = number_format(($total_pago + $sub_total_aseguradora), 2, '.', ''); 
+        }
+        
     }
-    array_push($datosRemesa, array("codigo" => '', "numero_poliza" => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => 'Total ' , 'valor_descuento' => '', 'valor_sobreComision' => '', 'total_aseguradora' => $total_pago, 'estilos' => 'font-weight: bold; background-color:#cccccc; text-align:center;'));
+    array_push($datosRemesa, array("codigo" => '', "numero_poliza" => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => 'Total ' , 'valor_descuento' => '', 'valor_sobreComision' => '', 'total_aseguradora' => '$ '.$total_pago, 'estilos' => 'font-weight: bold; background-color:#cccccc; text-align:center;'));
 
     $Remesas = Remesa::where(['remesa' => $codigo_remesa])->first();
     $aseguradora = Aseguradoras::where(['id' => $id_aseguradora])->first();
@@ -741,6 +793,161 @@ public function imprimirRemesa($codigo_remesa = null, $id_aseguradora = null , $
     $dompdf->stream($nombre, array("Attachment" => false));
     exit(0);
 
+}
+
+public function descargarRemesa() {
+
+    if (empty($_POST)) {
+        exit();
+    }
+    $id = $this->input->post('id', true);
+
+    if (empty($id)) {
+        return false;
+    }
+    $csv = array();
+
+    $Remesas = Remesa::where(['id' => $id])->first();
+
+    $fecha_inicial = $Remesas->fecha_desde;  
+    $fecha_final = $Remesas->fecha_hasta;
+    $id_asegurado = $Remesas->aseguradora_id;
+    $id_ramos = explode(",", $Remesas->ramos_id);
+    $validacion_datos = 0;
+    $total_pago = 0;
+    $i = 0;
+    foreach($id_ramos as $key => $info){
+
+        if( $Remesas->estado == "En Proceso" || $Remesas->estado == "Por pagar" ){
+
+            $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
+
+        }elseif($Remesas->estado == "Pagada" ){
+
+            $cobros = CobroFactura::whereRaw("cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '".$Remesas->remesa."' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
+        }
+
+        $sub_total_comision = 0;
+        $sub_total_valorSobre_comision = 0;
+        $sub_total_aseguradora = 0;
+        $nombre_ramo = '';
+
+        foreach ($cobros as $key => $value) {
+
+            $factura = $this->FacturaSeguro->GetFacturasRemesasSalientes($value->cobrable_id, $id_asegurado);              
+
+            if($factura != NULL){
+
+                $prima_neta = number_format(($value->monto_pagado - $factura['impuestos']), 2, '.', '');
+
+                if($factura['desc_comision'] == 'si'){
+
+                    $valor_comision =   round(($prima_neta * ($factura['comision']/100)),4); 
+                    $valor_sobreComision = round(($prima_neta * ($factura['porcentaje_sobre_comision']/100)),2);
+                    $total_aseguradora = round(($value->monto_pagado - $valor_comision + $valor_sobreComision),2);
+                }else{
+
+                    $valor_comision = "0.00";
+                    $valor_sobreComision = "0.00";
+                    $total_aseguradora = round($value->monto_pagado,2);
+                }
+                $comision = $factura['comision'];
+                $sobre_comision = $factura['porcentaje_sobre_comision'];
+
+                $sub_total_comision = $sub_total_comision + $valor_comision;
+                $sub_total_valorSobre_comision = $sub_total_valorSobre_comision + $valor_sobreComision;
+                $sub_total_aseguradora = $sub_total_aseguradora + $total_aseguradora;
+                $nombre_ramo = $factura['ramo'];
+
+                $valor_comision = number_format($valor_comision, 2, '.', '');
+                $valor_sobreComision = number_format($valor_sobreComision, 2, '.', '');
+                $total_aseguradora = number_format($total_aseguradora, 2, '.', '');
+
+                $csvdata[$i]['numero_recibo'] = $value->codigo;
+                $csvdata[$i]['numero_poliza'] = $factura['numero'];
+                $csvdata[$i]['ramo'] = $factura['ramo'];
+                $csvdata[$i]['asegurado'] = $factura['nombre'];
+                $csvdata[$i]['Inicio_vigencia'] = date($factura["fecha_desde"]);
+                $csvdata[$i]['fin_vigencia'] = date($factura["fecha_hasta"]);
+                $csvdata[$i]['prima_cobrada'] = '$'.number_format($value->monto_pagado, 2, '.', '');
+                $csvdata[$i]['impuesto'] = '$'.$factura['impuestos'];
+                $csvdata[$i]['prima_neta'] = '$'.$prima_neta;
+                $csvdata[$i]['porcentaje_comision'] = $comision.'%';
+                $csvdata[$i]['comision_descontada'] = '$'.$valor_comision;
+                $csvdata[$i]['porcentaje_sobre_comision'] = $sobre_comision.'%';
+                $csvdata[$i]['sobre_comision_descontada'] = '$'.$valor_sobreComision;
+                $csvdata[$i]['pago_aseguradora'] = '$'.$total_aseguradora;
+                $i++;
+                $validacion_datos = 1;
+            }
+        }
+
+        if($validacion_datos == 1){
+
+            $sub_total_comision = number_format($sub_total_comision, 2, '.', '');
+            $sub_total_valorSobre_comision = number_format($sub_total_valorSobre_comision, 2, '.', '');
+            $sub_total_aseguradora = number_format($sub_total_aseguradora, 2, '.', '');
+
+            $csvdata[$i]['numero_recibo'] = '';
+            $csvdata[$i]['numero_poliza'] = '';
+            $csvdata[$i]['ramo'] = '';
+            $csvdata[$i]['asegurado'] = '';
+            $csvdata[$i]['Inicio_vigencia'] = '';
+            $csvdata[$i]['fin_vigencia'] = '';
+            $csvdata[$i]['prima_cobrada'] = '';
+            $csvdata[$i]['impuesto'] = '';
+            $csvdata[$i]['prima_neta'] = '';
+            $csvdata[$i]['porcentaje_comision'] = $nombre_ramo ;
+            $csvdata[$i]['comision_descontada'] = '$'.$sub_total_comision;
+            $csvdata[$i]['porcentaje_sobre_comision'] = '';
+            $csvdata[$i]['sobre_comision_descontada'] = '$'.$sub_total_valorSobre_comision;
+            $csvdata[$i]['pago_aseguradora'] = '$'.$sub_total_aseguradora;
+            $i++;
+            $total_pago = $total_pago + $sub_total_aseguradora;
+        }    
+        $validacion_datos = 0;
+    }
+
+    $total_pago =  number_format($total_pago, 2, '.', '');
+    $csvdata[$i]['numero_recibo'] = '';
+    $csvdata[$i]['numero_poliza'] = '';
+    $csvdata[$i]['ramo'] = '';
+    $csvdata[$i]['asegurado'] = '';
+    $csvdata[$i]['Inicio_vigencia'] = '';
+    $csvdata[$i]['fin_vigencia'] = '';
+    $csvdata[$i]['prima_cobrada'] = '';
+    $csvdata[$i]['impuesto'] = '';
+    $csvdata[$i]['prima_neta'] = '';
+    $csvdata[$i]['porcentaje_comision'] = 'Total' ;
+    $csvdata[$i]['comision_descontada'] = '';
+    $csvdata[$i]['porcentaje_sobre_comision'] = '';
+    $csvdata[$i]['sobre_comision_descontada'] = '';
+    $csvdata[$i]['pago_aseguradora'] = '$'.$total_pago;
+    
+
+    //we create the CSV into memory
+    $csv = Writer::createFromFileObject(new SplTempFileObject());
+    $headers = [
+    'No. Recibo',
+    'No. Póliza',
+    'Ramo',
+    'Aseguradoro',
+    'Inicio vigencia',
+    'Fin vigencia',
+    'Prima cobrada',
+    'impuesto',
+    'Prima Neta',
+    '% Comisión',
+    'Comisión descontada',
+    '% Sobre comisión',
+    'S.Comisión descontada',
+    'Pago a aseguradora'
+    ];
+    $decodingHeaders = array_map("utf8_decode", $headers);
+    $csv->insertOne($decodingHeaders);
+    $csv->insertAll($csvdata);
+    $csv->output("RemesaSalientes-" . date('y-m-d') . ".csv");
+    exit();
 }
 
 
@@ -800,7 +1007,8 @@ public function ajax_cambiar_estado_remesa() {
    $campos = $this->input->post('campo');
    $ids = $campos['ids'];
    $empresa_id = $this->empresa_id;
-   $campo = ['estado'=>$campos['estado']];
+   $campo = ['estado'=>$campos['estado'], 'fecha' => date('Y-m-d')];
+
 
    try {
     $msg = $reclamo = Remesa::where('empresa_id', $empresa_id)->whereIn('id',$ids)->update($campo);

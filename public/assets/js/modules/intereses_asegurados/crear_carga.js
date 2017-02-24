@@ -111,6 +111,7 @@ function register_user_no_carga()
 
 
 $(document).ready(function(){
+    $('.estado_carga').attr('disabled', 'disabled');
     var counter = 2;
     $('#del_file_carga').hide();
     $('#add_file_carga').click(function(){

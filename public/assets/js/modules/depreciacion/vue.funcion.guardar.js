@@ -22,6 +22,11 @@ var guardar = {
         },200);
         }
       });
+      //case #989 se actualiza el valor actual a guardar
+      _.forEach(self.articulos, function(o) {
+          var valor_actual = o.valor_actual;
+          o.valor_actual = valor_actual - o.monto_depreciado;
+      });
     }
   }
 };

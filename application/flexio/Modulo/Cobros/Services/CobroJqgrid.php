@@ -41,6 +41,8 @@ class CobroJqgrid extends JqgridAbstract{
     $builder = $this->scoped->newQuery();
     $registros = $this->filters->apply($builder, $clause);
     
+	$registros->where("formulario","!=","seguros");
+	
     if(!is_null($sidx) && !is_null($sord)) $registros->orderBy($sidx, $sord);
 	  if(!is_null($limit) && !is_null($start)) $registros->skip($start)->take($limit);
 

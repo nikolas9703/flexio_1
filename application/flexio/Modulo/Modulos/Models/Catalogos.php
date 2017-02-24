@@ -18,6 +18,12 @@ class Catalogos extends Model
     public function scopeTerminosDePago($query) {
         return $query->where("identificador", "terminos_pago");
     }
+    public function scopeTipoPlanilla($query) {
+        return $query->where("identificador", "Tipo Planilla");
+    }
+    public function scopeCicloPlanilla($query) {
+        return $query->where("identificador", "Ciclo")->where("activo","=",1);
+    }
 
     public function scopeTiposDeCuenta($query) {
         return $query->where("identificador", "Tipo de Cuenta");

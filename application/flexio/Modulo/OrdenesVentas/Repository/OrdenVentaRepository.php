@@ -115,7 +115,7 @@ class OrdenVentaRepository{
       		return $comentarios_nuevos;
      	});
      	return  $comentariosNuevos;
-     }
+	}
 
     function agregarComentario($ordenId, $comentarios) {
     	$ordenVenta = OrdenVenta::find($ordenId);
@@ -166,8 +166,8 @@ class OrdenVentaRepository{
   }
 
 function lista_totales($clause=array()) {
-  return OrdenVenta::where(function($query) use($clause){
-    $query->where('empresa_id','=',$clause['empresa_id']);
+  $ordenes_ventas = OrdenVenta::where(function($query) use($clause){
+    $query->where('ord_ventas.empresa_id','=',$clause['empresa_id']);
     $query->where('formulario', '=', $clause['formulario']);
     if(isset($clause['cotizacion_id']))$query->where('cotizacion_id','=' ,$clause['cotizacion_id']);
     if(isset($clause['id']))$query->where('id','=' ,$clause['id']);
@@ -176,7 +176,10 @@ function lista_totales($clause=array()) {
     if(isset($clause['creado_por']))$query->where('created_by','=',$clause['creado_por']);
     if(isset($clause['fecha_desde']))$query->where('fecha_desde','<=',$clause['fecha_desde']);
     if(isset($clause['fecha_hasta']))$query->where('fecha_hasta','>=',$clause['fecha_hasta']);
-  })->count();
+
+  });
+  if(isset($clause['campo']) && !empty($clause['campo']))$ordenes_ventas->deFiltro($clause['campo']);
+  return $ordenes_ventas->count();
 }
 
 /**
@@ -184,9 +187,16 @@ function lista_totales($clause=array()) {
 */
 public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
     $ordenes = OrdenVenta::where(function($query) use($clause){
-        $query->where('empresa_id','=',$clause['empresa_id']);
+        $query->where('ord_ventas.empresa_id','=',$clause['empresa_id']);
         $query->where('formulario', '=', $clause['formulario']);
+        if(isset($clause['factura_id'])){
+            $factura_id = $clause['factura_id'];
+            $query->whereHas("facturas", function($factura) use ($factura_id) {
+                $factura->where('fac_facturas.id', '=', $factura_id);
+            });
+        }
         if(isset($clause['cotizacion_id']))$query->where('cotizacion_id','=' ,$clause['cotizacion_id']);
+        if(isset($clause['orden_venta_id']))$query->where('id', '=', $clause['orden_venta_id']);
         if(isset($clause['id']))$query->whereIn('id', $clause['id']);
         if(isset($clause['cliente_id']))$query->where('cliente_id','=' ,$clause['cliente_id']);
         if(isset($clause['etapa']))$query->where('estado','=' ,$clause['etapa']);
@@ -194,6 +204,7 @@ public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $st
         if(isset($clause['fecha_desde']))$query->where('fecha_desde','<=',$clause['fecha_desde']);
         if(isset($clause['fecha_hasta']))$query->where('fecha_hasta','>=',$clause['fecha_hasta']);
     });
+    if(isset($clause['campo']) && !empty($clause['campo']))$ordenes->deFiltro($clause['campo']);
     if($sidx!=NULL && $sord!=NULL) $ordenes->orderBy($sidx, $sord);
     if($limit!=NULL) $ordenes->skip($start)->take($limit);
   return $ordenes->get();
@@ -205,5 +216,38 @@ public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $st
         }
         $centro_facturacion = CentroFacturable::find($centro_facturable_id);
         $centro_facturacion->orden_ventas()->sync([$orden_venta->id]);
+    }
+    public static function exportar($clause = array()) {
+
+        $query = OrdenVenta::where(function($query) use($clause) {
+                    if (!empty($sidx) && preg_match("/cargo/i", $sidx)) {
+                        $query->orderBy("nombre", $sord);
+                    }
+                });
+
+
+        //Si existen variables de limite
+        if ($clause != NULL && !empty($clause) && is_array($clause)) {
+            foreach ($clause AS $field => $value) {
+                $i = 0;
+                foreach ($value AS $row) {
+
+                    $valor_fin[$i] = hex2bin($row);
+
+                    $i++;
+                }
+                //verificar si valor es array
+                if (is_array($value)) {
+
+
+                    $query->whereIn("uuid_venta", $valor_fin);
+
+                } else {
+                    $query->where($field, '=', $valor_fin);
+                }
+            }
+        }
+
+        return $query->get();
     }
 }

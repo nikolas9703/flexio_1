@@ -115,8 +115,7 @@
                                               </div>
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                                 <label for="estado">Estado</label>
-                                                <select name="estado" class="form-control chosen-select" id="estado">
-                                                    <option value="">Seleccione</option>
+                                                <select name="estado" multiple="true" class="form-control chosen-select" id="estado" data-placeholder="Seleccione">
                                                     <?php foreach($estados as $estado) {?>
                                                     <option value="<?php echo $estado->id?>"><?php echo $estado->valor?></option>
                                                     <?php }?>

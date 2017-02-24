@@ -30,9 +30,9 @@ use Flexio\Modulo\Usuarios\Models\Usuarios as Usuarios;
 use Flexio\Modulo\Ramos\Models\CatalogoTipoPoliza as CatalogoTipoPoliza;
 use Flexio\Modulo\Ramos\Models\CatalogoTipoIntereses as CatalogoTipoIntereses;
 use Flexio\Modulo\Politicas\Repository\PoliticasRepository as PoliticasRepository;
-use Flexio\Modulo\Ramos\Repository\RamoRepository;
 use Flexio\Modulo\Ramos\Models\RamosRoles;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
+use Flexio\Modulo\Ramos\Repository\RamoRepository;
 //use Flexio\Modulo\Solicitudes\Models\SolicitudesDocumentacionCategoria as DocumentacionCategoria;
 use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 
@@ -145,7 +145,7 @@ class Catalogos extends CRM_Controller {
 
         $this->assets->agregar_js(array(
             'public/assets/js/modules/planes/listar.js'
-            ));
+        ));
 
 
         //defino mi mensaje
@@ -156,7 +156,7 @@ class Catalogos extends CRM_Controller {
         }
         $this->assets->agregar_var_js(array(
             "toast_mensaje" => $mensaje
-            ));
+        ));
 
         //Verificar permisos para crear
         $breadcrumb = array(
@@ -164,16 +164,16 @@ class Catalogos extends CRM_Controller {
             "ruta" => array(
                 0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
                 1 => array("nombre" => '<b>Catalogos</b>', "activo" => true)
-                ),
+            ),
             "filtro" => false,
             "menu" => array()
-            );
+        );
 
         if ($this->auth->has_permission('acceso', 'catalogos/ver')) {
             $breadcrumb["menu"] = array(
                 "url" => 'catalogos/ver',
                 "nombre" => "Crear"
-                );
+            );
             $menuOpciones["#cambiarEstadoLnk"] = "Cambiar Estado";
             $menuOpciones["#exportarBtn"] = "Exportar";
             $breadcrumb["menu"]["opciones"] = $menuOpciones;
@@ -189,13 +189,13 @@ class Catalogos extends CRM_Controller {
           $data['usuarios'] = usuario_orm::where('estado', 'Activo')->get();
           /*$clause2['empresa_id'] = $this->empresa_id; */
 
-          $this->template->agregar_titulo_header('Listado de Catalogos');
-          $this->template->agregar_breadcrumb($breadcrumb);
-          $this->template->agregar_contenido($data);
-          $this->template->visualizar($breadcrumb);
-      }
+        $this->template->agregar_titulo_header('Listado de Catalogos');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar($breadcrumb);
+    }
 
-      public function ver($vista = null, $id = null) {
+    public function ver($vista = null, $id = null) {
         $acceso = 1;
         $mensaje = array();
         $mensaje2 = array();
@@ -217,21 +217,21 @@ class Catalogos extends CRM_Controller {
           if (in_array('listar Planes', $urls)) { $planlistar =1;  }else{ $planlistar=0; }
           if (in_array('editar Planes', $urls)) { $planeditar =1;  }else{ $planeditar=0; }
           if (in_array('ver Planes', $urls)) { $planver =1;  }else{ $planver=0; } */
-          $ramosPermission = array(
+        $ramosPermission = array(
             'crear' => $this->auth->has_permission('acceso', 'crear Ramos'),
             'listar' => $this->auth->has_permission('acceso', 'listar Ramos'),
             'editar' => $this->auth->has_permission('acceso', 'editar Ramos'),
-            );
+        );
 
-          $planesPermission = array(
+        $planesPermission = array(
             'crear' => $this->auth->has_permission('acceso', 'crear Planes'),
             'listar' => $this->auth->has_permission('acceso', 'listar Planes'),
             'editar' => $this->auth->has_permission('acceso', 'editar Planes'),
-            );
+        );
 
-          $data['ramosPermission'] = $ramosPermission;
-          $data['planesPermission'] = $planesPermission;
-          if ($this->auth->has_permission('acceso', 'crear Planes')) {
+        $data['ramosPermission'] = $ramosPermission;
+        $data['planesPermission'] = $planesPermission;
+        if ($this->auth->has_permission('acceso', 'crear Planes')) {
             $plancrear = 1;
         } else {
             $plancrear = 0;
@@ -284,7 +284,7 @@ class Catalogos extends CRM_Controller {
 
 
         $this->_Css();
-        $this->_js();
+        // $this->_js();
 
         $this->assets->agregar_css(array(
             'public/assets/css/default/ui/base/jquery-ui.css',
@@ -296,7 +296,7 @@ class Catalogos extends CRM_Controller {
             'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
             'public/assets/css/modules/stylesheets/aseguradoras.css',
             'public/assets/css/plugins/jquery/switchery.min.css'
-            ));
+        ));
         $this->assets->agregar_js(array(
             'public/assets/js/modules/planes/formulario.js',
             'public/assets/js/modules/planes/crear.js',
@@ -322,7 +322,7 @@ class Catalogos extends CRM_Controller {
             'public/assets/js/modules/ramos/configuracion.js',
             'public/assets/js/plugins/jquery/switchery.min.js',
             'public/assets/js/default/formulario.js',
-            ));
+        ));
 
 
         $this->assets->agregar_var_js(array(
@@ -331,12 +331,12 @@ class Catalogos extends CRM_Controller {
             "data_planes" => (!empty($planes)) ? $planes->toJson() : '',
                 //"id_planes" => ($id==null) ? '' : $id,
                 //"id_aseguradora" => (!isset($aseguradora)) ? '' : $aseguradora->id
-            ));
+        ));
         $menuOpciones = array(
             "#activarLnk" => "Habilitar",
             "#inactivarLnk" => "Deshabilitar",
             "#exportarLnk" => "Exportar",
-            );
+        );
 
         /* $data=array();      
           $this->assets->agregar_var_js(array(
@@ -344,24 +344,24 @@ class Catalogos extends CRM_Controller {
           "acceso" => $acceso,
           )); */
 
-          $uuid_empresa = $this->session->userdata('uuid_empresa');
-          $empresa = Empresa_orm::findByUuid($uuid_empresa);
+        $uuid_empresa = $this->session->userdata('uuid_empresa');
+        $empresa = Empresa_orm::findByUuid($uuid_empresa);
 
-          $breadcrumb = array(
+        $breadcrumb = array(
             "titulo" => '<i class="fa fa-archive"></i> Catálogos: Crear  ',
             "ruta" => array(
                 0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
                 1 => array("nombre" => 'Catálogos', "url" => "catalogos/ver", "activo" => false),
                 2 => array("nombre" => '<b>Crear</b>', "activo" => true)
-                ),
+            ),
             "filtro" => false,
             "menu" => array()
-            );
-          if ($this->auth->has_permission('acceso', 'catalogos/ver')) {
+        );
+        if ($this->auth->has_permission('acceso', 'catalogos/ver')) {
             $breadcrumb["menu"] = array(
                 "url" => '#',
                 "nombre" => "Acción"
-                );
+            );
             $menuOpciones2["#exportarBtn"] = "Exportar";
             $breadcrumb["menu"]["opciones"] = $menuOpciones2;
         }
@@ -371,10 +371,10 @@ class Catalogos extends CRM_Controller {
         $data['mensaje2'] = $mensaje2;
         $data['accesoplan'] = array('plancrear' => $plancrear, 'planeditar' => $planeditar, 'planver' => $planver, 'planlistar' => $planlistar);
         $data['usuarios'] = Usuarios::join('usuarios_has_empresas', 'usuario_id', '=', 'usuarios.id')
-        ->where('usuarios_has_empresas.empresa_id', '=', $this->id_empresa)
-        ->where('usuarios.estado', '=', 'Activo')
-        ->select('usuarios.id', 'nombre', 'apellido')
-        ->get();
+                ->where('usuarios_has_empresas.empresa_id', '=', $this->id_empresa)
+                ->where('usuarios.estado', '=', 'Activo')
+                ->select('usuarios.id', 'nombre', 'apellido')
+                ->get();
         $data['roles'] = Roles::where($clause)->get();
 //        $data['documentacion_n'] = DocumentacionCategoria::all();
 
@@ -434,7 +434,7 @@ class Catalogos extends CRM_Controller {
             'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
             'public/assets/css/modules/stylesheets/aseguradoras.css',
             'public/assets/css/plugins/jquery/switchery.min.css'
-            ));
+        ));
         $this->assets->agregar_js(array(
             'public/assets/js/modules/planes/formulario.js',
             'public/assets/js/modules/planes/crear.js',
@@ -460,7 +460,7 @@ class Catalogos extends CRM_Controller {
             'public/assets/js/modules/ramos/configuracion.js',
             'public/assets/js/plugins/jquery/switchery.min.js',
             'public/assets/js/default/formulario.js',
-            ));
+        ));
 
 
         $this->assets->agregar_var_js(array(
@@ -469,12 +469,12 @@ class Catalogos extends CRM_Controller {
             "data_planes" => (!empty($planes)) ? $planes->toJson() : '',
                 //"id_planes" => ($id==null) ? '' : $id,
                 //"id_aseguradora" => (!isset($aseguradora)) ? '' : $aseguradora->id
-            ));
+        ));
         $menuOpciones = array(
             "#activarLnk" => "Habilitar",
             "#inactivarLnk" => "Deshabilitar",
             "#exportarLnk" => "Exportar",
-            );
+        );
 
 
         $uuid_empresa = $this->session->userdata('uuid_empresa');
@@ -486,15 +486,15 @@ class Catalogos extends CRM_Controller {
                 0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
                 1 => array("nombre" => 'Catálogos', "url" => "catalogos/ver", "activo" => false),
                 2 => array("nombre" => '<b>Editar</b>', "activo" => true)
-                ),
+            ),
             "filtro" => false,
             "menu" => array()
-            );
+        );
         if ($this->auth->has_permission('acceso', 'catalogos/editar')) {
             $breadcrumb["menu"] = array(
                 "url" => '#',
                 "nombre" => "Acción"
-                );
+            );
             $menuOpciones2["#cambiarEstadoLnk"] = "Cambiar Estado";
             $menuOpciones2["#exportarBtn"] = "Exportar";
             $breadcrumb["menu"]["opciones"] = $menuOpciones2;
@@ -517,6 +517,44 @@ class Catalogos extends CRM_Controller {
         $this->template->visualizar();
     }
 
+    public function ajax_listar_ramos_tree() {
+
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $uuid_empresa = $this->session->userdata('uuid_empresa');
+        $empresa = Empresa_orm::findByUuid($uuid_empresa);
+        $tipo = $this->input->post('tipo');
+        $clause = array('empresa_id' => $empresa->id);
+        if (!empty($tipo))
+            $clause['tipo_cuenta_id'] = $tipo;
+        $cuentas = Ramos_orm::listar_cuentas($clause);
+        //Constructing a JSON
+        $response = new stdClass();
+        $response->plugins = ["contextmenu"];
+        $response->core->check_callback[0] = true;
+
+        $i = 0;
+        if (!empty($cuentas)) {
+            foreach ($cuentas as $row) {
+                $spanStyle = ($row['estado'] == 1) ? '' : 'color:red;';
+                $response->core->data[$i] = array(
+                    'id' => (string) $row['id'],
+                    'parent' => $row["padre_id"] == 0 ? "#" : (string) $row["padre_id"],
+                    'text' => "<span id='labelramo' style='" . $spanStyle . "'>" . $row["nombre"] . "</span>",
+                    'icon' => 'fa fa-folder',
+                    'codigo' => $row["id"]
+                        //'state' =>array('opened' => true)
+                );
+
+                $i++;
+            }
+        }
+
+        echo json_encode($response);
+        exit;
+    }
 
     public function ajax_listar_ramos() {
         //Just Allow ajax request
@@ -561,21 +599,21 @@ class Catalogos extends CRM_Controller {
                 $level = substr_count($row['nombre'], ".");
                 $spanStyle = ($row['estado'] == 1) ? '' : 'color:red;';
                 $response->rows[$i] = array("id" => $row['id'], 'cell' => array(
-                    'id' => $row['id'],
-                    'nombre' => "<span style='" . $spanStyle . "'>" . $row['nombre'] . "</span>",
-                    'descripcion' => "<span style='" . $spanStyle . "'>" . $row['descripcion'] . "</span>",
-                    'codigo' => $row['codigo_ramo'],
-                    'tipo_interes' => $row['interes_asegurado']["nombre"],
-                    'tipo_poliza' => $row['tipo_poliza']["nombre"],
-                    'estado' => "<span style='" . $spanStyle . "'>" . (($row['estado'] == 1) ? 'Habilitado' : 'Deshabilitado') . "</span>",
-                    'opciones' => $link_option,
-                    'link' => $hidden_options,
+                        'id' => $row['id'],
+                        'nombre' => "<span style='" . $spanStyle . "'>" . $row['nombre'] . "</span>",
+                        'descripcion' => "<span style='" . $spanStyle . "'>" . $row['descripcion'] . "</span>",
+                        'codigo' => $row['codigo_ramo'],
+                        'tipo_interes' => $row['interes_asegurado']["nombre"],
+                        'tipo_poliza' => $row['tipo_poliza']["nombre"],
+                        'estado' => "<span style='" . $spanStyle . "'>" . (($row['estado'] == 1) ? 'Habilitado' : 'Deshabilitado') . "</span>",
+                        'opciones' => $link_option,
+                        'link' => $hidden_options,
                         "level" => isset($row["level"]) ? $row["level"] : "0", //level
                         'parent' => $row["padre_id"] == 0 ? "NULL" : (string) $row["padre_id"], //parent
                         'isLeaf' => (Ramos_orm::is_parent($row['id']) == true) ? false : true, //isLeaf
                         'expanded' => false, //expended
                         'loaded' => true, //loaded
-                        ));
+                ));
                 $i++;
             }
         }
@@ -608,7 +646,7 @@ class Catalogos extends CRM_Controller {
             $clause = array(
                 "codigo_ramo" => strtoupper($codigo_ramo),
                 "empresa_id" => $empresa->id
-                );
+            );
             $existe = Ramos_orm::findCodigo($clause);
             if ($existe && $codigo_ramo != '') {
                 $response->clase = "danger";
@@ -637,7 +675,7 @@ class Catalogos extends CRM_Controller {
                 $clause = array(
                     "codigo_ramo" => strtoupper($codigo_ramo),
                     "empresa_id" => $empresa->id
-                    );
+                );
                 $existe = Ramos_orm::findCodigo($clause);
                 if ($existe) {
                     $response->clase = "danger";
@@ -691,7 +729,7 @@ class Catalogos extends CRM_Controller {
     function ocultoformulario() {
         $clause = array('empresa_id' => $this->empresa_id);
         $this->assets->agregar_var_js(array(
-            ));
+        ));
 
         $this->load->view('formulario');
     }
@@ -739,7 +777,7 @@ class Catalogos extends CRM_Controller {
     public function ocultotabla() {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/planes/tabla.js'
-            ));
+        ));
 
         $this->load->view('tabla');
     }
@@ -747,7 +785,7 @@ class Catalogos extends CRM_Controller {
     public function ajax_listar($grid = NULL) {
         $clause = array(
             "empresa_id" => $this->empresa_id
-            );
+        );
         $nombre = $this->input->post('nombre', true);
         $ruc = $this->input->post('ruc', true);
         $telefono = $this->input->post('telefono', true);
@@ -810,7 +848,7 @@ class Catalogos extends CRM_Controller {
                     $row->direccion,
                     $link_option,
                     $hidden_options
-                    );
+                );
                 $i++;
             }
         }
@@ -840,7 +878,7 @@ class Catalogos extends CRM_Controller {
             'public/assets/js/default/toast.controller.js',
             'public/assets/js/plugins/bootstrap/select2/select2.min.js',
             'public/assets/js/plugins/bootstrap/select2/es.js'
-            ));
+        ));
     }
 
     private function _css() {
@@ -859,7 +897,7 @@ class Catalogos extends CRM_Controller {
             'public/assets/css/plugins/jquery/toastr.min.css',
             'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
             'public/assets/css/plugins/bootstrap/select2.min.css',
-            ));
+        ));
     }
 
     function ajax_cambiar_estado_ramo() {
@@ -905,7 +943,7 @@ class Catalogos extends CRM_Controller {
         exit;
     }
 
-    public function exportar() {
+   public function exportar() {
         /* if(empty($_POST)){
           exit();
           }
@@ -992,78 +1030,79 @@ class Catalogos extends CRM_Controller {
      $csv->output("Ramos-" . date('Y/m/d') . ".csv");
      exit();
  }
- function ajax_buscar_ramo_usuario() {
-    if (!$this->input->is_ajax_request()) {
-        return false;
-    }
-    if ($this->input->post('idRol')!== null ) {
-        $roles = $this->input->post('idRol');
-    } else {
-        $roles = array();
-    }
-    if ($this->input->post('idUsuario')!== null ) {
-        $id_usuario = $this->input->post('idUsuario');
-    } else {
-        $id_usuario = array();
-    }
-    $user = new Usuarios();
+  
+    function ajax_buscar_ramo_usuario() {
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        if ($this->input->post('idRol')!== null ) {
+            $roles = $this->input->post('idRol');
+        } else {
+            $roles = array();
+        }
+        if ($this->input->post('idUsuario')!== null ) {
+            $id_usuario = $this->input->post('idUsuario');
+        } else {
+            $id_usuario = array();
+        }
+        $user = new Usuarios();
 
-    $response = $user->getActiveUsersByRol2($this->empresa_id, $roles, $id_usuario);
-    echo json_encode($response);
-    exit;
-}
-
-public function getActiveUsersByRol() {
-
-    if ($this->input->post('idRol')!== null ) {
-        $roles = $this->input->post('idRol');
-    } else {
-        $roles = array();
+        $response = $user->getActiveUsersByRol2($this->empresa_id, $roles, $id_usuario);
+        echo json_encode($response);
+        exit;
     }
 
-    $user = new Usuarios();
-    if (in_array("todos", $roles)) {
-        $roles = Roles::where("empresa_id", "=", $this->empresa_id)
-        ->select("id")
-        ->get()->toArray();
-        $roles = array_values($roles);
+    public function getActiveUsersByRol() {
+
+        if ($this->input->post('idRol')!== null ) {
+            $roles = $this->input->post('idRol');
+        } else {
+            $roles = array();
+        }
+
+        $user = new Usuarios();
+        if (in_array("todos", $roles)) {
+            $roles = Roles::where("empresa_id", "=", $this->empresa_id)
+                            ->select("id")
+                            ->get()->toArray();
+            $roles = array_values($roles);
+        }
+        $response = $user->getActiveUsersByRol($this->empresa_id, $roles);
+        print json_encode($response);
     }
-    $response = $user->getActiveUsersByRol($this->empresa_id, $roles);
-    print json_encode($response);
-}
 
-public function obtener_politicas() {
-    echo json_encode($this->politicas);
-    exit;
-}
+    public function obtener_politicas() {
+        echo json_encode($this->politicas);
+        exit;
+    }
 
-public function obtener_politicas_general() {
-    echo json_encode($this->politicas_general);
-    exit;
-}
+    public function obtener_politicas_general() {
+        echo json_encode($this->politicas_general);
+        exit;
+    }
 
-public function ocultotabladocumentos() {
-    $this->assets->agregar_js(array(
-        'public/assets/js/modules/configuracion_seguros/tablasdocumentos.js'
+    public function ocultotabladocumentos() {
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_seguros/tablasdocumentos.js'
         ));
 
-    $this->load->view('tablasdocumentos');
-}
+        $this->load->view('tablasdocumentos');
+    }
 
-public function ajax_listar_documentos($grid = NULL) {
+    public function ajax_listar_documentos($grid = NULL) {
 
 
-    $clause = array(
-        "nombre" => $this->input->post('nombre', true),
-        "categoria" => $this->input->post('categoria', true),
-        "modulo" => $this->input->post('modulo', true),
-        "estado" => $this->input->post('estado', true),
-        "id_ramo" => $this->input->post('id_ramo', true) == '' ? 0 : $this->input->post('id_ramo', true),
+        $clause = array(
+            "nombre" => $this->input->post('nombre', true),
+            "categoria" => $this->input->post('categoria', true),
+            "modulo" => $this->input->post('modulo', true),
+            "estado" => $this->input->post('estado', true),
+            "id_ramo" => $this->input->post('id_ramo', true) == '' ? 0 : $this->input->post('id_ramo', true),
         );
 
         //var_dump($clause);
 
-    list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
         $count = RamosDocumentos::listar_documentos_provicional($clause, NULL, NULL, NULL, NULL)->count();  //where(['id_ramo' => 1])->count();//ArticuloModel::listar_articulo_provicional
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
         $rows = RamosDocumentos::listar_documentos_provicional($clause, $sidx, $sord, $limit, $start);      // where(['id_ramo' => 1])->get();//ArticuloModel::listar_articulo_provicional($clause, $sidx, $sord, $limit, $start);
@@ -1098,7 +1137,7 @@ public function ajax_listar_documentos($grid = NULL) {
                     "<label class='" . $spanStyle . " cambiarestadoseparado' data-id='" . $row['id'] . "'>" . $row['estado'] . "</label>",
                     $link_option,
                     $hidden_options
-                    );
+                );
                 $i++;
             }
         }

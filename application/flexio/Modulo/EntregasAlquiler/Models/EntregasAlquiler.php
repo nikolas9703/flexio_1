@@ -43,10 +43,59 @@ class EntregasAlquiler extends Model
         return $this->codigo;
     }
 
+    public function getTimelineAttribute()
+    {
+        return [
+            "Cliente: ".$this->cliente->nombre,
+            "Fecha: ".Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->format('d-m-Y')
+        ];
+    }
+
+    public function getTipoSpanAttribute()
+    {
+        $attrs  = [
+            "style" => "float:right;color:orange;"
+        ];
+        $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
+
+        return $html->setType("htmlSpan")->setAttrs($attrs)->setHtml("Entrega")->getSalida();
+    }
+    public function getTipoFaAttribute()
+    {
+        $attrs = [
+            "class" => "fa fa-car",
+        ];
+        $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
+        return  $html->setType("htmlI")->setAttrs($attrs)->setHtml('')->getSalida();
+    }
+    public function getTimeAgoAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->diffForHumans();
+    }
+    public function getDiaMesAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->formatLocalized('%d de %B');
+    }
+
+    public function getFechaHoraAttribute()
+    {
+        return Carbon::createFromFormat("Y-m-d H:i:s", $this->created_at)->format('d/m/Y @ H:i');
+    }
+
     public function getNumeroDocumentoEnlaceAttribute()
     {
         $attrs = [
             'href'  => $this->enlace,
+            'class' => 'link'
+        ];
+
+        $html = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
+        return $html->setType('htmlA')->setAttrs($attrs)->setHtml($this->numero_documento)->getSalida();
+    }
+
+    public function getNumeroDocumentoEnlaceSinPermisoAttribute() {
+        $attrs = [
+            'href'  => '#',
             'class' => 'link'
         ];
 
@@ -102,6 +151,22 @@ class EntregasAlquiler extends Model
     {
         return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
     }
+
+    public function ubicacion()
+    {
+        return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
+    }
+
+    public function externo()
+    {
+        return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
+    }
+
+    public function getModuloAttribute()
+    {
+        return 'Entrega';//mod series
+    }
+
     public function items_relacionados()
     {
         return $this->belongsTo('Flexio\Modulo\Cliente\Models\Cliente','cliente_id');
@@ -222,6 +287,14 @@ class EntregasAlquiler extends Model
     	return $this->hasManyThrough('Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerItemsDetalles', 'Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler');
     }
 
+    public function devoluciones() {
+        return $this->belongsToMany('Flexio\Modulo\DevolucionesAlquiler\Models\DevolucionesAlquiler', 'entregas_devoluciones', 'entrega_id', 'devolucion_id');
+    }
+
+    public function items_entregados2() {
+    	return $this->belongsTo(ContratosAlquilerItemsDetalles::class, 'id', 'operacion_id')->where('contratos_items_detalles.operacion_type','Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler');
+    }
+
     public function contrato_alquiler() {
     	return $this->belongsTo('Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler', 'entregable_id');
     }
@@ -279,5 +352,17 @@ class EntregasAlquiler extends Model
                  return $collection_modulo;
             });
 
+       }
+
+       public function lines_items()
+       {
+           return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems','tipoable');
+       }
+
+       public function scopeDeFiltro($query, $campo)
+       {
+           
+           $queryFilter = new \Flexio\Modulo\EntregasAlquiler\Services\EntregaAlquilerFilters;
+           return $queryFilter->apply($query, $campo);
        }
 }

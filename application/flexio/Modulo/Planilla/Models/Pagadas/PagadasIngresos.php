@@ -20,10 +20,10 @@ class PagadasIngresos extends Model
 			'recargo_id',
 			'recargo_monto',
 			'beneficio_monto',
-			'fecha_creacion'
+			'fecha_transaccion'
 		];
 	protected $guarded = ['id'];
-	public $timestamps = false;
+	public $timestamps = true;
 
 
 }

@@ -3,28 +3,30 @@ namespace Flexio\Modulo\ClientesAbonos\Repository;
 use Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\ClientesAbonos\Models\ClienteAbono;
 use Carbon\Carbon as Carbon;
- 
- 
+
+
 class ClienteAbonoRepository
 {
     public function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
         $clientes = ClienteAbono::where(function($query) use($clause){
+            if(isset($clause['campo']) && !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
+            if(isset($clause['cliente_id']) && !empty($clause['cliente_id'])){$query->whereClienteId($clause['cliente_id']);}
             $query->where('empresa_id','=',$clause['empresa_id']);
-            $query->where('cliente_id','=',$clause['cliente_id']); 
-    	});	
+    	});
 
         return $clientes->get();
     }
-    
+
     public function listar_totales($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
         $clientes = ClienteAbono::where(function($query) use($clause){
+            if(isset($clause['campo']) && !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
+            if(isset($clause['cliente_id']) && !empty($clause['cliente_id'])){$query->whereClienteId($clause['cliente_id']);}
             $query->where('empresa_id','=',$clause['empresa_id']);
-            $query->where('cliente_id','=',$clause['cliente_id']); 
-    	});	
+    	});
 
         return $clientes->count();
     }
-    
+
     function guardar(Cobro_orm $cobro,$posts){
     $array_cobro = Util::set_fieldset("campo");
     $array_cobro['fecha_abono'] = $posts['campo']['fecha_abono'];
@@ -39,7 +41,7 @@ class ClienteAbonoRepository
     $cobro = $cobro->fresh();
     return $cobro;
   }
-  
+
   function tipo_abono($metodo_abono, array $item)
     {
         $tipo = array();

@@ -16,6 +16,7 @@ var tablaComponenteNotaCredito = Vue.extend({
   },
   computed:{
     total:function(){
+        console.log('compute total')
       return this.subtotal + this.impuesto;
     },
     subtotal:function(){
@@ -46,16 +47,17 @@ var tablaComponenteNotaCredito = Vue.extend({
         this.rows.$remove(fila);
       },*/
       calcular:function(monto, index){
-        var operacionPorcentaje = new Operacion(monto,this.items[index].impuesto.impuesto);
-        this.items[index].monto = monto;
+        
+        var operacionPorcentaje = new Operacion(monto, this.items[index].impuesto == null ? '': this.items[index].impuesto.impuesto);
+        //this.items[index].monto = monto;
         this.items[index].impuesto_total = operacionPorcentaje.porcentajeDelTotal();
-        this.items.$set(index,this.items[index]);
+        //this.items.$set(index,this.items[index]);
         var monto_factura = parseFloat(this.$parent.$data.datosFactura.total);
         factura = _.isNaN(monto_factura)?0:monto_factura;
-        if(this.total > factura){
+        if(this.total > parseFloat(factura)){
           this.boton = true;
           this.error = "El total no puede ser mayor al monto de la factura";
-        }else if( monto > this.items[index].precio_total){
+        }else if( monto > parseFloat(this.items[index].precio_total)){
           this.boton = true;
           this.error = "El crédito no puede ser mayor al monto del Items";
         }else{

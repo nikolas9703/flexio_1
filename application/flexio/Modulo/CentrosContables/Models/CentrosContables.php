@@ -57,7 +57,13 @@ class CentrosContables extends Model
         return $query->where("estado", "Activo");
     }
 
-    
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\CentrosContables\Service\CentroContableFilters;
+        return $queryFilter->apply($query, $campo);
+    }
+
+
 
 
 }

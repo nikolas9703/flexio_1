@@ -18,16 +18,21 @@ $formAttr = array(
                     <div class="row">
                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
                             <label>M&oacute;dulo <span required="" aria-required="true">*</span></label>
-                            <select data-rule-required="true" name="campo[modulo]" class="form-control" id="modulo" @change="moduloSelect(catalogos.modulos.id)">
+                            <select data-rule-required="true" name="campo[modulo]" v-model="detalle.modulo_id" class="form-control" id="modulo" @change="moduloSelect(catalogos.modulos.id)">
                                 <option value="">Seleccione</option>
-                                <option value="{{catalogos.modulos.id}}">Compras/{{catalogos.modulos.nombre}}</option>
+                                <option v-for="cat in catalogos.modulos" track-by="$index" value="{{cat.id}}">Compras/{{cat.nombre}}</option>
                             </select>
                         </div>
                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
                             <label>Transacci&oacute;n <span required="" aria-required="true">*</span></label>
-                            <select data-rule-required="true" name="campo[transaccion]" v-model="detalle.transaccion_id" class="form-control" id="transaccion">
+                            
+                            <select data-rule-required="true" v-if="detalle.modulo_id == 36" name="campo[transaccion]" v-model="detalle.transaccion_id" class="form-control" id="transaccion">
+                                <option selected value="">Seleccione</option>
+                                <option v-for="trans in catalogos.transaccion" :value="trans.id" v-html="trans.valor"</option>
+                            </select>
+                            <select data-rule-required="true" name="campo[transaccion]" v-if="detalle.modulo_id != 36"v-model="detalle.transaccion_id" class="form-control" id="transaccion">
                                 <option value="">Seleccione</option>
-                                "<option v-for="trans in catalogos.transaccion" :value="trans.id_cat" v-html="trans.etiqueta"</option>
+                                <option v-for="trans in catalogos.transaccion" :value="trans.id_cat" v-html="trans.etiqueta"</option>
                             </select>
                         </div>
                         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">

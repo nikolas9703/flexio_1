@@ -20,6 +20,10 @@ class AdendaMonto extends Model
 
     protected $fillable = ['empresa_id', 'monto', 'descripcion', 'cuenta_id'];
 
+     protected $casts = [
+        'monto' => 'float'
+    ];
+
     protected $guarded = ['id', 'adenda_id'];
 
     public function adenda()
@@ -31,6 +35,10 @@ class AdendaMonto extends Model
      *
      * @return void
      */
+     public function cuenta() {
+         return $this->belongsTo('Flexio\Modulo\Contabilidad\Models\Cuentas','cuenta_id')->select(['id','codigo','nombre']);
+     }
+
     public static function boot() {
         parent::boot();
     }

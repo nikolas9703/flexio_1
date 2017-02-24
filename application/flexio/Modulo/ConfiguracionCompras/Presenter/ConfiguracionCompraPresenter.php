@@ -11,6 +11,8 @@ class ConfiguracionCompraPresenter extends Presenter{
   private $labelEstado = [
     1 =>'label-successful',
     0 =>'label-danger',
+    19 =>'label-successful',
+    20 =>'label-danger',
   ];
 
   public function __construct($config) {
@@ -31,6 +33,19 @@ class ConfiguracionCompraPresenter extends Presenter{
       return '';
     }
   }
+    function estado_label_doc() {
+
+        /*if (is_null($this->config->estado_cheque)) {
+          return '';
+        }*/
+        try{
+            $color = $this->labelEstado[$this->config->estado];
+            $estado =  ($this->config->estado == 19)?'Activa':'Inactiva';
+            return '<label class="label '.$color.'">'.$estado.'</label>';
+        }catch(\Exception $e){
+            return '';
+        }
+    }
 
 
 }

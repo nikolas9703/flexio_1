@@ -1,32 +1,19 @@
  $(function() {
-     
+
     //ELEMENTOS DE TIPO CHOSEN
     $("#tipo, #categoria").chosen({
         width: '100%',
-        allow_single_deselect: true 
+        allow_single_deselect: true
     });
-    
-    console.log(mensaje_clase);
-    console.log(mensaje_contenido);
-    if(mensaje_clase != 0)
-    {
-        if(mensaje_clase == "alert-success")
-        {
-            toastr.success(mensaje_contenido);
 
-        }
-        else
-        {
-            toastr.error("¡Error! Su solicitud no fue procesada en el <<Proveedor/Proveedores>>.");
-        }
-    }
-	 
+    
+
     //Expotar a CSV
     $('#moduloOpciones ul').on("click", "#exportarBtn", function(e){
         e.preventDefault();
         e.returnValue=false;
         e.stopPropagation();
-        
+
 
         if($('#proveedoresGrid').is(':visible') == true){
             //Desde la Tabla
@@ -37,7 +24,7 @@
             exportarGrid();
         }
      });
-    
+
     //esta funcion no se usa
     function exportarjQgrid() {
         //Exportar Seleccionados del jQgrid
@@ -63,8 +50,8 @@
                 //Push to array
                 obj.items.push(registro_jqgrid);
             }
-            
-            
+
+
             var json = JSON.stringify(obj);
             var csvUrl = JSONToCSVConvertor(json);
             var filename = 'proveedores_'+ Date.now() +'.csv';
@@ -73,16 +60,16 @@
             downloadURL(csvUrl, filename);
 
             $('body').trigger('click');
-        } 
+        }
     }
-    
-    
-    
+
+
+
     function exportarGrid(){
-        
+
         //contiene un arreglo con los identificadores de los proveedores (uuid_proveedor)
         var registros_jqgrid = $("#proveedoresGrid").jqGrid('getGridParam','selarrrow');
-        
+
         if(registros_jqgrid.length)
         {
             var url = phost() + "proveedores/ajax-exportar";
@@ -101,7 +88,6 @@
             form.submit();
         }
     }
-        
-        
+
+
 });
- 

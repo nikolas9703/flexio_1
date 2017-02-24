@@ -59,6 +59,8 @@ class ItemsRepository{
         //scopeDeCategoria contiente un select para evitar el (id) ambiguo....
         if(isset($clause["categoria_id"]) and !empty($clause["categoria_id"])){$items->deCategoria($clause["categoria_id"]);}
         if(isset($clause["uuid_bodega"]) and !empty($clause["uuid_bodega"])){$items->deBodega($clause["uuid_bodega"]);}
+        if(isset($clause['campo']) and !empty($clause['campo']))$items->DeFiltro($clause['campo']);
+        if(isset($clause['item_ids']) and !empty($clause['item_ids']))$items->whereIn("id",$clause['item_ids']);
     }
 
     public function getUltimosPrecios($item, $limit = 3)
@@ -74,18 +76,30 @@ class ItemsRepository{
         });
     }
 
+    private function limpiar_cuentas($cuentas)
+    {
+        return array_map(function($cuenta){
+            $cuenta = str_replace('activo:', '', $cuenta);
+            $cuenta = str_replace('ingreso:', '', $cuenta);
+            $cuenta = str_replace('costo:', '', $cuenta);
+            return str_replace('variante:', '', $cuenta);
+        }, $cuentas);
+    }
+
     public function getCollectionItems($items){
 
         return $items->map(function($item){
+            $cuentas = json_decode($item->cuentas);
+            if(is_array($cuentas)){$cuentas = $this->limpiar_cuentas($cuentas);}
             return [
                 'id' => $item->id,
                 'nombre' => $item->nombre,
                 'descripcion' => $item->descripcion,
                 'unidades' => $item->unidades,
-                'cuenta_id' => '',//colocar count
+                'cuenta_id' => (is_array($cuentas) && count($cuentas) == 1) ? $cuentas[0] : '',
                 'impuesto_id' => count($item->impuesto_compra) ? $item->impuesto_compra->id : '',
                 'impuesto_uuid' => '',
-                'precio_unidad' => $item->costo_promedio,
+                'precio_unidad' =>$item->costo_promedio,
                 'precios' => $item->precios,
                 'unidad_id' => $item->unidad_id,
                 'atributos' => $item->atributos,
@@ -194,7 +208,7 @@ class ItemsRepository{
             $auth->has_permission('acceso', 'inventarios/ver/(:any)') ? $item->codigo_enlace : $item->codigo,
             $item->nombre,
             !empty($categorias) ? implode(", ", $categorias) : "",
-            $item->costo_promedio_label,
+            //$item->costo_promedio_label,
             $enInventario["cantidadPedidoBase"],
             $enInventario["cantidadDisponibleBase"],
             $enInventario["cantidadNoDisponibleBase"],
@@ -210,7 +224,7 @@ class ItemsRepository{
             !empty($categorias) ? implode(", ", $categorias) : "",
             $auth->has_permission('acceso', 'inventarios/ver/(:any)') ? $item->codigo_enlace : $item->codigo,
             $item->nombre,
-            $item->costo_promedio_label,
+            //$item->costo_promedio_label,
             $item->unidadBaseModel()->nombre,
             $enInventario["cantidadDisponibleBase"],
            // $item->state->etiqueta,
@@ -297,6 +311,7 @@ class ItemsRepository{
         foreach($item->categorias as $categoria)
         {
             $categorias[] = $categoria->nombre;
+            break;
         }
         $enInventario = $item->comp_enInventario($uuid_bodega);
 
@@ -411,7 +426,7 @@ class ItemsRepository{
         $this->_filtros($items, $clause);
 
         $items_categoria = [];
-        $items->chunk(200,function($articulos) use(&$items_categoria){
+        $items->chunk(20,function($articulos) use(&$items_categoria){
             foreach ($articulos as $articulo) {
                 $items_categoria[]= $articulo;
             }
@@ -422,24 +437,23 @@ class ItemsRepository{
 
     public function getCollectionVentas($items){
         $items = collect($items);
+
         return $items->map(function($item){
+
+            $cuentas = json_decode($item->cuentas);
+            $cuenta_id = "";
+            foreach((array) $cuentas as $cuenta) {
+                if(strrpos($cuenta, "ingreso") !== false) {
+                    $cuenta_id = str_replace("ingreso:", "", $cuenta);
+                }
+            }
+
             return [
                 "id" => $item->id,
                 "nombre" => $item->nombre,
                 "impuesto_id"  => count($item->impuesto_venta) ? $item->impuesto_venta->id : '', // impuesto no es requerido en el detalle de item
-                "cuenta_id" => '',
+                "cuenta_id" => $cuenta_id, //count($item->cuenta_ingreso) ? $item->cuenta_ingreso->id : '',
                 "cuentas" => $item->cuentas,//string json
-
-                'tarifa_hora' => $item->tarifa_hora,
-                'tarifa_4_horas' => $item->tarifa_4_horas,
-                'tarifa_6_dias' => $item->tarifa_6_dias,
-                'tarifa_15_dias' => $item->tarifa_15_dias,
-                'tarifa_28_dias' => $item->tarifa_28_dias,
-                'tarifa_30_dias' => $item->tarifa_30_dias,
-                'tarifa_diario' => $item->tarifa_diario,
-                'tarifa_mensual' => $item->tarifa_mensual,
-
-                
                 'atributos'=> $item->atributos,
                 "categoria"=> $item->categorias,
                 "codigo"=> $item->codigo,
@@ -494,6 +508,7 @@ class ItemsRepository{
 
         //filtro de categoria
         if(isset($busqueda["categoria_id"]) && !empty($busqueda["categoria_id"])){$items->deCategoria($busqueda["categoria_id"]);}
+        if(isset($busqueda["activo"]) && $busqueda["activo"]){$items->where('inv_items.estado',1);}
         if(strpos($this->request->server('HTTP_REFERER'), 'pedidos') === false){$items->where('inv_items.estado', '!=', 9);}//solo items aprobados
 
         $items->with('categorias','atributos','unidades')->where(function($query) use($busqueda) {
@@ -524,11 +539,24 @@ class ItemsRepository{
 
       $items = $categoria->items()->skip(0)->take(20)->where(function($query) use ($busqueda){
           if(isset($busqueda["item_id"]) && !empty($busqueda["item_id"])){$query->where("inv_items.id",$busqueda["item_id"]);}
+          if(isset($busqueda["activo"]) && $busqueda["activo"]){$query->where('inv_items.estado',1);}
           if(strpos($this->request->server('HTTP_REFERER'), 'pedidos') === false){$query->where('inv_items.estado', '!=', 9);}//solo items aprobados
       })->get();
       $items->load('unidades','atributos');
       return $items;
 
+    }
+
+    public function getItemsChunk($busqueda){
+
+        $items = Items::deEmpresa($busqueda["empresa_id"]);
+        //$items->deCategoria($busqueda["categoria_id"]);
+        $items->deEstado($busqueda["estado"]);
+        $items->where('nombre', 'like', "%".$busqueda['nombre']."%");
+        $items->skip(0)->take(20);
+        $articulos = $items->get(["id", "nombre", "codigo","cuentas",'uuid_venta']);
+        $articulos->load("precios","unidades","atributos");
+        return $articulos;
     }
 
 

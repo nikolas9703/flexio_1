@@ -32,4 +32,28 @@ $route['configuracion_contabilidad/ajax-cuenta-planilla'] = 'configuracion_conta
 $route['configuracion_contabilidad/ajax-eliminar-cuenta-planilla'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_planilla';
 $route['configuracion_contabilidad/ajax-guardar-planilla'] = 'configuracion_contabilidad/ajax_guardar_planilla';
 $route['configuracion_contabilidad/ajax-get-cuenta-planilla'] = 'configuracion_contabilidad/ajax_get_cuenta_planilla';
+$route['configuracion_contabilidad/ajax-get-cuentas-contrato'] = 'configuracion_contabilidad/ajax_get_cuentas_contrato';
+$route['configuracion_contabilidad/ajax-get-cuenta-contratos'] = 'configuracion_contabilidad/ajax_get_cuenta_contratos';
+$route['configuracion_contabilidad/ajax-guardar-cuenta-contratos'] = 'configuracion_contabilidad/ajax_guardar_cuenta_contratos';
+$route['configuracion_contabilidad/ajax-eliminar-cuenta-contratos'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_contratos';
+$route['configuracion_contabilidad/ajax-get-cuenta-aseguradora-pagar'] = 'configuracion_contabilidad/ajax_get_cuenta_aseguradora_pagar';
+$route['configuracion_contabilidad/ajax-eliminar-cuenta-aseguradora-pagar'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_aseguradora_pagar';
+$route['configuracion_contabilidad/ajax-guardar-cuenta-aseguradora-por-pagar'] = 'configuracion_contabilidad/ajax_guardar_cuenta_aseguradora_por_pagar';
+$route['configuracion_contabilidad/ajax-get-cuenta-agente-pagar'] = 'configuracion_contabilidad/ajax_get_cuenta_agente_pagar';
+$route['configuracion_contabilidad/ajax-eliminar-cuenta-agente-pagar'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_agente_pagar';
+$route['configuracion_contabilidad/ajax-guardar-cuenta-agente-pagar'] = 'configuracion_contabilidad/ajax_guardar_cuenta_agente_pagar';
+$route['configuracion_contabilidad/ajax-get-cuenta-remesa-entrante'] = 'configuracion_contabilidad/ajax_get_cuenta_remesa_entrante';
+$route['configuracion_contabilidad/ajax-eliminar-cuenta-remesa-entrante'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_remesa_entrante';
+$route['configuracion_contabilidad/ajax-guardar-cuenta-remesa-entrante'] = 'configuracion_contabilidad/ajax_guardar_cuenta_remesa_entrante';
+$route['configuracion_contabilidad/ajax-get-cuenta-remesa-saliente'] = 'configuracion_contabilidad/ajax_get_cuenta_remesa_saliente';
+$route['configuracion_contabilidad/ajax-eliminar-cuenta-remesa-saliente'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_remesa_saliente';
+$route['configuracion_contabilidad/ajax-guardar-cuenta-remesa-saliente'] = 'configuracion_contabilidad/ajax_guardar_cuenta_remesa_saliente';
+
+$route['configuracion_contabilidad/ajax-get-cuenta-aseguradora-cobrar'] = 'configuracion_contabilidad/ajax_get_cuenta_aseguradora_cobrar';
+$route['configuracion_contabilidad/ajax-eliminar-cuenta-aseguradora-cobrar'] = 'configuracion_contabilidad/ajax_eliminar_cuenta_aseguradora_cobrar';
+$route['configuracion_contabilidad/ajax-guardar-cuenta-aseguradora-cobrar'] = 'configuracion_contabilidad/ajax_guardar_cuenta_aseguradora_cobrar';
+
+
+
+
 //configuracion_contabilidad/ocultotablacajamenuda

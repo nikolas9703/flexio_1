@@ -61,4 +61,9 @@ class PlanesRepository {
         $query->where('id_ramo', '=', $clause['id_ramo']);       
         return $query;                
     }
+
+    function PlanesGet($id_plan){
+        $planes = Planes::with(array('comisiones'))->where(['id' => $id_plan])->first();
+        return $planes;
+    }
 }

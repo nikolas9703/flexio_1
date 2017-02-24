@@ -16,7 +16,7 @@ $config['modulo_config'] = array(
             "grupo_orden" => 9
         ),
         'Seguros' => array(
-            "grupo_orden" => 12
+            "grupo_orden" => 7
         ),
     ),
     'menu' => array(

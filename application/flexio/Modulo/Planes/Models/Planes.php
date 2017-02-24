@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Modulo\Ramos\Models\Ramos;
 use Flexio\Modulo\Planes\Models\PlanesComisiones;
+use Flexio\Modulo\Contabilidad\Models\Impuestos;
 
 class Planes extends Model
 {
@@ -27,4 +28,7 @@ class Planes extends Model
     public function comisiones(){
         return $this->hasOne( PlanesComisiones::class, 'id_planes', 'id');
     } 
+    public function impuestofk(){
+         return $this->hasOne(Impuestos::class, 'id', 'id_impuesto');
+    }
 }

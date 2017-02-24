@@ -103,6 +103,7 @@ $formAttr = array(
   'id'           => 'crearCentroForm',
   'autocomplete' => 'off'
 );
+
 echo Modal::config(array(
 	"id" => "modalCrearCentro",
   "titulo" => "Crear: Centro Contable",

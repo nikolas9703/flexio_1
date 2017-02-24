@@ -46,7 +46,7 @@
 
               <div class="ibox border-bottom">
                   <div class="ibox-title">
-                      <h5>Par&aacute;metros: <span v-text="tituloReporte"></span></h5>
+                      <h5>Par&aacute;metros: <span v-html="tituloReporte"></span></h5>
                       <div class="ibox-tools">
                           <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
                       </div>

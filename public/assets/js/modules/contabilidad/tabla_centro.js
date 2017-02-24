@@ -32,7 +32,7 @@ var centro = {
     tabla.grid_obj.jqGrid({
       url: tabla.url,
       datatype: "json",
-      colNames: ['', 'Centro Contable', 'Descripción', 'Estado', '', ''],
+      colNames: ['', 'Centro Contable', 'Dirección Completa', 'Estado', '', ''],
       colModel: [{
         name: 'id',
         index: 'id',
@@ -192,6 +192,7 @@ var centro = {
     tabla.opcionesModal.on("click", this.botones.editarCentro, function(e) {
       tabla.opcionesModal.modal("hide");
       var uuid = $(this).data("uuid");
+      console.log(uuid);
       var parametros = {
         uuid_centro: uuid
       };
@@ -204,6 +205,7 @@ var centro = {
       });
 
       selectDatos.done(function(data){
+        console.log(data);
         var items = $.parseJSON(data);
         tabla.formId.find('.chosen-select').append($('<option>', {
             value: '',
@@ -217,6 +219,7 @@ var centro = {
         });
         datos.success(function(data) {
           //popular
+          console.log(data);
           tabla.formId.find('#idEdicion').remove();
           var datos_centro = $.parseJSON(data);
           tabla.formId.append('<input type="hidden" name="campo[id]" id="idEdicion" value="' + datos_centro.id + '">');
@@ -225,6 +228,7 @@ var centro = {
 
         });
         datos.done(function(data) {
+
           var datos_centro = $.parseJSON(data);
           if (datos_centro.padre_id === 0) {
             tabla.formId.find('.chosen-select').prop('value', '');

@@ -9,6 +9,8 @@ use Flexio\Modulo\Cliente\Models\Cliente;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Flexio\Modulo\Cotizaciones\Models\LineItem as LineItem;
+use Flexio\Modulo\Documentos\Models\Documentos;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class OrdenesTrabajo extends Model
 {
@@ -38,7 +40,12 @@ class OrdenesTrabajo extends Model
     protected $appends  = ['icono','codigo','enlace'];
 
     protected static $ci;
-
+    public function __construct(array $attributes = array()) {
+        $this->setRawAttributes(array_merge($this->attributes, array(
+            'uuid_orden_trabajo' => Capsule::raw("ORDER_UUID(uuid())")
+        )), true);
+        parent::__construct($attributes);
+    }
     /**
      * Register any other events for your application.
      *
@@ -46,6 +53,43 @@ class OrdenesTrabajo extends Model
      */
     public static function boot() {
         parent::boot();
+        static::updating(function($odt) {
+            $cambio = $odt->getDirty();
+            $original = $odt->getOriginal();
+            if(isset($cambio['estado'])){
+                $catalogo_anterior = OrdenesTrabajoCatalogo::where("id","=",$original['estado'])->get();
+                $catalogo_actual = OrdenesTrabajoCatalogo::where("id","=",$cambio['estado'])->get();
+
+                $descripcion = "<b style='color:#0080FF; font-size:15px;'>Cambio de estado en la Orden de Trabajo</b></br></br>";
+                $descripcion .= "Estado actual: ".$catalogo_actual[0]->valor.'</br></br>';
+                $descripcion .= "Estado anterior: ".$catalogo_anterior[0]->valor;
+
+                $update = [
+                    'codigo' => $odt->numero,
+                    'usuario_id' => $odt->creado_por,
+                    'empresa_id' => $odt->empresa_id,
+                    'odt_id'=> $odt->id,
+                    'tipo'   => "actualizado",
+                    'descripcion' => $descripcion
+                ];
+                OrdenesTrabajoHistorial::create($update);
+                return $odt;
+            }
+
+        });
+        static::created(function($odt){
+
+            $create = [
+                'codigo' => $odt->numero,
+                'usuario_id' => $odt->creado_por,
+                'empresa_id' => $odt->empresa_id,
+                'odt_id'=> $odt->id,
+                'tipo'   => "creado",
+                'descripcion' => "<b style='color:#0080FF; font-size:15px;'>Se creó la cotización</b></br></br>No. ".$odt->numero."</br></br>Estado: Por aprobar"
+            ];
+            OrdenesTrabajoHistorial::create($create);
+            return $odt;
+        });
     }
 
     /**
@@ -131,5 +175,15 @@ class OrdenesTrabajo extends Model
     }
     public function items() {
         return $this->morphMany(LineItem::class,'tipoable');
+    }
+    function documentos(){
+    	return $this->morphMany(Documentos::class, 'documentable');
+    }
+    public function getEnlaceBitacoraAttribute()
+    {
+        return base_url('ordenes_trabajo/historial/'.$this->uuid_orden_trabajo);
+    }
+    public function historial(){
+        return $this->hasMany(OrdenesTrabajoHistorial::class,'odt_id');
     }
 }

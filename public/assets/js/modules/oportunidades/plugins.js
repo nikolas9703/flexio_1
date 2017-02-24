@@ -19,9 +19,4 @@ $(document).ready(function (e) {
         }
     });
 
-    $(".select2").select2({
-        theme: "bootstrap",
-        width: "100%"
-    });
-
 });

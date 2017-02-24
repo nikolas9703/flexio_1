@@ -13,6 +13,7 @@ use Flexio\Modulo\Cliente\Models\Asignados;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
+use Flexio\Modulo\Polizas\Models\Polizas;
 
 use Flexio\Modulo\Cobros_seguros\Models\CobroFactura;
 
@@ -27,7 +28,7 @@ class Cobros_seguros extends Model
 
     protected $table = 'cob_cobros';
 
-    protected $fillable = ['codigo','cliente_id','empresa_id','fecha_pago','estado','monto_pagado','referencia','tipo','formulario','depositable_id', 'depositable_type','empezable_type','empezable_id','num_remesa'];
+    protected $fillable = ['codigo','cliente_id','empresa_id','fecha_pago','estado','monto_pagado','referencia','tipo','formulario','depositable_id', 'depositable_type','empezable_type','empezable_id','num_remesa','num_remesa_entrante'];
 
     protected $guarded = ['id','uuid_cobro'];
     protected $appends = ['icono','enlace'];
@@ -95,7 +96,7 @@ class Cobros_seguros extends Model
         \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
           'cliente' => \Flexio\Modulo\Cliente\Models\Cliente::class,
           'polizas' => \Flexio\Modulo\Polizas\Models\Polizas::class,
-          'factura' =>  \Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro::class,
+          'factura' => \Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro::class,
       ]);
         $tipos = array_flip($this->empezar);
         if(array_key_exists($value,$tipos)){
@@ -144,6 +145,12 @@ class Cobros_seguros extends Model
     public function metodo_cobro()
     {
       return $this->hasMany(MetodoCobro::class,'cobro_id');
+    }
+	
+	public function empezablePoliza()
+    {
+		return $this->belongsTo('Flexio\Modulo\Polizas\Models\Polizas', 'empezable_id');
+     // return $this->belongsTo(Polizas::class,'empezable_id');
     }
 
     public function catalogo_estado()

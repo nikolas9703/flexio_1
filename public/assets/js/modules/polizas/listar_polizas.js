@@ -387,10 +387,10 @@ $("#cliente").keyup(function(e){
     	console.log(id);
 
 	    //Inicializar opciones del Modal
-	    /*$('#documentosModal').modal({
+	    $('#documentosModal').modal({
 	            backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
 	            show: false
-	        });*/
+	        });
 	    
 	    $('#documentosModal').modal('show');
 	    $('#id_poliza').val(id);

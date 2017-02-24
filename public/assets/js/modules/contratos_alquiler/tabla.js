@@ -22,16 +22,19 @@ var tablaContratosAlquiler = (function(){
             url: tablaUrl,
             mtype: "POST",
             datatype: "json",
-            colNames:['','No. contrato','Cliente','Centro de facturaci&oacute;n','Fecha de inicio','Saldo por facturar','Total facturado','Estado','', ''],
+            colNames:['','No. contrato','Cliente','Centro de facturaci&oacute;n','Fecha de inicio','Fecha de vencimiento','Saldo por facturar','Total facturado', 'Centro contable', 'Creado por', 'Estado','', ''],
             colModel:[
                 {name:'uuid', index:'uuid', width:30,  hidedlg:true, hidden: true},
                 {name:'codigo', index:'codigo', width:55, sortable:true},
                 {name:'cliente_id', index:'cliente_id', width:50, sortable:true},
                 {name:'centro_facturacion_id', index:'centro_facturacion_id', width: 50,  sortable:false},
-                {name:'fecha_inicio', index:'fecha_inicio', width:50,  sortable:false, },
+                {name:'fecha_inicio', index:'fecha_inicio', width:40,  sortable:false, },
+                {name:'fecha_final', index:'fecha_final', width:40,  sortable:false, },
                 {name:'saldo_facturado', index:'saldo_facturado', width:50,  sortable:false, },
                 {name:'total_facturado', index:'total_facturado', width: 50,  sortable:false},
-                {name:'estado_id', index:'estado_id', width:50,  sortable:false, },
+                {name:'centro_contable_id', index:'centro_contable_id', width: 50,  sortable:false},
+                {name:'created_by', index:'created_by', width: 50,  sortable:false},
+                {name:'estado_id', index:'estado_id', width:35,  sortable:false },
                 {name:'options', index:'options',width: 40},
                 {name:'link', index:'link', width:50, align:"center", sortable:false, resizable:false,hidden: true, hidedlg:true},
             ],
@@ -90,6 +93,26 @@ var tablaContratosAlquiler = (function(){
     };
 
     var eventos = function(){
+		$("#cliente_id").select2({
+			theme: "bootstrap",
+			width:"100%"
+		});
+		$("#categoria").select2({
+			theme: "bootstrap",
+			width:"100%"
+		});
+		
+		$(".select2-search__field").css("height","27px");
+		
+		$('#fecha_desde, #fecha_hasta').daterangepicker({
+			locale: {
+				format: 'YYYY-MM-DD'
+			},
+			showDropdowns: true,
+			defaultDate: '',
+			singleDatePicker: true
+		}).val("");
+		
         //Bnoton de Opciones
         gridObj.on("click", botones.opciones, function(e){
             e.preventDefault();
@@ -136,8 +159,10 @@ var tablaContratosAlquiler = (function(){
             e.returnValue=false;
             e.stopPropagation();
             formularioBuscar.find('input[type="text"]').prop("value", "");
-            formularioBuscar.find('select.select2').val('').change();
             formularioBuscar.find('select').prop("value", "");
+			$("#cliente_id").select2("val", "");
+			$("#categoria").select2("val", "");
+			
             recargar();
         });
         //boton Buscar
@@ -148,9 +173,12 @@ var tablaContratosAlquiler = (function(){
 
             var codigo = $('#codigo').val();
             var cliente_id = $('#cliente_id').val();
+            var categoria = $('#categoria').val();
             var fecha_desde= $('#fecha_desde').val();
             var fecha_hasta= $('#fecha_hasta').val();
             var estado_id = $('#estado_id').val();
+            var creado_por = $('#creado_por').val();
+            var centro_contable_id = $('#centro_contable_id').val();
 
             if (codigo !== "" || cliente_id !== "" || fecha_desde !== "" || fecha_hasta !== "" || estado_id) {
                 //Reload Grid
@@ -160,9 +188,12 @@ var tablaContratosAlquiler = (function(){
                     postData: {
                         codigo: codigo,
                         cliente_id: cliente_id,
+                        categoria: categoria,
                         fecha_desde: fecha_desde,
                         fecha_hasta: fecha_hasta,
                         estado_id: estado_id,
+                        creado_por: creado_por,
+                        centro_contable_id: centro_contable_id,
                         erptkn: tkn
                     }
                 }).trigger('reloadGrid');
@@ -223,9 +254,12 @@ var tablaContratosAlquiler = (function(){
             postData: {
                 codigo: '',
                 cliente_id: '',
+                categoria: '',
                 fecha_desde: '',
                 fecha_hasta: '',
                 estado_id: '',
+                creado_por: '',
+                centro_contable_id: '',
                 erptkn: tkn
             }
         }).trigger('reloadGrid');

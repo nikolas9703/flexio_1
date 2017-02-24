@@ -19,6 +19,7 @@ use Flexio\Modulo\Politicas\Repository\PoliticasRepository;
 //modelos
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra as OrdenesCompra;
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesHistorial;
+use Flexio\Modulo\OrdenesCompra\Models\OrdenesCompraCat;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 
 use Flexio\Library\Util\FlexioSession;
@@ -36,6 +37,7 @@ class OrdenesCompraRepository{
     private $itemsRep;
     protected $PedidoRepository;
     protected $PoliticasRepository;
+    protected $OrdenesCompraCat;
      protected $session;
 
     public function __construct() {
@@ -86,6 +88,7 @@ class OrdenesCompraRepository{
         if(isset($clause["uuid_pedido"]) and !empty($clause["uuid_pedido"])){$ordenes_compra->dePedido($clause["uuid_pedido"]);}
         if(isset($clause["id_estado"]) and !empty($clause["id_estado"])){$ordenes_compra->where('id_estado',$clause["id_estado"]);}
         if(isset($clause["id"]) and !empty($clause["id"])){$ordenes_compra->where('id',$clause["id"]);}
+        if(isset($clause["campo"]) and !empty($clause["campo"])){$ordenes_compra->deFiltro($clause["campo"]);}
         //bool -> true and false
         if(isset($clause["facturables"]) and $clause["facturables"]){$ordenes_compra->facturables();}
     }
@@ -94,22 +97,61 @@ class OrdenesCompraRepository{
 
         return $ordenes_compra->map(function($orden_compra){
 
-            $articulo = new \Flexio\Library\Articulos\OrdenCompraArticulo;
+            return $this->getOrdenCompra($orden_compra);
+
+        });
+
+    }
+
+    public function getCollectionOrdenesCompraAjax($ordenes_compra){
+
+        return $ordenes_compra->map(function($orden_compra){
+
             $proveedor_name = count($orden_compra->proveedor) ? $orden_compra->proveedor->nombre : "Proveedor inactivo";
-            $proveedor_id = count($orden_compra->proveedor) ? $orden_compra->proveedor->id : "";
 
             return [
                 'id' => $orden_compra->id,
-                'nombre' => $proveedor_name .' - '.$orden_compra->numero .' ('.$orden_compra->estado->etiqueta.')',
-                'proveedor_id' => $proveedor_id,
-                'terminos_pago' => $orden_compra->termino_pago,
-                'centro_contable_id' => $orden_compra->centro_contable->id,
-                'recibir_en_id' => $orden_compra->bodega->id,
-                "saldo_proveedor" => 0,
-                "credito_proveedor" => 0,
-                "articulos" => $articulo->get($orden_compra->items, $orden_compra)
+                'nombre' => $proveedor_name .' - '.$orden_compra->numero
             ];
+
         });
+
+    }
+
+    public function getOrdenCompra($orden_compra){
+
+        $articulo = new \Flexio\Library\Articulos\OrdenCompraArticulo;
+        $proveedor_name = count($orden_compra->proveedor) ? $orden_compra->proveedor->nombre : "Proveedor inactivo";
+        $proveedor_id = count($orden_compra->proveedor) ? $orden_compra->proveedor->id : "";
+
+        return [
+            'id' => $orden_compra->id,
+            'nombre' => $proveedor_name .' - '.$orden_compra->numero,
+            'proveedor_id' => $proveedor_id,
+            'terminos_pago' => $orden_compra->termino_pago,
+            'centro_contable_id' => $orden_compra->centro_contable->id,
+            'recibir_en_id' => $orden_compra->bodega->id,
+            "saldo_proveedor" => 0,
+            "credito_proveedor" => 0,
+            "monto" => $orden_compra->monto,
+            "referencia" => $orden_compra->referencia,
+            "articulos" => $articulo->get($orden_compra->items, $orden_compra),
+            "proveedor" => count($orden_compra->proveedor)?$this->formatProveedor($orden_compra->proveedor):[]
+        ];
+
+    }
+
+    public function formatProveedor($proveedor){
+
+        return [
+                'id' => $proveedor->uuid_proveedor,
+                'saldo_pendiente' => $proveedor->saldo_pendiente,
+                'credito' => $proveedor->credito,
+                'nombre' => $proveedor->nombre,
+                'proveedor_id' => $proveedor->id,
+                'retiene_impuesto' => $proveedor->retiene_impuesto,
+                'estado' => $proveedor->estado
+            ];
 
     }
 
@@ -130,6 +172,7 @@ class OrdenesCompraRepository{
             "observaciones" => $orden->observaciones,
             "id" => $orden->id,
             "creado_por" => $orden->creado_por,
+            "aprobado_por" => $orden->aprobado_por,
             "articulos" => $articulo->get($orden->items, $orden),
             "comentario" => $orden->comentario,
             "saldo" => count($orden->proveedor) ? $orden->proveedor->saldo_pendiente : 0,
@@ -192,10 +235,21 @@ class OrdenesCompraRepository{
         $orden->observaciones   = $campo["observaciones"];
         $orden->termino_pago    = $campo["termino_pago"];
         $orden->monto           = $campo["monto"];
-
         $orden->uuid_centro     = hex2bin(strtolower($campo["centro"]));
         $orden->uuid_lugar      = hex2bin(strtolower($campo["lugar"]));
-        $orden->uuid_proveedor  = hex2bin(strtolower($campo["proveedor"]));
+        $orden->uuid_proveedor = hex2bin(strtolower($campo['proveedor']));
+        $id = $post['campo']['id'];
+        if(!empty($id)){
+
+          $orden_info = OrdenesCompra::with(array("estado"))->find($id);
+
+          if(!empty($orden_info->estado) && preg_match("/por aprobar/i", $orden_info->estado->etiqueta) && $campo["estado"]==2){
+            $orden->aprobado_por = $this->session->usuarioId();
+          }
+
+        }else{
+          $orden->uuid_proveedor  = hex2bin(strtolower($campo["proveedor"]));
+        }
         //$orden->uuid_pedido     = hex2bin(strtolower($campo["pedido"]));
 
         $orden->save();
@@ -225,19 +279,19 @@ class OrdenesCompraRepository{
                 $line_item_id = (isset($oi['id_pedido_item']) and !empty($oi['id_pedido_item'])) ? $oi['id_pedido_item'] : '';
                 $line_item = $orden->lines_items()->firstOrNew(['id'=>$line_item_id]);
 
-                $line_item->categoria_id = $oi["categoria"];
-                $line_item->item_id = $oi["item_id"];
-                $line_item->cuenta_id = $oi["cuenta"];
-                $line_item->cantidad = $oi["cantidad"];
-                $line_item->cantidad2 = 0;
-                $line_item->unidad_id = $oi["unidad"];
-                $line_item->precio_unidad = $oi["precio_unidad"];
-                $line_item->descuento = $oi["descuento"];
-                $line_item->impuesto_id = $oi["impuesto"];
-                $line_item->impuesto_total = $oi["impuesto_total"];
+                $line_item->categoria_id    = $oi["categoria"];
+                $line_item->item_id         = $oi["item_id"];
+                $line_item->cuenta_id       = !empty($oi["cuenta"]) ? $oi["cuenta"] : 0;
+                $line_item->cantidad        = !empty($oi["cantidad"]) ? $oi["cantidad"] : 0;
+                $line_item->cantidad2       = 0;
+                $line_item->unidad_id       = !empty($oi["unidad"]) ? $oi["unidad"] : "";
+                $line_item->precio_unidad   = !empty($oi["precio_unidad"]) ? $oi["precio_unidad"] : "0.00";
+                $line_item->descuento       = !empty($oi["descuento"]) ? $oi["descuento"]: 0;
+                $line_item->impuesto_id     = $oi["impuesto"];
+                $line_item->impuesto_total  = $oi["impuesto_total"];
                 $line_item->descuento_total = $oi["descuento_total"];
-                $line_item->precio_total = $oi["precio_total"];
-                $line_item->comentario = (isset($oi['comentario']))?$oi['comentario']:'';
+                $line_item->precio_total    = $oi["precio_total"];
+                $line_item->comentario      = (isset($oi['comentario']))?$oi['comentario']:'';
                 //opcionales
                 $line_item->atributo_id = (isset($oi['atributo_id']) and !empty($oi['atributo_id'])) ? $oi['atributo_id'] : 0;
                 $line_item->atributo_text = (isset($oi['atributo_text']) and !empty($oi['atributo_text'])) ? $oi['atributo_text'] : '';
@@ -279,10 +333,9 @@ class OrdenesCompraRepository{
      function addHistorial($orden = array(),  $objeto ){
 
        $descripcion = strip_tags($objeto['comentario']);
-
         $create = [
           'codigo' => $orden->numero,
-          'usuario_id' => $orden->creado_por,
+          'usuario_id' => $this->session->usuarioId(),
           'empresa_id' => $orden->id_empresa,
           'orden_id'=> $orden->id,
           'tipo'   => 'comentario',
@@ -303,4 +356,17 @@ class OrdenesCompraRepository{
 
        return $politicas;
    }
+
+   function getOrdenesPedidoWithItems($uuid_pedido) {
+       $clause['uuid_pedido'] = $uuid_pedido;
+       $clause['empresa_id'] = 4;
+
+       $ordenes = OrdenesCompra::where('uuid_pedido', '=', hex2bin($uuid_pedido))->get();
+       foreach ($ordenes as $orden) {
+           $orden->load('lines_items');
+       }
+
+       return $ordenes;
+   }
+
 }

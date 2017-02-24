@@ -40,7 +40,8 @@ var tablaOrdenesVentas = (function(){
 		 ],
  	   postData: {
                 erptkn: tkn,
-                cotizacion_id: (typeof window.sp_cotizacion_id !== 'undefined') ? window.sp_cotizacion_id : ''
+                cotizacion_id: (typeof window.sp_cotizacion_id !== 'undefined') ? window.sp_cotizacion_id : '',
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
 			height: "auto",
 	 		autowidth: true,

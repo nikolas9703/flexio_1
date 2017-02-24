@@ -20,6 +20,7 @@ var tablaAccionPersonal = (function(){
 		var licenciaid = "";
 		var liquidacionid = "";
 		var colaboradorid = "";
+		var estadoplanilla = "";
 		var ocultar_opciones = false;
 
 		if(typeof vacacion_id != "undefined"){
@@ -37,6 +38,11 @@ var tablaAccionPersonal = (function(){
 		if(typeof colaborador_id != "undefined"){
 			colaboradorid = $.parseJSON(colaborador_id);
 		}
+
+		if(typeof estado_planilla != "undefined"){
+			estadoplanilla = estado_planilla;
+ 		}
+
 	    var location_url = window.location.pathname.match(/planilla/g) ? true : false;
 
  	    if(location_url ==  true){
@@ -79,6 +85,7 @@ var tablaAccionPersonal = (function(){
 		   		licencia_id: licenciaid,
 		   		liquidacion_id: liquidacionid,
 		   		colaborador_id: colaboradorid,
+					estado_planilla: estadoplanilla
 		   	},
 			height: "auto",
 			autowidth: true,

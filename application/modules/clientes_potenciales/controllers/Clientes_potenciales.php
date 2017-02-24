@@ -100,11 +100,20 @@ class Clientes_potenciales extends CRM_Controller {
               'public/assets/js/default/toast.controller.js'
         ));
 
+        $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
+      						var capitalize = str[0].toUpperCase()+str.substring(1);
+      						document.write(capitalize);
+  						</script>";
+
+        
+  		$breadcrumbUrl =base_url("/");
+  		$brModulo="<a href='$breadcrumbUrl'>$nombreModuloBr</a>";
+
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Clientes Potenciales',
             "ruta" => array(
                 0 => array(
-                    "nombre" => "Ventas",
+                    "nombre" => $brModulo,
                     "activo" => false
                 ),
                 1 => array(
@@ -287,13 +296,20 @@ class Clientes_potenciales extends CRM_Controller {
             'public/assets/js/default/formulario.js'
         ));
 
+        $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
+      						var capitalize = str[0].toUpperCase()+str.substring(1);
+      						document.write(capitalize);
+  						</script>";        
+  		$breadcrumbUrl =base_url("/");
+  		$brModulo="<a href='$breadcrumbUrl'>$nombreModuloBr</a>";
+
         $data['info']['toma_contacto'] =  $this->ClienteRepository->getTomaContacto();
         $this->template->agregar_titulo_header('Clientes Potenciales');
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Clientes Potenciales: Crear',
             "ruta" => array(
                 0 => array(
-                    "nombre" => "Ventas",
+                    "nombre" => $brModulo,
                     "activo" => false
                 ),
                 1 => array(
@@ -438,12 +454,18 @@ class Clientes_potenciales extends CRM_Controller {
 
         $data["campos"]["campos"] = $cliente;
 
+        $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
+      						var capitalize = str[0].toUpperCase()+str.substring(1);
+      						document.write(capitalize);
+  						</script>";        
+  		$breadcrumbUrl =base_url("/");
+  		$brModulo="<a href='$breadcrumbUrl'>$nombreModuloBr</a>";
 
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Clientes Potenciales: '.$cliente->nombre,
             "ruta" => array(
                 0 => array(
-                    "nombre" => "Ventas",
+                    "nombre" => $brModulo,
                     "activo" => false
                 ),
                 1 => array(

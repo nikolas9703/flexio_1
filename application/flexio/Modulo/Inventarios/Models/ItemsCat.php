@@ -15,4 +15,5 @@ class ItemsCat extends Model
     {
         return $query->where("valor", $valor);
     }
+    
 }

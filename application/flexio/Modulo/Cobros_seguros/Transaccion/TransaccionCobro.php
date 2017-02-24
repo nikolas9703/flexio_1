@@ -11,9 +11,13 @@ class TransaccionCobro implements InterfaceTransaccion{
 		//print_r($_POST);
 		$modelo->load('cobros_facturas','metodo_cobro');
 		$encontrar = $modelo->sistema_transaccion->count();
-		if($modelo->codigo<1){
-			$modelo->codigo = $_POST["empezable"]["empezable_id"];
+		if(isset($_POST["empezable"]["empezable_id"]))
+		{
+			if($modelo->codigo<1){
+				$modelo->codigo = $_POST["empezable"]["empezable_id"];
+			}
 		}
+		
 		if(is_array($modelo->facturas) AND count($modelo->facturas)==0 ){
 			$modelo->facturas = $_POST["factura"][0]["cobrable_id"];
 		}

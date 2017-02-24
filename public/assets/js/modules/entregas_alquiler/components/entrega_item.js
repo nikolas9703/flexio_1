@@ -3,7 +3,7 @@ var entrega_item = Vue.component('entrega_item',{
 
     template:'#entrega_item',
 
-    props: ['parent_index','parent_articulo'],
+    props: ['parent_index','parent_articulo','parent_articulos'],
 
     ready: function ()
     {
@@ -33,7 +33,7 @@ var entrega_item = Vue.component('entrega_item',{
             disabledEditar:false,
             disabledEditarTabla:false,
             disabledAddRow:false,
-
+            fecha_estimada_devolucion : '',
             categorias: categorias,//catalogo from controller
             ciclos_tarifarios: ciclos_tarifarios,//catalogo from controller,
             bodegas: JSON.parse(bodegas),
@@ -45,20 +45,47 @@ var entrega_item = Vue.component('entrega_item',{
 
     },
 
+    computed: {
+
+        getSeries:function(){
+
+            //recordar colocar condicion
+            //para validar que sea el mismo
+            //item y la misma categoria
+            //también borrar la condicion que evita que se rompa el codigo de
+            //jose luis
+            var context = this;
+            var series_seleccionadas = [];
+
+            _.forEach(context.parent_articulos, function(fila){
+                _.forEach(fila.detalles, function(subfila){
+                    series_seleccionadas.push(subfila.serie);
+                });
+            });
+
+            return _.filter(context.parent_articulo.series, function(serie){
+                console.log(series_seleccionadas, serie.codigo, series_seleccionadas.indexOf(serie.codigo));
+                return series_seleccionadas.indexOf(serie.codigo) === -1;
+            });
+
+        }
+
+    },
+
     methods:
     {
 
         myReady:function()
         {
-
             var context = this;
             var item = _.find(context.parent_articulo.items, function(item){
                 return item.id == context.parent_articulo.item_id;
             });
             var cantidad_restante = context.parent_articulo.cantidad_restante;
-            var serializable = (item.tipo_id == '5' || item.tipo_id == '8');
+            var serializable = typeof item !="undefined" && (item.tipo_id == '5' || item.tipo_id == '8');
 
             context.articulos = [];
+            var fecha_fin = '';
 
             if(context.vista == 'editar')
             {
@@ -93,7 +120,17 @@ var entrega_item = Vue.component('entrega_item',{
             }
             else if(serializable)
             {
+                var fecha_devolucion_estimada = '';
+                if(vista=='crear') {
+                    //if(typeof articulo.fecha_devolucion_estimada != 'undefined') {
+
+                    //}
+                }
                 var i = 0;
+                if (this.$root.entrega_alquiler.fecha_fin_contrato!=''){
+                    fecha_fin = this.$root.entrega_alquiler.fecha_fin_contrato;
+                }
+
                 for(var i=0;i<cantidad_restante;i++)
                 {
                     context.articulos.push({
@@ -101,7 +138,7 @@ var entrega_item = Vue.component('entrega_item',{
                         serie:'',
                         cantidad: 1,
                         bodega_id:'',
-                        fecha_devolucion_estimada:'',
+                        fecha_devolucion_estimada:fecha_fin,
                         ubicacion_id:'',
                         disabledAddRow:true
                     });
@@ -110,19 +147,27 @@ var entrega_item = Vue.component('entrega_item',{
             }
             else
             {
+                if (this.$root.entrega_alquiler.fecha_fin_contrato!=''){
+                    fecha_fin = this.$root.entrega_alquiler.fecha_fin_contrato;
+                }
 
                 context.articulos.push({
                     serializable: false,
                     serie:'',
                     cantidad: cantidad_restante,
                     bodega_id:'',
-                    fecha_devolucion_estimada:'',
+                    fecha_devolucion_estimada:fecha_fin,
                     ubicacion_id:'',
                     disabledAddRow:true
                 });
 
             }
 
+            if(context.vista == 'crear')
+            {
+                //se usa para unir los objetos padre-hijo
+                context.parent_articulos[context.parent_index].detalles = context.articulos;
+            }
             context.activarDatepicker();
 
         },
@@ -189,41 +234,6 @@ var entrega_item = Vue.component('entrega_item',{
             var context = this;
             context.verificaCantidad();
 
-        },
-
-        cambiarSerie:function(articulo, parent_articulo, index){
-
-            var context = this;
-
-            $.ajax({
-                url: phost() + "entregas_alquiler/ajax-get-serie-ubicacion",
-                type:"POST",
-                data:{
-                    erptkn:tkn,
-                    item_id:parent_articulo.item_id,
-                    nombre:articulo.serie
-                },
-                dataType:"json",
-                success: function(response){
-                    if(!_.isEmpty(response)){
-                        articulo.ubicacion_id = response.ubicacion_id;
-                    }
-                }
-            });
-
-      //Verificar si esta disponible
-      var objeto = _.find(context.ItemsNoDisponibles, function(obj) {
-         if(parent_articulo.item_id == obj.item_id && articulo.serie == obj.serie){
-           return obj.serie == articulo.serie;
-         }
-       });
-       if(typeof objeto === "undefined"){
-           $('#guardarBtn').attr('disabled', false);
-       }else{
-           $('#guardarBtn').attr('disabled', true);
-           toastr.error('Item no disponible, seleccione otro');          
-           $("#series" + index).val("");
-       }
         },
 
         addRow:function(e)

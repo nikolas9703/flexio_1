@@ -2,7 +2,7 @@
 namespace Flexio\Modulo\Pagos\Repository;
 
 use Flexio\Modulo\Pagos\Models\Pagos as Pagos;
-
+use Flexio\Modulo\Anticipos\Models\Anticipo;
 //service
 use Flexio\Modulo\Base\Services\Numero as Numero;
 use Flexio\Modulo\FacturasVentas\Services\FacturaVentaEstado as FacturaEstado;
@@ -70,12 +70,30 @@ class PagosRepository implements PagosInterface{
         return $aux;
     }
 
+    private function saveAnticipo($pago, $post, $anticipo)
+    {
+        foreach($post['items'] as $item)
+        {
+            $monto_pagado = str_replace(",", "", $item['monto_pagado']);
+            if($monto_pagado > 0)
+            {
+              $pago->anticipo()->save($anticipo,['monto_pagado' => $monto_pagado,'empresa_id' => $post['campo']['empresa_id']]);
+            }
+        }
+    }
+
     public function create($post)
     {
         $this->PagoValidator->post_validate($post);
         $post['campo']['codigo'] = Pagos::whereEmpresaId($post['campo']['empresa_id'])->count() + 1;
         $pago = Pagos::create($post['campo']);
-        $pago->facturas()->sync($this->_getSyncFacturas($post));
+        if($pago->empezable_type == "anticipo"){
+            $anticipo = Anticipo::find($pago->empezable_id);
+            $this->saveAnticipo($pago,$post,$anticipo);
+        }else{
+            $pago->facturas()->sync($this->_getSyncFacturas($post));
+        }
+
 
         $metodo_pago = $pago->metodo_pago()->firstOrNew($post['metodo_pago'][0]);
         $metodo_pago->save();
@@ -134,9 +152,18 @@ class PagosRepository implements PagosInterface{
 
     public function getColletionPago($pago)
     {
-        return Collect(array_merge(
+
+        if($pago->empezable_type == "anticipo"){
+            return $this->pago_anticipo($pago);
+        }else if($pago->formulario == "retenido"){
+            return $this->pago_retenido($pago);
+        }else if($pago->formulario == "movimiento_monetario"){
+            return $this->pago_movimiento_monetario($pago);
+        }
+        $proveedor = is_null($pago->proveedor)? []: $this->formatProveedor($pago->proveedor);
+        return collect(array_merge(
             $pago->toArray(),
-            [
+            [   'proveedor' => $proveedor,
                 'pagables' => $pago->facturas->map(function($factura){
                     return [
                         'numero_documento' => $factura->codigo,
@@ -152,6 +179,66 @@ class PagosRepository implements PagosInterface{
                 'metodos_pago' => $pago->metodo_pago
             ]
         ));
+    }
+
+    public function pago_movimiento_monetario($pago)
+    {
+
+        return collect(array_merge(
+            $pago->toArray(),
+            [
+                'pagables' => $pago->movimientos_monetarios->map(function($movimiento){
+                    $aux = $movimiento->items->sum('debito');
+                    return [
+                        'numero_documento' => $movimiento->codigo,
+                        'fecha_emision' => $movimiento->created_at->format('d/m/Y'),
+                        'total' => $aux,
+                        'pagado' => $movimiento->pagado,
+                        'saldo' => $movimiento->saldo,
+                        'monto_pagado' => $movimiento->pivot->monto_pagado,
+                        'pagable_id' => $movimiento->pivot->pagable_id,
+                        'pagable_type' => $movimiento->pivot->pagable_type
+                    ];
+                }),
+                'metodos_pago' => $pago->metodo_pago
+            ]
+        ));
+    }
+
+    public function pago_retenido($pago)
+    {
+
+        return collect(array_merge(
+            $pago->toArray(),
+            [
+                'pagables' => $pago->facturas->map(function($factura){
+                    return [
+                        'numero_documento' => $factura->codigo,
+                        'fecha_emision' => $factura->fecha_desde,
+                        'total' => $factura->retencion,
+                        'pagado' => $factura->retenido_pagado,
+                        'saldo' => $factura->retenido_por_pagar,
+                        'monto_pagado' => $factura->pivot->monto_pagado,
+                        'pagable_id' => $factura->pivot->pagable_id,
+                        'pagable_type' => $factura->pivot->pagable_type
+                    ];
+                }),
+                'metodos_pago' => $pago->metodo_pago
+            ]
+        ));
+    }
+
+    public function formatProveedor($proveedor){
+        return [
+                'id' => $proveedor->uuid_proveedor,
+                'saldo_pendiente' => $proveedor->saldo_pendiente,
+                'credito' => $proveedor->credito,
+                'nombre' => $proveedor->nombre,
+                'proveedor_id' => $proveedor->id,
+                'retiene_impuesto' => $proveedor->retiene_impuesto,
+                'estado' => $proveedor->estado
+            ];
+
     }
 
     private function _filtros($pagos, $clause)
@@ -189,16 +276,28 @@ class PagosRepository implements PagosInterface{
     {
         $monto_pagado       = new \Flexio\Modulo\Base\Services\Numero("moneda", $pago->monto_pagado);
         //$numeros_documentos = $this->getFacturaOperacionNumeroDocumentos($pago);
-
+     //   dd($pago->proveedor->toArray());
+        $nombre_pago = count($pago->proveedor) ? utf8_decode($pago->proveedor->nombre) : '';
+        if ($pago->formulario == 'planilla') {
+            $nombre = !empty($pago->colaborador) && !empty($pago->colaborador->nombre) ? $pago->colaborador->nombre : '';
+            $apellido = !empty($pago->colaborador) && !empty($pago->colaborador->apellido) ? $pago->colaborador->apellido : '';
+            $nombre_pago ="$nombre $apellido";
+        } elseif ($pago->formulario == 'pago_extraordinario') {
+            $nombre = !empty($pago->colaborador) && !empty($pago->colaborador->nombre) ? $pago->colaborador->nombre : '';
+            $apellido = !empty($pago->colaborador) && !empty($pago->colaborador->apellido) ? $pago->colaborador->apellido : '';
+            $nombre_pago ="$nombre $apellido";
+        }
+        
+        
         return [
             $pago->numero_documento,
             $pago->created_at,
-            count($pago->proveedor) ? utf8_decode($pago->proveedor->nombre) : '',
+            $nombre_pago,
             count($pago->facturas) ? $pago->facturas->implode("codigo", ", ") : '',//hasta que haga la integracion con contratos
             $this->_metodo_pago($pago->metodo_pago),
             $this->_banco($pago->metodo_pago),
             isset($pago->catalogo_estado->valor)?$pago->catalogo_estado->valor:'',
-            $monto_pagado->getSalida()
+            ltrim($monto_pagado->getSalida(), '$')
         ];
     }
 
@@ -221,9 +320,14 @@ class PagosRepository implements PagosInterface{
         $banco="";
 
         foreach($metodo_pago as $metodo){
-            $aux    = json_decode($metodo->referencia);
-            $banco .= (isset($aux->nombre_banco_ach) && $aux->nombre_banco_ach > 0) ? $this->bancosRep->find($aux->nombre_banco_ach)->nombre : "";
-            $banco .= (isset($aux->nombre_banco_cheque) && is_numeric($aux->nombre_banco_cheque)) ? $this->bancosRep->find($aux->nombre_banco_cheque)->nombre : "";
+          if($metodo->referencia != null){
+           //  $aux    = json_decode($metodo->referencia); //Error reportado 1012-1012-compras-exportar-error-en-el-excel
+            $banco .= (isset($metodo->referencia['nombre_banco_ach']) && $metodo->referencia['nombre_banco_ach'] !='') ? $this->bancosRep->find($metodo->referencia['nombre_banco_ach'])->nombre : "";
+            $banco .= (isset($metodo->referencia['nombre_banco_cheque']) && is_numeric($metodo->referencia['nombre_banco_cheque'])) ? $this->bancosRep->find($metodo->referencia['nombre_banco_cheque'])->nombre : "";
+            //$banco .= (isset($aux->nombre_banco_ach) && $aux->nombre_banco_ach > 0) ? $this->bancosRep->find($aux->nombre_banco_ach)->nombre : "";
+            //$banco .= (isset($aux->nombre_banco_cheque) && is_numeric($aux->nombre_banco_cheque)) ? $this->bancosRep->find($aux->nombre_banco_cheque)->nombre : "";
+          }
+
         }
 
         return $banco;
@@ -233,5 +337,43 @@ class PagosRepository implements PagosInterface{
         $comentario = new Comentario($comentarios);
         $pagos->comentario_timeline()->save($comentario);
         return $pagos;
+    }
+
+    function pago_anticipo($pago){
+        $pagable_id = $pago->empezable_id;
+        $pagable_type = 'Flexio\Modulo\Anticipos\Models\Anticipo';
+        $proveedor = is_null($pago->proveedor)? []: $this->formatProveedor($pago->proveedor);
+        return collect(array_merge(
+            $pago->toArray(),
+
+            [   'proveedor' =>$proveedor,
+                'pagables' => $pago->anticipo->map(function($anticipo) use($pagable_type) {
+
+                    return [
+                        'numero_documento' => $anticipo->codigo,
+                        'fecha_emision' => $anticipo->fecha_anticipo,
+                        'total' => $anticipo->monto,
+                        'pagado' => $anticipo->pago_pagado,
+                        'saldo' => $anticipo->pago_saldo,
+                        'monto_pagado' => $anticipo->pivot->monto_pagado,
+                        'pagable_id' => $anticipo->pivot->pagable_id,
+                        'pagable_type' => $pagable_type
+                    ];
+                }),
+                'metodos_pago' => $pago->metodo_pago
+            ]
+        ));
+    }
+
+    function getLastEstadoHistory($id){
+        return Capsule::table('revisions as i')
+                ->select(capsule::raw('CONCAT(usr.nombre, " " , usr.apellido) as usuario, i.*'))
+                ->join('usuarios as usr', 'i.user_id','=', 'usr.id')
+                ->where('revisionable_id', '=', $id)
+                ->where('revisionable_type', '=', 'Flexio\\Modulo\\Pagos\\Models\\Pagos')
+                ->where('new_value','=','aplicado')
+                ->where('key', 'estado')
+                ->orderBy('i.created_at', 'desc')
+                ->first();
     }
  }

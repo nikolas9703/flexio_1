@@ -20,9 +20,6 @@ var tablaInteresesAsegurados = (function () {
     var formularioBuscar = '';
     var documentosModal = $('#documentosModal');
     var grid_obj = $("#tablaInteresesAseguradosGrid");
-
-
-
     var botones = {
         opciones: ".viewOptions",
         subir_archivo: ".subir_archivo_intereses",
@@ -32,7 +29,6 @@ var tablaInteresesAsegurados = (function () {
         modalstate: "label.estadoInteres",
         cambiarEstado: "#cambiarEstadoInteresesLnk"
     };
-
     var tabla = function () {
         gridObj.jqGrid({
             url: tablaUrl,
@@ -69,7 +65,6 @@ var tablaInteresesAsegurados = (function () {
             sortname: "numero",
             sortorder: "DESC",
             multiselect: true,
-
             beforeProcessing: function (data, status, xhr) {
                 //Check Session
                 if ($.isEmptyObject(data.session) == false) {
@@ -101,7 +96,6 @@ var tablaInteresesAsegurados = (function () {
                     getWidthFrom: '.ui-jqgrid-view',
                     className: 'jqgridHeader'
                 });
-
                 //Arreglar tamaño de TD de los checkboxes
                 //FALTA ADAPTAR EL CODIGO PARA QUE LOS CHECKBOX SE VEAN BIEN
                 $('#jqgh_' + gridId + "_cb").css("text-align", "center");
@@ -116,9 +110,6 @@ var tablaInteresesAsegurados = (function () {
             tablaInteresesAsegurados.redimencionar_tabla();
         });
     };
-
-
-
     var eventos = function () {
         //Bnoton de Opciones
         gridObj.on("click", botones.modalstate, function (e) {
@@ -136,22 +127,16 @@ var tablaInteresesAsegurados = (function () {
             opcionesModal.modal('show');
             var idArray = [rowINFO.id];
             var estado = rowINFO.massState == "Activo" ? "Inactivo" : "Activo";
-
             var datos = {campo: {estado: estado, ids: idArray}};
             opcionesModal.on("click", ".massive", function (e) {
                 var cambio = moduloIntereses.cambiarEstadoIntereses(datos);
                 cambio.done(function (response) {
                     opcionesModal.modal('hide');
                     $("#mensaje").hide();
-
                     recargar();
-
                 });
-
-
             });
         });
-
         gridObj.on("click", botones.opciones, function (e) {
             e.preventDefault();
             e.returnValue = false;
@@ -166,11 +151,7 @@ var tablaInteresesAsegurados = (function () {
             opcionesModal.find('.modal-footer').empty();
             opcionesModal.modal('show');
         });
-
     };
-
-
-
     //Documentos Modal
     $(opcionesModal).on("click", ".subir_archivo_intereses", function (e) {
         e.preventDefault();
@@ -178,10 +159,8 @@ var tablaInteresesAsegurados = (function () {
         e.stopPropagation();
         //Cerrar modal de opciones
         opcionesModal.modal('hide');
-
         var intereses_id = $(this).attr("data-id");
         var intereses_type = $(this).attr("data-type");
-
         //Inicializar opciones del Modal
         documentosModal.modal({
             backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
@@ -196,7 +175,6 @@ var tablaInteresesAsegurados = (function () {
         });
         documentosModal.modal('show');
     });
-
     $(botones.limpiar).click(function (e) {
         e.preventDefault();
         e.returnValue = false;
@@ -205,18 +183,14 @@ var tablaInteresesAsegurados = (function () {
         $('#buscarInteresesAseguradosForm').find('select.chosen-select').prop("value", "");
         $('#buscarInteresesAseguradosForm').find('select').prop("value", "");
         $(".chosen-select").trigger("chosen:updated");
-
         recargar();
     });
-
     //Boton de Cambiar estado InteresesAsegurados
     $(opcionesModal).on("click", ".eliminar_interes", function (e) {
         e.preventDefault();
         e.returnValue = false;
         e.stopPropagation();
-
         var intereses_id = $(this).attr("data-id");
-
         if (permiso_eliminar === 1)
         {
             $.ajax({
@@ -246,14 +220,13 @@ var tablaInteresesAsegurados = (function () {
         }
 
     });
-
     //Boton de Cambiar estado InteresesAsegurados
     $(botones.cambiarEstado).on("click", function (e) {
         e.preventDefault();
         e.returnValue = false;
         e.stopPropagation();
         if ($('#tabla').is(':visible') === true) {
-            //Exportar Seleccionados del jQgrid
+//Exportar Seleccionados del jQgrid
 
             var ids = [],
                     statesValues = ["Activo", "Inactivo"],
@@ -284,7 +257,6 @@ var tablaInteresesAsegurados = (function () {
                 });
             }
             ;
-
             //Verificar si hay seleccionados
             if (ids.length > 0) {
 
@@ -302,27 +274,93 @@ var tablaInteresesAsegurados = (function () {
                 for (i = ids.length - 1; i >= 0; i--) {
 
                     opciones = $.extend({}, gridObj.getRowData(ids[i]));
-
                     removeA(statesValues, opciones.massState);
                     states.push(opciones.massState);
-
                 }
                 if (states.allValuesSame()) {
                     var politicas_general = moduloIntereses.ajaxcambiarObtenerPoliticasGeneral();
-                    var permisos_generales = politicas_general.success(function (data) {
-                        var politicas = moduloIntereses.ajaxcambiarObtenerPoliticas();
-                        var permisos1 = politicas.success(function (data) {
-                            var permisos = [];
-                            $.each(data, function (i, filename) {
-                                permisos.push(filename);
-                            });
-
-                            if (permisos.indexOf(19, 0) != -1 || permisos.indexOf(20, 0) != -1)
-                            {
-                                if (ids_activos.length > 0)
-                                {
-                                    if (permisos.indexOf(19, 0) != -1)
+                    var politicas_general_total = moduloIntereses.ajaxcambiarObtenerPoliticasGenerales();
+                    var permisos_generales = politicas_general_total.success(function (data) {
+                        var permisos_total = [];
+                        $.each(data, function (i, filename) {
+                            permisos_total.push(filename);
+                        });
+                        console.log(permisos_total.indexOf(19, 0) + " " + permisos_total.indexOf(20, 0));
+                        var permisos_generales = politicas_general.success(function (data) {
+                            var politicas = moduloIntereses.ajaxcambiarObtenerPoliticas();
+                            var permisos1 = politicas.success(function (data) {
+                                var permisos = [];
+                                $.each(data, function (i, filename) {
+                                    permisos.push(filename);
+                                });
+                                console.log(permisos.indexOf(19, 0) + " " + permisos.indexOf(20, 0));
+                                var politicas_general = moduloIntereses.ajaxcambiarObtenerPoliticasGeneral();
+                                var permisos_generales = politicas_general.success(function (data) {
+                                    console.log(data);
+                                    if (data > 0)
                                     {
+                                        if (ids_activos.length > 0)
+                                        {
+                                            if (((permisos.indexOf(19, 0) == -1) && (permisos_total.indexOf(19, 0) == -1)) || (permisos.indexOf(19, 0) != -1))
+                                            {
+                                                for (i = statesValues.length - 1; i >= 0; i--) {
+                                                    estado = statesValues[i];
+                                                    style = estado == "Activo" ? "successful" : 'danger';
+                                                    button += "<button class='btn btn-block btn-outline btn-" + style + " massive'>" + estado + "</button>";
+                                                }
+                                                opcionesModal.find('.modal-title').empty().append('Cambiar estado(s)');
+                                                opcionesModal.find('.modal-body').empty().append(button);
+                                                opcionesModal.find('.modal-footer').empty();
+                                                opcionesModal.modal('show');
+                                                //db state type emun
+
+                                                var datos = {campo: {estado: estado, ids: ids}};
+                                                opcionesModal.on("click", ".massive", function (e) {
+                                                    var cambio = moduloIntereses.cambiarEstadoIntereses(datos);
+                                                    cambio.done(function (response) {
+                                                        opcionesModal.modal('hide');
+                                                        $("#mensaje").hide();
+                                                        recargar();
+                                                    });
+                                                });
+                                            } else {
+                                                opcionesModal.modal('hide');
+                                                $("#mensaje").show();
+                                                $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+                                            }
+                                        } else if (ids_inactivos.length > 0)
+                                        {
+                                            var datos = {campo: {estado: 'Activo', ids: ids_inactivos}};
+                                            if (((permisos.indexOf(20, 0) == -1) && (permisos_total.indexOf(20, 0) == -1)) || (permisos.indexOf(20, 0) != -1))
+                                            {
+                                                for (i = statesValues.length - 1; i >= 0; i--) {
+                                                    estado = statesValues[i];
+                                                    style = estado == "Activo" ? "successful" : 'danger';
+                                                    button += "<button class='btn btn-block btn-outline btn-" + style + " massive'>" + estado + "</button>";
+                                                }
+                                                opcionesModal.find('.modal-title').empty().append('Cambiar estado(s)');
+                                                opcionesModal.find('.modal-body').empty().append(button);
+                                                opcionesModal.find('.modal-footer').empty();
+                                                opcionesModal.modal('show');
+                                                //db state type emun
+
+                                                var datos = {campo: {estado: estado, ids: ids}};
+                                                opcionesModal.on("click", ".massive", function (e) {
+                                                    var cambio = moduloIntereses.cambiarEstadoIntereses(datos);
+                                                    cambio.done(function (response) {
+                                                        opcionesModal.modal('hide');
+                                                        $("#mensaje").hide();
+                                                        recargar();
+                                                    });
+                                                });
+                                            } else {
+                                                opcionesModal.modal('hide');
+                                                $("#mensaje").show();
+                                                $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+                                            }
+
+                                        }
+                                    } else {
                                         for (i = statesValues.length - 1; i >= 0; i--) {
                                             estado = statesValues[i];
                                             style = estado == "Activo" ? "successful" : 'danger';
@@ -335,106 +373,28 @@ var tablaInteresesAsegurados = (function () {
                                         //db state type emun
 
                                         var datos = {campo: {estado: estado, ids: ids}};
-
                                         opcionesModal.on("click", ".massive", function (e) {
                                             var cambio = moduloIntereses.cambiarEstadoIntereses(datos);
                                             cambio.done(function (response) {
                                                 opcionesModal.modal('hide');
                                                 $("#mensaje").hide();
-
                                                 recargar();
-
                                             });
-
-
                                         });
-                                    } else {
-                                        opcionesModal.modal('hide');
-                                        $("#mensaje").show();
-                                        $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
-                                    }
-                                } else if (ids_inactivos.length > 0)
-                                {
-                                    var datos = {campo: {estado: 'Activo', ids: ids_inactivos}};
-
-                                    if (permisos.indexOf(20, 0) != -1)
-                                    {
-                                        for (i = statesValues.length - 1; i >= 0; i--) {
-                                            estado = statesValues[i];
-                                            style = estado == "Activo" ? "successful" : 'danger';
-                                            button += "<button class='btn btn-block btn-outline btn-" + style + " massive'>" + estado + "</button>";
-                                        }
-                                        opcionesModal.find('.modal-title').empty().append('Cambiar estado(s)');
-                                        opcionesModal.find('.modal-body').empty().append(button);
-                                        opcionesModal.find('.modal-footer').empty();
-                                        opcionesModal.modal('show');
-                                        //db state type emun
-
-                                        var datos = {campo: {estado: estado, ids: ids}};
-
-                                        opcionesModal.on("click", ".massive", function (e) {
-                                            var cambio = moduloIntereses.cambiarEstadoIntereses(datos);
-                                            cambio.done(function (response) {
-                                                opcionesModal.modal('hide');
-                                                $("#mensaje").hide();
-
-                                                recargar();
-
-                                            });
-
-
-                                        });
-
-                                    } else {
-                                        opcionesModal.modal('hide');
-                                        $("#mensaje").show();
-                                        $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
-                                    }
-
-                                }
-                            } else {
-                                 for (i = statesValues.length - 1; i >= 0; i--) {
-                                            estado = statesValues[i];
-                                            style = estado == "Activo" ? "successful" : 'danger';
-                                            button += "<button class='btn btn-block btn-outline btn-" + style + " massive'>" + estado + "</button>";
-                                        }
-                                        opcionesModal.find('.modal-title').empty().append('Cambiar estado(s)');
-                                        opcionesModal.find('.modal-body').empty().append(button);
-                                        opcionesModal.find('.modal-footer').empty();
-                                        opcionesModal.modal('show');
-                                        //db state type emun
-
-                                        var datos = {campo: {estado: estado, ids: ids}};
-
-                                        opcionesModal.on("click", ".massive", function (e) {
-                                            var cambio = moduloIntereses.cambiarEstadoIntereses(datos);
-                                            cambio.done(function (response) {
-                                                opcionesModal.modal('hide');
-                                                $("#mensaje").hide();
-
-                                                recargar();
-
-                                            });
-
-
-                                        });
-
-
 //                                opcionesModal.modal('hide');
 //                                $("#mensaje").show();
 //                                $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
-                            }
-                            return permisos;
+                                    }
+                                    return permisos;
+                                });
+                            });
                         });
                     });
-
-
                 } else {
                     opcionesModal.find('.modal-title').empty().append('Mensaje');
                     opcionesModal.find('.modal-body').empty().append("<button class='btn btn-block btn-outline btn-danger'><p>Los registros</p> <p>no tienen el mismo estado <i class='fa fa-exclamation-triangle'></p></button>");
                     opcionesModal.find('.modal-footer').empty();
                     opcionesModal.modal('show');
-
                 }
 
             } else {
@@ -447,9 +407,6 @@ var tablaInteresesAsegurados = (function () {
         }
 
     });
-
-
-
     $(botones.buscar).click(function (e) {
         e.preventDefault();
         e.returnValue = false;
@@ -458,9 +415,8 @@ var tablaInteresesAsegurados = (function () {
         var tipo = $('#tipo').val();
         var identificacion = $("#identificacion").val();
         var estado = $("#estado").val();
-
         if (numero !== "" || tipo !== "" || identificacion !== "" || estado) {
-            //Reload Grid
+//Reload Grid
             gridObj.setGridParam({
                 url: tablaUrl,
                 datatype: "json",
@@ -482,7 +438,7 @@ var tablaInteresesAsegurados = (function () {
         e.returnValue = false;
         e.stopPropagation();
         if ($('#tabla').is(':visible') === true) {
-            //Exportar Seleccionados del jQgrid
+//Exportar Seleccionados del jQgrid
             var ids = [];
             ids = gridObj.jqGrid('getGridParam', 'selarrrow');
             //Verificar si hay seleccionados
@@ -508,7 +464,6 @@ var tablaInteresesAsegurados = (function () {
                 erptkn: tkn
             }
         }).trigger('reloadGrid');
-
     };
     var redimencionar_tabla = function () {
         $(window).resizeEnd(function () {
@@ -527,22 +482,18 @@ var tablaInteresesAsegurados = (function () {
             redimencionar_tabla();
         }
     };
-
 })();
-
 $(function () {
     tablaInteresesAsegurados.init();
     $("#jqgh_tablaInteresesAseguradosGrid_cb span").removeClass("s-ico");
     $('#jqgh_tablaInteresesAseguradosGrid_options span').removeClass("s-ico");
 });
-
 $('#tipo').on("change", function () {
     var tipo = $(this).val();
     tipo === '1' ? $('#identificacion_label').text('Identificación') : '';
     tipo === '2' ? $('#identificacion_label').text('No. de liquidación') : '';
-    tipo === '3' || tipo === '4' ? $('#identificacion_label').text('No. de serie') : '';
+    tipo === '3' || tipo === '4' || tipo === '8' ? $('#identificacion_label').text('No. de serie') : '';
     tipo === '5' ? $('#identificacion_label').text('No. de cédula') : '';
     tipo === '6' ? $('#identificacion_label').text('No. de orden o contrato') : '';
     tipo === '7' ? $('#identificacion_label').text('Dirección') : '';
-    tipo === '8' ? $('#identificacion_label').text('N° Motor') : '';
-}); 
+});

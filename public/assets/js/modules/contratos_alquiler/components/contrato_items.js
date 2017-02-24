@@ -25,6 +25,8 @@ var contrato_items = Vue.component('contrato_items',{
                 context.disabledEditarTabla = false;
             }
         }
+        
+
     },
 
     data: function()

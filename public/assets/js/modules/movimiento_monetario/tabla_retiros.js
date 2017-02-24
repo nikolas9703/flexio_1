@@ -50,7 +50,7 @@ var tablaRecibos = (function(){
 	var opcionesModal = $('#opcionesModal');
 	var formularioBusqueda = '#buscarRetirosForm';
 	var formularioInventarioModal = $('#entregaInventarioModal');
-	
+	var documentosModal = $('#documentosModal');
 	var botones = {
 		opciones: ".viewOptions",
 		editar: ".editarInventarioBtn",
@@ -58,7 +58,8 @@ var tablaRecibos = (function(){
 		descargar: ".descargarInventarioBtn",
                 exportar: "#exportarDescuentoLnk",
 		limpiar: "#clearBtn",
-		buscar: "#searchBtn"
+		buscar: "#searchBtn",
+		subirArchivo: ".subirArchivoBtn",
 	};
 	
 		
@@ -226,6 +227,27 @@ var tablaRecibos = (function(){
                     
                     
 		});
+
+		//Documentos Modal
+		$(opcionesModal).on("click", botones.subirArchivo, function(e){
+			e.preventDefault();
+			e.returnValue=false;
+			e.stopPropagation();
+			//Cerrar modal de opciones
+			opcionesModal.modal('hide');			
+			var retiro_id = $(this).attr("data-id");
+			//Inicializar opciones del Modal
+			documentosModal.modal({
+				backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+				show: false
+			});
+			
+			var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
+		    scope.safeApply(function(){
+		    	scope.campos.retiro_id = retiro_id;		    	
+		    });
+			documentosModal.modal('show');
+		});
 		
 		//Boton de Descargar de Entrega de Inventario
 		opcionesModal.on("click", botones.descargar, function(e){
@@ -374,7 +396,7 @@ var tablaRecibos = (function(){
            // console.log("llegaste");
 
 		var cliente 	        = $('#cliente').val();
-		var nombre              = $('#nombre').val();
+		var nombre              = $('#cliente_proveedor').val();
 		var narracion    	= $('#narracion').val();
 		var monto_desde         = $('#monto_desde').val();
 		var monto_hasta         = $('#monto_hasta').val();
@@ -408,7 +430,7 @@ var tablaRecibos = (function(){
            // console.log("llegastelimpiando");
 		$('input[type="text"]').prop("value", "");
 		$('#cliente').val('').trigger('chosen:updated');
-                $('#nombre').val('').trigger('chosen:updated');
+                $('#cliente_proveedor').val('').trigger('change');
 
 	};
 
@@ -434,7 +456,7 @@ var tablaRecibos = (function(){
 	};
 })();
 
-$("#cliente").change(function() {
+$("#cliente2").change(function() {
 var cliente_proveedor = $('#cliente').val();
 
   $.ajax({
@@ -465,6 +487,40 @@ var cliente_proveedor = $('#cliente').val();
     
 });
 
+ $('#cliente_proveedor').removeClass("chosen-filtro").addClass("form-control").select2({
+        ajax: {
+            url: phost() + "movimiento_monetario/ajax-cliente-proveedor",
+            method: 'POST',
+            dataType: 'json',
+            delay: 200,
+            cache: true,
+            data: function (params) {
+                return {
+                    cliente_proveedor: $('#cliente').val(),
+                    q: params.term, // search term
+                    page: params.page,
+                    limit: 10,
+                    erptkn: window.tkn
+                };
+            },
+            processResults: function (data, params) {
 
+
+                let resultsReturn = data.map(resp=> [{
+                    'id': resp['id'],
+                    'text': resp['nombre']
+                }]).reduce((a, b) => a.concat(b), []);
+
+                return {results: resultsReturn};
+            },
+            escapeMarkup: function (markup) {
+                return markup;
+            },
+        }
+    }).on("change", function () {
+        $('.id_cliente_proveedor').val($(this).val());
+        $('.guardar1').removeAttr('disabled');
+    });
+
+    
 tablaRecibos.init();
-

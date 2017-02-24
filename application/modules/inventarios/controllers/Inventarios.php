@@ -1300,7 +1300,7 @@ class Inventarios extends CRM_Controller
 
 
         $clause = $this->input->post();
-        $items = $this->itemsRep->newCatItems(['categoria_id'=>$clause['id'],'empresa_id'=>$this->id_empresa, "item_id" => $clause["item_id"]]);
+        $items = $this->itemsRep->newCatItems(['categoria_id'=>$clause['id'],'empresa_id'=>$this->id_empresa, "item_id" => $clause["item_id"], 'activo' => true]);
         $response = [
             'items' => $clause['ventas'] ? $this->itemsRep->getCollectionItemsVentas($items) : $this->itemsRep->getCollectionItems($items)
         ];
@@ -1318,7 +1318,7 @@ class Inventarios extends CRM_Controller
         $nombre = $this->input->get('search');
         $ventas = $this->input->get('ventas');
         $categoria_id = $this->input->get('categoria_id');
-        $items = $this->itemsRep->getItemsConCategoriasChunk(['nombre'=>$nombre,'empresa_id'=>$this->id_empresa, "categoria_id" => $categoria_id]);
+        $items = $this->itemsRep->getItemsConCategoriasChunk(['nombre'=>$nombre,'empresa_id'=>$this->id_empresa, "categoria_id" => $categoria_id, 'activo' => true]);
 
         $response = $ventas ? $this->itemsRep->getCollectionItemsVentas($items) : $this->itemsRep->getCollectionItems($items);
 
@@ -1333,7 +1333,8 @@ class Inventarios extends CRM_Controller
         }
 
         $nombre = $this->input->get('params[search]');
-        $ventas = $this->input->get('ventas');
+        if(empty($nombre))$nombre = $this->input->get('search');
+        $ventas = str_replace("/", "",$this->input->get('ventas'));
         $categoria_id = $this->input->get('categoria_id');
         $collection = new \Flexio\Modulo\Inventarios\Collections\ItemsVentas;
 

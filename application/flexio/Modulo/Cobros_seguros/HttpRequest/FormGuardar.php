@@ -54,10 +54,11 @@ class FormGuardar{
 		$cobro['estado'] = 'aplicado';
 		$cobro['formulario'] = 'seguros';
 		//estado
-
-		//print_r($cobro);
-
+	
 		$factura_ids = array_get($facturas,'cobrable_id');
+		
+		//print_r('convertir a ids');
+		//print_r($facturas);
 
 		return $this->crear($cobro, $facturas, $metodo_cobros);
     }
@@ -68,7 +69,6 @@ class FormGuardar{
 			$cobro = new Cobro($campos);
 			//1. se crea el cobros
 			$cobro->save();
-
 			//se obtiene los ids de las facturas para cambiarle el estado
 			$factura_ids = $facturas->map(function($item){
 				return $item['cobrable_id'];
@@ -105,10 +105,23 @@ class FormGuardar{
 					for($i=0;$i<count($dFac);$i++){
 						$idFac = $dFac[$i]["cobrable_id"];
 						
-						$facturasObj = facturaSeg::where(["id"=>$idFac])->get()->toArray();
+						$facturasObj = facturaSeg::where(["id"=>$idFac]);
+						if($facturasObj->count()==0){
+							$facturasObj = facturaSeg::where(["id_poliza"=>$idFac]);
+						}
+						$facturasObj->get()->toArray();
+						
+						
 						
 						foreach($facturasObj as $facInfo){
+							
+							$id_fac_final = $facInfo["id"];
 							$id_poliza = $facInfo["id_poliza"];
+							
+							$factUpdate = CobroFactura::where(array("cobrable_id" => $id_poliza, "cobro_id" => $cobro->id));
+							$factUpdate->update(array("cobrable_id" => $id_fac_final));
+							
+							
 							$bus = Polizas::find($id_poliza);
 							if($bus->count()!=0){
 								$tipo = "Cobro_seguros";
@@ -118,7 +131,7 @@ class FormGuardar{
 								$comment = ['comentario'=>$comentario,'usuario_id'=>$this->session->usuarioId(), 'comentable_id' =>$id_poliza, 'comentable_type'=>$tipo, 'created_at'=>$fecha_creado, 'empresa_id'=>$this->session->empresaId() ];
 								$msg = $Bitacora->create($comment);
 								
-								$cobFacs = CobroFactura::where(array("cobrable_id" => $idFac, "cobro_id" => $cobro->id));
+								$cobFacs = CobroFactura::where(array("cobrable_id" => $id_fac_final, "cobro_id" => $cobro->id));
 								
 								$cobFacs->update(array("id_ramo" => $bus->ramo_id));
 							}
@@ -147,7 +160,11 @@ class FormGuardar{
         $clause = ['empresa_id' => $this->session->empresaId()];
         $year = Carbon::now()->format('y');
         $cobro = Cobro::where($clause)->get()->last();
-        $codigo = (int)str_replace('PAY'.$year, "", $cobro->codigo);
+		if(count($cobro)>0)
+			$codigocobro=$cobro->codigo;
+		else
+			$codigocobro=0;
+        $codigo = (int)str_replace('PAY'.$year, "", $codigocobro);
         return $codigo + 1;
       }
 }

@@ -69,6 +69,7 @@
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                     <label>Ramo</label>
                                     <select id="ramos" name="ramos" class="ramo chosen-select grouper" multiple="multiple" data-placeholder="Seleccione una opción">
+                                        <option value="todos">Todos</option>
                                         <?php 
                                             $cont = 0;
                                             foreach ($menu_crear as  $value) {
@@ -86,6 +87,27 @@
                                             }
                                         ?>
                                     </select>
+
+                                    <select id="ramos2" name="ramos2" class="hidden" multiple="multiple" data-placeholder="Seleccione una opción">
+                                        <option value="todos">Todos</option>
+                                        <?php 
+                                            $cont = 0;
+                                            foreach ($menu_crear as  $value) {
+                                                foreach ($menu_crear AS $menu) {
+                                                    if ($value['id'] == $menu['padre_id']) {
+                                                        $cont++;
+                                                    }
+                                                }
+                                                if($cont == 0 && $value['padre_id'] != 0 && $value['estado'] && in_array($value['id'], $rolesArray) && in_array($value['id'], $usuariosArray) ){
+                                                    echo '
+                                                    <option value="'.$value['id'].'">'.$value['nombre'].'</option>
+                                                    ';
+                                                }
+                                                $cont = 0;
+                                            }
+                                        ?>
+                                    </select>
+
                                 </div>
                             <!--</div> -->
 

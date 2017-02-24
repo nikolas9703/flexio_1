@@ -16,7 +16,7 @@ var tablaAdendas = (function(){
  		 url: tablaUrl,
  		 mtype: "POST",
  		 datatype: "json",
- 		 colNames:['','Numero de adenda','Fecha','Monto','Monto modificado del contrato','', ''],
+ 		 colNames:['','Numero de adenda','Fecha','Monto (sin ITBMS)','Monto modificado del contrato','', ''],
  		 colModel:[
  		 {name:'uuid', index:'uuid', width:30,  hidedlg:true, hidden: true},
  		 {name:'codigo', index:'codigo', width:30, sortable:true},

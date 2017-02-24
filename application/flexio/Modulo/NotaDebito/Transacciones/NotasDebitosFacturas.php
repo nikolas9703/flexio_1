@@ -35,7 +35,6 @@ class NotasDebitosFacturas {
             });
 
         }
-        //dd($nota_debito->toArray(),$nota_debito->items->toArray());
     }
 
     public function deshaceTransaccion($nota_debito)
@@ -52,22 +51,10 @@ class NotasDebitosFacturas {
     private function _debito($nota_debito)
     {
 
-        $asientos   = [];
-
-        foreach($nota_debito->items as $item)
-        {
-            $cuenta_id  = $this->_getCuentaIdDebito($nota_debito, $item);
-            if(empty($cuenta_id)){throw new \Exception('No se logr&oacute; determinar la cuenta para realizar el debito.');}
-            $asientos[] = new AsientoContable([
-                'codigo' => $nota_debito->codigo,
-                'nombre' => $nota_debito->codigo,
-                'debito' => $nota_debito->a_proveedor ? $item->monto : $nota_debito->total,
-                'cuenta_id' => $cuenta_id,
-                'empresa_id' => $nota_debito->empresa_id
-            ]);
+        if($nota_debito->a_proveedor){
+            return $this->debitoCuandoEsProveedor($nota_debito);
         }
-
-        return $asientos;
+        return $this->debitoCuandoEsfactura($nota_debito);
     }
 
     private function _credito($nota_debito){
@@ -94,6 +81,16 @@ class NotasDebitosFacturas {
                     'cuenta_id' => $item->impuesto->cuenta_id,
                     'empresa_id' => $nota_debito->empresa_id
                 ]);
+
+                $asientos[] = new AsientoContable([
+                    'codigo' => $nota_debito->codigo,
+                    'nombre' => $nota_debito->codigo,
+                    'credito' => round(  $item->impuesto_total * ($item->impuesto->porcentaje_retenido / 100), 2, PHP_ROUND_HALF_UP),
+                    'cuenta_id' => $item->impuesto->cuenta_retenida_id,
+                    'empresa_id' => $nota_debito->empresa_id
+                ]);
+
+
             }
 
         }
@@ -119,6 +116,49 @@ class NotasDebitosFacturas {
             return $item->cuenta_id;
         }
         return $nota_debito->empresa->cuenta_por_pagar_proveedores->first()->cuenta_id;
+    }
+
+    function debitoCuandoEsProveedor($nota_debito){
+        $asientos   = [];
+
+        foreach($nota_debito->items as $item)
+        {
+            $cuenta_id  = $this->_getCuentaIdDebito($nota_debito, $item);
+            if(empty($cuenta_id)){throw new \Exception('No se logr&oacute; determinar la cuenta para realizar el debito.');}
+            $asientos[] = new AsientoContable([
+                'codigo' => $nota_debito->codigo,
+                'nombre' => $nota_debito->codigo,
+                'debito' =>  $item->monto,
+                'cuenta_id' => $cuenta_id,
+                'empresa_id' => $nota_debito->empresa_id
+            ]);
+        }
+
+        return $asientos;
+    }
+
+    function debitoCuandoEsfactura($nota_debito){
+        $asientos   = [];
+
+        $cuenta_id  = $this->_getCuentaIdDebito($nota_debito, null);
+        if(empty($cuenta_id)){throw new \Exception('No se logr&oacute; determinar la cuenta para realizar el debito.');}
+        $asientos[] = new AsientoContable([
+            'codigo' => $nota_debito->codigo,
+            'nombre' => $nota_debito->codigo,
+            'debito' =>  $nota_debito->total,
+            'cuenta_id' => $cuenta_id,
+            'empresa_id' => $nota_debito->empresa_id
+        ]);
+
+        $asientos[] = new AsientoContable([
+            'codigo' => $nota_debito->codigo,
+            'nombre' => $nota_debito->codigo,
+            'debito' =>  $nota_debito->retenido,
+            'cuenta_id' => $cuenta_id,
+            'empresa_id' => $nota_debito->empresa_id
+        ]);
+
+        return $asientos;
     }
 
 }

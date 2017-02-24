@@ -13,6 +13,10 @@ use Flexio\Modulo\Inventarios\HttpRequest\FormMutator;
 
 //models
 use Flexio\Modulo\Inventarios\Models\Items;
+use Flexio\Modulo\Inventarios\Models\LinesItems;
+use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerItems;
+use Flexio\Modulo\FacturasCompras\Models\FacturaCompraItems;
+use Flexio\Modulo\Pedidos\Models\PedidosItems;
 
 
 class FormGuardar{
@@ -58,16 +62,35 @@ class FormGuardar{
         }
     }
 
+    private function _actualizarTablasRelacionadas($categoria_nueva, $item )
+    {
+              $categoria_actual = $item->categorias_items->first()->id_categoria;
+
+              LinesItems::where('categoria_id', $categoria_actual)->where('item_id', $item->id)->update(['categoria_id' => $categoria_nueva]);
+              ContratosAlquilerItems::where('categoria_id', $categoria_actual)->where('item_id', $item->id)->update(['categoria_id' => $categoria_nueva]);
+              FacturaCompraItems::where('categoria_id', $categoria_actual)->where('item_id', $item->id)->update(['categoria_id' => $categoria_nueva]);
+              PedidosItems::where('categoria_id', $categoria_actual)->where('id_item', $item->id)->update(['categoria_id' => $categoria_nueva]);
+     }
+
     private function _relationships($item)
     {
 
         $campo = $this->request->input('campo');
-        $categorias = $campo["categorias"];
+
+        $categorias = $campo["categorias"]; //Se cambio el select a simple y no multiples categorias
+
         $unidades = $this->request->input('unidades');
         $atributos = $this->request->input('atributos') ? : [];
         $precios = $this->request->input('precios') ? : [];
         $precio_alquiler= $this->request->input('precio_alquiler') ? : []; //****
-         $item->categorias()->sync($categorias);
+
+        //Cambio de Kimi para el card 1189 si ha habido un cambio en la categora del item cambiar las tablas donde aparezca la categoria
+        if($item->categorias_items->first()->id_categoria != current($categorias)){
+          //nuvo id de la categoria current($categorias)
+            $item->categorias()->sync($categorias);
+            $this->_actualizarTablasRelacionadas(current($categorias), $item); //valor Nuevo, Valor Viejo
+        }
+
         $item->unidades()->sync($this->FormMutator->unidades($unidades));
         $item->precios()->sync($this->FormMutator->precios($precios));
         $item->precios_alquiler()->sync($this->FormMutator->precios_alquiler($precio_alquiler));

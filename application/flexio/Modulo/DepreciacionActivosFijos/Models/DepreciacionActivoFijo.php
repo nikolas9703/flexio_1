@@ -9,7 +9,7 @@ use Flexio\Modulo\Inventarios\Models\Categoria as Categoria;
 class DepreciacionActivoFijo extends Model{
 
     protected $table = 'dep_depreciaciones_activos_fijos';
-	protected $fillable = ['codigo','categoria_id','empresa_id','referencia','centro_contable_id','porcentaje'];
+	protected $fillable = ['codigo','categoria_id','empresa_id','referencia','centro_contable_id','porcentaje', 'tipo_item', 'cuenta_id_debito', 'cuenta_id_credito'];
 	protected $guarded = ['id','uuid_depreciacion'];
 
   public function __construct(array $attributes = array()){

@@ -27,8 +27,10 @@
                       <li><a data-toggle="tab" href="#bancos">Bancos</a></li>
                       <li><a data-toggle="tab" href="#Cajamenuda">Caja Menuda</a></li>
                       <li><a data-toggle="tab" href="#abonos">Anticipos</a></li>
-                     <li><a data-toggle="tab" href="#inventario">Inventario</a></li>
+                      <li><a data-toggle="tab" href="#inventario">Inventario</a></li>
 					  <li><a data-toggle="tab" href="#planilla">Planilla</a></li>
+                      <li><a data-toggle="tab" href="#contratos">Contratos</a></li>
+                      <li><a data-toggle="tab" href="#seguros">Seguros</a></li>
                </ul>
            </div>
 				<div class="tab-content row" ng-controller="configImpuestoController">
@@ -175,6 +177,21 @@
 							<?php echo modules::run('configuracion_contabilidad/planilla'); ?>
 						</div>
 					</div>
+
+                                        <!-- Tab Contratos -->
+	                <div class="ibox-content tab-pane fade"  id="contratos">
+	                  <div class="row">
+	                    <?php echo modules::run('configuracion_contabilidad/contratos'); ?>
+	    	            </div>
+	                </div>
+
+	                <!-- Tab Seguros -->
+	                <div class="ibox-content tab-pane fade"  id="seguros">
+	                  <div class="row">
+	                    <?php echo modules::run('configuracion_contabilidad/seguros'); ?>
+	    	            </div>
+	                </div>
+
 					</div>
 				</div>
         	</div>

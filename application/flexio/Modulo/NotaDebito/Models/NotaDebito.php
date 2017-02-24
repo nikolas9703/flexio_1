@@ -8,6 +8,7 @@ use Flexio\Modulo\FacturasCompras\Models\FacturaCompra as FacturaCompra;
 use Flexio\Modulo\Proveedores\Models\Proveedores;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
+use Flexio\Modulo\NotaDebito\Observers\NotaCreditoEventos;
 
 class NotaDebito extends Model{
 
@@ -16,11 +17,11 @@ class NotaDebito extends Model{
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf= ['codigo','proveedor_id','empresa_id','estado','creado_por','total','centro_contable_id','entrada_manual_id','factura_id','tipo','fecha','subtotal','impuesto'];
+    protected $keepRevisionOf= ['codigo','proveedor_id','empresa_id','estado','creado_por','total','centro_contable_id','entrada_manual_id','factura_id','tipo','fecha','subtotal','impuesto','retenido','monto_retenido'];
 
     protected $table = 'compra_nota_debitos';
 
-  protected $fillable = ['codigo','proveedor_id','empresa_id','estado','creado_por','total','centro_contable_id','entrada_manual_id','factura_id','tipo','fecha','subtotal','impuesto','no_nota_credito','monto_factura','fecha_factura'];
+  protected $fillable = ['codigo','proveedor_id','empresa_id','estado','creado_por','total','centro_contable_id','entrada_manual_id','factura_id','tipo','fecha','subtotal','impuesto','no_nota_credito','monto_factura','fecha_factura','retenido','monto_retenido'];
 
   protected $guarded = ['id','uuid_nota_debito'];
   protected $appends =['icono','enlace'];
@@ -37,30 +38,7 @@ class NotaDebito extends Model{
     public static function boot() {
         parent::boot();
 
-        static::updating(function($nota_debito) {
-             $cambio = $nota_debito->getDirty();
-             $original = $nota_debito->getOriginal();
-               if(isset($cambio['estado'])){
-
-                 if($cambio['estado'] == 'aprobado'){
-
-                      $nota_debito->load('factura');
-                      if(count($nota_debito->factura))
-                      {
-                        $factura = FacturaCompra::find($nota_debito->factura->id);
-                        $factura->estado_id = ($nota_debito->total < $nota_debito->factura->total) ? 15 : 16;
-                        $factura->save();
-                        //pagada_parcial  15 | //16 pagada_completa
-                      }else{
-                        $proveedor = Proveedores::find($nota_debito->proveedor_id);
-                        $proveedor->credito += $nota_debito->total;
-                        $proveedor->save();
-                      }
-
-                 }
-
-             }
-         });
+        static::observe(NotaCreditoEventos::class);
     }
   function setCodigoAttribute($value){
       return $this->attributes['codigo'] = GenerarCodigo::setCodigo('ND'.Carbon::now()->format('y'), $value);
@@ -117,6 +95,11 @@ class NotaDebito extends Model{
    return $this->belongsTo('Centros_orm','centro_contable_id');
  }
 
+  public function documentos()
+  {
+      return $this->morphMany('Flexio\Modulo\Documentos\Models\Documentos', 'documentable');
+  }
+
  public function setFechaAttribute($date){
    return  $this->attributes['fecha'] = Carbon::createFromFormat('d/m/Y', $date, 'America/Panama');
  }
@@ -153,14 +136,14 @@ class NotaDebito extends Model{
    return $this->hasMany(NotaDebitoItem::class,'nota_debito_id');
  }
 
- public function total(){
-   return $this->items->sum('monto');
- }
-
  public function proveedor()
  {
-     return $this->belongsTo('Proveedores_orm', 'proveedor_id');
+     return $this->belongsTo('Flexio\Modulo\Proveedores\Models\Proveedores', 'proveedor_id');
  }
+
+ function sistema_transaccion(){
+       return $this->morphMany('Flexio\Modulo\Transaccion\Models\SysTransaccion','linkable');
+   }
 
  public function vendedor(){
    return $this->belongsTo('Usuario_orm','creado_por');
@@ -178,9 +161,14 @@ class NotaDebito extends Model{
  public function getIconoAttribute(){
    return 'fa fa-shopping-cart';
  }
- public function landing_comments(){
-    return $this->morphMany(Comentario::class,'comentable');
-  }
+
+  public function landing_comments() {
+        return $this->morphMany(Comentario::class, 'comentable');
+    }
+
+  public function getModuloAttribute() {
+        return 'Nota debito';
+    }
 
 
 

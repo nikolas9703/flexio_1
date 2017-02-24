@@ -6,7 +6,7 @@ var tablaEntregasAlquiler = (function(){
     var tablaUrl = phost() + 'entregas_alquiler/ajax-listar';
     var gridId = "tablaEntregasAlquilerGrid";
     var gridObj = $("#" + gridId);
-    var opcionesModal = $('#optionsModal');
+    var opcionesModal = $('#optionsModal, #opcionesModal');
     var formularioBuscar = $('#buscarEntregasAlquilerForm');
 
     var botones = {
@@ -35,8 +35,9 @@ var tablaEntregasAlquiler = (function(){
             ],
             postData: {
                 erptkn: tkn,
-                contrato_alquiler_id:(typeof contrato_alquiler_id === 'undefined') ? '' : contrato_alquiler_id,
-                item_id:(typeof window.sp_item_id !== 'undefined') ? window.sp_item_id : ''
+                contrato_alquiler_id:(typeof contrato_alquiler_id === 'undefined' || _.toString(window.contrato_alquiler_id) == "[object HTMLInputElement]") ? '' : window.contrato_alquiler_id,
+                item_id:(typeof window.sp_item_id !== 'undefined') ? window.sp_item_id : '',
+                campo: typeof window.campo !== 'undefined' ? window.campo : {}
             },
             height: "auto",
             autowidth: true,

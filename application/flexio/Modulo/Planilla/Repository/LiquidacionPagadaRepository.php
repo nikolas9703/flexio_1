@@ -439,22 +439,29 @@ use Flexio\Modulo\Planilla\Repository\Regular\PlanillaRegularRepository;
                                                         }
 		   				}
 		   				else{ //Es impuesto sobre la renta
+                $limite1 = $deduccion['deduccion_info']['limite1'];
+                $limite2 = $deduccion['deduccion_info']['limite2'];
 
+                if($ObjetoColaborador['deduccion_tipo_declarante_id'] == 34) //Conjunta
+                {
+                      $limite1 = 11800;
+                      $limite2 = 50800;
+                }
 		   					//$salario_promedio_anual = $salario_bruto*12;
 		   					$salario_promedio_anual = $salario_bruto;
 
-		   					$monto_excedente =  ($deduccion['deduccion_info']['limite2']-$deduccion['deduccion_info']['limite1'])*$rata;
+		   					$monto_excedente =  ($limite2-$limite1)*$rata;
 
 		   					//Formula Para sacar Impuesto Sobre la Renta
-		   					if($salario_promedio_anual > 0 && $salario_promedio_anual<= $deduccion['deduccion_info']['limite1']){
+		   					if($salario_promedio_anual > 0 && $salario_promedio_anual<= $limite1){
 		   						$deducido = 0;
 		   					}
-		   					else if($salario_promedio_anual > $deduccion['deduccion_info']['limite1']+1  && $salario_promedio_anual<= $deduccion['deduccion_info']['limite2']){
-		   						$excedente = $salario_promedio_anual - $deduccion['deduccion_info']['limite1'];
+		   					else if($salario_promedio_anual > $limite1+1  && $salario_promedio_anual<= $limite2){
+		   						$excedente = $salario_promedio_anual - $limite1;
 		   						$deducido = $excedente*$rata;
 		   					}
-		   					else if($salario_promedio_anual >  $deduccion['deduccion_info']['limite2']+1){
-		   						$excedente = $salario_promedio_anual -  $deduccion['deduccion_info']['limite2']+1;
+		   					else if($salario_promedio_anual >  $limite2+1){
+		   						$excedente = $salario_promedio_anual -  $limite2+1;
 		   						$deducido = $monto_excedente + $excedente*0.25;
 		   					}
 

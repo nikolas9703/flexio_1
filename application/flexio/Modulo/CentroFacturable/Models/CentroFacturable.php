@@ -11,8 +11,23 @@ use Flexio\Modulo\FacturasVentas\Models\FacturaVenta;
 class CentroFacturable extends Model{
 
   protected $table = 'cli_centros_facturacion';
-  protected $fillable = ['nombre', 'empresa_id','direccion','direccion_principal','pertenece','cliente_id'];
-  protected $guarded = ['id'];
+  protected $fillable = ['nombre', 'empresa_id','direccion', 'provincia_id', 'distrito_id', 'corregimiento_id', 'eliminado'];
+  protected $guarded = ['id','cliente_id'];
+
+  public function provincia()
+  {
+      return $this->belongsTo('\Flexio\Modulo\Geo\Models\Provincia', 'provincia_id');
+  }
+
+  public function distrito()
+  {
+      return $this->belongsTo('\Flexio\Modulo\Geo\Models\Distrito', 'distrito_id');
+  }
+
+  public function corregimiento()
+  {
+      return $this->belongsTo('\Flexio\Modulo\Geo\Models\Corregimiento', 'corregimiento_id');
+  }
 
 
   function cliente(){
@@ -37,5 +52,11 @@ class CentroFacturable extends Model{
 
   function tiene_relaciones(){
     return ($this->factura->count() + $this->orden_ventas->count() + $this->cotizacion->count()) > 0;
+  }
+
+  public function scopeDeFiltro($query, $campo)
+  {
+      $queryFilter = new \Flexio\Modulo\CentroFacturable\Services\CentroFacturableFilters;
+      return $queryFilter->apply($query, $campo);
   }
 }

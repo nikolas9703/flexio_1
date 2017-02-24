@@ -247,6 +247,7 @@ var tablaCategorias = (function(){
 
         dom.iCategoria.val("");
         dom.iDescripcion.val("");
+        dom.iModo.data("uuid", "");
 
     }
     var cambiarEstadoCategoria = function(uuid, estado){

@@ -175,5 +175,11 @@ class Oportunidades extends Model
         return $query->where('monto','<=',$monto_hasta);
     }
 
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Oportunidades\Services\OportunidadFilters;
+        return $queryFilter->apply($query, $campo);
+    }
+
 
 }

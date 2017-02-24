@@ -9,15 +9,11 @@ use Flexio\Modulo\Planilla\Models\Pagadas\PagadasAcumulados;
 use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDeducciones;
 use Carbon\Carbon;
 
-/*
-use Flexio\Modulo\Planilla\Models\Pagadas\PagadasIngresos;
-use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDeducciones;
-use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDescuentos;*/
 
  class PagadasColaborador extends Model
 {
 	protected $table = 'pln_pagadas_colaborador';
-	protected $fillable = ['salario_bruto','planilla_id','contrato_id','colaborador_id','salario_neto','fecha_pago','fecha_creacion','fecha_cierre_planilla'];
+	protected $fillable = ['salario_bruto','planilla_id','contrato_id','colaborador_id','salario_neto','fecha_pago','fecha_creacion','fecha_cierre_planilla','estado_pago','vacacion_acumulado','decimo_tercermes','prima_antiguedad','asistencia'];
 	protected $guarded = ['id', 'uuid_colaborador'];
   protected $appends      = ['fecha_cierre_planilla_format'];
 
@@ -48,10 +44,12 @@ use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDescuentos;*/
 	{
 		return $this->hasMany(PagadasDeducciones::Class, 'planilla_pagada_id');
 	}
+
   public function acumulados()
   {
     return $this->hasMany(PagadasAcumulados::Class, 'planilla_pagada_id');
   }
+
   	public function descuentos()
  	{
  		return $this->hasMany(PagadasDescuentos::Class, 'planilla_pagada_id');
@@ -67,20 +65,17 @@ use Flexio\Modulo\Planilla\Models\Pagadas\PagadasDescuentos;*/
   public function scopeDePlanilla($query, $planilla_id) {
  		return $query->where("planilla_id", $planilla_id);
  	}
-
+  public function scopeDePlanillaEntreFechas($query, $fecha1, $fecha2) {
+ 		return $query->where("fecha_cierre_planilla",'>=', $fecha1)->where("fecha_cierre_planilla",'<=', $fecha2);
+ 	}
   public function scopeDeColaborador($query, $colaborador_id) {
     return $query->where("colaborador_id", $colaborador_id);
   }
   public function colaborador()
   {
-    //return $this->hasMany(PagadasCalculos::Class, 'planilla_pagada_id');
     return $this->hasOne(Colaboradores::class, 'id', 'colaborador_id');
   }
 
-  	/*public function planilla()
- 	{
- 		return $this->hasOne('Planilla_orm','id','planilla_id');
- 	}*/
  	public function scopeDeHaceCincoAnos($query) {
  	    $haceCinco = strtotime ( '-5 year' , strtotime ( date("Y-m-d") ) ) ;
  	    $haceCinco = date ( 'Y-m-d' , $haceCinco ); //Fecha de hace 5 a�os

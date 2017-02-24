@@ -5,19 +5,20 @@ use Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon as Carbon;
 use Flexio\Library\Util\GenerarCodigo;
-
+use Flexio\Library\Util\FlexioSession;
 
 class EntradaManual extends Model
 {
     protected $table = 'contab_entrada_manual';
-    protected $fillable = ['uuid_entrada','codigo','nombre','empresa_id'];
+    protected $fillable = ['uuid_entrada','codigo','nombre','empresa_id', 'fecha_entrada'];
     protected $guarded = ['id'];
 
 
     public function __construct(array $attributes = array())
     {
+          $session = new FlexioSession;
           $this->setRawAttributes(array_merge($this->attributes, array(
-            'uuid_entrada' => Capsule::raw("ORDER_UUID(uuid())")
+            'uuid_entrada' => Capsule::raw("ORDER_UUID(uuid())"),'usuario_id'=>$session->usuarioId()
           )), true);
           parent::__construct($attributes);
     }
@@ -25,7 +26,17 @@ class EntradaManual extends Model
     //mutators
     public function getCreatedAtAttribute($date)
     {
-        return Carbon::createFromFormat('Y-m-d H:i:s', $date)->format('Y-m-d H:i:s');
+        return Carbon::createFromFormat('Y-m-d H:i:s', $date);
+    }
+
+    public function getFechaEntradaAttribute($value)
+    {
+        return Carbon::createFromFormat('Y-m-d H:i:s', $value);
+    }
+
+    public function setFechaEntradaAttribute($value)
+    {
+        $this->attributes['fecha_entrada'] = Carbon::createFromFormat('d/m/Y', $value);
     }
 
     public function getUuidEntradaAttribute($value){
@@ -36,6 +47,13 @@ class EntradaManual extends Model
         return $this->attributes['codigo'] = GenerarCodigo::setCodigo('EM'.Carbon::now()->format('y'), $value);
     }
 
+    public function getUsuarioNombreAttribute() {
+        if (is_null($this->usuario)) {
+            return '';
+        }
+        return $this->usuario->nombre . " " . $this->usuario->apellido;
+    }
+
 
     //relationships
     function transacciones(){
@@ -43,8 +61,16 @@ class EntradaManual extends Model
     }
 
   	function comentarios(){
-        return $this->hasMany('Comentario_orm','entrada_manual_id');
+        return $this->hasMany('Comentario_orm','entrada_id');
     }
+
+    public function landing_comments() {
+        return $this->morphMany('Flexio\Modulo\Comentario\Models\Comentario', 'comentable');
+    }
+
+    public function usuario() {
+  		return $this->belongsTo('Flexio\Modulo\Usuarios\Models\Usuarios','usuario_id');
+  	}
 
     //scope
 
@@ -79,5 +105,21 @@ class EntradaManual extends Model
     {
       // transaccionable es el campo polimorfico de contab_transaccions en AsientoContable
       return $this->morphMany(AsientoContable::class, 'transaccionable');
+    }
+
+    public function getEnlaceAttribute() {
+        return base_url("entrada_manual/ver/".$this->uuid_entrada);
+    }
+    public function present(){
+        return new \Flexio\Modulo\EntradaManuales\Presenter\EntradaManualPresenter($this);
+    }
+
+    public function scopeFiltro($builder, $campo){
+        $queryFilter = new \Flexio\Modulo\EntradaManuales\Services\EntradaManualQueryFilters;
+        return $queryFilter->apply($builder, $campo);
+    }
+
+    function empresa() {
+      return $this->belongsTo('Flexio\Modulo\Empresa\Models\Empresa','empresa_id');
     }
 }

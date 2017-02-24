@@ -140,7 +140,8 @@ var tablaItems2 = (function(){
             mtype: "POST",
             postData: {
                 erptkn: tkn,
-                item_id: typeof window.sp_item_id !== 'undefined' ? window.sp_item_id : ''
+                item_id: typeof window.sp_item_id !== 'undefined' ? window.sp_item_id : '',
+                campo: (typeof window.campo === 'undefined') ? '': window.campo
             },
             height: "auto",
             autowidth: true,

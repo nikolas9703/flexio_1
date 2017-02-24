@@ -17,7 +17,7 @@ $config['modulo_config'] = array(
             "grupo_orden" => 6
         ),
         'Seguros' => array(
-            "grupo_orden" => 11
+            "grupo_orden" => 6
         ),
     ),
 	'prefijo'		=> 'ventas',

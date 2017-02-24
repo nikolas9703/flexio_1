@@ -53,25 +53,38 @@ class CajasTransacciones {
      
     public function debito($transferencia, $numero)
     {
-    	
+        $cuenta_id = 0;
+    	if ($transferencia->transferencia_desde==0){
+            $cuenta_id = $transferencia->empresa->cuenta_caja_menuda->cuenta_id;
+        } else if ($transferencia->transferencia_desde==1){
+            $cuenta_id = $transferencia->cuenta->id;
+        }
        	$asientos   = [];
        	
     	$asientos[] = new AsientoContable([
     			'codigo'        => $transferencia->caja_id,
     			'nombre'        => $numero,
     			'debito'        => $transferencia->monto,
-    			'cuenta_id'     => $transferencia->empresa->cuenta_caja_menuda->cuenta_id,
+    			'cuenta_id'     => $cuenta_id,
     			'empresa_id'    => $transferencia->empresa_id
     			]);
     	return $asientos;
     }
     public function credito($transferencia, $numero){
+        
+        $cuenta_id = 0;
+    	if ($transferencia->transferencia_desde==0){
+            $cuenta_id = $transferencia->cuenta->id;
+        } else if ($transferencia->transferencia_desde==1){
+            $cuenta_id = $transferencia->empresa->cuenta_caja_menuda->cuenta_id;
+        }
+        
       	$asientos   = [];
      	$asientos[] = new AsientoContable([
     			'codigo'        => $transferencia->caja_id,
     			'nombre'        => $numero,
     			'credito'       => $transferencia->monto,
-    			'cuenta_id'     => $transferencia->cuenta->id,
+    			'cuenta_id'     => $cuenta_id,
     			'empresa_id'    => $transferencia->empresa_id
     			]);
     	return $asientos;

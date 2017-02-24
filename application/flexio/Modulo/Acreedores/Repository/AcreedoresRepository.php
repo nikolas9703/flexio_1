@@ -124,6 +124,11 @@ class AcreedoresRepository implements AcreedoresInterface{
 
         return $acreedor;
     }
+    public function id($id) {
+        $acreedor = Acreedores::where("id","=",$id)->first();
+
+        return $acreedor;
+    }
 
     public function getColletionCampos($acreedor)
     {

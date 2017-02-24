@@ -47,7 +47,7 @@ var tablaColaboradores = (function(){
 	 				{name:'Cedula', index:'Departamento', width:40},
 	 				{name:'Centro Contable', index:'centro_contable',  sortable:false,width: 40},
 	 		   		{name:'Detalle', index:'detalle',editable:true,  sortable:false,width: 70},
- 	 		   		{name:'Monto', index:'monto',editable:true, width: 50, editrules:{required:true,number:true}},
+ 	 		   		{name:'Monto', index:'monto',editable:true, width: 50, editrules:{required:true}},
 	  		   	],
 				mtype: "POST",
 			   	postData: {
@@ -93,6 +93,11 @@ var tablaColaboradores = (function(){
 	 		    },
 	  		    beforeRequest: function(data, status, xhr){},
 				loadComplete: function(data){
+
+					$("#gbox_tablaColaboradoresGrid input:checkbox").each(function() {
+					    this.checked = true;
+					});
+
 					 //$("#cb_" + this.id).click();
 					//check if isset data
 					if( data['total'] == 0 ){
@@ -333,7 +338,6 @@ var tablaColaboradores = (function(){
 	 opcionesModal.modal('show');
 };
  	var editarComision = function(){
-
 		if(formulario.validate().form() == true )
 		{
 			$.ajax({

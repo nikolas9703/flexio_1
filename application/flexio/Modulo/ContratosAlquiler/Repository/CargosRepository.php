@@ -115,7 +115,7 @@ class CargosRepository{
 			    	return $item['cantidad'];
 					});
 
-					list($datos, $items) = $this->armarDatosItemsCargos($CargosArray);
+					list($datos, $items) = $this->armarDatosCargos($CargosArray);
 
 					$info[$i]["items"] = $items;
 					$info[$i]["empresa_id"] = $empresa_id;
@@ -123,10 +123,12 @@ class CargosRepository{
 					$info[$i]["cargos"] = $cargos_id_array;
 					$info[$i] = array_merge($datos, $info[$i]);
 					$i++;
+
+					/*if($contrato_id!=1){
+						dd($info);
+					}*/
 				}
 			}
-
-			//dd($info);
 
 		} else {
 
@@ -141,12 +143,11 @@ class CargosRepository{
 				return false;
 			}
 
-			list($datos, $items) = $this->armarDatosItemsCargos($CargosArray);
+			list($datos, $items) = $this->armarDatosCargos($CargosArray);
 			$info["items"] = $items;
 			$info["cargos"] = $cargos_id_array;
 			$info = array_merge($info, $datos);
 		}
-		//dd($info);
 
 		return $info;
 	}
@@ -158,139 +159,194 @@ class CargosRepository{
 	 * @param  Array $CargosArray [description]
 	 * @return Array
 	 */
-	private function armarDatosItemsCargos($CargosArray=array()) {
+	private function armarDatosCargos($CargosArray=array()) {
 
-			$items = array();
-			$info=array();
 			if(empty($CargosArray)) {
-				return $items;
+				return array();
+			}
+			$CargosArray = collect(array_values( collect($CargosArray)->toArray()));
+
+			//-----------------------------------------------
+			// Obtener los cargos de ITEM NO DEVUELTOS
+			//-----------------------------------------------
+			$cargosCompletos = array();
+			$cargosRetorno = array();
+			foreach ($CargosArray AS $cargos) {
+				foreach ($cargos AS $cargo) {
+					if(is_numeric($cargo["devuelto"]) && $cargo["devuelto"]===0){
+						$cargosCompletos[] = $cargo;
+					}else{
+						$cargosRetorno[] = $cargo;
+					}
+				}
 			}
 
-			$i=0;
-			foreach ($CargosArray as $cantidad_cargos => $cargosarray) {
+			list($cargos_completos, $info) = $this->armarItemCargos([collect($cargosCompletos)]);
+			$items = $cargos_completos;
 
-				if(empty($cargosarray[$i])){
-					continue;
+			//-----------------------------------------------
+			// Obtener los cargos de ITEM DEVUELTOS
+			// Cargos con tarifa prorrateada/escalonada
+			//-----------------------------------------------
+			if(!empty($cargosRetorno)){
+
+				$cargosRetornoGroupByItem=array();
+				foreach ($cargosRetorno as $retorno) {
+				    $cargosRetornoGroupByItem[$retorno["item_id"]][] = $retorno;
 				}
 
-				$primercargo = $cargosarray->first();
-				$ultimocargo = $cargosarray->last();
-				$fecha_primercargo 	= !empty($primercargo["cantidad"]) ? Carbon::parse($primercargo["fecha_cargo"]) : "";
-				$fecha_ultimocargo 	= !empty($ultimocargo["cantidad"]) ? Carbon::parse($ultimocargo["fecha_cargo"]) : "";
-				$fecha_entrega 			= !empty($cargosarray[0]["entregas_alquiler"]["fecha_entrega"]) ? $cargosarray[0]["entregas_alquiler"]["fecha_entrega"] : "";
-				$cantidad_periodos 	= $cargosarray->count();
-				$total 							= $cargosarray->sum("total_cargo");
-				$rango_fecha 				= !empty($fecha_primercargo) ? $fecha_primercargo->format("d/m/Y") . " - ". $fecha_ultimocargo->format("d/m/Y") : "";
-
-				$empresa_id = !empty($cargosarray[$i]["empresa_id"]) ? $cargosarray[$i]["empresa_id"] : "";
-
-				$cliente_id	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["cliente_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["cliente_id"] : "";
-				$contrato_id	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["id"] : "";
-				$centro_contable_id	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_contable_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_contable_id"] : "";
-				$centro_facturacion_id = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_facturacion_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_facturacion_id"] : "";
-				$corte_facturacion_id = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion_id"] : "";
-				$corte_facturacion = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion"]["nombre"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion"]["nombre"] : "";
-				$dia_corte 	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["dia_corte"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["dia_corte"] : "";
-				$lista_precio_alquiler_id = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["lista_precio_alquiler_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["lista_precio_alquiler_id"] : "";
-				$creado_por	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["created_by"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["created_by"] : "";
-				$facturar_contra_entrega = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["facturar_contra_entrega"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["facturar_contra_entrega"]["valor"] : "";
-				$contratos_items = !empty($cargosarray[$i]["entregas_alquiler"]["contrato_alquiler"]["contratos_items"]) ? $cargosarray[$i]["entregas_alquiler"]["contrato_alquiler"]["contratos_items"] : array();
-
-				if(empty($contratos_items)){
-					continue;
+				foreach ($cargosRetornoGroupByItem as $cargo) {
+					list($cargos_retorno, $info) = $this->armarItemCargos([collect($cargo)]);
+					$retornos[] = !empty($cargos_retorno[0]) ? $cargos_retorno[0] : array();
 				}
-
-				$j=0;
-				foreach ($contratos_items AS $item) {
-
-					//Dinamico - varios items
-					$item_nombre = !empty($item["item"]["nombre"]) ? $item["item"]["nombre"] : "";
-					$item_id 		= !empty($item["item"]["id"]) ? $item["item"]["id"] : "";
-					$categoria_id	= !empty($item["categoria_id"]) ? (int)$item["categoria_id"] : "";
-					$atributo_id	= !empty($item["atributo_id"]) ? (int)$item["atributo_id"] : "";
-					$atributo_text	= !empty($item["atributo_text"]) ? (int)$item["atributo_text"] : "";
-					$impuesto	= !empty($item["impuestoinfo"]["impuesto"]) ? $item["impuestoinfo"]["impuesto"] : "";
-					$impuesto_id	= !empty($item["impuesto_id"]) ? (int)$item["impuesto_id"] : "";
-					$impuesto_total	= !empty($item["impuesto_total"]) ? $item["impuesto_total"] : "";
-					$cuenta_id	= !empty($item["cuenta_id"]) ? (int)$item["cuenta_id"] : "";
-					$descuento	= !empty($item["descuento"]) ? (int)$item["descuento"] : "";
-					$descuento_total	= !empty($item["descuento_total"]) ? (int)$item["descuento_total"] : "";
-					$cantidad	= !empty($item["cantidad"]) ? (int)$item["cantidad"] : "";
-
-					$periodo_id		= !empty($item["ciclo_id"]) ? $item["ciclo_id"] : "";
-					$periodo 			= !empty($item["periodo_tarifario"]) ? ucFirst(str_replace("_", " ", $item["periodo_tarifario"])) : "";
-					$tarifa 			= !empty($item["tarifa"]) ? $item["tarifa"] : "";
-					$tarifa_monto = $tarifa * $cantidad;
-
-					$tarifa_fecha_desde = !empty($fecha_primercargo) ? $fecha_primercargo->format("Y-m-d H:i:s") : "";
-					$tarifa_fecha_hasta = !empty($fecha_ultimocargo) ? $fecha_ultimocargo->format("Y-m-d H:i:s") : "";
-
-					if(preg_match("/si/i", $facturar_contra_entrega) && preg_match("/mensual|15|28|30/i", $periodo)){
-						$cantidad_periodos 	= 1;
-						$tarifa_fecha_desde = $fecha_entrega->format("Y-m-d H:i:s");
-						$rango_fecha 				= $fecha_entrega->format("d/m/Y");
-
-						if(preg_match("/mensual/i", $periodo)){
-							$tarifa_fecha_hasta = Carbon::parse($fecha_entrega)->addMonths(1)->format("Y-m-d H:i:s");
-							$rango_fecha .= " - ". Carbon::parse($fecha_entrega)->addMonths(1)->format("d/m/Y");
-						}else if(preg_match("/15|28|30/i", $periodo)){
-							$lapso = intval($periodo);
-							$tarifa_fecha_hasta = Carbon::parse($fecha_entrega)->addDays($lapso)->format("Y-m-d H:i:s");
-							$rango_fecha .= " - ". Carbon::parse($fecha_entrega)->addDays($lapso)->format("d/m/Y");
-						}
-					}
-
-					$info = array(
-						"centro_contable_id" => $centro_contable_id,
-						"centro_facturacion_id" => $centro_facturacion_id,
-						"creado_por" => $creado_por,
-						"cliente_id" => $cliente_id,
-						"fecha_entrega" => $fecha_entrega,
-						"contrato_id" => $contrato_id,
-						"facturar_contra_entrega" => $facturar_contra_entrega,
-						"corte_facturacion_id" => $corte_facturacion_id,
-						"corte_facturacion" => $corte_facturacion,
-						"lista_precio_alquiler_id" => $lista_precio_alquiler_id,
-						"dia_corte" => $dia_corte
-					);
-
-					$items[$j] = array(
-						"item" => array(
-							"id" => $item_id,
-							"nombre" => $item_nombre
-						),
-						"categoria_id" => $categoria_id,
-						"atributo_id" => $atributo_id,
-						"atributo_text" => $atributo_text,
-						"cuenta_id" => $cuenta_id,
-						"descuento" => $descuento,
-						"impuesto" => $impuesto,
-						"impuesto_id" => $impuesto_id,
-						"impuesto_total" => $impuesto_total,
-						"descuento_total" => $descuento_total,
-						"cantidad" 	=> $cantidad,
-						"rango_fecha" 		=> $rango_fecha,
-						"periodo" => array(
-							"id" => $periodo_id,
-							"nombre" => $periodo
-						),
-						"monto" 										=> $tarifa ,
-						"tarifa_fecha_desde" 				=> $tarifa_fecha_desde,
-						"tarifa_fecha_hasta" 				=> $tarifa_fecha_hasta,
-						"tarifa_pactada" 						=> $tarifa,
-						"tarifa_monto" 							=> $tarifa_monto,
-						"precio_total" 							=> $total,
-						"tarifa_cantidad_periodo" 	=> $cantidad_periodos,
-					);
-					$j++;
-				}
-				$i++;
+				$items = array_merge($cargos_completos, $retornos);
 			}
 
 			return array(
 				$info,
 				$items
 			);
+	}
+
+	private function armarItemCargos($cargos) {
+
+		$items = array();
+		$info=array();
+		$i=0;
+		$j=0;
+
+		foreach ($cargos as $cargosarray) {
+			if(empty($cargosarray[$i])){
+				continue;
+			}
+
+			$primercargo = $cargosarray->first();
+			$ultimocargo = $cargosarray->last();
+			$fecha_primercargo 	= !empty($primercargo["fecha_cargo"]) ? Carbon::parse($primercargo["fecha_cargo"]) : "";
+			$fecha_ultimocargo 	= !empty($ultimocargo["fecha_cargo"]) ? Carbon::parse($ultimocargo["fecha_cargo"]) : "";
+			$fecha_entrega 			= !empty($cargosarray[0]["entregas_alquiler"]["fecha_entrega"]) ? $cargosarray[0]["entregas_alquiler"]["fecha_entrega"] : "";
+			$cantidad_periodos 	= $cargosarray->count();
+			$total 							= $cargosarray->sum("total_cargo");
+			$rango_fecha 				= !empty($fecha_primercargo) ? $fecha_primercargo->format("d/m/Y") . " - ". $fecha_ultimocargo->format("d/m/Y") : "";
+
+			$empresa_id = !empty($cargosarray[$i]["empresa_id"]) ? $cargosarray[$i]["empresa_id"] : "";
+			$cantidad_devuelta = !empty($cargosarray[$i]["cantidad_devuelta"]) ? $cargosarray[$i]["cantidad_devuelta"] : 0;
+
+			$cliente_id	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["cliente_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["cliente_id"] : "";
+			$contrato_id	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["id"] : "";
+			$centro_contable_id	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_contable_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_contable_id"] : "";
+			$centro_facturacion_id = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_facturacion_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["centro_facturacion_id"] : "";
+			$corte_facturacion_id = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion_id"] : "";
+			$corte_facturacion = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion"]["nombre"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["corte_facturacion"]["nombre"] : "";
+			$dia_corte 	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["dia_corte"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["dia_corte"] : "";
+			$lista_precio_alquiler_id = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["lista_precio_alquiler_id"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["lista_precio_alquiler_id"] : "";
+			$creado_por	= !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["created_by"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["created_by"] : "";
+			$facturar_contra_entrega = !empty($cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["facturar_contra_entrega"]) ? $cargosarray[0]["entregas_alquiler"]["contrato_alquiler"]["facturar_contra_entrega"]["valor"] : "";
+			$contratos_items = !empty($cargosarray[$i]["entregas_alquiler"]["contrato_alquiler"]["contratos_items"]) ? $cargosarray[$i]["entregas_alquiler"]["contrato_alquiler"]["contratos_items"] : array();
+
+			if(empty($contratos_items)){
+				continue;
+			}
+
+			foreach ($contratos_items AS $item) {
+
+				$item_id = !empty($item["item"]["id"]) ? $item["item"]["id"] : "";
+
+				if($cargosarray[$i]["item_id"] != $item_id){
+					continue;
+				}
+
+				//Dinamico - varios items
+				$item_nombre = !empty($item["item"]["nombre"]) ? $item["item"]["nombre"] : "";
+				$categoria_id	= !empty($item["categoria_id"]) ? (int)$item["categoria_id"] : "";
+				$atributo_id	= !empty($item["atributo_id"]) ? (int)$item["atributo_id"] : "";
+				$atributo_text	= !empty($item["atributo_text"]) ? (int)$item["atributo_text"] : "";
+				$impuesto	= !empty($item["impuestoinfo"]["impuesto"]) ? $item["impuestoinfo"]["impuesto"] : "";
+				$impuesto_id	= !empty($item["impuesto_id"]) ? (int)$item["impuesto_id"] : "";
+				$impuesto_total	= !empty($item["impuesto_total"]) ? $item["impuesto_total"] : "";
+				$cuenta_id	= !empty($item["cuenta_id"]) ? (int)$item["cuenta_id"] : "";
+				$descuento	= !empty($item["descuento"]) ? (int)$item["descuento"] : "";
+				$descuento_total	= !empty($item["descuento_total"]) ? (int)$item["descuento_total"] : "";
+				$cantidad	= !empty($item["cantidad"]) ? (int)$item["cantidad"] : "";
+
+				$periodo_id		= !empty($item["ciclo_id"]) ? $item["ciclo_id"] : "";
+				$periodo 			= !empty($item["periodo_tarifario"]) ? ucFirst(str_replace("_", " ", $item["periodo_tarifario"])) : "";
+
+				$devuelto 		= ($cantidad - $cantidad_devuelta)===0 ? true : false;
+				$tarifa 			= !empty($cargosarray[0]["tarifa"]) ? $cargosarray[0]["tarifa"] : "";
+				$tarifa 			= $devuelto==false ? $tarifa : $cargosarray[0]["tarifa"];
+				$tarifa_monto = $tarifa * $cantidad;
+
+				$tarifa_fecha_desde = !empty($fecha_primercargo) ? $fecha_primercargo->format("Y-m-d H:i:s") : "";
+				$tarifa_fecha_hasta = !empty($fecha_ultimocargo) ? $fecha_ultimocargo->format("Y-m-d H:i:s") : "";
+
+				if(preg_match("/si/i", $facturar_contra_entrega) && preg_match("/mensual|15|28|30/i", $periodo)){
+					$cantidad_periodos 	= 1;
+					$tarifa_fecha_desde = $fecha_entrega->format("Y-m-d H:i:s");
+					$rango_fecha 				= $fecha_entrega->format("d/m/Y");
+
+					if(preg_match("/mensual/i", $periodo)){
+						$tarifa_fecha_hasta = Carbon::parse($fecha_entrega)->addMonths(1)->format("Y-m-d H:i:s");
+						$rango_fecha .= " - ". Carbon::parse($fecha_entrega)->addMonths(1)->format("d/m/Y");
+					}else if(preg_match("/15|28|30/i", $periodo)){
+						$lapso = intval($periodo);
+						$tarifa_fecha_hasta = Carbon::parse($fecha_entrega)->addDays($lapso)->format("Y-m-d H:i:s");
+						$rango_fecha .= " - ". Carbon::parse($fecha_entrega)->addDays($lapso)->format("d/m/Y");
+					}
+				}
+
+				$info = array(
+					"centro_contable_id" => $centro_contable_id,
+					"centro_facturacion_id" => $centro_facturacion_id,
+					"creado_por" => $creado_por,
+					"cliente_id" => $cliente_id,
+					"fecha_entrega" => $fecha_entrega,
+					"contrato_id" => $contrato_id,
+					"facturar_contra_entrega" => $facturar_contra_entrega,
+					"corte_facturacion_id" => $corte_facturacion_id,
+					"corte_facturacion" => $corte_facturacion,
+					"lista_precio_alquiler_id" => $lista_precio_alquiler_id,
+					"dia_corte" => $dia_corte
+				);
+
+				$items[$j] = array(
+					"item" => array(
+						"id" => $item_id,
+						"nombre" => $item_nombre
+					),
+					"categoria_id" => $categoria_id,
+					"atributo_id" => $atributo_id,
+					"atributo_text" => $atributo_text,
+					"cuenta_id" => $cuenta_id,
+					"descuento" => $descuento,
+					"impuesto" => $impuesto,
+					"impuesto_id" => $impuesto_id,
+					"impuesto_total" => $impuesto_total,
+					"descuento_total" => $descuento_total,
+					"cantidad" 	=> $cantidad,
+					"rango_fecha" 		=> $rango_fecha,
+					"periodo" => array(
+						"id" => $periodo_id,
+						"nombre" => $periodo
+					),
+					"monto" 										=> $tarifa ,
+					"tarifa_fecha_desde" 				=> $tarifa_fecha_desde,
+					"tarifa_fecha_hasta" 				=> $tarifa_fecha_hasta,
+					"tarifa_pactada" 						=> $tarifa,
+					"tarifa_monto" 							=> $tarifa_monto,
+					"precio_total" 							=> $total,
+					"tarifa_cantidad_periodo" 	=> $cantidad_periodos,
+				);
+				$j++;
+			}
+
+			$i++;
+		}
+
+		return array(
+			$items,
+			$info
+		);
 	}
 
 	/**

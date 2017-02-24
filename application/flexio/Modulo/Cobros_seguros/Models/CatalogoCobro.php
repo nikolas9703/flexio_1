@@ -18,8 +18,8 @@ class CatalogoCobro
   public static function metodoCobro()
   {
     return Catalogo::where(function($query){
-      $query->where('modulo','cobro');
-      $query->where('tipo','metodo_cobro');
+      $query->where('modulo','cobro_seguros');
+      $query->where('tipo','metodo_cobro_seguros');
     })->get();
   }
 

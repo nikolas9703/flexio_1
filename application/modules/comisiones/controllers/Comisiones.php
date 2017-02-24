@@ -881,27 +881,38 @@ class Comisiones extends CRM_Controller
     //Se usa en la lista del formulario
     public function ajax_listar_colaboradores()
     {
-     	if(!$this->input->is_ajax_request()){
-    		return false;
-    	}
-    	$uuid_empresa = $this->session->userdata('uuid_empresa');
-    	$empresa = Empresa_orm::findByUuid($uuid_empresa);
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $uuid_empresa = $this->session->userdata('uuid_empresa');
+        $empresa = Empresa_orm::findByUuid($uuid_empresa);
 
-    	$centro_contable_id 	= $this->input->post('centro_contable_id', true);
-    	$departamento_id 	= $this->input->post('departamento_id', true);
-    	$response = new stdClass();
+        $q = $this->input->post('q', true);
+        $departamento_id = $this->input->post('departamento_id', true);
+        $response = new stdClass();
 
-    	if( (int) $departamento_id > 0 ){
-    		$response->result = Colaboradores_orm::where("centro_contable_id", "=", $centro_contable_id)
-    			->where('empresa_id', $empresa->id)
-    			->where('departamento_id', $departamento_id)
-    			//->select('id', 'no_colaborador','nombre','apellido', 'cedula')->get()->toArray();
-                         ->select('id', 'codigo','nombre','apellido', 'cedula')->get()->toArray();
-    	}else{
-    		$response->result = Colaboradores_orm::where("centro_contable_id", "=", $centro_contable_id)
-    		->where('empresa_id', $empresa->id)
-                    ->select('id', 'codigo','nombre','apellido', 'cedula')->get()->toArray();
-    	}
+
+        $query = Colaboradores_orm::where('empresa_id', $empresa->id);
+        if (intval($departamento_id) > 0)
+            $query->where('departamento_id', $departamento_id);
+
+        $query->where(function ($query) use ($q) {
+            if (!empty($q)) {
+                $query
+                    ->where("codigo", "like", $q. "%")
+                    ->orWhere("cedula", "=", $q)
+                    ->orWhere("nombre", "like", "%" . $q . "%")
+                    ->orWhere("apellido", "like", "%" . $q . "%");
+            }
+
+        })
+            //->select('id', 'no_colaborador','nombre','apellido', 'cedula')->get()->toArray();
+            ->select('id', 'codigo', 'nombre', 'apellido', 'cedula')
+            ->take(20);
+
+        $response->result = $query->get()->toArray();
+
+
 
        	echo json_encode($response);
     	exit;

@@ -71,6 +71,7 @@ class FacturaCompraRepository {
             "observaciones" => $factura_compra->comentario,
             "pagos" => $factura_compra->pagos_aplicados_suma,
             "saldo" => $factura_compra->saldo,
+            "creditos_aplicados" => $factura_compra->creditos_aplicados->sum('total'),
             "saldo_proveedor" => 0,
             "credito_proveedor" => 0,
             "articulos" => $articulo->get($factura_compra->facturas_items, $factura_compra),
@@ -183,17 +184,16 @@ class FacturaCompraRepository {
     public function getCollectionExportarRow($factura) {
         $monto = new \Flexio\Modulo\Base\Services\Numero("moneda", $factura->total);
         $saldo = new \Flexio\Modulo\Base\Services\Numero("moneda", $factura->saldo);
-
         return [
             $factura->numero_documento,
-            $factura->created_at,
+            str_replace("/","-",$factura->fecha_desde),
             count($factura->proveedor) ? utf8_decode($factura->proveedor->nombre) : '',
             //'',referencia
             !empty($factura->operacion_type) ? $factura->operacion->numero_documento : '',
             count($factura->centro_contable) ? utf8_decode($factura->centro_contable->nombre) : '',
             count($factura->estado) ? $factura->estado->valor : '',
-            $monto->getSalida(),
-            $saldo->getSalida()
+            ltrim($monto->getSalida(), '$'),
+            ltrim($saldo->getSalida(), '$')
         ];
     }
 
@@ -317,6 +317,7 @@ class FacturaCompraRepository {
     {
         return $facturas->map(function($factura){
             return [
+                'factura' => $factura->toArray(),
                 'id' => $factura->id,
                 'nombre' => (!empty($factura->proveedor) ? $factura->proveedor->nombre : " -"). " {$factura->codigo}",
                 'proveedor_id' => $factura->proveedor_id,
@@ -358,7 +359,9 @@ class FacturaCompraRepository {
      */
     function cobradoCompletoSinNotaDebitoSinEstadosPorProveedor($clause, $limit = null)
     {
-        $query = FacturaCompra::has('nota_debito', '<', 1);
+
+        //$query = FacturaCompra::has('nota_debito', '<', 1);
+        $query = FacturaCompra::query();
         $query->select("faccom_facturas.*");
         if (isset($clause['q']) && !empty($clause['q'])) {
             $query->join("pro_proveedores", "pro_proveedores.id", "=", "proveedor_id")

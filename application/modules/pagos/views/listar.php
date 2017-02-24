@@ -43,6 +43,11 @@
                                 <div class="ibox-content" style="display:none;">
                                     <!-- Inicia campos de Busqueda -->
                                     <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                      <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                              <label for="numero">Número de pago</label>
+                                              <input type="text" id="codigo" name="codigo" class="form-control" value="" placeholder="">
+                                          </div>
+
                                     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="proveedor">Proveedor</label>
                                             <select name="proveedor" class="form-control" id="proveedor3">
@@ -92,10 +97,17 @@
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Tipo</label>
                                             <select name="tipo" class="form-control chosen-select" id="tipo">
-                                                <option value="">Seleccione</option>
-                                                <option value="compras">Compras</option>
-                                                <option value="planilla">Planilla</option>
-                                                <option value="pago_extraordinario">Pago extraordinario</option>
+                                                <?php
+                                                if (!isset($modulo_padre) || $modulo_padre != "contratos") {
+                                                    ?>
+                                                    <option value="">Seleccione</option>
+                                                    <option value="compras">Compras</option>
+                                                    <option value="planilla">Planilla</option>
+                                                    <option value="pago_extraordinario">Pago extraordinario</option>
+                                                <?php } else {
+                                                    ?>
+                                                    <option value="contratos">Contratos</option>
+                                                <?php } ?>
                                             </select>
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
@@ -104,11 +116,22 @@
                                         </div>
                                          <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Estado</label>
-                                            <select name="estado" class="form-control chosen-select" id="estado">
-                                                <option value="">Seleccione</option>
+                                            <select name="estado" multiple="" data-placeholder="Seleccione" class="form-control chosen-select" id="estado">
                                                 <?php foreach($etapas as $etapa) {?>
                                                 <option value="<?php echo $etapa->etiqueta?>"><?php echo $etapa->valor?></option>
                                                 <?php }?>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="categoria">Categor&iacute;a(s) de Proveedor</label><br>
+                                            <select id="categoria" class="form-control" data-placeholder="Seleccione" multiple="">
+                                                <?php
+                                                if(!empty($info['categorias'])):
+                                                  foreach ($info['categorias'] as $categoria) { ?>
+                                                      <option value="<?php echo $categoria->id?>" <?php echo ((isset($info['catSelect'])) && in_array($categoria->id, $info['catSelect'])) ? ' selected ' : ''?>><?php echo $categoria->nombre;?></option>
+                                                  <?php }
+                                                endif;
+                                                ?>
                                             </select>
                                         </div>
                                         <!-- <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">

@@ -32,7 +32,6 @@ class RolesUsuario extends Model
   {
       return $this->belongsTo(Usuarios::class, 'usuario_id', 'id');
   }
-
   public function ramos(){
       return $this->hasMany(RamosRoles::class, 'id_rol', 'role_id');
   }

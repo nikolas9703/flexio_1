@@ -12,6 +12,8 @@ use Flexio\Modulo\Inventarios\Repository\SerialesRepository as serialesRep;
 use Flexio\Modulo\Inventarios\Repository\LinesItemsRepository as linesItemsRep;
 use Flexio\Modulo\Inventarios\Repository\ItemsRepository as itemsRep;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository as cuentasRep;
+use Flexio\Modulo\OrdenesVentas\Repository\OrdenVentaRepository;
+use Flexio\Modulo\FacturasVentas\Repository\FacturaVentaRepository;
 
 class SalidasRepository implements SalidasInterface{
 
@@ -48,17 +50,20 @@ class SalidasRepository implements SalidasInterface{
         return Salidas::find($entrada_id);
     }
 
-    private function _setSeriales($items)
+    private function _setSeriales($items, $registro)
     {
         foreach($items as $item)
         {
             $itemAux    = $this->itemsRep->findByUuid($item["item"]);
             if(!empty($itemAux->id) and !empty($item["id_entrada_item"]))
             {
-                $this->serialesRep->delete(["item_id" => $itemAux->id, "line_id" => $item["id_entrada_item"]]);
+                //esta linea se borra para el mismo registro, de manera que la salida se le da guardar varias
+                //veces no se duplique el registro.
+                //$this->serialesRep->delete(["item_id" => $itemAux->id, "line_id" => $item["id_entrada_item"]]);
 
                 //popular items nuevamente
-                $this->serialesRep->save($item);
+                $estado = $registro->estado_id == '1' ? 'disponible' : 'no_disponible';
+                $this->serialesRep->save($item, $registro, $estado);
             }
             else
             {
@@ -121,7 +126,7 @@ class SalidasRepository implements SalidasInterface{
         }
 
         //seteo los seriales y la relacion lines_items
-        $this->_setSeriales($post["items"]);
+        $this->_setSeriales($post["items"], $registro);
 
 
         return $registro->save();
@@ -147,7 +152,23 @@ class SalidasRepository implements SalidasInterface{
         if(isset($clause["estado"]) and !empty($clause["estado"])){$salidas->deEstado($clause["estado"]);}
         if(isset($clause["numero"]) and !empty($clause["numero"])){$salidas->deNumero($clause["numero"]);}
         if(isset($clause["tipo"]) and !empty($clause["tipo"])){$salidas->deTipo($clause["tipo"]);}
+        if(isset($clause["campo"]) and !empty($clause["campo"])){$salidas->deFiltro($clause["campo"]);}
+        if(isset($clause["factura_uuid"]) and !empty($clause['factura_uuid'])){
+            //traer las salidas de la factura
+            $factura = (new FacturaVentaRepository)->findByUuid($clause['factura_uuid']);
 
+
+            $ordenes_de_venta = $factura->orden_venta;
+                        $idsdeOrdenes = array();
+                        $i = 0;
+                        foreach ($ordenes_de_venta as $orden_venta) {
+                            $idsdeOrdenes[$i] = $orden_venta->id;
+                            $i++;
+            }
+            $salidas->whereHas("orden_venta", function($salidas) use ($idsdeOrdenes) {
+                            $salidas->whereIn('id', $idsdeOrdenes);
+            });
+        }
         //desde subpanel
         if(isset($clause["operacion_type"]) and !empty($clause["operacion_type"])){$salidas->deTipo($clause["operacion_type"]);}
         if(isset($clause["operacion_id"]) and !empty($clause["operacion_id"])){$salidas->deTipoId($clause["operacion_id"]);}

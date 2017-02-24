@@ -120,7 +120,7 @@ class CargosAlquiler extends Model
   		{
   			foreach($clause AS $field => $value)
   			{
-  				if($field == "nombre_centro" || $field == "item" || $field == "contrato" || $field == "contrato_id"){
+  				if($field == "nombre_centro" || $field == "fecha_entrega" || $field == "impuesto" || $field == "item" || $field == "contrato" || $field == "contrato_id"){
   					continue;
   				}
 
@@ -131,9 +131,15 @@ class CargosAlquiler extends Model
 
   				//verificar si valor es array
   				if(is_array($value)){
+            if(empty($value[1])){
+              continue;
+            }
   					$query->where($field, $value[0], $value[1]);
   				}else{
-  					$query->where($field, '=', $value);
+            if(empty($value)){
+              continue;
+            }
+  					$query->where($field, $value);
   				}
   			}
   		}

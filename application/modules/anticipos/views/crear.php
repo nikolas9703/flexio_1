@@ -28,11 +28,13 @@
             echo form_open(base_url('anticipos/guardar'), $formAttr);?>
 
             <!--loading-->
-            <div class="row"v-if="config.loading"><i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span>Cargando...</span></div>
-            <div class="row rowhigth" v-show="config.acceso" v-if="!config.loading">
-                    <!--componente empezar desde-->
-                    <empezar-desde :info="config" :empezable="empezable"></empezar-desde>
-                    <!--componente empezar desde-->
+			<div id="contFormAnticipo">
+				<div class="row" v-if="config.loading"><i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span>Cargando...</span></div>
+				<div class="row rowhigth" v-show="config.acceso" v-if="!config.loading">
+						<!--componente empezar desde-->
+						<empezar-desde :info="config" :empezable="empezable"></empezar-desde>
+						<!--componente empezar desde-->
+				</div>
             </div>
 
 

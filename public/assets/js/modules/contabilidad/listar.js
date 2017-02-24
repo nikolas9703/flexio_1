@@ -40,11 +40,11 @@ $(document).ready(function() {
     var cuentas = moduloContabilidad.listarCuenta();
     cuentas.success(function() {
       $("#cuentas_tabs li:first-child").addClass('active');
-      $("#nombre").val('');
+      $("#nombre1").val('');
       $("#codigo").val('');
       $("#descripcion").val('');
       $("#padre_id").val('');
-      $('#codigo').prop('readonly', true);
+      $('#codigo').prop('readonly', false);
       $("#plan_cuentas").jstree("destroy");
     });
     cuentas.done(function(data) {
