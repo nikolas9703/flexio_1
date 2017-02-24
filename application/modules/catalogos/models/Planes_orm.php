@@ -51,6 +51,7 @@ class Planes_orm extends Model
         return $query;                
     }
     public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
+
         $planes = self::select(
             'seg_planes.id as id',
             'seg_planes.uuid_planes as uuid_planes',
@@ -69,6 +70,47 @@ class Planes_orm extends Model
                 $join->on("comi.id_planes", "=", "seg_planes.id");
             })
             ->where("seg_planes.id_aseguradora", "=", $clause['id_aseguradora']);
+            
+            foreach($clause AS $field => $value)
+            {  
+                    //verificar si valor es array
+                if(is_array($value)){                        
+                    $planes->where($field, $value[0], $value[1]);                        
+                }
+            }
+
+
+            if($sidx!=NULL && $sord!=NULL) $planes->orderBy($sidx, $sord);
+            if($limit!=NULL) $planes->skip($start)->take($limit);
+
+
+        
+        return $planes->groupBy('seg_planes.id')->get();
+    }
+    public static function listarplanes($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
+
+        $planes = self::select(
+            'seg_planes.id as id',
+            'seg_planes.uuid_planes as uuid_planes',
+            'seg_planes.nombre as plan',
+            'producto.nombre as producto',
+            'seg_ramos.nombre as ramo',
+            'seg_planes.desc_comision as desc_comision',
+            'comi.comision as comision',
+            'comi.sobre_comision as sobre_comision',
+			'aseg.nombre as nombre_aseguradora',
+			'aseg.uuid_aseguradora as uuid_aseguradora'
+            )
+            ->leftjoin("seg_ramos", function($join){
+                $join->on("seg_ramos.id", "=", "seg_planes.id_ramo");
+            })->leftjoin("seg_ramos as producto", function($join){
+                $join->on("producto.id", "=", "seg_ramos.padre_id");
+            })->leftjoin("seg_planes_comisiones as comi", function($join){
+                $join->on("comi.id_planes", "=", "seg_planes.id");
+            })->leftjoin("seg_aseguradoras as aseg", function($join){
+                $join->on("aseg.id", "=", "seg_planes.id_aseguradora");
+            })
+            ->whereIn("seg_planes.id", $clause['id']);
 
             if($sidx!=NULL && $sord!=NULL) $planes->orderBy($sidx, $sord);
             if($limit!=NULL) $planes->skip($start)->take($limit);
@@ -76,4 +118,50 @@ class Planes_orm extends Model
         
         return $planes->groupBy('seg_planes.id')->get();
     }
+	
+	public static function listartodo($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
+
+        $planes = self::select(
+            'seg_planes.id as id',
+            'seg_planes.uuid_planes as uuid_planes',
+            'seg_planes.nombre as plan',
+            'seg_ramos.nombre as producto',
+            'seg_ramos.nombre as ramo',
+            'seg_planes.desc_comision as desc_comision',
+            'comi.comision as comision',
+            'comi.sobre_comision as sobre_comision',
+			'aseg.nombre as nombre_aseguradora',
+			'aseg.uuid_aseguradora as uuid_aseguradora'
+            )
+            ->leftjoin("seg_ramos", function($join){
+                $join->on("seg_ramos.id", "=", "seg_planes.id_ramo");
+            })->leftjoin("seg_ramos as producto", function($join){
+                $join->on("producto.id", "=", "seg_ramos.padre_id");
+            })->leftjoin("seg_planes_comisiones as comi", function($join){
+                $join->on("comi.id_planes", "=", "seg_planes.id");
+            })->leftjoin("seg_aseguradoras as aseg", function($join){
+                $join->on("aseg.id", "=", "seg_planes.id_aseguradora");
+            });
+            
+            foreach($clause AS $field => $value)
+            {  
+                    //verificar si valor es array
+                if(is_array($value)){                        
+                    $planes->where($field, $value[0], $value[1]);                        
+                }
+				else
+					$planes->where($field,$value);
+            }
+
+			if($sidx=="aseg.nombre1"){
+				$planes->orderBy("aseg.nombre", "ASC")
+				->orderBy("seg_planes.nombre", "ASC");
+			}
+
+            if($sidx!=NULL && $sord!=NULL && $sidx!="aseg.nombre1") $planes->orderBy($sidx, $sord);
+            if($limit!=NULL) $planes->skip($start)->take($limit);
+
+        return $planes->groupBy('seg_planes.id')->get();
+    }
+
 }

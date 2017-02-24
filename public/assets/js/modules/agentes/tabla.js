@@ -10,15 +10,18 @@ $(function(){
 			'Teléfono',
 			'Correo',
 			'Participación',
+			'Estado',
 			'Acci&oacute;n',
 			'',
 		],
 	   	colModel:[
 			{name:'Nombre', index:'nombre_agente', width:70},
-			{name:'identificacion', index:'agt.identificacion', width:70, sortable:false},
-			{name:'Telefono', index:'agt.telefono', width:70,   sortable:false},
+			{name:'identificacion', index:'agt.identificacion', width:40, sortable:false},
+			{name:'Telefono', index:'agt.telefono', width:40,   sortable:false},
 	   		{name:'Correo', index:'agt.correo', width: 40,   sortable:false},
-	   		{name:'Participacion', index:'agt.porcentaje_participacion', width: 50 },
+	   		{name:'estado', index:'agt.estado', width: 40,   sortable:false},
+	   		{name:'porcentaje_participacion', index:'agt.porcentaje_participacion', width: 30 },
+	   		
 			{name:'link', index:'link', width:50, sortable:false, resizable:false, hidedlg:true, align:"center"},
 			{name:'options', index:'options', hidedlg:true, hidden: true},
 	   	],
@@ -130,11 +133,13 @@ $(function(){
 				apellido: '',
 				telefono: '',
 				correo: '',
+				identificacion: '',
+				porcentaje_participacion: '',
 			}
 		}).trigger('reloadGrid');
 		
 		//Reset Fields
-		$('#nombre, #apellido, #telefono, #correo').val('');
+		$('#nombre, #apellido, #telefono, #correo, #identificacion').val('');
 	});
 });
 
@@ -146,8 +151,9 @@ function searchBtnHlr(e) {
 	var apellido = $('#apellido').val();
 	var telefono = $('#telefono').val();
 	var correo 	= $('#correo').val();
+	var identificacion 	= $('#identificacion').val();
 
-	if(nombre != "" || apellido != "" || telefono != "" || correo != "" )
+	if(nombre != "" || apellido != "" || telefono != "" || correo != "" || identificacion != "" )
 	{
 		$("#agentesGrid").setGridParam({
 			url: phost() + 'agentes/ajax-listar-agentes',
@@ -157,6 +163,10 @@ function searchBtnHlr(e) {
 				apellido: apellido,
 				telefono: telefono,
 				correo: correo,
+				cedula: cedula,
+				identificacion: identificacion,
+				porcentaje_participacion: porcentaje_participacion,
+				estado: estado,
 				erptkn: tkn
 			}
 		}).trigger('reloadGrid');

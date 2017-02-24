@@ -35,7 +35,7 @@
                             ?>
 							<div class="ibox border-bottom">
 								<div class="ibox-title">
-									<h5>Buscar notas de d&eacute;bito</h5>
+									<h5>Buscar notas de cr&eacute;dito de proveedor</h5>
 							        <div class="ibox-tools">
 							         	<a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
 							    	</div>
@@ -45,12 +45,12 @@
 
                  	<div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
                     	<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                            <label for="codigo">No. Nota de débito</label><br>
+                            <label for="codigo">N&uacute;mero interno de nota</label><br>
                             <input type="text" name="codigo" id="codigo" class="form-control">
                       </div>
 
                       <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                            <label for="no_nota_credito">No. Nota de crédito</label><br>
+                            <label for="no_nota_credito">No. de nota del proveedor</label><br>
                             <input type="text" name="no_nota_credito" id="no_nota_credito" class="form-control">
                       </div>
                       <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">

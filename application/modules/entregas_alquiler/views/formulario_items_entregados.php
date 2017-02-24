@@ -3,7 +3,7 @@
 
 
 
-<div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12 ">
+<div class="form-group col-xs-5 col-sm-5 col-md-5 col-lg-5 ">
     <label for="observaciones">Observaciones</label>
     <textarea name="campo[observaciones]" class="form-control" v-model="entrega_alquiler.observaciones" :disabled="disabledEditar"></textarea>
 </div>

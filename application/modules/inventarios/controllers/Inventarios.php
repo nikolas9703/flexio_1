@@ -330,7 +330,7 @@ class Inventarios extends CRM_Controller
 
         $clause                 = $this->input->post();
         $clause["empresa_id"]   = $this->id_empresa;
-
+        $clause['campo']        = $this->input->post('campo');
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
 
         $count = $this->itemsRep->count($clause);
@@ -381,10 +381,9 @@ class Inventarios extends CRM_Controller
         if(!$this->input->is_ajax_request()){
             return false;
         }
-
         $clause                 = $this->input->post();
         $clause["empresa_id"]   = $this->id_empresa;
-
+        $clause['campo']        = $this->input->post('campo');
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
 
         $count = $this->seriesRep->count($clause);
@@ -464,6 +463,7 @@ class Inventarios extends CRM_Controller
     	{
             //Para aplicar filtros
             $item_id  = $this->input->post("item_id", true);
+            $item = Flexio\Modulo\Inventarios\Models\Items::find($item_id);
             $registros  = Bodegas_orm::deEmpresa($this->id_empresa)->activas();
 
             //jqgrid
@@ -501,14 +501,13 @@ class Inventarios extends CRM_Controller
                     }
 
 
-                    //este metodo ya no se va a usar -> nuevo disenio de disponibilidad
-                    //$enInventario = $item->enInventario($row->uuid_bodega);
+                    $enInventario = $item->comp_enInventario($row->uuid_bodega);
 
                     $response->rows[$i]["id"]   = $row->uuid_bodega;
                     $response->rows[$i]["cell"] = array(
                         $row->nombre,
-                        0,//pendiente por desarrollar -> nuevo disenio de disponibilidad
-                        0,//pendiente por desarrollar -> nuevo disenio de disponibilidad
+                        $enInventario["cantidadDisponibleBase"],
+                        $enInventario["cantidadDisponibleBase"],
                         $link_option,
                         $hidden_options,
                     );
@@ -848,6 +847,13 @@ class Inventarios extends CRM_Controller
      */
     public function ocultotabla($uuid = NULL, $modulo = "")
     {
+
+        if(is_array($uuid))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($uuid)
+            ]);
+        }
         //If ajax request
     	$this->assets->agregar_js(array(
             'public/assets/js/modules/inventarios/tabla.js'
@@ -858,18 +864,33 @@ class Inventarios extends CRM_Controller
 
     public function ocultotabla_series($sp_string_var = "")
     {
-        $this->assets->agregar_js(array(
-            'public/assets/js/modules/inventarios/tabla_series.js'
-    	));
 
-        $sp_array_var = explode('=', $sp_string_var);
+
+
+        /*$sp_array_var = explode('=', $sp_string_var);
         if (count($sp_array_var) == 2) {
 
             $this->assets->agregar_var_js(array(
                 $sp_array_var[0] => $sp_array_var[1]
             ));
 
+        }*/ //modelo anterior
+
+        if(is_array($sp_string_var))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($sp_string_var)
+            ]);
         }
+        elseif($sp_string_var and count(explode("=", $sp_string_var)) > 1)
+        {
+            $aux = explode("=", $sp_string_var);
+            $this->assets->agregar_var_js([$aux[0]=>$aux[1]]);
+        }
+
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/inventarios/tabla_series.js'
+    	));
 
     	$this->load->view('tabla_series');
     }
@@ -1057,7 +1078,7 @@ class Inventarios extends CRM_Controller
 
         $toast = new Flexio\Library\Toast;
         //Verificar permisos de acceso -> sin no los tiene retorna al landing page.
-        $toast->runVerifyPermission($this->auth->has_permission('acceso'));
+        $toast->runVerifyPermission($this->auth->has_permission('acceso', "inventarios/crear"));
 
         //styles, scripts and javascript vars required
         $this->_css();
@@ -1113,7 +1134,7 @@ class Inventarios extends CRM_Controller
 
         $toast = new Flexio\Library\Toast;
         //Verificar permisos de acceso -> sin no los tiene retorna al landing page.
-        $toast->runVerifyPermission($this->auth->has_permission('acceso'));
+        $toast->runVerifyPermission($this->auth->has_permission('acceso', "inventarios/ver/(:any)"));
 
         //styles, scripts and javascript vars required
         $this->_css();
@@ -1306,6 +1327,24 @@ class Inventarios extends CRM_Controller
 
     }
 
+    function ajax_getnuevo_typehead_items(){
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $nombre = $this->input->get('params[search]');
+        $ventas = $this->input->get('ventas');
+        $categoria_id = $this->input->get('categoria_id');
+        $collection = new \Flexio\Modulo\Inventarios\Collections\ItemsVentas;
+
+        $items = $this->itemsRep->getItemsChunk(['nombre'=>$nombre,'empresa_id'=>$this->id_empresa, "categoria_id" => $categoria_id,'estado' => 1]);
+
+        $response = $collection::getCollectionVentas($items);
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+        exit();
+    }
+
     function documentos_campos() {
 
     	return array(
@@ -1326,6 +1365,18 @@ class Inventarios extends CRM_Controller
     	$items_id = $this->input->post('items_id', true);
         $modeloInstancia = $this->itemsRep->findByUuid($items_id);
     	$this->documentos->subir($modeloInstancia);
+    }
+
+    function ajax_categoria(){
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+         $clause = ['empresa_id' => $this->id_empresa];
+         $columns = ['id','nombre'];
+         $categorias = $this->ItemsCategoriasRepository->getAll($clause, $columns);
+          $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output($categorias)->_display();
+        exit();
+
     }
 
 }

@@ -118,4 +118,31 @@ class VehiculoAsegurados extends Model
 	public function datosAcreedor() {
         return $this->hasOne(Proveedores::class, 'id', 'acreedor');
     }
+
+    public static function listar_vehiculo_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
+        $vehiculo = self::join("int_intereses_asegurados", "int_intereses_asegurados.interesestable_id", "=", "int_vehiculo.id")->join("int_intereses_asegurados_detalles", "int_intereses_asegurados_detalles.id_intereses", "=", "int_intereses_asegurados.id")->where("int_intereses_asegurados.interesestable_type", '8')->where(function($query) use($clause,$sidx,$sord,$limit,$start){
+            
+            if((isset($clause['empresa_id'])) && (!empty($clause['empresa_id']))) $query->where('int_intereses_asegurados.empresa_id','=' , $clause['empresa_id']);
+            if((isset($clause['detalle_unico'])) && (!empty($clause['detalle_unico']))) $query->where('int_intereses_asegurados_detalles.detalle_unico','=' , $clause['detalle_unico']);
+            if($limit!=NULL) $query->skip($start)->take($limit);            
+            });
+        
+        if($sidx!=NULL && $sord!=NULL){ $vehiculo->orderBy($sidx, $sord); }
+
+        return $vehiculo->get();
+    }
+
+    public static function listar_vehiculo($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
+        $vehiculo = self::join("int_intereses_asegurados", "int_intereses_asegurados.interesestable_id", "=", "int_vehiculo.id")->join("seg_solicitudes_intereses", "seg_solicitudes.id_intereses", "=", "int_intereses_asegurados.id")->where("int_intereses_asegurados.interesestable_type", '8')->where(function($query) use($clause,$sidx,$sord,$limit,$start){
+            
+            if((isset($clause['empresa_id'])) && (!empty($clause['empresa_id']))) $query->where('int_intereses_asegurados.empresa_id','=' , $clause['empresa_id']);
+            if((isset($clause['detalle_unico'])) && (!empty($clause['detalle_unico']))) $query->where('seg_.detalle_unico','=' , $clause['detalle_unico']);
+            if($limit!=NULL) $query->skip($start)->take($limit);            
+            });
+        
+        if($sidx!=NULL && $sord!=NULL){ $vehiculo->orderBy($sidx, $sord); }
+
+        return $vehiculo->get();
+    }
+
 }

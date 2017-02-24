@@ -96,7 +96,19 @@ Template::cargar_vista('sidebar');
 							</select>
 						</div>
 					</div>
-
+				</div>	
+				<div class="row">			
+					<div class="col-lg-3 col-md-3">
+						<div class="form-group">
+							<label>Categoria(s)</label>
+							<select name="campo[categorias]" multiple="true" class="form-control" v-select2="detalle.categorias" :config="config.select2">
+								<option value="todos">Todos</option>
+								<option :value="categorias.id" v-for="categorias in getCategorias" v-html="categorias.nombre"></option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="row">
                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                         <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8"></div>
                         <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">

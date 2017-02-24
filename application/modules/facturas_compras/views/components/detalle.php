@@ -69,14 +69,26 @@
             </select>
         </div>
 
-        <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 " style="clear: both;">
+        <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <label>Referencia <span required="" aria-required="true">*</span></label>
+            <input type="text" name="campo[referencia]" class="form-control"  id="referencia" data-rule-required="true" v-model="detalle.referencia" :disabled="config.disableDetalle">
+            <label id="referencia-error" class="error" for="referencia"></label>
+        </div>
+
+        <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
             <label>Recibir en bodega <span required="" aria-required="true">*</span></label>
             <select name="campo[lugar]" class="chosen" id="lugar" data-rule-required="true" aria-required="true" v-model="detalle.recibir_en_id" v-select2="detalle.recibir_en_id" :config="config.select2" :disabled="config.disableDetalle">
                 <option value="">Seleccione</option>
                 <option :value="bodega.bodega_id" v-for="bodega in catalogos.bodegas">{{bodega.nombre}}</option>
             </select>
         </div>
+        <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3" v-if="config.muestroRetenidoSubContrato"  >
+            <label for="porcentaje">Porcentaje de retención  </label>
 
+
+            <input type="text"  name="campo[porcentaje_retencion]" class="form-control"  id="porcentaje_retencion" data-rule-required="true" v-model="detalle.porcentaje_retencion" :disabled="config.disableDetallePorcentaje || config.disableDetalle"  >
+            <label id="porcentaje_retencion-error" class="error" for="porcentaje_retencion"></label>
+        </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
             <label>Estado <span required="" aria-required="true">*</span></label>
             <select name="campo[estado]" class="chosen" id="estado" data-rule-required="true" aria-required="true" v-model="detalle.estado" v-select2="detalle.estado" :config="config.select2" :disabled="config.disableDetalle || config.vista == 'crear' || tienePoliticas">

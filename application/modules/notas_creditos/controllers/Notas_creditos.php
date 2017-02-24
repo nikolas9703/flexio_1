@@ -207,9 +207,29 @@ class Notas_creditos extends CRM_Controller
         "vista" => 'crear',
         "acceso" => $acceso
       ));
-    $breadcrumb = array(
-      "titulo" => '<i class="fa fa-line-chart"></i> Notas de crédito: Crear',
-    );
+
+    $breadcrumb = array( "titulo" => '<i class="fa fa-line-chart"></i> Nota de Cr&eacute;dito',
+        "ruta" => array(
+          0 => array(
+            "nombre" => "Ventas",
+            "activo" => false
+          ),
+          1 => array(
+            "nombre" => 'Nota de Cr&eacute;dito',
+            "url"=>'notas_creditos/listar',
+            "activo" => true
+          ),
+          2 => array(
+            "nombre" => '<b>Crear</b>',
+            "activo" => true
+          )
+        ),
+        "menu" => array(
+          "nombre" => "Crear",
+          "url"	 => "notas_creditos/crear",
+          "opciones" => array()
+        )
+   );
     $data['mensaje'] = $mensaje;
     $this->template->agregar_titulo_header('Notas de crédito: Crear');
     $this->template->agregar_breadcrumb($breadcrumb);
@@ -253,9 +273,29 @@ class Notas_creditos extends CRM_Controller
         "acceso" => $acceso,
         "nota_credito" => $nota_credito
       ));
-    $breadcrumb = array(
-      "titulo" => '<i class="fa fa-line-chart"></i> Notas de crédito: Ver '.$nota_credito->codigo,
-    );
+
+    $breadcrumb = array(   "titulo" => '<i class="fa fa-line-chart"></i> Notas de crédito: Ver '.$nota_credito->codigo,
+        "ruta" => array(
+          0 => array(
+            "nombre" => "Ventas",
+            "activo" => false
+          ),
+          1 => array(
+            "nombre" => 'Nota de Cr&eacute;dito',
+            "url"=>'notas_creditos/listar',
+            "activo" => true
+          ),
+          2 => array(
+            "nombre" => '<b>Detalle</b>',
+            "activo" => true
+          )
+        ),
+        "menu" => array(
+          "nombre" => "Crear",
+          "url"	 => "notas_creditos/crear",
+          "opciones" => array()
+        )
+   );
     $data['mensaje'] = $mensaje;
     $this->template->agregar_titulo_header('Notas de crédito: Ver');
     $this->template->agregar_breadcrumb($breadcrumb);
@@ -280,7 +320,7 @@ class Notas_creditos extends CRM_Controller
 
 
   function guardar(){
-    //dd($_POST);
+
     if($_POST){
       $request = Illuminate\Http\Request::createFromGlobals();
       $array_campo = $request->input('campo');
@@ -294,6 +334,7 @@ class Notas_creditos extends CRM_Controller
         $uuid_usuario = $this->session->userdata('huuid_usuario');
         $usuario = Usuario_orm::findByUuid($uuid_usuario);
         $comentario = ['comentario'=>$datos_activos['comentario'],'usuario_id'=>$usuario->id];
+        $datos_activos['observaciones'] = $datos_activos['comentario'];
       }
 
 

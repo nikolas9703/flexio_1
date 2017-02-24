@@ -21,7 +21,8 @@ $config['modulo_config'] = array(
 	),
         'permisos'		=> array(
             'acceso' => 'Acceso',
-            'listar-agentes__exportarAgentes'   => 'Exportar Agentes',
-            'ver-agente__editarAgente'          => 'Editar Agente',
+            'listar__exportarAgentes'   => 'Exportar Agentes',
+            'ver__editarAgente'          => 'Editar Agente',
+            'ver__estadoAgente'          => 'Cambiar Estado',
 	)
 );

@@ -5,7 +5,7 @@ $info = !empty($info) ? $info : array();
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
     <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
         <label for="cliente_id">Cliente <span required="" aria-required="true">*</span></label>
-        <select name="campo[cliente_id]" class="form-control select2" id="cliente_id" data-rule-required="true" v-model="datosDevolucion.cliente_id" :disabled="disableCliente">
+        <select name="campo[cliente_id]" class="form-control select2" id="cliente_id" data-rule-required="true" v-model="datosDevolucion.cliente_id" :disabled="disableCliente || disableFormulario">
           <option value="">Seleccione</option>
           <?php foreach($clientes as $cliente) {?>
           <option value="<?php echo $cliente->id?>"><?php echo $cliente->nombre?></option>
@@ -18,7 +18,7 @@ $info = !empty($info) ? $info : array();
       <label for="fecha_desde">Fecha de factura <span required="" aria-required="true">*</span></label>
       <div class="input-group">
           <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-          <input type="text" name="campo[fecha_factura]" class="form-control"  id="fecha_desde" data-rule-required="true"  v-model="datosDevolucion.fecha_factura" :disabled="disableDevolucion">
+          <input type="text" name="campo[fecha_factura]" class="form-control"  id="fecha_desde" data-rule-required="true"  v-model="datosDevolucion.fecha_factura"  :disabled="disableDevolucion || disableFormulario" >
     </div>
     <label id="fecha_desde-error" class="error" for="fecha_desde"></label>
     </div>
@@ -47,14 +47,14 @@ $info = !empty($info) ? $info : array();
         <label for="fecha_hasta">Fecha de devolución <span required="" aria-required="true">*</span></label>
         <div class="input-group">
             <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-            <input type="text" name="campo[fecha_devolucion]" class="form-control"  id="fecha_hasta" data-rule-required="true" v-model="datosDevolucion.fecha_devolucion">
+            <input type="text" name="campo[fecha_devolucion]" class="form-control"  id="fecha_hasta" data-rule-required="true" v-model="datosDevolucion.fecha_devolucion"  :disabled="disableFormulario">
       </div>
       <label id="fecha_hasta-error" class="error" for="fecha_hasta"></label>
     </div>
 <?php //dd($info['info']->centros_contable_id);?>
     <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
       <label for="centro_contable_id">Centro Contable <span required="" aria-required="true">*</span></label>
-      <select name="campo[centro_contable_id]" class="form-control" id="centro_contable_id" data-rule-required="true" v-model="datosDevolucion.centro_contable_id" :disabled="disableDevolucion">
+      <select name="campo[centro_contable_id]" class="form-control" id="centro_contable_id" data-rule-required="true" v-model="datosDevolucion.centro_contable_id" :disabled="disableDevolucion || disableFormulario">
         <option value="">Seleccione</option>
         <?php foreach($centros_contables as $centro) {?>
         <option value="<?php echo $centro->id?>"><?php echo $centro->nombre?></option>
@@ -65,7 +65,7 @@ $info = !empty($info) ? $info : array();
 
     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
       <label for="bodega_id">Devoluci&oacute;n a bodega <span required="" aria-required="true">*</span></label>
-      <select name="campo[bodega_id]" class="form-control" id="bodega_id" data-rule-required="true" v-model="datosDevolucion.bodega_id" :disabled="disableDevolucion">
+      <select name="campo[bodega_id]" class="form-control" id="bodega_id" data-rule-required="true" v-model="datosDevolucion.bodega_id"  :disabled="disableFormulario">
         <option value="">Seleccione</option>
         <?php foreach($bodegas as $bodega) {?>
         <option value="<?php echo $bodega->id?>"><?php echo $bodega->nombre?></option>
@@ -76,7 +76,7 @@ $info = !empty($info) ? $info : array();
 
       <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
         <label>Vendedor <span required="" aria-required="true">*</span></label>
-        <select name="campo[created_by]" class="form-control select2" id="vendedor" data-rule-required="true" v-model="datosDevolucion.created_by">
+        <select name="campo[created_by]" class="form-control select2" id="vendedor" data-rule-required="true" v-model="datosDevolucion.created_by"  :disabled="disableFormulario">
           <option value="">Seleccione</option>
           <?php foreach($vendedores as $vendedor) {?>
           <option  value="<?php echo $vendedor->id?>"><?php echo $vendedor->nombre." ".$vendedor->apellido?></option>
@@ -89,7 +89,7 @@ $info = !empty($info) ? $info : array();
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
   <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
       <label for="razon">Raz&oacute;n <span required="" aria-required="true">*</span></label>
-      <select name="campo[razon]" class="form-control" id="razon" data-rule-required="true" v-model="datosDevolucion.razon">
+      <select name="campo[razon]" class="form-control" id="razon" data-rule-required="true" v-model="datosDevolucion.razon"  :disabled="disableFormulario">
         <option value="">Seleccione</option>
         <?php foreach($razones as $razon) {?>
         <option value="<?php echo $razon->etiqueta?>"><?php echo $razon->valor?></option>
@@ -110,12 +110,12 @@ $info = !empty($info) ? $info : array();
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
   <div class="form-group col-xs-12 col-sm-12 col-md-6 col-lg-6 ">
     <label>Comentarios </label>
-    <textarea id="comentario" name="campo[comentario]" v-model="datosDevolucion.comentario" class="form-control"></textarea>
+    <textarea id="comentario" name="campo[comentario]" v-model="datosDevolucion.comentario" class="form-control"  :disabled="disableFormulario"></textarea>
   </div>
 
     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
       <label>Estado <span required="" aria-required="true">*</span></label>
-      <select name="campo[estado]" v-model="datosDevolucion.estado" class="form-control" id="estado" data-rule-required="true">
+      <select name="campo[estado]" v-model="datosDevolucion.estado" class="form-control" id="estado" data-rule-required="true"  :disabled="disableFormulario">
         <option value="">Seleccione</option>
         <?php foreach($etapas as $etapa) {?>
         <option value="<?php echo $etapa->etiqueta?>"><?php echo $etapa->valor?></option>
@@ -134,7 +134,7 @@ $info = !empty($info) ? $info : array();
         <input type="hidden"  id="id" name="campo[factura_id]" value="{{datosDevolucion.factura_id}}">
         <input type="hidden"  id="id" name="campo[id]" value="{{datosDevolucion.id}}">
         <input type="hidden" name="campo[formulario]" value="{{devolucionHeader.tipo}}">
-      <button id="guardarBtn"  class="btn btn-primary btn-block" :disabled="botonDisabled"  v-on:click="guardar()">Guardar</button>
+      <button id="guardarBtn"  class="btn btn-primary btn-block" :disabled="botonDisabled || disableFormulario"  v-on:click="guardar()">Guardar</button>
     </div>
 </div>
 <!-- Termina campos de Busqueda -->

@@ -1,16 +1,25 @@
 <div class="col-lg-12">
     <div class="ibox float-e-margins">
         <div class="" id="ibox-content">
+            <?php $aux=[];?>
             <div id="vertical-timeline" class="vertical-container center-orientation light-timeline">
                 <?php foreach($serial->seriales_lineas->sortByDesc("id")->values() as $t):?>
                 <!--inicio de elemento-->
+                <?php
+                    $tipoable = $t->line_item->tipoable;
+                    if(in_array($tipoable->numero_documento.$tipoable->numero_documento, $aux)){
+                        continue;
+                    }else{
+                        $aux[] = $tipoable->numero_documento.$tipoable->numero_documento;
+                    }
+                ?>
                 <div class="vertical-timeline-block">
                     <div class="vertical-timeline-icon navy-bg">
                         <?php echo $t->line_item->tipoable->tipo_fa;?>
                     </div>
                     <div class="vertical-timeline-content">
                         <h2>
-                            N&uacute;mero: <?php echo $t->line_item->tipoable->numero_documento;?> 
+                            N&uacute;mero: <?php echo $t->line_item->tipoable->numero_documento;?>
                             <span style="float: right;"><?php echo $t->line_item->tipoable->tipo_span?></span>
                         </h2>
                         <p>

@@ -20,8 +20,6 @@
         <label id="fecha_abono-error" class="error" for="fecha_anticipo"></label>
     </div>
 
-
-
     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
         <label>&nbsp;</label>
         <div class="input-group">
@@ -42,7 +40,6 @@
 
 </div>
 
-
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
         <label for="total">Monto del anticipo</label>
@@ -53,23 +50,13 @@
             <label id="total-error" class="error" for="total"></label>
             <label class="error" v-if="validacionMonto" >El monto no puede ser mayor al monto de origen</label>
     </div>
-
-    <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-        <label>&nbsp;</label>
-        <select class="form-control" name="campo[tipo_deposito]" id="deposito_tipo" v-model="formulario.tipo_deposito">
-            <option v-for="tipo in catalogoFormulario.tipoable" :value="tipo.etiqueta">{{tipo.valor}}</option>
-        </select>
-    </div>
-    <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-        <label for="depositable_id">&nbsp;</label>
-        <select name="campo[depositable_id]" v-model="formulario.depositable_id" class="form-control" id="depositable_id" data-rule-required="true" :disabled="catalogoFormulario.depositable === 0 || Desabilitados">
+    <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
+        <label>Creado por</label>
+        <select name="campo[creado_por]" class="form-control" id="creado_por" v-model="formulario.creado_por"  :disabled="true">
             <option value="">Seleccione</option>
-            <option v-for="depositable in catalogoFormulario.depositable" :value="depositable.id" v-text="depositable.nombre"></option>
+            <option :value="comprador.id" v-for="comprador in catalogoFormulario.compradores">{{comprador.nombre}}</option>
         </select>
-        <label id="depositable_id-error" class="error" for="depositable_id"></label>
-        <!-- <input type="hidden" name="pb1" value="{{formulario.depositable_type}}"> -->
     </div>
-
     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
         <label>Estado</label>
         <select name="campo[estado]" v-model="formulario.estado" class="form-control" id="estado" data-rule-required="true" :disabled="campoDisabled.estadoDisabled" @change="cambiarEstadoAnticipo(formulario.estado)">
@@ -78,69 +65,6 @@
 
     </div>
 </div>
-
-<div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
-
-        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>Método de anticipo <span required="" aria-required="true">*</span></label>
-        </div>
-        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <select class="form-control" name="campo[metodo_anticipo]" id="metodo_anticipo" v-model="formulario.metodo_anticipo" data-rule-required="true" :disabled="Desabilitados">
-                <option value="">Seleccione</option>
-                <option v-for="metodo_anticipo in filtroMetodoAnticipo" :value="metodo_anticipo.etiqueta" v-text="metodo_anticipo.valor"></option>
-            </select>
-        </div>
-</div>
-
-
-    <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12" v-if="formulario.metodo_anticipo ==='ach'">
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>Banco del <span v-text="owner"></span></label>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <select name="metodo_anticipo[nombre_banco_ach]" id="nombre_banco_ach" class="form-control" v-model="formulario.opciones_metodo_acticipo.ach.nombre_banco_ach" >
-                <option value=""></option>
-                <option v-for="banco in catalogoFormulario.bancos" :value="banco.id" v-text="banco.nombre"></option>
-            </select>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>Número de cuenta del <span v-text="owner"></span></label>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <input type="text" name="metodo_anticipo[cuenta]" id="cuenta_proveedor" class="form-control" v-model="formulario.opciones_metodo_acticipo.ach.cuenta" />
-        </div>
-    </div>
-
-    <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12"v-if="formulario.metodo_anticipo ==='cheque'">
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>Número Cheque</label>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <input type="text" name="metodo_anticipo[numero_cheque]" id="numero_cheque" class="form-control disable" disabled="" v-model="formulario.opciones_metodo_acticipo.cheque.numero_cheque"/>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>Nombre Banco</label>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <input type="text" name="metodo_anticipo[nombre_banco_cheque]" id="nombre_banco_cheque" class="form-control" v-model="formulario.opciones_metodo_acticipo.cheque.nombre_banco_cheque"/>
-        </div>
-    </div>
-
-  <!-- <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12" v-if="formulario.metodo_anticipo ==='tarjeta_credito'">
-    <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-      <label>Número de tarjeta</label>
-    </div>
-    <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-      <input type="text" name="metodo_anticipo[numero_tarjeta]" id="numero_tarjeta" class="form-control" />
-    </div>
-    <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-      <label>Número de recibo</label>
-    </div>
-    <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-      <input type="text" name="metodo_anticipo[numero_recibo]" id="numero_recibo" class="form-control" />
-    </div>
-  </div> -->
-
 
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-top:30px">
     <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>

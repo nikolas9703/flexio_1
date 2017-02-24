@@ -38,7 +38,7 @@
               <?php  echo  form_close();?>
 
               <div class="row" id="subpanel">
-                <?php SubpanelTabs::visualizar($subcontrato_id); ?>
+                <?php SubpanelTabs::visualizar($subpanels); ?>
               </div>
               <!-- Comentarios -->
               <div class="row">
@@ -59,6 +59,14 @@
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 <?php
+
+echo Modal::config(array(
+	"id" => "documentosModal",
+	"size" => "lg",
+	"titulo" => "Subir Documentos",
+	"contenido" => modules::run("documentos/formulario", array())
+))->html();
+
 echo Modal::config(array(
 	"id" => "opcionesModal",
 	"size" => "sm"

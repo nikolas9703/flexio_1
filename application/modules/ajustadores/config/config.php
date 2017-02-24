@@ -1,27 +1,27 @@
-<?php defined('BASEPATH') || exit('No direct script access allowed');
+<?php
+
+defined('BASEPATH') || exit('No direct script access allowed');
 
 $config['modulo_config'] = array(
-	'nombre'        => 'Ajustadores',
-	'descripcion'	=> 'Modulo para Ajustadores.',
-	'autor'			=> 'Pensanomica Team',
-	'icono'			=> 'fa-child',
-	'version'		=> '1.0',
-	'tipo'			=> 'addon', // core, addon
-	'grupo'			=> 'Administración',
-	'agrupador'		=> array(
-                'Seguros' => array(
-                    "grupo_orden" => 3
-                ),
+    'nombre' => 'Ajustadores',
+    'descripcion' => 'Ajustadores',
+    'autor' => 'Pensanomica Team',
+    'icono' => 'fa-unlock-alt',
+    'version' => '1.0',
+    'tipo' => 'addon', // core, addon
+    'grupo' => 'Administración',
+    'agrupador' => array(
+        'Seguros' => array(
+            'grupo_orden' => 1
         ),
-	'prefijo'		=> 'seg',
-	'menu' => array(
-		'nombre' => 'Ajustadores' ,
-		'url' => 'ajustadores/listar',
-                'orden'		=> 2
-	),
-        'permisos'		=> array(
-            'acceso' => 'Acceso',
-            'listar-ajustadores__exportarAjustadores'   => 'Exportar Ajustadores',
-            'ver-ajustadores__editarAjustadores'          => 'Editar Ajustadores',
-	)
+    ),
+    'permisos' => array(
+        'acceso' => 'Acceso'
+    ),
+    'prefijo' => 'sol',
+    'menu' => array(
+        'nombre' => 'Ajustadores',
+        'url' => 'ajustadores/listar',
+        'orden' => 1
+    ),
 );

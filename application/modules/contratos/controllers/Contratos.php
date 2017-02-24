@@ -267,12 +267,13 @@ class Contratos extends CRM_Controller{
         ));
         $breadcrumb = array(
             //"titulo" => '<i class="fa fa-file-text"></i> Adenda: ' .$subcontrato->codigo. ' / Crear',
-            "titulo" => '<i class="fa fa-file-text-o"></i> Contratos: adendas',
+            "titulo" => '<i class="fa fa-file-text-o"></i> Adenda: '.$adenda->codigo,
             "ruta" => array(
                 0 => ["nombre" => "Ventas", "activo" => false], // VENTAS ??????????????????
-                1 => ["nombre" => '<b>Subcontrato</b>', "activo" => false],
-                2 => ["nombre" => '<b>'.$contrato->codigo.' / Adenda/ Crear</b>', "activo" => false]
-                ),
+                1 => ["nombre" => 'Contratos', "activo" => false, 'url'=>'contratos/listar'],
+                2 => ["nombre" =>  $contrato->codigo, "activo" => false, 'url'=>'contratos/ver/'.$adenda->contrato->uuid_contrato],
+                3 => ["nombre" => '<b>Adenda detalle</b>', "activo" => true],
+                 ),
             "menu" => []
         );
 
@@ -305,8 +306,26 @@ class Contratos extends CRM_Controller{
     ));
 
     $data=array();
+    /*$breadcrumb = array(
+
+    );*/
     $breadcrumb = array(
-      "titulo" => '<i class="fa fa-line-chart"></i> Crear Contrato',
+    "titulo" => '<i class="fa fa-line-chart"></i> Crear contrato',
+    "ruta" => array(
+      0 => array(
+        "nombre" => "Ventas",
+        "activo" => false,
+      ),
+      1 => array(
+        "nombre" => "Contratos de venta",
+        "activo" => false,
+        "url" => 'contratos/listar'
+      ),
+      2=> array(
+        "nombre" => '<b>Crear</b>',
+        "activo" => true
+      )
+    ),
     );
     $this->template->agregar_titulo_header('Crear Contratos');
     $this->template->agregar_breadcrumb($breadcrumb);
@@ -390,7 +409,17 @@ class Contratos extends CRM_Controller{
           "nombre" => "Ventas",
           "activo" => false
         ],
-        1 => ["nombre" => '<b>Contratos de venta</b>',"activo" => true]
+        //1 => ["nombre" => '<b>Contratos de venta</b>',"activo" => true],
+        1 => array(
+							"nombre" => "Contratos de venta",
+							"activo" => false,
+							"url" => 'contratos/listar'
+						),
+
+        2=> array(
+          "nombre" => '<b>Detalle</b>',
+          "activo" => true
+        )
       ),
       "menu" => [
         "nombre" => "Acci&oacute;n","url"	 => "#",
@@ -398,6 +427,8 @@ class Contratos extends CRM_Controller{
         /*'#exportar_adenda'=>'Exportar Adenda'*/) //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
       ]
     );
+
+
 
     $this->template->agregar_titulo_header('Contrato de venta');
     $this->template->agregar_breadcrumb($breadcrumb);
@@ -432,9 +463,19 @@ class Contratos extends CRM_Controller{
       "contrato" => $contrato,
       "cliente_id" => $contrato['cliente']['uuid_cliente']
     ));
-
-
     $breadcrumb = array(
+        //"titulo" => '<i class="fa fa-file-text"></i> Adenda: ' .$subcontrato->codigo. ' / Crear',
+        "titulo" => '<i class="fa fa-file-text-o"></i> Contratos: adendas',
+        "ruta" => array(
+            0 => ["nombre" => "Ventas", "activo" => false], // VENTAS ??????????????????
+            1 => ["nombre" => 'Contratos', "activo" => false, 'url'=>'contratos/listar'],
+            2 => ["nombre" =>  $contrato->codigo, "activo" => false, 'url'=>'contratos/ver/'.$uuid],
+            3 => ["nombre" => '<b>Adenda crear</b>', "activo" => true],
+             ),
+        "menu" => []
+    );
+
+  /*  $breadcrumb = array(
       "titulo" => '<i class="fa fa-line-chart"></i> Adenda: ' .$contrato->codigo. ' / Crear',
       "ruta" => array(
         0 => ["nombre" => "Ventas", "activo" => false],
@@ -442,7 +483,7 @@ class Contratos extends CRM_Controller{
         2 => ["nombre" => '<b>'.$contrato->codigo.' / Adenda/ Crear</b>',"activo" => false]
       ),
       "menu" => []
-    );
+    );*/
 
     $this->template->agregar_titulo_header('Contrato de venta');
     $this->template->agregar_breadcrumb($breadcrumb);

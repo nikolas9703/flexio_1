@@ -170,7 +170,9 @@ class Ordenes extends CRM_Controller
             'public/assets/css/plugins/jquery/fileinput/fileinput.css',
             'public/assets/css/plugins/jquery/jquery.fileupload.css',
             'public/assets/css/modules/stylesheets/ordenes_compras.css',
-            'public/assets/js/plugins/jquery/sweetalert/sweetalert.css'
+            'public/assets/js/plugins/jquery/sweetalert/sweetalert.css',
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css',
         ));
 
         $this->assets->agregar_js(array(
@@ -203,8 +205,11 @@ class Ordenes extends CRM_Controller
             'public/assets/js/default/toast.controller.js',
             'public/assets/js/default/formulario.js',
             'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
             /* Archivos js del propio modulo*/
-            'public/assets/js/modules/ordenes/listar.js',
+            'public/assets/js/modules/ordenes/listar.js'
+
         ));
         if(!empty($this->session->flashdata('mensaje')))
         {
@@ -276,18 +281,21 @@ class Ordenes extends CRM_Controller
                                 ::where("id_campo", "=", "7")
                                 ->orderBy("id_cat", "ASC")
                                 ->get();
+            $clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true];
+            $data["centros"] = $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause));
+            /* $data["centros"]    = Centros_orm::deEmpresa($this->id_empresa)
+                                 ->activa()
+                                 ->deMasJuventud($this->id_empresa)
+                                 ->orderBy("nombre", "ASC")
+                                 ->get();*/
 
-            $data["centros"]    = Centros_orm::deEmpresa($this->id_empresa)
-                                ->activa()
-                                ->deMasJuventud($this->id_empresa)
-                                ->orderBy("nombre", "ASC")
-                                ->get();
-
-            $data["proveedores"]    = Proveedores_orm
+            /*$data["proveedores"]    = Proveedores_orm
                                     ::where("id_empresa", "=", $this->id_empresa)
                                     ->where("estado", 'activo')
                                     ->orderBy("nombre", "ASC")
-                                    ->get();
+                                    ->skip(0)->take(200)
+                                    ->get();*/
+            $data["proveedores"] = collect([]);
             $clause = ['empresa_id' => $this->id_empresa];
             $data["usuarios"]    =  $this->UsuariosRepository->get($clause, 'nombre', 'ASC');
 
@@ -319,13 +327,13 @@ class Ordenes extends CRM_Controller
         );
 
         //Verificar si tiene permiso a la seccion de Crear
-        if (1 or $this->auth->has_permission('acceso', 'ordenes/crear')){
+        if ($this->auth->has_permission('acceso', 'ordenes/crear')){
             $breadcrumb["menu"]["nombre"] = "Crear";
             $breadcrumb["menu"]["url"] = "ordenes/crear";
         }
 
         //Verificar si tiene permiso de Exportar
-        if (1 or $this->auth->has_permission('listar__exportar', 'ordenes/listar')){
+        if ($this->auth->has_permission('listar__exportar', 'ordenes/listar')){
             $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
         }
 
@@ -1146,6 +1154,26 @@ class Ordenes extends CRM_Controller
     	exit;
     }
 
+    public function ajax_get_empezable()
+    {
+        if(!$this->input->is_ajax_request()){
+    		return false;
+    	}
+
+        $post = $this->input->post();
+        $response = [];
+
+        if($post['type'] == 'pedido')
+        {
+            $response = $this->PedidosRepository->find($post['id']);
+            $response = count($response) ? $this->PedidosRepository->getPedido($response) : [];
+        }
+
+    	$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    	->set_output(Collect($response))->_display();
+    	exit;
+    }
+
 
     public function ocultotablaFacturasCompras($factura_compra_id = NULL)
     {
@@ -1188,10 +1216,9 @@ class Ordenes extends CRM_Controller
         //catalogos
         $clause = ['empresa_id'=>$this->id_empresa,'ordenables'=>true,'transaccionales'=>true,'conItems'=>true, 'estado != por_aprobar'];
         $this->assets->agregar_var_js(array(
-            'pedidos' => $this->PedidosRepository->getCollectionPedidos($this->PedidosRepository->get($clause)->filter(function($pedido){
-                return $pedido->comprable == true;
-            })),
-            'proveedores' => $this->ProveedoresRepository->getCollectionProveedores($this->ProveedoresRepository->get($clause)),
+            'pedidos' => $this->PedidosRepository->getCollectionPedidosAjax($this->PedidosRepository->get($clause)),
+            //'proveedores' => $this->ProveedoresRepository->getCollectionProveedores($this->ProveedoresRepository->get($clause,null,null,10,0)),
+            'proveedores' =>collect([]),
             'bodegas' => $this->bodegasRep->getCollectionBodegas($this->bodegasRep->get($clause)),
             'centros_contables' => $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause)),
             'estados' => $this->OrdenesCompraCatRepository->get(['campo_id'=>7]),
@@ -1282,17 +1309,20 @@ class Ordenes extends CRM_Controller
             $htmlmail = str_replace("__BODY__", $html, $htmlmail);
             $htmlmail = str_replace("__YEAR__", date('Y'), $htmlmail);
 
-            $this->email->from('no-reply@pensanomica.com', 'Flexio');
+            $uuid_empresa = $this->session->userdata('uuid_empresa');
+            $empresa = Empresa_orm::findByUuid($uuid_empresa);
+            $this->email->from($empresa->no_reply_email, $empresa->no_reply_name  );
             $this->email->to($correo_proveedor);
 
             $this->email->subject('Orden de Compra No. '.$orden_compra->codigo.'<<'.$orden_compra->empresa->nombre.'>>');
             $this->email->message($htmlmail);
             $this->email->attach($file_saved);
             $resultado_envio = $this->email->send();
+            $usuario_id = $this->session->userdata('id_usuario');
             if($resultado_envio == 1){
-                $comentario = ['comentario'=>'Se envió exitosamente el correo al proveedor','usuario_id'=>$this->id_usuario];
+                $comentario = ['comentario'=>'Se envió exitosamente el correo al proveedor','usuario_id' => $usuario_id];
             }else{
-                $comentario = ['comentario'=>'No se envi el correo al proveedor','usuario_id'=>$this->id_usuario];
+                $comentario = ['comentario'=>'No se envió el correo al proveedor','usuario_id' => $usuario_id];
             }
             $this->ordenesCompraRep->addHistorial( $orden_compra,  $comentario );
             return $resultado_envio;
@@ -1330,9 +1360,13 @@ class Ordenes extends CRM_Controller
                 }
                  //ACTUALIZO EL ESTADO DEL PEDIDO -> pendiente refactory
                 $uuid_pedido = count($orden_compra->pedido) ? $orden_compra->pedido->uuid_pedido : '';
-                $pedido = Pedidos_orm::findByUuid($uuid_pedido);
+                $pedido = Pedidos_orm::findByUuid($uuid_pedido); //Version Vieja
+                //$pedido = $this->PedidosRepository->find( $orden_compra->pedido->id); //Version en DESARROLLO
+
+
                 if(count($pedido)){
-                     $pedido->comp_actualizarEstado();//ACTUALIZO EL ESTADO DEL PEDIDO
+                     //$this->PedidosRepository->actualizarEstadoPedido($pedido, $orden_compra);//Version en DESARROLLO
+                     $pedido->comp_actualizarEstado();//ACTUALIZO EL ESTADO DEL PEDIDO, version vieja
                  }
              } catch (Illuminate\Database\QueryException $e) {
                 log_message('error', __METHOD__ . " ->" . ", Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
@@ -1360,8 +1394,16 @@ class Ordenes extends CRM_Controller
     private function _generar_codigo()
     {
         $clause_empresa = ['empresa_id' => $this->id_empresa];
-        $total = $this->ordenesCompraRep->count($clause_empresa);
+        $orden = $this->ordenesCompraRep->get($clause_empresa)->last();
         $year = Carbon::now()->format('y');
+
+        $codigo_actual = is_null($orden)? 0 :$orden->codigo;
+        $total = (int)str_replace('OC'.$year, "", $codigo_actual);
+        ///para RM
+        if(getenv('OC') =='RM' && $total == 0){
+             $total = 441336;
+        }
+
         $codigo = Util::generar_codigo('OC'.$year,$total + 1);
         return $codigo;
     }
@@ -1575,7 +1617,7 @@ class Ordenes extends CRM_Controller
         }
 
         $orden_compra = $this->ordenesCompraRep->findByUuid($uuid);
-        $orden_compra = $orden_compra->load("empresa");
+        $orden_compra = $orden_compra->load("empresa", "aprobadopor");
         //dd($orden_compra->items);
         $centro_contable = $this->CentrosContablesRepository->findByUuid($orden_compra->uuid_centro);
 		$coleccion = $this->ordenesCompraRep->getColletionCampos($orden_compra);

@@ -54,6 +54,7 @@ class Contactos extends CRM_Controller {
     function ajax_guardar_contacto() {
 
       $campo =  $_POST;
+      $campos = $this->input->post("campos");
        // $campo = $this->input->post("campo");
        // dd($campo);
         $cedula = null;
@@ -73,7 +74,7 @@ class Contactos extends CRM_Controller {
                 $campo['id_aseguradora'] = $seguro->id;
                 $campo['empresa_id'] = $this->id_empresa;
                 $contacto = Contacto_orm::create($campo);
-                
+
                 //Clientes - Contacto nuevo
             } else{
                 $contacto = Contacto_orm::find($campo['id']);
@@ -84,61 +85,22 @@ class Contactos extends CRM_Controller {
                 unset($campo['id_aseguradora']);
                 $contacto->update($campo);
             }
-          }else if(!isset($campo['id'])) { //Clientes
-              //dd($campo);
-              $uuid = $campo['uuidcliente'];
-              unset($campo['uuidcliente']);
-              //Objeto para Vista clientes
-              $clienteObj = new Buscar(new Cliente_orm, 'uuid_cliente');
-              $cliente = $clienteObj->findByUuid($uuid);
-              //Relacion Contacto-Cliente
-              $campo['cliente_id'] = $cliente->id;
-              $campo['empresa_id'] = $this->id_empresa;
-              $ident = $campo['tipo']['tipo'];
-              unset($campo['tipo']);
-              $campo['tipo_identificacion'] = $ident;
-              if ($ident == 'natural'){
-                  if ($campo['letra'] == '0') {
-                      $cedula = $campo['provincia'] . "-" . $campo['tomo'] . "-" . $campo['asiento'];
-                  }elseif ($campo['letra'] == 'E' || $campo['letra'] == 'N' || $campo['letra'] == 'PE' || $campo['letra'] == 'PI') {
-                      $cedula = $campo['letra'] . "-" . $campo['tomo'] . "-" . $campo['asiento'];
-                      if ($campo['letra'] == 'PI') $cedula = $campo['provincia'] . $campo['letra'] . "-" . $campo['tomo'] . "-" . $campo['asiento'];
-                  }
-              }else{
-                  $cedula =$campo['pasaporte'];
-              }
-              $campo['identificacion'] = $cedula;
-              //dd($campo);
-              $contacto = Contacto_orm::create($campo);
-              //dd($contacto);
-         }else {
-              //dd($campo);
-              $contacto = Contacto_orm::find($campo['id']);
-              unset($campo['uuidcliente']);
-              unset($campo['created_at']);
-              unset($campo['id']);
-              unset($campo['empresa_id']);
-              unset($campo['cliente_id']);
-              unset($campo['id_aseguradora']);
-         $ident = $campo['tipo']['tipo'];
-         unset($campo['tipo']);
-         $campo['tipo_identificacion'] = $ident;
-              if ($ident == 'natural'){
-                  if ($campo['letra'] == '0') {
-                      $cedula = $campo['provincia'] . "-" . $campo['tomo'] . "-" . $campo['asiento'];
-                  }elseif ($campo['letra'] == 'E' || $campo['letra'] == 'N' || $campo['letra'] == 'PE' || $campo['letra'] == 'PI') {
-                      $cedula = $campo['letra'] . "-" . $campo['tomo'] . "-" . $campo['asiento'];
-                      if ($campo['letra'] == 'PI') $cedula = $campo['provincia'] . $campo['letra'] . "-" . $campo['tomo'] . "-" . $campo['asiento'];
-                  }
-              }else{
-                  $cedula =$campo['pasaporte'];
-              }
-              $campo['identificacion'] = $cedula;
-         $contacto->update($campo);
+        }else if(isset($campos['id']) && empty($campos['id'])) { //Clientes
+
+            $campos['empresa_id'] = $this->id_empresa;
+            $contacto = \Flexio\Modulo\Contactos\Models\Contacto::create($campos);
+
+        }else if(isset($campos['id']) && !empty($campos['id'])){
+
+            $contacto = \Flexio\Modulo\Contactos\Models\Contacto::find($campos['id']);
+            $contacto->update($campos);
+
         }
 
         if(!is_null($contacto)){
-          $response = array('clase'=>'alert-success','contenido'=> '<b>Exito</b> Se ha guardado correctamente '.$contacto->nombre);
+            $response = array('clase'=>'alert-success','contenido'=> '<b>Exito</b> Se ha guardado correctamente '.$contacto->nombre);
+        }else{
+            $response = array('clase'=>'alert-error','contenido'=> '<b>Error</b> No se ha guardado correctamente ');
         }
         echo json_encode($response);
 
@@ -154,7 +116,6 @@ class Contactos extends CRM_Controller {
       $uuid = $this->input->post('uuid_contacto');
       $contactoObj  = new Buscar(new Contacto_orm,'uuid_contacto');
       $contacto = $contactoObj->findByUuid($uuid);
-       // dd($contacto);
       if(!is_null($contacto)){
         $response = $contacto->toArray();
       }
@@ -189,8 +150,14 @@ class Contactos extends CRM_Controller {
             'public/assets/js/modules/contactos/tabla.js',
         ));
 
-        if (!empty($id_cliente)) {
-
+        if(is_array($id_cliente))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($id_cliente)
+            ]);
+        }
+        elseif(!empty($id_cliente))
+        {
             // Agregra variables PHP como variables JS
             $this->assets->agregar_var_js(array(
                 "id_cliente" => $id_cliente
@@ -336,6 +303,7 @@ class Contactos extends CRM_Controller {
             }
         }
 
+        $clause["campo"] = $this->input->post('campo', TRUE);
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
         $count = Contacto_orm::lista_totales($clause);
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
@@ -363,7 +331,7 @@ class Contactos extends CRM_Controller {
                         $hidden_options = '<a href="javascript:" data-contactouuid="' . $row->uuid_contacto . '" class="btn btn-block btn-outline btn-success aseguradoraEditarContacto">Editar</a>';
                          $hidden_options .= '<a href="javascript:" data-contactouuid="' . $row->uuid_contacto . '" class="btn btn-block btn-outline btn-success aseguradoraEstadoContacto">Desactivar</a>';
                     }else if(preg_match("/clientes/i", $_SERVER['HTTP_REFERER'])){
-                        $hidden_options = '<a href="javascript:" data-contactouuid="' . $row->uuid_contacto . '" class="btn btn-block btn-outline btn-success clienteVerContacto">Ver Contacto</a>';
+                        $hidden_options = '<a href="javascript:" data-id="' . $row->id . '" data-uuid_contacto="' . $row->uuid_contacto . '" class="btn btn-block btn-outline btn-success clienteVerContacto">Ver Contacto</a>';
                         //$hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_contacto . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Nueva Oportunidad</a>'; //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
                         //$hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_contacto . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Registrar Actividad</a>'; //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
                         //$hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_contacto . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Subir Documento</a>'; //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
@@ -377,7 +345,7 @@ class Contactos extends CRM_Controller {
                     $response->rows [$i]["cell"] = array(
                         //$nombre_link.$label_contacto_principal,
                         $row->principal,
-                        '<a href="javascript:" class="link editarContacto"  data-contactoUuid="'. $row->uuid_contacto .'">'.$row->nombre.'</a> ' .$label_principal ,
+                        '<a href="javascript:" class="link editarContacto clienteVerContacto"  data-contactoUuid="'. $row->uuid_contacto .'"  data-uuid_contacto="'. $row->uuid_contacto .'" data-id="'. $row->id .'">'.$row->nombre.'</a> ' .$label_principal ,
                         $row->cargo,
                         $row->correo,
                         $row->celular,
@@ -515,36 +483,27 @@ class Contactos extends CRM_Controller {
     		return false;
     	}
       $clause = array();
-      $uuid_cliente = $this->input->post('uuid_cliente', true);
       $uuid_contacto = $this->input->post('uuid_contacto', true);
-
-      $clienteObj  = new Buscar(new Cliente_orm,'uuid_cliente');
-      $cliente = $clienteObj->findByUuid($uuid_cliente);
-      if(isset($cliente->id)){
-            $clause['cliente_id'] = $cliente->id;
-            $campo = 'cliente_id';
-      }else{
-            $seguroObj = new Buscar(new Aseguradoras_orm, 'uuid_aseguradora');
-            $seguro = $seguroObj->findByUuid($uuid_cliente);
-            $clause['cliente_id'] = $seguro->id;
-            $campo = 'id_aseguradora';
-      }
-      
-      
-      
-      
+      $uuid_cliente = $this->input->post('uuid_cliente', true);
 
       $contactoObj  = new Buscar(new Contacto_orm,'uuid_contacto');
       $contacto = $contactoObj->findByUuid($uuid_contacto);
 
-      
+      if($uuid_cliente){
+          $seguroObj = new Buscar(new Aseguradoras_orm, 'uuid_aseguradora');
+          $seguro = $seguroObj->findByUuid($uuid_cliente);
+          $clause['cliente_id'] = $seguro->id;
+          $campo = 'id_aseguradora';
+      }else{
+          $clause['cliente_id'] = $contacto->cliente_id;
+          $campo = 'cliente_id';
+      }
+
       $clause['id'] = $contacto->id;
       $response = Contacto_orm::asignar_contacto_principal($campo,$clause);
-    	//$response = $this->contactos_model->asignar_contacto_principal();
-
-    	$json = json_encode($response);
-    	echo $json;
-    	exit;
+      $json = json_encode($response);
+      echo $json;
+      exit;
     }
 
     function editar_contacto($id_contacto = NULL) {

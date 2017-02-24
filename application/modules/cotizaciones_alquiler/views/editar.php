@@ -28,13 +28,13 @@
                 echo form_open(base_url('cotizaciones_alquiler/guardar'), $formAttr);
                 ?>
 
-                <div class="row rowhigth">
+                <div class="row rowhigth" v-show="config.acceso">
                         <!--componente empezar desde-->
                         <empezar-desde :titulo="empezable.titulo" :options="empezable.categoria" :config="empezable.configSelect2" :info="config"></empezar-desde>
                         <!--componente empezar desde-->
                 </div>
 
-                <div class="ibox border-bottom">
+                <div class="ibox border-bottom" v-show="config.acceso">
                     <div class="ibox-title">
                         <h5>Datos del cliente</h5>
                         <div class="ibox-tools">
@@ -60,15 +60,39 @@
 
                     <div class="ibox-content" style="display:block;">
                         <div class="row">
-                             <tabla-articulos :config="config" :catalogos="catalogoFormulario.articulos" :articulos="tablaItem"></tabla-articulos>
+                             <tabla-articulos :config="config" :catalogos="catalogos" :detalle.sync="detalle"></tabla-articulos>
                         </div>
+
+                        <div id="cargoadicional-accordion">
+                      		<div class="ibox-title">
+                      			<h5><input type="checkbox" name="campo[cargos_adicionales]" id="cargos_adicionales" class="toggle-cargoadicional" v-model="formulario.cargos_adicionales_checked" /> Cargos adicionales a</h5>
+                      			<a href="#cargoadicional" id="togglecargoadicional" data-toggle="collapse">&nbsp;</a>
+                      		</div>
+                      		<div id="cargoadicional" class="ibox-content panel-collapse collapse {{formulario.cargos_adicionales_checked ? 'in' : ''}}">
+
+                            <!-- Lista de Precio Item Adicional -->
+                            <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                                <label>Lista de precio de venta<span required="" aria-required="true">*</span></label>
+                                <select name="campo[item_precio_id]" class="" id="item_precio_id" :data-rule-required="detalle.cargos_adicionales_checked ? 'true' : 'false'" aria-required="true" v-model="detalle.item_precio_id" v-select2="detalle.item_precio_id" :config="config.select2" :disabled="config.disableDetalle">
+                                    <option value="">Seleccione</option>
+                                    <option :value="precio.id" v-for="precio in catalogos.precios">{{precio.nombre}}</option>
+                                </select>
+                            </div>
+
+                      			<articulos :config="config" :detalle.sync="detalle" :catalogos="catalogos" :empezable.sync="empezable"></articulos>
+
+                      		</div>
+                      	</div>
+
+                        <totales-alquiler :config="config" :detalle.sync="detalle" :catalogos="catalogos" :empezable.sync="empezable"></totales-alquiler>
+                        <div class="row"></div>
+
                         <div class="row">
                             <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
                             <label for="comentario">Observaciones</label>
                             <textarea id="comentario" name="campo[comentario]" class="form-control" v-model="formulario.comentario" :disabled="disabledEditar"></textarea>
                           </div>
                         </div>
-
 
                         <div class="row">
                             <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
@@ -85,7 +109,7 @@
                 </div>
                 <?php echo form_close(); ?>
                 <!-- Comentarios -->
-                 <div class="row">
+                 <div class="row" v-show="config.acceso">
                   <vista_comments
                   v-if="config.vista ==='editar'"
                   :config="config"

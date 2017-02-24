@@ -77,5 +77,6 @@ $route['usuarios/ajax-actividades'] 			= 'usuarios/ajax_actividades';
 $route['usuarios/ajax-tabla-agentes'] 			= 'usuarios/ajax_tabla_agentes';
 $route['usuarios/ajax-polular-tabla'] 			= 'usuarios/ajax_polular_tabla';
 $route['usuarios/ajax-listar-empresas'] = 'usuarios/ajax_listar_empresas';
+$route['usuarios/ajax-notifications'] = 'usuarios/ajax_notifications';
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

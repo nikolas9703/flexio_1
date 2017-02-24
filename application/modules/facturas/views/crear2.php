@@ -22,7 +22,7 @@
                 );
                 echo form_open(base_url('facturas/guardar2'), $formAttr);
                 ?>
-
+                <input type="hidden" id="cliente_ID" value="" />
                 <!-- Componentes -->
                 <div class="row">
                     <filtro_factura v-ref:filtro></filtro_factura>

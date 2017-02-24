@@ -414,8 +414,7 @@ class Catalogos_inventario extends CRM_Controller
                 $response["success"]    = true;
                 $response["registro"]   = $registro;
             }
-
-
+            
             echo json_encode($response);
             exit();
         }

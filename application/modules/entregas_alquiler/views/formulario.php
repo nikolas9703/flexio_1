@@ -47,7 +47,10 @@ $info = !empty($info) ? $info : array();
 
     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
         <label for="fecha_entrega">Fecha y hora de entrega <span required="" aria-required="true">*</span></label>
-        <input type="text" name="campo[fecha_entrega]" class="form-control fecha_entrega" required="" data-rule-required="true" v-model="entrega_alquiler.fecha_entrega" :disabled="disabledEditar">
+        <div class="input-group">
+            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+            <input type="text" name="campo[fecha_entrega]" class="form-control fecha_entrega" required="" data-rule-required="true" v-model="entrega_alquiler.fecha_entrega" :disabled="disabledEditar">
+        </div>
     </div>
 
     <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">

@@ -10,14 +10,14 @@ $config['modulo_config'] = array(
 	'grupo'			=> 'Ordenes de Venta',
   'agrupador'		=> array(
       'Alquileres' => array(
-          "grupo_orden" => 3
+          "grupo_orden" => 4
       )
    ),
 	'prefijo'		=> 'ord',
 	'menu' => array(
 		'nombre' =>'Ordenes de Venta' ,
 		'url' => 'ordenes_alquiler/listar',
-		'orden'=> 2
+		'orden'=> 5
 	),
 	'permisos'		=> array(
 		'acceso' => 'Acceso',

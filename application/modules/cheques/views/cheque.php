@@ -87,14 +87,16 @@ $ano=date("Y",$fecha_cheque);
 
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr class="primera_linea">
-            <td width="80%" class="td_proveedor"><span class="Estilo5 proveedor"><?php echo $cheque->pago->proveedor->nombre; ?></span>
+            <td width="80%" class="td_proveedor"><span class="Estilo5 proveedor"><?php
+
+            echo ($cheque->pago->formulario=='transferencia')?$cheque->pago->transferencias->first()->caja->responsable->nombre." ".$cheque->pago->transferencias->first()->caja->responsable->apellido:$cheque->pago->proveedor->nombre; ?></span>
             <td width="20%" class="td_proveedor caja_monto" ><span class="Estilo5 right"><?php echo $cheque->monto; ?></span></td>
         </tr>
         <tr class="">
             <td colspan="2" ><span class="Estilo5 monto_letras"><?php echo strtolower(NumeroALetras::convertir($cheque->monto, 'dolares', 'centavos'));?></span></td>
         </tr>
     </table>
-    
+
     <br><br><br>
     <table class="talonario" border="0" cellspacing="0" cellpadding="0">
         <tr class="talonario_primera_linea">

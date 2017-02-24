@@ -33,7 +33,7 @@
                                         <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
                                     </div>
                                 </div>
-                                <div class="ibox-content" style="display:none;">
+                                <div class="ibox-content" class='collapsed'  style="display: none;">
                                     <!-- Inicia campos de Busqueda -->
 
                                     		<?php
@@ -50,7 +50,7 @@
 
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	   <label for="nombre">Centro Contable</label>
-                                           <select id="centro_contable_id" name="centro_contable" class="form-control" >
+                                           <select id="centro_contable_id" name="centro_contable" class="form-control select2" style="width:375px;" >
 								                <option value="">Seleccione</option>
 								                <?php
 
@@ -68,14 +68,14 @@
 
                                         <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
                                            <label for="estado">&Aacute;rea de negocio</label><br>
-                                            <select id="departamento_id" name="departamento_id" class="form-control" >
+                                            <select id="departamento_id" name="departamento_id" class="form-control select2"  style="width:375px;">
 								                <option value="">Seleccione</option>
 								                <?php
-								                if(!empty($codigos3))
+								                if(!empty($areas_negocio))
 								                {
-									                foreach ($codigos3 AS $codigo)
+									                foreach ($areas_negocio AS $area)
 									                {
-									               		echo '<option value="'. $codigo['id'] .'">'. $codigo['nombre'] .'</option>';
+									               		echo '<option value="'. $area['id'] .'">'. $area['nombre'] .'</option>';
 									                }
 								                }
 								                ?>
@@ -98,7 +98,7 @@
                                         </div>
                                          <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
                                              <label for="nombre">Estado</label>
-                                           <select id="estado_id" name="estado" class="form-control" >
+                                           <select id="estado_id" name="estado" class="form-control select2"  style="width:375px;">
 								                <option value="">Seleccione</option>
 								                <?php
 								                if(!empty($estados))

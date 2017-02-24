@@ -59,10 +59,21 @@
                               <?php echo form_error('campo[nombre]', '<div class="error">', '</div>'); ?>
                           </div>
 
+
                           <div class="form-group col-lg-12 col-md-12">
-                            <label> Direcci&oacute;n <span required="" aria-required="true">*</span></label>
+                              <label> Direcci&oacute;n <span required="" aria-required="true">*</span></label>
                               <input type="text" name="campo[descripcion]" class="form-control" value="<?php echo $empresa['descripcion']?>" />
                               <?php echo form_error('campo[descripcion]', '<div class="error">', '</div>'); ?>
+                          </div>
+                          <div class="form-group col-lg-12 col-md-12">
+                              <label> Nombre de correo saliente <span required="" aria-required="true">*</span></label>
+                              <input type="text" name="campo[no_reply_name]" class="form-control" value="<?php echo $empresa['no_reply_name']?>" />
+                              <?php echo form_error('campo[no_reply_name]', '<div class="error">', '</div>'); ?>
+                          </div>
+                          <div class="form-group col-lg-12 col-md-12">
+                            <label> Dirección de correo saliente <span required="" aria-required="true">*</span></label>
+                              <input type="text" name="campo[no_reply_email]" class="form-control" value="<?php echo $empresa['no_reply_email']?>" />
+                              <?php echo form_error('campo[no_reply_email]', '<div class="error">', '</div>'); ?>
                           </div>
                       </div>
 

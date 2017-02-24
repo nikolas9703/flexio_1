@@ -44,6 +44,19 @@
                                     <div class="ibox-content" style="display:none;">
 					<!-- Inicia campos de Busqueda -->
                                         <div class="row">
+                                          <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                              <label for="fecha1">No. factura</label>
+                                                  <input type="text" class="form-control" id="numero_factura" />
+                                          </div>
+                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                                <label for="proveedor">Proveedor</label>
+                                                <select name="proveedor" class="form-control chosen-select" id="proveedor">
+                                                    <option value="">Seleccione</option>
+                                                    <?php foreach($proveedores as $proveedor) {?>
+                                                    <option value="<?php echo $proveedor->id?>"><?php echo $proveedor->nombre?></option>
+                                                    <?php }?>
+                                                </select>
+                                            </div>
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                                 <label for="fecha1">Rango de fechas</label>
                                                 <div class="form-inline">
@@ -56,24 +69,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                                <label for="proveedor">Proveedor</label>
-                                                <select name="proveedor" class="form-control chosen-select" id="proveedor">
-                                                    <option value="">Seleccione</option>
-                                                    <?php foreach($proveedores as $proveedor) {?>
-                                                    <option value="<?php echo $proveedor->id?>"><?php echo $proveedor->nombre?></option>
-                                                    <?php }?>
-                                                </select>
-                                            </div>
-                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                                <label for="estado">Estado</label>
-                                                <select name="estado" class="form-control chosen-select" id="estado">
-                                                    <option value="">Seleccione</option>
-                                                    <?php foreach($estados as $estado) {?>
-                                                    <option value="<?php echo $estado->id?>"><?php echo $estado->valor?></option>
-                                                    <?php }?>
-                                                </select>
                                             </div>
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                                 <label for="monto1">Montos</label>
@@ -103,6 +98,16 @@
                                                     <option value="19">Contratos</option>
                                                 </select>
                                             </div>
+                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                                <label for="estado">Estado</label>
+                                                <select name="estado" class="form-control chosen-select" id="estado">
+                                                    <option value="">Seleccione</option>
+                                                    <?php foreach($estados as $estado) {?>
+                                                    <option value="<?php echo $estado->id?>"><?php echo $estado->valor?></option>
+                                                    <?php }?>
+                                                </select>
+                                            </div>
+
                                         </div>
 
                                         <div class="row">
@@ -141,4 +146,11 @@
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 
-<?php echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->
+<?php
+echo Modal::config(array(
+    "id" => "documentosModal",
+    "size" => "lg",
+    "titulo" => "Subir Documentos",
+    "contenido" => modules::run("documentos/formulario", array())
+))->html();
+echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->

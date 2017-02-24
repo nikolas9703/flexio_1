@@ -65,6 +65,12 @@ $(function(){
         "add", {required: true,
         rgx: '^[a-zA-Z0-9áéíóúñÁÉÍÓÚ ]+$'
     });
+
+    $(".valor_mercancia").inputmask('currency',{
+        prefix: "",
+        autoUnmask : true,
+        removeMaskOnSubmit: true
+    });  
     
 });
 
@@ -75,12 +81,13 @@ function register_user_no_carga()
             type: "POST",
             data: {
                 no_liquidacion: $('#no_liquidacion').val(),
+                uuid_carga: $('.uuid_carga').val(),
                 erptkn: tkn
             },
             url: phost() + 'intereses_asegurados/ajax-check-carga',
             success: function(data)
             {                  
-                //console.log(data); 
+                console.log(data); 
                 if(data === 'USER_EXISTS')
                 {
                     toastr.warning('No se puede guardar, registro duplicado');
@@ -108,7 +115,7 @@ $(document).ready(function(){
     $('#del_file_carga').hide();
     $('#add_file_carga').click(function(){
             
-        $('#file_tools_carga').before('<div class="file_upload_carga" id="f'+counter+'"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"></div>');
+        $('#file_tools_carga').before('<div class="file_upload_carga row" id="fcarga'+counter+'"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
         $('#del_file_carga').fadeIn(0);
     counter++;
     });
@@ -117,18 +124,90 @@ $(document).ready(function(){
             $('#del_file_carga').hide();
         }   
         counter--;
-        $('#f'+counter).remove();
+        $('#fcarga'+counter).remove();
     });  
 
+    //imprimir formulario de vehiculo
+    $('#imprimirLnk').click(function(){
+        var id_carga=$('.uuid_carga').val();
+        console.log(id_carga);
+        window.location.href = '../imprimirFormulario/'+id_carga+'?tipo=2';  
+    });
+
+	//Documentos Modal
+    $('#subirDocumentoLnk').click(function(e){
+            e.preventDefault();
+            e.returnValue=false;
+            e.stopPropagation();
+
+            //Inicializar opciones del Modal
+            $('#documentosModal').modal({
+                    backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+                    show: false
+            });
+			
+            $('#documentosModal').modal('show');
+    }); 
+
+    if (permiso_cambio_estado === 0) {
+        $('.estado_carga').attr('disabled', true);
+    }
+
+    if (vista==='editar') {
+        if (desde==="intereses_asegurados") {
+            $(".docentregados").hide();
+        }else if(desde==="solicitudes"){
+            $(".docentregados").show();
+        }        
+    }
+
+    if(vista==='editar' && permiso_editar === 0){
+        //Verificar si tiene permisos para editar
+        if(typeof permiso_editar !== 'undefined')
+        {
+            $(".guardarCarga").prop('disabled', true);
+            $('#no_liquidacion').attr('disabled', true);
+            $('#fecha_despacho').attr('disabled', true);
+            $('#fecha_arribo').attr('disabled', true);
+            $('#detalle').attr('disabled', true);
+            $('#valor').attr('disabled', true);
+            $('.tipo_empaque').attr('disabled', true);
+            $('.condicion_envio').attr('disabled', true);
+            $('.medio_transporte').attr('disabled', true);
+            $('.acreedor_carga').attr('disabled', true);
+            $('#acreedor_carga_opcional').attr('disabled', true);
+            $('.tipo_obligacion').attr('disabled', true);
+            $('#tipo_obligacion_opcional').attr('disabled', true);
+            $('#observaciones_carga').attr('disabled', true);
+            $('#nombre_documento').attr('disabled', true);
+            $('.filedoc').attr('disabled', true); 
+            $('.estado_carga').attr('disabled', true); 
 
 
+        }
+    }
 
+    var contador = 2;
+      //$('#del_file_vehiculo').hide();
+      $('#add_file').click(function(){
+        
+       $('#file_tools').before('<div class="file_upload" id="f'+contador+'"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"></div>');
+       $('#del_file').fadeIn(0);
+       contador++;
+    });
+      $('#del_file').click(function(){
+           /*if(counter==3){
+            $('#del_file_vehiculo').hide();
+        } */  
+        contador--;
+        $('#f'+contador).remove();
+    });
 });
 
 //Popular formulario
 new Vue({
   el: '#proyecto_actividad',
-  ready:function(){
+  ready:function(data){
     if(vista==='ver' && formulario_seleccionado === 'carga'){
     if(typeof intereses_asegurados_id_carga !== 'undefined'){    
     $('.uuid_carga').val(intereses_asegurados_id_carga);
@@ -159,16 +238,7 @@ new Vue({
     $('#observaciones_carga').val(data.observaciones);
     $('.estado_carga').find('option[value=' + data.estado + ']').prop('selected', 'selected');
 
-    //Verificar si tiene permisos para editar
-    if(typeof permiso_editar !== 'undefined')
-    {
-            if(permiso_editar == 'true'){
-                    setTimeout(function(){
-                            $(".guardarCarga").prop('disabled', false);
-                           
-                    }, 1000);
-            }
-    }
+
     }
   },
 })

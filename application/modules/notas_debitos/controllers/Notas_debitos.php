@@ -17,6 +17,7 @@ use Flexio\Library\Util\FormRequest;
 use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\FacturasCompras\Repository\FacturaCompraRepository;
+use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 
 //transacciones
 use Flexio\Modulo\NotaDebito\Transacciones\NotasDebitosFacturas;
@@ -36,6 +37,7 @@ class Notas_debitos extends CRM_Controller
   protected $ProveedoresRepository;
   protected $ImpuestosRepository;
   protected $FacturaCompraRepository;
+  protected $CentrosContablesRepository;
 
   //utils
   protected $FlexioSession;
@@ -72,6 +74,7 @@ class Notas_debitos extends CRM_Controller
 
         //trasancciones
         $this->NotasDebitosFacturas = new NotasDebitosFacturas();
+        $this->CentrosContablesRepository = new CentrosContablesRepository;
 
         //utils
         $this->FlexioSession = new FlexioSession;
@@ -93,14 +96,14 @@ class Notas_debitos extends CRM_Controller
         'public/assets/js/default/toast.controller.js'
       ));
 
-      $breadcrumb = array( "titulo" => '<i class="fa fa-shopping-cart"></i> Notas de d&eacute;bito',
+      $breadcrumb = array( "titulo" => '<i class="fa fa-shopping-cart"></i> Notas de cr&eacute;dito de provedor',
           "ruta" => array(
             0 => array(
               "nombre" => "Compras",
               "activo" => false
             ),
             1 => array(
-              "nombre" => '<b>Notas de d&eacute;bito</b>',
+              "nombre" => '<b>Notas de cr&eacute;dito de provedor</b>',
               "activo" => true
             )
           ),
@@ -122,7 +125,7 @@ class Notas_debitos extends CRM_Controller
       $data['etapas'] = $this->catalogo->getEtapas();
       $data['vendedores'] = Usuario_orm::rolVendedor($clause);
       $breadcrumb["menu"]["opciones"]["#exportarNotaDebito"] = "Exportar";
-      $this->template->agregar_titulo_header('Listado de Nota de D&eacute;bito');
+      $this->template->agregar_titulo_header('Listado de Notas de cr&eacute;dito de provedor');
       $this->template->agregar_breadcrumb($breadcrumb);
       $this->template->agregar_contenido($data);
       $this->template->visualizar($breadcrumb);
@@ -257,16 +260,16 @@ class Notas_debitos extends CRM_Controller
 
       //breadcrumb
       $breadcrumb = [
-          "titulo" => '<i class="fa fa-shopping-cart"></i> Notas de d&eacute;bito: Crear ',
+          "titulo" => '<i class="fa fa-shopping-cart"></i> Notas de cr&eacute;dito de proveedor: Crear ',
           "ruta" => [
               ["nombre" => "Compras", "activo" => false],
-              ["nombre" => "Notas de débito", "activo" => false, "url" => 'notas_debitos/listar'],
+              ["nombre" => "Notas de cr&eacute;dito de provedor", "activo" => false, "url" => 'notas_debitos/listar'],
               ["nombre" => "<b>Crear</b>", "activo" => true]
           ],
       ];
 
       //render
-      $this->template->agregar_titulo_header('Notas de d&eacute;bito: Crear');
+      $this->template->agregar_titulo_header('Notas de cr&eacute;dito de provedor: Crear');
       $this->template->agregar_breadcrumb($breadcrumb);
       $this->template->agregar_contenido([]);
       $this->template->visualizar();
@@ -274,9 +277,12 @@ class Notas_debitos extends CRM_Controller
 
   public function ver($uuid=null)
   {
-      //permisos
       $acceso = $this->auth->has_permission('acceso');
-      $this->Toast->runVerifyPermission($acceso);
+      if(!$this->auth->has_permission('acceso', 'notas_debitos/ver/(:any)')){
+        redirect(base_url('/'));
+      }
+
+      //$this->Toast->runVerifyPermission($acceso);
 
       //registros
       $nota_debito = $this->notaDebitoRepository->findByUuid($uuid);
@@ -300,38 +306,42 @@ class Notas_debitos extends CRM_Controller
       ]);
       //breadcrumb
       $breadcrumb = [
-          "titulo" => '<i class="fa fa-shopping-cart"></i> Notas de d&eacute;bito: '.$nota_debito->codigo,
+          "titulo" => '<i class="fa fa-shopping-cart"></i> Notas de cr&eacute;dito de proveedor: '.$nota_debito->codigo,
           "ruta" => [
               ["nombre" => "Compras", "activo" => false],
-              ["nombre" => "Notas de débito", "activo" => false, "url" => 'notas_debitos/listar'],
+              ["nombre" => "Notas de cr&eacute;dito de proveedor", "activo" => false, "url" => 'notas_debitos/listar'],
               ["nombre" => "<b>Detalle</b>", "activo" => true]
           ],
       ];
 
       //render
-      $this->template->agregar_titulo_header('Notas de d&eacute;bito: Detalle');
+      $this->template->agregar_titulo_header('Notas de cr&eacute;dito de proveedor: Detalle');
       $this->template->agregar_breadcrumb($breadcrumb);
       $this->template->agregar_contenido([]);
       $this->template->visualizar();
   }
 
-  public function ocultoformulario()
+  public function ocultoformulario($info)
   {
+    //$limit=10;
+    $limit=null;
     $data = array();
     $clause = array('empresa_id'=> $this->empresa_id);
     $clause2 = ['empresa_id'=>$this->empresa_id,'ordenables'=>true];
-
+    $clause3 = ['empresa_id' => $this->empresa_id, 'transaccionales' => true];
     $this->FlexioAssets->add('js', ['public/resources/compile/modulos/notas_debitos/formulario.js']);
     $this->FlexioAssets->add('vars',[
-      'proveedores' => $this->ProveedoresRepository->getCollectionProveedores($this->ProveedoresRepository->get($clause2)),
-      'centros_contables' => Centros_orm::transaccionalesDeEmpresa($this->empresa_id)->activos()->get(),
+      'proveedores' => $this->ProveedoresRepository->getCollectionProveedores($this->ProveedoresRepository->get($clause2, null,null, $limit)),
+      //'centros_contables' => Centros_orm::transaccionalesDeEmpresa($this->empresa_id)->activos()->get(),
+      'centros_contables' => $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause3)),
       'usuarios' => Usuario_orm::listar($this->empresaObj->uuid_empresa),
       'estados' => $this->catalogo->getEtapas(),
       'cuentas' => Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->activas()->get(),
       'impuestos' => $this->ImpuestosRepository->get($clause),
       'usuario_id' => $this->FlexioSession->usuarioId(),
-      'facturas' => $this->FacturaCompraRepository->getCollectionFacturasNotaDebito($this->FacturaCompraRepository->cobradoCompletoSinNotaDebito($clause))
+      'facturas' => $this->FacturaCompraRepository->getCollectionFacturasNotaDebito($this->FacturaCompraRepository->cobradoCompletoSinNotaDebitoSinEstados($clause))
     ]);
+     // dd(count($this->FacturaCompraRepository->getCollectionFacturasNotaDebito($this->FacturaCompraRepository->cobradoCompletoSinNotaDebito($clause))));
 
     $this->load->view('formulario', $data);
 

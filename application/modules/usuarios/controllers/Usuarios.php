@@ -8,6 +8,7 @@ use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 
 //utils
 use Flexio\Library\Util\FlexioAssets;
+use Flexio\Library\Util\FlexioSession;
 use Flexio\Library\Toast;
 
 class Usuarios extends CRM_Controller {
@@ -20,6 +21,7 @@ class Usuarios extends CRM_Controller {
 
     //utils
     protected $FlexioAssets;
+    protected $FlexioSession;
     protected $Toast;
 
     function __construct() {
@@ -54,6 +56,7 @@ class Usuarios extends CRM_Controller {
 
         //utils
         $this->FlexioAssets = new FlexioAssets;
+        $this->FlexioSession = new FlexioSession;
         $this->Toast = new Toast;
     }
 
@@ -266,7 +269,7 @@ class Usuarios extends CRM_Controller {
         {
             redirect('/');
         }
-
+        
         $this->template->agregar_titulo_header('Empresa: Editar');
         $this->form_validation->set_rules('campo[nombre]', 'Nombre de Compañia', 'trim|required');
         $this->form_validation->set_rules('campo[descripcion]', 'Dirección', 'trim|required');
@@ -295,7 +298,7 @@ class Usuarios extends CRM_Controller {
         if (empty($uuid_empresa))
             redirect('usuarios/listar_empresa/');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
-
+        
         if ($empresa === null) {
             redirect('usuarios/listar-empresa');
         } else {
@@ -323,6 +326,7 @@ class Usuarios extends CRM_Controller {
                 'empresa' => $empresa->toArray()
             );*/
             $data = ['empresa' => $empresa->toArray()];
+            
             $this->template->agregar_contenido($data);
             $this->template->agregar_breadcrumb($breadcrumb);
 
@@ -348,8 +352,9 @@ class Usuarios extends CRM_Controller {
                         $error_image = true;
                     }
                 }
-
+                
                 $logo = isset($config['file_name']) ? $config['file_name'] : '';
+                
                 /*$padre = $this->input->post('padre', true);
                 $nombre_empresa = $this->input->post('nombre_empresa', true);
                 $direccion = $this->input->post('direccion', true);
@@ -364,9 +369,14 @@ class Usuarios extends CRM_Controller {
                 $this->cache->delete("menuListaEmpresa-". $uuid_usuario.'-'. $delete_uuid);
                 //$this->cache->delete("empresaDefault-". $uuid_usuario.'-'. $uuid_empresa);
                 $this->empresa_request = new CrearEmpresaRequest();
+                if($logo==''){
+                    $datos = ['id' => $empresa->id];
+                } else {
                 $datos = ['id' => $empresa->id,'logo'=>$logo];
+                }
+                
                 $empresa = $this->empresa_request->datos($datos);
-
+                
                 //$guardar = Empresa_orm::actualizar_empresa($campos);
 
                 if (!is_null($empresa)){
@@ -420,6 +430,22 @@ class Usuarios extends CRM_Controller {
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido([]);
         $this->template->visualizar();
+    }
+
+    public function ajax_notifications()
+    {
+        $usuario = $this->FlexioSession->usuario();
+        if($this->input->post('setNotificationsAsRead') == 'true')
+        {
+            $usuario->notifications->markAsRead();
+        }
+        $notifications = $this->userRepo->getCollectionNotifications($usuario->notifications->take(5));
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($notifications, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->_display();
+        exit;
+
+
     }
 
     public function ajax_guardar_usuario() {
@@ -484,7 +510,8 @@ class Usuarios extends CRM_Controller {
             $htmlmail = str_replace("__PASSWORD__", $password, $htmlmail);
 
             //Enviar el correo
-            $this->email->from('no-reply@pensanomica.com', 'Flexio');
+            $empresa = Empresa_orm::findByUuid($this->session->userdata('uuid_empresa'));
+            $this->email->from($empresa->no_reply_email, $empresa->no_reply_name  );
             $this->email->to($usuario->email);
             $this->email->subject('Nueva cuenta Flexio');
             $this->email->message($htmlmail);
@@ -668,7 +695,6 @@ class Usuarios extends CRM_Controller {
         $response->total = $total_pages;
         $response->records = $count;
         $i = 0;
-
         if (!empty($rows->toArray())) {
             foreach ($rows->toArray() AS $i => $row) {
 
@@ -699,13 +725,15 @@ class Usuarios extends CRM_Controller {
 
                 //Seleccionar centros contables del usuario
                 $centros_contables = $row['filtro_centro_contable'] == 'todos' ? ['todos'] : array_pluck($row['centros_contables'], 'id');
+                $categorias_inventario = $row['filtro_categoria'] == 'todos' ? ['todos'] : array_pluck($row['categorias_inventario'], 'id');
 
                 $response->rows[$i]["id"] = $row['id'];
                 $response->rows[$i]["cell"] = array(
                     $row['nombre_completo'],
                     $row['email'],
                     $row['fecha_creacion'],
-                    $row['filtro_centro_contable'] == 'todos' ? '&lt;&lt;Todos&gt;&gt;' : implode(', ', array_pluck($row['centros_contables'], 'nombre')),
+                    $row['filtro_centro_contable'] == 'todos' ? '&lt;&lt;Todos&gt;&gt;' : count($row['centros_contables'])<5? implode(', ', array_pluck($row['centros_contables'], 'nombre')): '<a href="javascript:;" title="'.implode(', ', array_pluck($row['centros_contables'], 'nombre')).'">' .count($row['centros_contables']).' Centros seleccionados </a>',
+                     $row['filtro_categoria'] == 'todos' ? 'todos' : implode(', ', array_pluck($row['categorias_inventario'], 'nombre')),
                     '<span class="label label-' . $label_class . '">' . $row["estado"] . '</span>',
                     $link_option,
                     $hidden_options,
@@ -713,7 +741,8 @@ class Usuarios extends CRM_Controller {
                     $row['apellido'],
                     $rol_sistema_id,
                     $rol_id,
-                    $centros_contables
+                    $centros_contables,
+                    $categorias_inventario
                 );
                 $i++;
             }

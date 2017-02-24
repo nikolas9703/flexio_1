@@ -3,10 +3,10 @@
  *
  * @package    Flexio
  * @subpackage Controller
- * @category   Abonos
+ * @category   Anticipos
  * @author     Pensanomica Team
  * @link       http://www.pensanomica.com
- * @copyright  01/15/2016
+ * @copyright  10/15/2016
  */
 
 use Illuminate\Database\Capsule\Manager as Capsule;
@@ -14,7 +14,7 @@ use Carbon\Carbon as Carbon;
 
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaBancoRepository as CuentaBanco;
 use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
-
+use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 
 class Anticipos extends CRM_Controller
 {
@@ -25,23 +25,24 @@ class Anticipos extends CRM_Controller
   protected $cuenta_banco;
   protected $modulo_padre;
   private $proveedoresRep;
+  public $tipo;
+  protected $UsuariosRepository;
 
     function __construct(){
         parent::__construct();
 
         Carbon::setLocale('es');
         setlocale(LC_TIME, 'Spanish');
-        //Cargar Clase Util de Base de Datos
-        //$this->load->dbutil();
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresaObj  = new Buscar(new Empresa_orm,'uuid_empresa');
         $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
-	      //$this->usuario   = $this->session->userdata("huuid_usuario");
-	      $this->empresa_id   = $this->empresaObj->id;
+	    $this->empresa_id   = $this->empresaObj->id;
         $this->cuenta_banco = new CuentaBanco;
         $this->proveedoresRep = new ProveedoresRepository();
         $this->setPadreModulo();
         $this->load->module(array('documentos'));
+        $this->UsuariosRepository = new UsuariosRepository;
+        $this->usuario_id = $this->session->userdata("id_usuario");
     }
 
     function listar(){
@@ -51,7 +52,6 @@ class Anticipos extends CRM_Controller
             $mensaje = array('tipo'=>"error", 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud');
             $this->session->set_flashdata('mensaje', $mensaje);
         }
-
 
         $this->_Css();
         $this->assets->agregar_css(array(
@@ -71,9 +71,11 @@ class Anticipos extends CRM_Controller
 
         if($this->modulo_padre == 'compras'){
             $anticipable = $catalogo_proveedores->get($empresa);
+            $this->tipo = $this->modulo_padre;
         }else{
             $clientesActivos = $catalogo_clientes->getClientesEstadoActivo($empresa)->get();
             $anticipable = $catalogo_clientes->clienteCatalogo($clientesActivos);
+            $this->tipo = $this->modulo_padre;
         }
 
 
@@ -138,7 +140,6 @@ class Anticipos extends CRM_Controller
             $clause['anticipable_type'] = $this->anticipable_type();
         }
 
-
         $response = $jqgrid->listar($clause);
 
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
@@ -152,7 +153,13 @@ class Anticipos extends CRM_Controller
             'public/assets/js/modules/anticipos/tabla.js'
         ));
         if (!empty($modulo_id)) {
-            if (preg_match("/(ordenes)/i", $this->router->fetch_class())) {
+            if(is_array($modulo_id))
+            {
+                $this->assets->agregar_var_js([
+                    "campo" => collect($modulo_id)
+                ]);
+            }
+            elseif (preg_match("/(ordenes)/i", $this->router->fetch_class())) {
                 //dd($modulo_id);
                 $this->assets->agregar_var_js(array(
                     "orden_id" => $modulo_id
@@ -178,23 +185,23 @@ class Anticipos extends CRM_Controller
 
         if($this->modulo_padre == "compras"){
             $this->desde_empezables_compras($request);
+            $this->tipo = $this->modulo_padre;
         }else{
             $this->desde_empezables_ventas($request);
+            $this->tipo = $this->modulo_padre;
         }
 
         $this->_Css();
         $this->_js();
         $this->assets->agregar_js(array(
           'public/assets/js/default/vue/directives/new-select2.js',
-          'public/resources/compile/modulos/anticipos/formulario.js',
-          'public/assets/js/modules/anticipos/plugins.js'
+          'public/resources/compile/modulos/anticipos/formulario.js'
         ));
-
-
 
         $this->assets->agregar_var_js(array(
             "vista"             => 'crear',
             "acceso"            => $acceso == 0? $acceso : $acceso,
+            'usuario_id' => $this->usuario_id,
         ));
 
         $data['mensaje'] = $mensaje;
@@ -202,17 +209,17 @@ class Anticipos extends CRM_Controller
             "titulo" => '<i class="fa '.$this->icono().'"></i> Anticipo: Crear ',
             "ruta" => array(
                 0 => array(
-                    "nombre" => "<b>".ucfirst($this->modulo_padre)."</b>",
-                    "activo" => true
+                    "nombre" => ucfirst($this->modulo_padre),
+                    "activo" => false
                 ),
                 1 => array(
-                    "nombre" => '<b>Anticipos</b>',
-                    "activo" => true,
+                    "nombre" => 'Anticipos',
+                    "activo" => false,
                     "url" => "anticipos/listar"
                 ),
                 2 => array(
-                    "nombre" => 'Crear',
-                    "activo" => false
+                    "nombre" => '<b>Crear</b>',
+                    "activo" => true
                 )
             )
         );
@@ -227,6 +234,7 @@ class Anticipos extends CRM_Controller
     function ver($uuid=NULL){
         $mensaje = array();
         $acceso = 1;
+        $subpanels = [];
         if(!$this->auth->has_permission('acceso','anticipos/ver/(:any)')){
             $acceso = 0;
             $mensaje = array('estado'=>500, 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud','clase'=>'alert-danger');
@@ -239,8 +247,7 @@ class Anticipos extends CRM_Controller
         $this->_js();
         $this->assets->agregar_js(array(
             'public/assets/js/default/vue/directives/new-select2.js',
-            'public/resources/compile/modulos/anticipos/formulario.js',
-            'public/assets/js/modules/anticipos/plugins.js'
+            'public/resources/compile/modulos/anticipos/formulario.js'
         ));
 
         $anticipoObj    = new Flexio\Modulo\Anticipos\Repository\AnticipoRepository;
@@ -251,31 +258,40 @@ class Anticipos extends CRM_Controller
             redirect(base_url('anticipos/listar'));
         }
 
+        if($this->modulo_padre =="compras"){
+          $subpanels = [
+            'pago'=>['anticipo'=>$anticipo->id],
+            'documento'=>['anticipo'=>$anticipo->id]
+          ];
+          $this->tipo = $this->modulo_padre;
+        }
 
         $clause  = array('empresa_id'=> $this->empresa_id);
 
         $this->assets->agregar_var_js(array(
             "vista"     => 'ver',
             "acceso"    => $acceso == 0? $acceso : $acceso,
-            "hex_anticipo" => $anticipo->uuid_anticipo
+            "hex_anticipo" => $anticipo->uuid_anticipo,
+            'usuario_id' => $this->usuario_id,
         ));
-
+        $data['modulo'] = $this->modulo_padre;
+        $data['subpanels'] = $subpanels;
         $data['mensaje']        = $mensaje;
         $breadcrumb = array(
             "titulo" => '<i class="fa '.$this->icono().'"></i> Anticipo: '.$anticipo->codigo,
             "ruta" => array(
                 0 => array(
-                    "nombre" => "<b>".ucfirst($this->modulo_padre)."</b>",
-                    "activo" => true
+                    "nombre" =>  ucfirst($this->modulo_padre) ,
+                    "activo" => false
                 ),
                 1 => array(
-                    "nombre" => '<b>Anticipos</b>',
-                    "activo" => true,
+                    "nombre" => 'Anticipos',
+                    "activo" => false,
                     "url" => "anticipos/listar"
                 ),
                 2 => array(
-                    "nombre" => $anticipo->codigo,
-                    "activo" => false
+                    "nombre" =>'<b>Detalle</b>',
+                    "activo" => true
                 )
             )
         );
@@ -295,26 +311,40 @@ class Anticipos extends CRM_Controller
       if (!$this->input->is_ajax_request()) {
         return false;
       }
+      $clause = ['empresa_id'=>$this->empresa_id];
+      $modulo = $this->input->post('modulo');
       $empresa = ['empresa_id' => $this->empresa_id];
       $catalogo_anticipo = new Flexio\Modulo\Anticipos\Repository\CatalogoAnticipo;
 
       $bancos = new Flexio\Modulo\Bancos\Repository\BancosRepository;
-
+      $cajas = new Flexio\Modulo\Cajas\Repository\CajasRepository;
       //repositorio catalogo
       //repositorio proveedores
       $catalogo = [];
       $catalogo['estados'] = $catalogo_anticipo->getEstados();
-      $catalogo['metodo_anticipo'] = $catalogo_anticipo->getMetodoAnticipo();
-      $catalogo['bancos'] = $bancos->get();
-      $catalogo["depositable"] = [];
+      //$catalogo['metodo_anticipo'] = $catalogo_anticipo->getMetodoAnticipo();
+      //$catalogo['bancos'] = $bancos->get();
+      //$catalogo['caja'] = $cajas->getAll(array_merge($empresa,['estado_id'=>1]));
+      //$catalogo["depositable"] = [];
       // hacer dinamico por el tipo se refiere banco o caja
-      $catalogo['tipoable'] = [['etiqueta' => 'banco', 'valor'=>'Pagar de cuenta de banco']];
+      if($this->modulo_padre =="compras"){
+          $tipoable = [
+            ['etiqueta' => 'banco', 'valor'=>'Pagar de cuenta de banco']
+          ];
+      }else{
+           $tipoable = [
+               ['etiqueta' => 'banco', 'valor'=>'Depositar en cuenta de banco']
+        ];
+      }
+      //$catalogo['tipoable'] = $tipoable;
+
       if($this->cuenta_banco->tieneCuenta($empresa)) {
         $cuenta_banco = $this->cuenta_banco->cuentasConfigBancos($empresa);
-        $catalogo["depositable"] = $cuenta_banco;
+        //$catalogo["depositable"] = $cuenta_banco;
        }
        //hacer dinamico se refiere proveedores o clientes
-       $catalogo['anticipables'] = $this->catalogo_anticipable();
+       $catalogo['anticipables'] = $this->catalogo_anticipable($modulo);
+       $catalogo['compradores'] = $this->UsuariosRepository->getCollectionUsuarios($this->UsuariosRepository->get($clause));
 
 
       $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
@@ -413,6 +443,7 @@ class Anticipos extends CRM_Controller
         return false;
        }
 
+
        $tipo_deposito = ['Flexio\Modulo\Contabilidad\Models\Cuentas' => 'banco', 'Flexio\Modulo\Cajas\Models\Cajas'=> 'caja'];
        $tipo_anticipable = ['Flexio\Modulo\Proveedores\Models\Proveedores' => 'proveedor','Flexio\Modulo\Cliente\Models\Cliente'=>'cliente'];
        $empezable = ['orden_compra' => 'Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra',
@@ -421,17 +452,23 @@ class Anticipos extends CRM_Controller
        $uuid =$this->input->post('uuid');
        $anticipoObj    = new Flexio\Modulo\Anticipos\Repository\AnticipoRepository;
        $anticipo       = $anticipoObj->findByUuid($uuid);
-
-
-       $anticipo->tipo_deposito= $tipo_deposito[$anticipo->depositable_type];
+       $anticipo->tipo_deposito= !empty($tipo_deposito[$anticipo->depositable_type])?$tipo_deposito[$anticipo->depositable_type]:'';
        $anticipo->tipo_anticipable =  $tipo_anticipable[$anticipo->anticipable_type];
 
-
-       /*$anticipo->load('landing_comments','orden_compra','subcontrato','contrato','orden_venta');
-       $anticipo->politica = $this->modulo_padre =="compras"?$anticipo->politica():[];*/
-
        $anticipo = $this->cargar_relaciones($anticipo);
-
+       $anticipo->anticipable;
+       if($anticipo->tipo_anticipable =="proveedor"){
+           $proveedor = collect([
+           'id'=> $anticipo->anticipable->uuid_proveedor,
+           'credito' => $anticipo->anticipable->credito,
+           'saldo_pendiente' => $anticipo->anticipable->saldo_pendiente,
+           'nombre' => $anticipo->anticipable->nombre,
+           'retiene_impuesto' => $anticipo->anticipable->retiene_impuesto,
+           'proveedor_id' => $anticipo->anticipable->id
+           ]);
+           $anticipo->{'proveedor'} = $proveedor;
+       }
+       
        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
        ->set_output($anticipo)->_display();
        exit;
@@ -445,7 +482,8 @@ class Anticipos extends CRM_Controller
        return $anticipo;
      }
 
-     $anticipo->load('landing_comments','contrato','orden_venta');
+     $anticipo->load('landing_comments','contrato','orden_venta','anticipable');
+     
      $anticipo->politica = [];
      return $anticipo;
    }
@@ -454,25 +492,30 @@ class Anticipos extends CRM_Controller
 
       if($this->modulo_padre =="compras"){
           return 'proveedor';
+      }else if($this->modulo_padre =="ventas"){
+        return 'cliente';
       }
-      return 'cliente';
+
    }
 
    private function anticipable_type(){
 
        if($this->owner() =='proveedor'){
            return 'Flexio\Modulo\Proveedores\Models\Proveedores';
+       }else if($this->owner() =='cliente'){
+            return 'Flexio\Modulo\Cliente\Models\Cliente';
        }
-       return 'Flexio\Modulo\Cliente\Models\Cliente';
+
    }
 
-   private function catalogo_anticipable(){
+   private function catalogo_anticipable($modulo){
+
      $empresa = ['empresa_id' => $this->empresa_id];
-     //dd($this->owner(),$this->modulo_padre);
-     if($this->owner() =='proveedor'){
-       $catalogo_proveedores = new Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
-       $proveedores = $catalogo_proveedores->get($empresa);
-       return $proveedores;
+     
+     if($modulo == 'compras'){
+       //$catalogo_proveedores = new Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
+       //$proveedores = $catalogo_proveedores->get($empresa);
+       return [];
      }
      $catalogo_clientes = new Flexio\Modulo\Cliente\Repository\ClienteRepository;
      $clientes = $catalogo_clientes->getClientesEstadoActivo($empresa)->get();
@@ -555,14 +598,14 @@ class Anticipos extends CRM_Controller
    }
 
    function setPadreModulo(){
-      $request = Illuminate\Http\Request::capture();
+      $request = Illuminate\Http\Request::createFromGlobals();
 
       if($request->has('contrato')){
-      return  $this->modulo_padre = 'ventas';
-      }
-
-      if($request->has('subcontrato')){
-        return  $this->modulo_padre = 'compras';
+        $this->modulo_padre = 'ventas';
+        return 'ventas';
+      }else if($request->has('subcontrato')){
+        $this->modulo_padre = 'compras';
+        return 'compras';
       }
 
 
@@ -618,6 +661,7 @@ class Anticipos extends CRM_Controller
         'public/assets/js/moment-with-locales-290.js',
         'public/assets/js/plugins/bootstrap/daterangepicker.js',
         'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
+        'public/assets/js/modules/anticipos/plugins.js'
       ));
     }
 

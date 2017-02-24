@@ -27,19 +27,19 @@
                 echo form_open(base_url('entregas_alquiler/guardar'), $formAttr);
                 ?>
 
-                <div class="row rowhigth">
-                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                            <span>Empezar entregas desde </span>
+                <div class="row" style="margin-right: 0px">
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="background-color: #D9D9D9;padding: 7px 0 7px 0px;">
+                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3" style="padding-top: 7px;">
+                            <span style="font-weight: bold">Empezar entrega desde </span>
                         </div>
-                        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                            <select class="form-control" name="campo[empezar_desde_type]" required="" data-rule-required="true" v-model="entrega_alquiler.empezar_desde_type" @change="cambiarTipo(entrega_alquiler.empezar_desde_type)" :disabled="disabledHeader || disabledEditar">
+                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                            <select class="form-control" name="campo[empezar_desde_type]" required="" data-rule-required="true" v-select2="entrega_alquiler.empezar_desde_type" @change="cambiarTipo(entrega_alquiler.empezar_desde_type)" :disabled="disabledEditar">
                                 <option value="">Seleccione</option>
                                 <option value="contrato_alquiler">Contrato de alquiler</option>
                             </select>
                         </div>
-                        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                            <select  class="form-control" name="campo[empezar_desde_id]" v-model="entrega_alquiler.empezar_desde_id" :disabled="entrega_alquiler.empezar_desde_type == '' || disabledHeader || disabledEditar">
+                        <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                            <select  class="form-control" name="campo[empezar_desde_id]" v-select2="entrega_alquiler.empezar_desde_id" :disabled="entrega_alquiler.empezar_desde_type == '' || disabledHeader || disabledEditar" @change="cambiarEmpezable(entrega_alquiler.empezar_desde_id)">
                                 <option value="">Seleccione</option>
                                 <option value="{{empezable.id}}" v-for="empezable in empezables | orderBy 'codigo'" v-if="(empezable.estado_id == '2') || vista != 'crear'">{{empezable.codigo}} - {{empezable.cliente.nombre}}</option>
                             </select>
@@ -66,9 +66,10 @@
 
                     <div class="ibox-title">
                         <h5>&Iacute;tems contratados</h5>
+                        <!-- case #1682 quitar caret
                         <div class="ibox-tools">
                             <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
-                        </div>
+                        </div>-->
                     </div>
 
                     <div class="ibox-content" style="display:block;">

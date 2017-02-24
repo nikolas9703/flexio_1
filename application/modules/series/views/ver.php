@@ -30,7 +30,7 @@
                 </div>
 
                 <div class="row" style="margin-left: -15px;">
-                    <?php SubpanelTabs::visualizar("sp_serie_id=$serie_id"); ?>
+                    <?php SubpanelTabs::visualizar($subpanels); ?>
                 </div>
 
                 <!-- Comentarios -->

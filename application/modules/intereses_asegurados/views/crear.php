@@ -42,7 +42,7 @@
                             ?>
                         </ul>
                     </div>
-
+                    <?php //print_r($campos); ?>
                     <!-- Tabs Content -->
                     <div class="tab-content filtro-formularios-content m-t-sm">
                     <?php
@@ -50,6 +50,7 @@
                     ?>
                     <div class="tab-pane" id="<?=$tipo->valor?>Tab">
                     <?php
+                    //var_dump($tipo->valor);
                     echo modules::run("intereses_asegurados/" . $tipo->valor. "formularioparcial",$campos);
                     ?>
                     </div>

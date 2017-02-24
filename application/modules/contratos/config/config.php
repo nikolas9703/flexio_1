@@ -13,7 +13,7 @@ $config['modulo_config'] = array(
                     "grupo_orden" => 1
 		),
                 'Ventas' => array(
-                    "grupo_orden" => 0
+                    "grupo_orden" => 4
 		)
          ),
     

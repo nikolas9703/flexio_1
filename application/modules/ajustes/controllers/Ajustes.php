@@ -319,13 +319,7 @@ class Ajustes extends CRM_Controller
                 $response["articulos"]  = $this->ajustesRep->getCollectionArticulos($ajuste->items, $ajuste->empresa_id);
             }
 
-//            echo "<pre>";
-//            print_r($response);
-//            echo "<pre>";
-//            die();
-
-            //echo json_encode($response);
-             $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($response))->_display();
             exit();
         }
@@ -382,7 +376,12 @@ class Ajustes extends CRM_Controller
             $categorias     = $this->input->post('categorias', true);
             $numero_item    = $this->input->post('numero_item', true);
             $estado         = $this->input->post('estado', true);
+            $campo = $this->input->post('campo', true);
 
+
+            if(!empty($campo)){
+                $registros->deFiltro($campo);
+            }
 
             if(!empty($fecha)){
                 $registros->deFecha(date("Y-m-d", strtotime($fecha)));
@@ -570,13 +569,14 @@ class Ajustes extends CRM_Controller
         exit();
     }
 
-    /**
-     * Cargar Vista Parcial de Tabla
-     *
-     * @return void
-     */
-    public function ocultotabla($uuid = NULL, $modulo = "")
+    public function ocultotabla($campo_array = [])
     {
+        if(is_array($campo_array))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($campo_array)
+            ]);
+        }
         //If ajax request
     	$this->assets->agregar_js(array(
             'public/assets/js/modules/ajustes/tabla.js'

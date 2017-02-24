@@ -257,6 +257,9 @@
 					echo form_close();
 					?>
 				</div>
+        <div class="row" id="subpanel">
+          <?php if(!empty($subpanels)){SubpanelTabs::visualizar($subpanels);} ?>
+        </div>
 				<td v-if="id!=''">
 				<?php echo modules::run('ordenes_trabajo/ocultoformulariocomentarios'); ?>
 				</td>

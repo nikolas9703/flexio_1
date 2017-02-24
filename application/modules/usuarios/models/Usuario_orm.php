@@ -47,6 +47,11 @@ class Usuario_orm extends Model{
                   ->withPivot('empresa_id');
   }
 
+  public function categorias_inventario()
+  {
+        return $this->belongsToMany('Flexio\Modulo\Inventarios\Models\Categoria','usuarios_categorias','usuario_id','categoria_id')->withPivot('empresa_id');
+  }
+
   public function conversion2bin($value){
     return hex2bin($value);
   }
@@ -118,6 +123,10 @@ public static function listar($uuid_empresa,$sidx=NULL, $sord=NULL, $limit=NULL,
   $usuarios->with(array("centros_contables" => function($query) use($empresa){
       $query->where("usuarios_has_centros.empresa_id", $empresa->id);
   }));
+
+  $usuarios->with(["categorias_inventario" => function($query) use($empresa){
+      $query->where("usuarios_categorias.empresa_id", $empresa->id);
+  }]);
 
   //Si existen variables de orden
   if($sidx!=NULL && $sord!=NULL) $usuarios->orderBy($sidx, $sord);

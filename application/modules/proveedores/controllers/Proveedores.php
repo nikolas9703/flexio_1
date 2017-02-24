@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Pedidos
@@ -11,7 +10,7 @@
  * @author     Pensanomica Team
  * @link       http://www.pensanomca.com
  * @copyright  10/29/2015
- **/
+ */
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Comentario\Models\Comentario;
@@ -28,16 +27,17 @@ class Proveedores extends CRM_Controller
     protected $empresa;
     protected $DocumentosRepository;
     protected $upload_folder = './public/uploads/';
-    private  $proveedoresModel;
+    private $proveedoresModel;
 
     protected $HtmlRender;
-    protected $color_states = ['19' => '#5CB85C', '20' => '#D9534F', '21' => '#F0AD4E' ];
+    protected $color_states = ['19' => '#5CB85C', '20' => '#D9534F', '21' => '#F0AD4E'];
 
 
     //repositories
     private $proveedoresRep;
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->load->model("ordenes/Ordenes_orm");
 
@@ -67,7 +67,7 @@ class Proveedores extends CRM_Controller
         //repositories
         $this->proveedoresRep = new ProveedoresRepository();
 
-         $this->HtmlRender = new HtmlRender;
+        $this->HtmlRender = new HtmlRender;
 
     }
 
@@ -78,7 +78,8 @@ class Proveedores extends CRM_Controller
      }*/
 
 
-    public function listar() {
+    public function listar()
+    {
         $data = array();
 
 
@@ -190,7 +191,7 @@ class Proveedores extends CRM_Controller
         unset($data["mensaje"]);
 
         //catalogos
-        $tipos_proveedores = Tipos_proveedores_orm::where("id_empresa", "=", $this->id_empresa)->estadoActivo()->get(array("id","nombre"))->toArray();
+        $tipos_proveedores = Tipos_proveedores_orm::where("id_empresa", "=", $this->id_empresa)->estadoActivo()->get(array("id", "nombre"))->toArray();
         $data["tipos"] = $tipos_proveedores;
 
         $data['info']["categorias"] = Proveedores_categorias_orm
@@ -206,7 +207,8 @@ class Proveedores extends CRM_Controller
 
     }
 
-    public function ajax_obtener_item() {
+    public function ajax_obtener_item()
+    {
         //Just Allow ajax request
         if ($this->input->is_ajax_request()) {
             $this->load->model("inventarios/Items_orm");
@@ -240,7 +242,8 @@ class Proveedores extends CRM_Controller
 
     }
 
-    public function ajax_obtener_pedido_item() {
+    public function ajax_obtener_pedido_item()
+    {
         //Just Allow ajax request
         if ($this->input->is_ajax_request()) {
             $this->load->model("pedidos/Pedidos_items_orm");
@@ -263,7 +266,8 @@ class Proveedores extends CRM_Controller
 
     }
 
-    public function ajax_listar() {
+    public function ajax_listar()
+    {
         //Just Allow ajax request
         if ($this->input->is_ajax_request()) {
             /**
@@ -333,10 +337,9 @@ class Proveedores extends CRM_Controller
                 $registros_count = $registros_count->where("pro_proveedores.tipo_id", $tipo);
             }
             //************************************************************************************
-            if (!empty($estados))
-            {
+            if (!empty($estados)) {
                 //$data['estados'] = Proveedores_orm::where('estado', '=', $estados)->get()->toArray();
-                 $registros = $registros->where("pro_proveedores.estado", "=", $estados);
+                $registros = $registros->where("pro_proveedores.estado", "=", $estados);
             }
 
             /**
@@ -431,8 +434,8 @@ class Proveedores extends CRM_Controller
 
                     //dd($row);
                     $cat_estado = new Proveedores_cat_orm();
-                    $estados = $cat_estado->where('valor','=',$row->estado)->get();
-                   // dd($estados[0]->valor);
+                    $estados = $cat_estado->where('valor', '=', $row->estado)->get();
+                    // dd($estados[0]->valor);
                     $response->rows[$i]["id"] = $row->uuid_proveedor;
                     $response->rows[$i]["cell"] = array(
                         '<a class="link" href="' . base_url('proveedores/ver/' . $row->uuid_proveedor) . '" class="link">' . $row->nombre . '</a>',
@@ -454,7 +457,8 @@ class Proveedores extends CRM_Controller
         }
     }
 
-    function ajax_anular() {
+    function ajax_anular()
+    {
         $response = array();
         $response["success"] = false;
         $response["mensaje"] = "Error de sistema. Comuniquelo con el administrador de sistema";
@@ -480,7 +484,8 @@ class Proveedores extends CRM_Controller
         exit();
     }
 
-    function ajax_eliminar_pedido_item() {
+    function ajax_eliminar_pedido_item()
+    {
         //Just Allow ajax request
         if (!$this->input->is_ajax_request()) {
             return false;
@@ -502,7 +507,8 @@ class Proveedores extends CRM_Controller
         exit;
     }
 
-    function ajax_reabrir() {
+    function ajax_reabrir()
+    {
         $response = array();
         $response["success"] = false;
         $response["mensaje"] = "Error de sistema. Comuniquelo con el administrador de sistema";
@@ -528,7 +534,8 @@ class Proveedores extends CRM_Controller
         exit();
     }
 
-    private function _getProveedor($proveedor) {
+    private function _getProveedor($proveedor)
+    {
         return [
             "id" => $proveedor->id,
             "nombre" => $proveedor->nombre,
@@ -538,7 +545,8 @@ class Proveedores extends CRM_Controller
         ];
     }
 
-    function ajax_get_proveedor() {
+    function ajax_get_proveedor()
+    {
 
         $proveedor_id = $this->input->post("proveedor_id");
         $proveedor = Proveedores_orm::find($proveedor_id);
@@ -554,7 +562,8 @@ class Proveedores extends CRM_Controller
         exit;
     }
 
-    public function ajax_get_montos() {
+    public function ajax_get_montos()
+    {
 
         $proveedor_id = $this->input->post("proveedor_id");
         $proveedor = is_numeric($proveedor_id) ? $this->proveedoresRep->find($proveedor_id) : $this->proveedoresRep->findByUuid($proveedor_id);//cuando es desde ordenes de compra se manda el uuid
@@ -572,7 +581,8 @@ class Proveedores extends CRM_Controller
         exit;
     }
 
-    function ajax_exportar() {
+    function ajax_exportar()
+    {
         $clause = [];
         $clause["empresa_id"] = $this->id_empresa;
         $clause["uuid_proveedores"] = $this->input->post("uuid_proveedor", true);
@@ -590,7 +600,8 @@ class Proveedores extends CRM_Controller
      *
      * @return void
      */
-    public function ocultotabla() {
+    public function ocultotabla()
+    {
         //If ajax request
         $this->assets->agregar_js(array(
             'public/assets/js/modules/proveedores/tabla.js'
@@ -612,12 +623,14 @@ class Proveedores extends CRM_Controller
 
         $this->load->view('formularios', $data);
     }
+
     /**
      * Cargar Vista Parcial de Formulario
      *
      * @return void
      */
-    public function ocultoformulariover($data = array()) {
+    public function ocultoformulariover($data = array())
+    {
         $this->assets->agregar_js(array(
             //'public/assets/js/modules/proveedores/crear.js',
             //'public/assets/js/modules/proveedores/formulario.js'
@@ -630,7 +643,9 @@ class Proveedores extends CRM_Controller
 
         $this->load->view('formulario_ver', $data);
     }
-    function ocultoformulariocomentarios() {
+
+    function ocultoformulariocomentarios()
+    {
 
         $data = array();
 
@@ -646,14 +661,15 @@ class Proveedores extends CRM_Controller
 
     }
 
-    function ajax_guardar_comentario() {
+    function ajax_guardar_comentario()
+    {
 
-        if(!$this->input->is_ajax_request()){
+        if (!$this->input->is_ajax_request()) {
             return false;
         }
-        $model_id   = $this->input->post('modelId');
+        $model_id = $this->input->post('modelId');
         $comentario = $this->input->post('comentario');
-        $comentario = ['comentario'=>$comentario,'usuario_id'=>$this->id_usuario];
+        $comentario = ['comentario' => $comentario, 'usuario_id' => $this->id_usuario];
         $proveedor = $this->proveedoresRep->agregarComentario($model_id, $comentario);
         $proveedor->load('comentario_timeline');
 
@@ -662,12 +678,17 @@ class Proveedores extends CRM_Controller
         exit;
     }
 
-    function crear() {
+    function crear()
+    {
         $data = array();
         $mensaje = array();
         $acceso = "";
+        $cambio_estado = 0;
         if ($this->auth->has_permission('acceso', 'proveedores/ver/(:any)')) {
             $acceso = "acceso";
+        }
+        if ($this->auth->has_permission('ver__cambioestadoProveedores', 'proveedores/ver/(:any)')) {
+            $cambio_estado = 1;
         }
         //Agregra variables PHP como variables JS
         $this->assets->agregar_var_js(array(
@@ -726,7 +747,7 @@ class Proveedores extends CRM_Controller
             ->orderBy("nombre", "ASC")->get();
 
         //Tipo de proveedores
-        $tipos_proveedores = Tipos_proveedores_orm::where("id_empresa", "=", $this->id_empresa)->estadoActivo()->get(array("id","nombre"))->toArray();
+        $tipos_proveedores = Tipos_proveedores_orm::where("id_empresa", "=", $this->id_empresa)->estadoActivo()->get(array("id", "nombre"))->toArray();
         $data['info']['tipos'] = $tipos_proveedores;
         //dd($data['tipos_proveedores']);
 
@@ -740,9 +761,18 @@ class Proveedores extends CRM_Controller
         $this->assets->agregar_var_js(array(
             'tipo_id' => 'null',
             'balance' => 0,
-            "vista" => "crear"
+            "vista" => "crear",
+            'cambio_estado' => $cambio_estado
         ));
-        // dd($data);
+        // Show msg provider exist
+        if ($this->session->userdata('dniExist')) {
+            //Borrar la variable de session
+            $this->session->unset_userdata('dniExist');
+            //Establecer el mensaje a mostrar
+            $data["mensaje"]["clase"] = "alert-danger";
+            $data["mensaje"]["contenido"] = "Identificación de proveedor ya se encuentra registrada en el sistema";
+        }
+
         $this->template->agregar_titulo_header('Proveedores');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
@@ -750,7 +780,8 @@ class Proveedores extends CRM_Controller
     }
 
 
-    function editar($uuid = NULL) {
+    function editar($uuid = NULL)
+    {
         if (!$uuid) {
             echo "Error.";
             exit;
@@ -760,8 +791,12 @@ class Proveedores extends CRM_Controller
         $mensaje = array();
 
         $acceso = "";
+        $cambio_estado = 0;
         if ($this->auth->has_permission('acceso', 'proveedores/ver/(:any)')) {
             $acceso = "acceso";
+        }
+        if ($this->auth->has_permission('ver__cambioestadoProveedores', 'proveedores/ver/(:any)')) {
+            $cambio_estado = 1;
         }
         //Cargo el registro
         $proveedor = new Proveedores_orm;
@@ -770,7 +805,7 @@ class Proveedores extends CRM_Controller
             ->first();
         $proveedores = $this->proveedoresRep->findByUuid($uuid);
         //dd($proveedores->comentario_timeline);
-        $proveedores->load('comentario_timeline','proveedores_asignados');
+        $proveedores->load('comentario_timeline', 'proveedores_asignados');
         //Introducir mensaje de error al arreglo
         //para mostrarlo en caso de haber error
         $data["message"] = $mensaje;
@@ -824,9 +859,10 @@ class Proveedores extends CRM_Controller
             'vista' => 'ver',
             "proveedores_id" => $proveedor->id,
             "proveedor" => $proveedores,
-            "pro_coment" =>(isset($proveedores->comentario_timeline)) ? $proveedores->comentario_timeline : [],
+            "pro_coment" => (isset($proveedores->comentario_timeline)) ? $proveedores->comentario_timeline : [],
             "lista_asignados" => $proveedor->proveedores_asignados,
-            'acceso' => $acceso
+            'acceso' => $acceso,
+            'cambio_estado' => $cambio_estado
         ));
 
         //Arreglo de modulo de subpabeles que estan activos
@@ -866,8 +902,8 @@ class Proveedores extends CRM_Controller
             ->get()->toArray();*/
 
         //Tipo de proveedores
-        $tipos_proveedores = Tipos_proveedores_orm::where("id_empresa", "=", $this->id_empresa)->estadoActivo()->get(array("id","nombre"))->toArray();
-      //dd($tipos_proveedores);
+        $tipos_proveedores = Tipos_proveedores_orm::where("id_empresa", "=", $this->id_empresa)->estadoActivo()->get(array("id", "nombre"))->toArray();
+        //dd($tipos_proveedores);
         $data['info']['tipos'] = $tipos_proveedores;
 
         $data['info']["categorias"] = Proveedores_categorias_orm
@@ -886,16 +922,16 @@ class Proveedores extends CRM_Controller
 
         // dd($proveedor);
         $this->assets->agregar_var_js(array(
-            'proveedor'=> $proveedor
+            'proveedor' => $proveedor
         ));
 
         $data["info"]["credito"] = number_format($proveedor->credito, 2, '.', ',') ?: "0.00";
-        $data["info"]["saldo"] =  number_format($proveedor->total_saldo_pendiente(), 2, '.', ',') ?: "0.00";
+        $data["info"]["saldo"] = number_format($proveedor->total_saldo_pendiente(), 2, '.', ',') ?: "0.00";
         $data["info"]["acreedor"] = $proveedor->acreedor;
         $data["info"]["tipoCuentaSelect"] = $proveedor->id_tipo_cuenta;
         $data["info"]["terminoPagoSelect"] = $proveedor->termino_pago_id;
         $data["info"]["bancoSelect"] = $proveedor->id_banco;
-          $data["info"]["tipo_id_selected"] = $proveedor->tipo_id;
+        $data["info"]["tipo_id_selected"] = $proveedor->tipo_id;
         //Identificacion
         $data["info"]["identificacionSelect"] = $proveedor->identificacion;
         //Letra de la identificación
@@ -903,14 +939,14 @@ class Proveedores extends CRM_Controller
         $data["info"]["estadoSelect"] = $proveedor->estado;
 
         //formas de pago
-        $j=0;
+        $j = 0;
         foreach ($proveedor->formasDePago as $row) {
             $data["info"]["pagosSelect"][$j] = $row->id_cat;
             $j += 1;
         }
 
         //categorias
-        $i=0;
+        $i = 0;
         foreach ($proveedor->categorias as $row) {
             $data["info"]["catSelect"][$i] = $row->id;
             $i += 1;
@@ -927,10 +963,15 @@ class Proveedores extends CRM_Controller
         $this->template->visualizar();
     }
 
-    function guardar() {
+    function ajax_valida_proveedor(){
+      echo json_encode(["isValid"=>!$this->proveedoresRep->existDNI($_POST)]);
+    }
 
-        $data       = array();
-        $mensaje    = array();
+    function guardar()
+    {
+
+        $data = array();
+        $mensaje = array();
         $proveedor = "";
 
         //dd($_POST);
@@ -938,12 +979,20 @@ class Proveedores extends CRM_Controller
         if (!empty($_POST)) {
             $response = false;
             $response = Capsule::transaction(
-                function () {
+                function () use ($data) {
                     $campo = $this->input->post("campo");
+                    //       dd($_POST);
                     //DATOS GENERALES
-                    if (empty($campo["uuid"])){
+                    if (empty($campo["uuid"])) {
+                        /**
+                         * Se busca el proveedor por RUC
+                         */
+
+                        if ($this->proveedoresRep->existDNI($_POST)) {
+                            return 2;
+                        }
                         $proveedor = new proveedoresModel();
-                    }else{
+                    } else {
                         $proveedor = $this->proveedoresRep->findByUuid($campo["uuid"]);
                     }
 
@@ -956,7 +1005,7 @@ class Proveedores extends CRM_Controller
                     $proveedor->id_banco = $campo["banco"];
                     $proveedor->id_tipo_cuenta = $campo["tipo_cuenta"];
                     $proveedor->numero_cuenta = $campo["numero_cuenta"];
-                    $proveedor->limite_credito = str_replace(',','',$campo["limite_credito"]);
+                    $proveedor->limite_credito = str_replace(',', '', $campo["limite_credito"]);
                     $proveedor->direccion = $campo["direccion"];
                     $proveedor->termino_pago_id = $campo["termino_pago_id"];
                     $proveedor->retiene_impuesto = !empty($campo["retiene_impuesto"]) ? $campo["retiene_impuesto"] : "";
@@ -986,7 +1035,7 @@ class Proveedores extends CRM_Controller
                         $proveedor->pasaporte = $campo['pasaporte'];
                     }
 
-                    if (empty($campo["uuid"])){
+                    if (empty($campo["uuid"])) {
                         //Guarda el registro.
                         $proveedor->uuid_proveedor = Capsule::raw("ORDER_UUID(uuid())");
                         $proveedor->fecha_creacion = date("Y-m-d", time());
@@ -994,7 +1043,7 @@ class Proveedores extends CRM_Controller
                         $proveedor->id_empresa = $this->id_empresa;
                         $proveedor->save();
 
-                    }else{
+                    } else {
                         //Actualiza el registro.
                         $proveedor->save();
                     }
@@ -1013,7 +1062,7 @@ class Proveedores extends CRM_Controller
                         $count = 0;
                         foreach ($campo["categorias"] as $row) {
                             if (!empty($row)) {
-                                if ($proveedor_categoria->countRegistro($proveedor->id, $row)== 0){
+                                if ($proveedor_categoria->countRegistro($proveedor->id, $row) == 0) {
                                     $registro[$i]["id_proveedor"] = $proveedor->id;
                                     $registro[$i]["id_categoria"] = $row;
                                     $count += 1;
@@ -1022,7 +1071,7 @@ class Proveedores extends CRM_Controller
                                 $i += 1;
                             }
                         }
-                        if($count>0){
+                        if ($count > 0) {
                             $proveedor_categoria::insert($registro);
                         }
 
@@ -1032,33 +1081,81 @@ class Proveedores extends CRM_Controller
             );
             if ($response == "1") {
                 redirect(base_url('proveedores/listar'));
+            }
+            if ($response == "2") {
+                //Pasa a la session el id del proveedor.
+                $this->session->set_userdata('dniExist', true);
+                redirect(base_url('proveedores/crear'));
             } else {
                 //Establecer el mensaje a mostrar
                 $data["mensaje"]["clase"] = "alert-danger";
-                $data["mensaje"]["contenido"] = "Hubo un error al tratar de crear el pedido.";
+                $data["mensaje"]["contenido"] = "Hubo un error al tratar de crear el proveedor.";
             }
         }
 
     }
-    function documentos_campos() {
 
+    function documentos_campos()
+    {
         return array(
             array(
-                "type"		=> "hidden",
-                "name" 		=> "proveedores_id",
-                "id" 		=> "proveedores_id",
-                "class"		=> "form-control",
-                "readonly"	=> "readonly",
+                "type" => "hidden",
+                "name" => "proveedores_id",
+                "id" => "proveedores_id",
+                "class" => "form-control",
+                "readonly" => "readonly",
             ));
     }
 
-    function ajax_guardar_documentos() {
-        if(empty($_POST)){
+    function ajax_guardar_documentos()
+    {
+        if (empty($_POST)) {
             return false;
         }
-
         $proveedores_id = $this->input->post('proveedores_id', true);
         $modeloInstancia = $this->proveedoresRep->findByUuid($proveedores_id);
         $this->documentos->subir($modeloInstancia);
+    }
+
+    function ajax_catalogo_proveedores(){
+            
+            $clause = ['empresa_id'=>$this->id_empresa,'estado'=>"activo"];
+            $nombre = $this->input->get('q', true);
+            if(!empty($nombre)){
+                $clause['nombre'] = $nombre;
+            }
+            
+            $coleccion_proveedor = $this->proveedoresRep->get($clause,null,null,10,0);
+             //dd($coleccion_proveedor);
+            $response = $this->proveedoresRep->getCollectionProveedores($coleccion_proveedor);
+           
+            $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+          ->set_output($response)->_display();
+        exit;
+    }
+
+    public function ajax_get_proveedor_pago()
+    {
+
+        $proveedor_id = $this->input->post("proveedor_id");
+        $proveedor = is_numeric($proveedor_id) ? $this->proveedoresRep->find($proveedor_id) : $this->proveedoresRep->findByUuid($proveedor_id);//cuando es desde ordenes de compra se manda el uuid
+        $registro = array();
+
+        if (count($proveedor)) {
+            $registro['nombre'] = $proveedor->nombre;
+            $registro['id'] = $proveedor->id;
+             $registro['proveedor_id'] = $proveedor->id;
+            $registro['saldo'] = $proveedor->saldo_pendiente;
+            $registro['credito'] = $proveedor->credito;
+            $registro['forma_pago'] = $proveedor->forma_de_pago;
+            $registro['banco_id'] = $proveedor->id_banco;
+            $registro['numero_cuenta'] = $proveedor->numero_cuenta;
+            $registro['termino_pago'] = count($proveedor->termino_pago) ? $proveedor->termino_pago->valor : '';
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($registro))->_display();
+
+        exit;
     }
 }

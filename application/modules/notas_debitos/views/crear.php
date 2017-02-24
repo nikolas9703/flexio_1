@@ -32,7 +32,7 @@
 
               <div class="ibox border-bottom">
                   <div class="ibox-title">
-                      <h5>Datos de la nota de d&eacute;bito</h5>
+                      <h5>Datos de la nota de cr&eacute;dito de proveedor</h5>
                       <div class="ibox-tools">
                           <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
                       </div>

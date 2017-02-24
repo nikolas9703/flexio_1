@@ -33,8 +33,7 @@ $info = !empty($info) ? $info : array();
                     <a @click="get_detalle2(balances.balance_flexio)"><i class="fa fa-info-circle"></i></a>
                 </div>
             </div>
-
-            <div class="ibox-content" style="display:block;">
+             <div class="ibox-content" style="display:block;">
                 <div v-if="acceso">
                     <div class="form-group has-success" style="margin-top: 20px;margin-bottom: 20px !important;">
                         <input readonly="" type="text" name="campo[balance_flexio]" class="form-control" value="{{balance_verificado_flexio | redondeo}}" placeholder="0.00"  style="border: 2px solid #5BB85C;color:#5BB85C;font-weight:bold;text-align:center;">

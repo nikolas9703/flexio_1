@@ -149,9 +149,24 @@ class Configuracion_rrhh extends CRM_Controller
                         'public/assets/js/default/jquery.inputmask.bundle.min.js',
 		));
 
-		$breadcrumb = array(
-			"titulo" => '<i class="fa fa-cogs"></i> Configuraci&oacute;n de &aacute;reas de Negocio y cargos',
-		);
+
+
+					$breadcrumb = array(
+						"titulo" => '<i class="fa fa-cogs"></i> Configuraci&oacute;n de &aacute;reas de Negocio y cargos',
+						"filtro" => false,
+						"ruta" => array(
+								0 => array(
+										"nombre" => "Recursos humanos",
+										"activo" => false,
+								 ),
+								1=> array(
+											"nombre" => '<b>Configuración</b>',
+											"activo" => true,
+		 						),
+
+						),
+				);
+
 		$this->template->agregar_titulo_header('Colaboradores');
 		$this->template->agregar_breadcrumb($breadcrumb);
 		$this->template->agregar_contenido($data);
@@ -537,7 +552,7 @@ public function ocultotablaareanegocio()
   {
  	 //Just Allow ajax request
  	 if(!$this->input->is_ajax_request()){
- 		 return false; 
+ 		 return false;
  	 }
  	 $clause = array(
  			 "empresa_id" =>  $this->empresa_id

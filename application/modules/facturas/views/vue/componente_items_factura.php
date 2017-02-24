@@ -1,7 +1,7 @@
 <template id="items_factura">
 
 	<div class="ibox-content">
-              
+
             <!-- Componentes Dinamicos -->
             <div v-ref:items :is="currentView" :categorias="categorias" :impuestos="impuestos" :cuenta_transaccionales="cuenta_transaccionales" :factura.sync="factura"></div>
             <!-- /Componentes Dinamicos -->

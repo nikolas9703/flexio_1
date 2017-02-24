@@ -127,5 +127,13 @@
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 
-<?php echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->
+<?php 
+echo Modal::config(array(
+	"id" => "documentosModal",
+	"size" => "lg",
+	"titulo" => "Subir Documentos",
+	"contenido" => modules::run("documentos/formulario", array())
+))->html();
+
+echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->
 <?php //echo Modal::modalSubirDocumentos();?>  <!-- modal subir documentos -->

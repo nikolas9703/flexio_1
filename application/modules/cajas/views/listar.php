@@ -46,7 +46,7 @@
                                             <select id="centro" class="form-control">
                                                 <option value="">Seleccione</option>
                                                 <?php foreach ($centros as $centro): ?>
-                                                    <option value="<?php echo $centro->id ?>"><?php echo $centro->nombre ?></option>
+                                                    <option value="<?php echo $centro['centro_contable_id'] ?>"><?php echo $centro['nombre'] ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>

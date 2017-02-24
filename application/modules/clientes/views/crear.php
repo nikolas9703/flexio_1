@@ -9,15 +9,8 @@
 	    <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
 
     	<div class="col-lg-12">
-        	<div class="wrapper-content">
+        	<div class="wrapper-content" id="formClienteCrearDiv">
 	            <div class="row">
-	                <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
-	                    <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
-	                    <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
-	                </div>
-	            </div>
-
-              <div class="row">
                 	<?php
                 		$info = !empty($info) ? array("info" => $info) : array();
                 		echo modules::run('clientes/ocultoformulario', $info);

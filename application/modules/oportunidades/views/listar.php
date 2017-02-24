@@ -129,4 +129,8 @@
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 
+<?php echo Modal::config(array(
+    "id" => "opcionesModalGrupal",
+    "size" => "sm"
+))->html();?> <!-- modal cambio de estados -->
 <?php echo Modal::config(array("id" => "optionsModal", "size" => "sm"))->html(); ?> <!-- modal opciones -->

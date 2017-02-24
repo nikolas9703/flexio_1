@@ -2,11 +2,14 @@
 
 
 $route['aseguradoras/listar']= 'aseguradoras/listar';
+$route['aseguradoras/crear']= 'aseguradoras/crear';
+$route['aseguradoras/ver'] = 'aseguradoras/ver';
+$route['aseguradoras/editar']= 'aseguradoras/editar';
 $route['aseguradoras/ajax_listar']= 'aseguradoras/ajax_listar';
+$route['aseguradoras/ajax_cambiar_estados']= 'aseguradoras/ajax_cambiar_estados';
 $route['aseguradoras/ocultotabla']   = 'aseguradoras/ocultotabla';
 $route['aseguradoras/ocultoformulario']   = 'aseguradoras/ocultoformulario';
-$route['aseguradoras/crear']         = 'aseguradoras/crear';
-$route['aseguradoras/guardar']         = 'aseguradoras/guardar';
+//$route['aseguradoras/guardar']= 'aseguradoras/guardar';
 /*
 //Ajax
 

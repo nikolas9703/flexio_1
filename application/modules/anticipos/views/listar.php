@@ -95,7 +95,7 @@ echo form_open_multipart("", $formAttr);
         <input type="text" name="campo[documento]" id="documento1" class="form-control">
     </div>
 
-    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 hidden">
         <label for="">Metodo de Anticipo</label>
         <select name="campo[metodo_anticipo]" class="form-control chosen-select" id="metodo_anticipo">
             <option value="">Seleccione</option>

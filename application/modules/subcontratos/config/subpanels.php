@@ -12,5 +12,23 @@ $config['subpanels'] = array(
         'view'   => 'ocultoTablaSubcontratos',
         'nombre' => 'Facturas de compra',
         'icono'  => ''
-    )
+    ),
+    'anticipos' => [
+        'modulo' => 'anticipos',
+        'view'   => 'ocultotabla',
+        'nombre' => 'Anticipo',
+        'icono'  => ''
+        ],
+    'pagos' => [
+        'modulo'    => 'pagos',
+        'view'      => 'ocultotabla',
+        'nombre'    => 'Pagos',
+        'icono'     => ''
+    ],
+    'documentos' => [
+        'modulo'    => 'documentos',
+        'view'      => 'ocultotabla',
+        'nombre'    => 'Documentos',
+        'icono'     => ''
+    ]
 );

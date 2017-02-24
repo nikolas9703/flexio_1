@@ -22,6 +22,13 @@ use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategorias
 use Flexio\Modulo\ContratosAlquiler\Repository\ContratosAlquilerCatalogosRepository;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Inventarios\Repository\PreciosRepository;
+use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
+use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
+use Flexio\Library\Util\AuthUser;
+use Flexio\Modulo\Inventarios\Models\Categoria;
+
+//otros
+use Dompdf\Dompdf;
 
 class Cotizaciones_alquiler extends CRM_Controller
 {
@@ -40,6 +47,8 @@ class Cotizaciones_alquiler extends CRM_Controller
     protected $ItemsCategoriasRepository;
     protected $ContratosAlquilerCatalogosRepository;
     protected $PreciosRepository;
+    protected $CuentasRepository;
+    protected $ImpuestosRepository;
 
     /**
      * Método constructor
@@ -66,6 +75,8 @@ class Cotizaciones_alquiler extends CRM_Controller
         $this->ItemsCategoriasRepository = new ItemsCategoriasRepository();
         $this->ContratosAlquilerCatalogosRepository = new ContratosAlquilerCatalogosRepository();
         $this->PreciosRepository = new PreciosRepository;
+        $this->CuentasRepository = new CuentasRepository();
+        $this->ImpuestosRepository = new ImpuestosRepository();
     }
 
     public function listar()
@@ -74,7 +85,8 @@ class Cotizaciones_alquiler extends CRM_Controller
         $mensaje ='';
         if(!$this->auth->has_permission('acceso'))
         {
-            redirect ( '/' );
+            $mensaje = array('tipo'=>"error", 'mensaje'=>'<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud');
+            $this->session->set_flashdata('mensaje', $mensaje);
         }
         if(!empty($this->session->flashdata('mensaje')))
         {
@@ -90,14 +102,14 @@ class Cotizaciones_alquiler extends CRM_Controller
             ),
             "menu" => ["nombre" => "Crear", "url" => "cotizaciones_alquiler/crear","opciones" => array()]
         );
-        $breadcrumb["menu"]["opciones"]["#exportarCotizacionesAlquiler"] = "Exportar";
+        //$breadcrumb["menu"]["opciones"]["#exportarCotizacionesAlquiler"] = "Exportar";
 
         $this->assets->agregar_var_js(array(
             "toast_mensaje" => $mensaje
         ));
-
+        $repositoryCliente = new  Flexio\Modulo\Cliente\Repository\ClienteRepositorio;
         $clause = ['empresa_id' => $this->empresa_id];
-        $data['clientes']   = $this->ClienteRepository->get($clause);
+        $data['clientes']   = $repositoryCliente->getClientes($this->empresa_id)->activos()->fetch();
         $data['estados']    = $this->CotizacionesAlquilerCatalogosRepository->getEtapas();
         $this->template->agregar_titulo_header('Cotizaciones ');
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -105,42 +117,23 @@ class Cotizaciones_alquiler extends CRM_Controller
         $this->template->visualizar($breadcrumb);
     }
 
+   public function ajax_listar()
+   {
+       if(!$this->input->is_ajax_request()) return false;
 
+       $clause                 = $this->input->post();
+       $clause['campo']        = $this->input->post();
+       $jqgrid = new Flexio\Modulo\CotizacionesAlquiler\Services\CotizacionAlquilerJqgrid($this->auth);
+       $clause['empresa']   = $this->empresa_id;
+       $clause['tipo'] = 'alquiler';
+       //if(!AuthUser::is_owner())$clause['creado_por'] =  AuthUser::getId();
 
+       $response = $jqgrid->listar($clause);
 
-
-
-    /**
-     * Método listar los registros de los subcotizaciones en ocultotabla()
-     */
-//    public function ajax_listar()
-//    {
-//        if(!$this->input->is_ajax_request()){return false;}
-//
-//        $clause                 = $this->input->post();
-//        $clause['empresa_id']   = $this->empresa_id;
-//
-//        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-//        $count = $this->CotizacionesAlquilerRepository->count($clause);
-//
-//        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-//        $cotizaciones_alquiler = $this->CotizacionesAlquilerRepository->get($clause ,$sidx, $sord, $limit, $start);
-//
-//        $response          = new stdClass();
-//        $response->page    = $page;
-//        $response->total   = $total_pages;
-//        $response->records = $count;
-//
-//        if($count > 0){
-//            foreach ($cotizaciones_alquiler as $i => $cotizacion_alquiler)
-//            {
-//                $response->rows[$i]["id"]   = $cotizacion_alquiler->uuid_cotizacion_alquiler;
-//                $response->rows[$i]["cell"] = $this->CotizacionesAlquilerRepository->getCollectionCell($cotizacion_alquiler, $this->auth);
-//            }
-//        }
-//        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->_display();
-//        exit;
-//    }
+       $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+       ->set_output(json_encode($response))->_display();
+       exit;
+   }
 
 
 
@@ -172,6 +165,7 @@ class Cotizaciones_alquiler extends CRM_Controller
             'public/assets/css/plugins/bootstrap/select2.min.css',
             'public/assets/css/plugins/jquery/jquery.webui-popover.css',
             'public/assets/css/default/ladda.min.css',
+            'public/assets/css/plugins/jquery/switchery.min.css',
             'public/assets/css/modules/stylesheets/cotizaciones_alquiler.css',
         ));
     }
@@ -185,16 +179,21 @@ class Cotizaciones_alquiler extends CRM_Controller
             'public/assets/js/plugins/ckeditor/ckeditor.js',
             'public/assets/js/plugins/ckeditor/adapters/jquery.js',
             'public/assets/js/moment-with-locales-290.js',
+            'public/assets/js/plugins/jquery/jquery.webui-popover.js',
             'public/assets/js/plugins/bootstrap/select2/select2.min.js',
             'public/assets/js/plugins/bootstrap/select2/es.js',
             'public/assets/js/plugins/bootstrap/daterangepicker.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
             'public/assets/js/default/toast.controller.js',
+            'public/assets/js/default/accounting.min.js',
             'public/assets/js/default/vue/directives/datepicker2.js',
             'public/assets/js/default/vue/directives/new-select2.js',
             'public/assets/js/default/vue/directives/item-comentario.js',
             'public/assets/js/default/vue/directives/porcentaje.js',
             'public/assets/js/default/vue/directives/inputmask3.js',
+            'public/assets/js/default/vue/directives/datepicker2.js',
+            'public/assets/js/default/vue/directives/inputmask.js',
+            'public/assets/js/plugins/jquery/switchery.min.js',
         ));
     }
 
@@ -215,10 +214,17 @@ class Cotizaciones_alquiler extends CRM_Controller
     public function crear(){
 
         $acceso = 1;
+        $editarPrecioUnidad_adicional = 1;
         $mensaje = array();
         if (!$this->auth->has_permission('acceso')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
+        }
+
+        if (!$this->auth->has_permission('editarPrecioUnidad_adicional', 'cotizaciones_alquiler/crear')){
+            $editarPrecioUnidad_adicional = 0;
+            $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
+
         }
 
         $clause = array(
@@ -228,19 +234,47 @@ class Cotizaciones_alquiler extends CRM_Controller
        	$this->_css();
         $this->_js();
         $this->assets->agregar_js(array(
+          'public/assets/js/default/vue/directives/pop_over_precio.js',
+          'public/assets/js/default/vue/directives/pop_over_cantidad.js',
             'public/resources/compile/modulos/cotizaciones_alquiler/crear-alquiler-cotizacion.js',
         ));
 
+        $precios_venta_id_default = $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "venta", "principal" => 1));
+
+        $clause2 = ['empresa_id' => $this->empresa_id, 'transaccionales' => true, 'conItems' => true, 'tipo_cuenta_id' => '4', 'vendedor' => true];
         $this->assets->agregar_var_js(array(
             "vista"                 => 'crear',
-            "acceso"                => $acceso == 0 ? $acceso : $acceso,
+            "acceso"                => $acceso == 0 ? 0 : 1,
             "usuario_id"            => $this->session->userdata("id_usuario"),
+            'clientes'              => $this->ClienteRepository->getCollectionClientes($this->ClienteRepository->getClientesEstadoActivo($clause2)->get()),
             "lista_precio_alquiler" => $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "alquiler")),
+            'precios_venta_id_default' => !empty(collect($precios_venta_id_default)->toArray()) ? $precios_venta_id_default[0]["id"] : "",
+            'precios'               => $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "venta")),
+            'categorias'            => $this->ItemsCategoriasRepository->getCollectionCategorias($this->ItemsCategoriasRepository->get($clause2)),
+            'cuentas'               => $this->CuentasRepository->get($clause2),
+            'impuestos'             => $this->ImpuestosRepository->get($clause2),
+            //'editarPrecioUnidad_adicional' => $editarPrecioUnidad_adicional,
+            "editar_precio" => $editarPrecioUnidad_adicional//$this->auth->has_permission('crear__editarPrecioOrdenAlquiler', 'ordenes_alquiler/crear') == true ? 1 : 0
         ));
 
         $data['mensaje'] = $mensaje;
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Cotizaciones: Crear ',
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Alquileres",
+                    "activo" => false
+                ),
+                1 => array(
+                    "nombre" => 'Cotizaciones',
+                    "activo" => true,
+                    "url" => "cotizaciones_alquiler/listar"
+                ),
+                2 => array(
+                    "nombre" => '<b>Crear</b>',
+                    "activo" => true
+                )
+            )
         );
 
         $this->template->agregar_titulo_header('Cotizaciones: Crear ');
@@ -255,31 +289,70 @@ class Cotizaciones_alquiler extends CRM_Controller
         $acceso = 1;
         $mensaje = array();
         $cotizacion_alquiler = $this->CotizacionesAlquilerRepository->findBy(['empresa_id'=>$this->empresa_id,'uuid_cotizacion'=>$uuid]);
-        if (!$this->auth->has_permission('acceso') || is_null($cotizacion_alquiler)) {
+        if (!$this->auth->has_permission('acceso','cotizaciones_alquiler/editar/(:any)') || is_null($cotizacion_alquiler)) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
+        }
+        $editarPrecioUnidad_adicional = 1;
+        if (!$this->auth->has_permission('editarPrecioUnidad_adicional', 'cotizaciones_alquiler/editar/(:any)')){
+            $editarPrecioUnidad_adicional = 0;
+            $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
+
         }
 
         $this->_css();
         $this->_js();
         $this->assets->agregar_js(array(
-            'public/resources/compile/modulos/cotizaciones_alquiler/crear-alquiler-cotizacion.js',
+          'public/assets/js/default/vue/directives/pop_over_precio.js',
+          'public/assets/js/default/vue/directives/pop_over_cantidad.js',
+          'public/resources/compile/modulos/cotizaciones_alquiler/crear-alquiler-cotizacion.js',
         ));
 
         if(!is_null($cotizacion_alquiler))$cotizacion_alquiler->load('items');
 
+        $precios_venta_id_default = $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "venta", "principal" => 1));
+        $clause2 = ['empresa_id' => $this->empresa_id, 'transaccionales' => true, 'conItems' => true, 'tipo_cuenta_id' => '4', 'vendedor' => true];
         $this->assets->agregar_var_js(array(
             "vista"                     => 'editar',
             "acceso"                    => $acceso == 0 ? $acceso : $acceso,
             "cotizacion_alquiler"         => $cotizacion_alquiler,
             "uuid_cotizacion"   => $uuid,
-              "lista_precio_alquiler" => $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "alquiler")),
+            'clientes'              => $this->ClienteRepository->getCollectionClientes($this->ClienteRepository->getClientesEstadoActivo($clause2)->get()),
+            "lista_precio_alquiler" => $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "alquiler")),
+            'precios_venta_id_default' => !empty(collect($precios_venta_id_default)->toArray()) ? $precios_venta_id_default[0]["id"] : "",
+            'precios'    => $this->PreciosRepository->get(array('empresa_id' => $this->empresa_id, "estado" => 1, "tipo_precio" => "venta")),
+            'categorias'            => $this->ItemsCategoriasRepository->getCollectionCategorias($this->ItemsCategoriasRepository->get($clause2)),
+            'cuentas'               => $this->CuentasRepository->get($clause2),
+            'impuestos'             => $this->ImpuestosRepository->get($clause2),
+            "editar_precio" => $editarPrecioUnidad_adicional
         ));
 
         $data['mensaje'] = $mensaje;
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Cotizaciones: '.$cotizacion_alquiler->codigo,
+            "menu" => array(
+             						"nombre" => 'Acci&oacute;n',
+             						"url"	 => '#',
+             						"opciones" => array()
+             				),
+            "ruta" => array(
+                0 => array(
+                    "nombre" =>  "Alquileres" ,
+                    "activo" => false
+                ),
+                1 => array(
+                    "nombre" => 'Cotizaciones',
+                    "activo" => false,
+                    "url" => "cotizaciones_alquiler/listar"
+                ),
+                2 => array(
+                    "nombre" =>'<b>Detalle</b>',
+                    "activo" => true
+                )
+            )
+
         );
+        $breadcrumb["menu"]["opciones"]["cotizaciones_alquiler/imprimir_cotizacion_de_alquiler/" . $uuid] = "Imprimir";
 
         $this->template->agregar_titulo_header('Cotizaciones: '.$cotizacion_alquiler->codigo);
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -290,6 +363,21 @@ class Cotizaciones_alquiler extends CRM_Controller
 
     public function ocultoformulario() {
         $this->load->view('formulario');
+    }
+
+    public function ocultotabla($subpanels = null) {
+
+
+        if(is_array($subpanels) && !empty($subpanels))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($subpanels)
+            ]);
+        }
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/cotizaciones_alquiler/tabla.js'
+        ));
+        $this->load->view('tabla');
     }
 
     //agregada funcion "ocultotablaV2" por jose luis
@@ -331,6 +419,7 @@ class Cotizaciones_alquiler extends CRM_Controller
     {
 
         $post = $this->input->post();
+        //dd($post);
 
         if (!empty($post)) {
         $formGuardar = new Flexio\Modulo\CotizacionesAlquiler\FormRequest\GuardarCotizacionAlquiler;
@@ -362,9 +451,9 @@ class Cotizaciones_alquiler extends CRM_Controller
 
         $uuid = $this->input->post('uuid', TRUE);
         $cotizacion_alquiler = $this->CotizacionesAlquilerRepository->findBy(['empresa_id'=>$this->empresa_id,'uuid_cotizacion'=>$uuid]);
-        $cotizacion_alquiler->load('items.item.atributos','landing_comments');
+        $cotizacion_alquiler->load('items_alquiler.item.atributos','items_adicionales','items_adicionales.item.unidades','items_adicionales.item.atributos','landing_comments');
 
-        $cotizacion_alquiler->items->each(function($item) use($cotizacion_alquiler) {
+        $cotizacion_alquiler->items_alquiler->each(function($item) use($cotizacion_alquiler) {
             if ($item->comentario!=''){
                 $fieldset = array(
                     'comentario'=>$item->comentario,
@@ -376,8 +465,30 @@ class Cotizaciones_alquiler extends CRM_Controller
             }
             return $cotizacion_alquiler;
         });
-
+//dd(collect($cotizacion_alquiler)->toArray());
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cotizacion_alquiler))->_display();
+        exit();
+    }
+
+    function imprimir_cotizacion_de_alquiler($uuid) {
+        if($uuid==null){
+            return false;
+        }
+
+        $clause['uuid_cotizacion'] = $uuid;
+        $cotizacion_alquiler = $this->CotizacionesAlquilerRepository->findBy(['empresa_id'=>$this->empresa_id,'uuid_cotizacion'=>$uuid]);
+
+        //$history = $this->pagosRep->getLastEstadoHistory($cotizacion_alquiler->id);
+        $dompdf = new Dompdf();
+        $data   = ['cotizacion_alquiler'=>$cotizacion_alquiler];//, 'history'=>$history];
+         $html = $this->load->view('pdf/cotizaciondealquiler', $data, true);
+        //echo '<pre>'. $html . '</pre>'; die;
+        //render
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream($cotizacion_alquiler->codigo);
+
         exit();
     }
 }

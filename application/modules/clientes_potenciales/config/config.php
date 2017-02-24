@@ -27,6 +27,7 @@ $config['modulo_config'] = array(
     	'listar__convertirJuridicoCP' => 'Convertir a Cliente Juridico',
     	'listar__convertirNaturalCP' => 'Convertir a Cliente Natural',
     	'listar-clientes-potenciales__campanaMercadeoCP' => 'Agregar a Campa&ntilde;a de Mercadeo',
-    	'ver__editarClientePotencial' => 'Editar Cliente Potencial'
+    	'ver__editarClientePotencial' => 'Editar Cliente Potencial',
+    	'crear__crearClientePotencial' => 'Crear Cliente Potencial'
 	)
 );

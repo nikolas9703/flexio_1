@@ -37,7 +37,7 @@ $info = !empty($info) ? $info : array();
                     <input type="hidden" name="transacciones[{{$index}}][balance_verificado]" value="{{transaccion.balance_verificado.monto | redondeo}}">
                     <input type="hidden" name="transacciones[{{$index}}][order]" value="{{transaccion.balance_verificado.order}}">
 
-                    <input type="checkbox" name="transacciones[{{$index}}][transaccion_id]" value="{{transaccion.id}}" class="icheck" style="float: right;"  v-model="transaccion.balance_verificado.checked" @click="verificar_monto(transaccion)" :disabled="!visible">
+                    <input type="checkbox" name="transacciones[{{$index}}][transaccion_id]" value="{{transaccion.id}}" class="icheck" style="float: right;"  v-model="transaccion.balance_verificado.checked" v-on:change="verificar_monto(transaccion)" :disabled="!visible">
                 </td>
             </tr>
         </tbody>

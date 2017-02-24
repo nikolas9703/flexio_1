@@ -266,6 +266,7 @@ class Roles extends CRM_Controller {
             "grupo_modulos" => $this->modulos->comp_listar_modulos_activos(),
             "rol_info" => $this->roles_model->seleccionar_rol($id_rol)
         );
+        
         $this->assets->agregar_css(array(
             'public/assets/css/plugins/jquery/awesome-bootstrap-checkbox.css',
         ));

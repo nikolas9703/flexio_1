@@ -8,53 +8,44 @@ class Factura_catalogo_orm extends Model
 {
     protected $table = 'fac_factura_catalogo';
     protected $guarded = ['id'];
-    
+
     public function scopeDeEtiqueta($query, $etiqueta)
     {
         return $query->where("etiqueta", $etiqueta);
     }
-    
+
     public function scopeEstadosFacturasCompras($query)
     {
         return $query->where("tipo", "estado_factura_compra");
     }
-    
+
     public function scopeTiposFacturasCompras($query)
     {
         return $query->where("tipo", "tipo_factura_compra");
     }
-    
+
     public function valorSpan()
     {
-        $estado     = "No Aplica";
+        $estado     = $this->valor==null ?"No Aplica": $this->valor;
         $background = "red";
-        
-        if($this->id == 13)//Por aprobrar
-        {
-            $estado     = $this->valor;
-            $background = "#EBAD50";
+
+        switch ($this->id) {
+            case 13: //Por aprobrar
+                $background = "#EBAD50";
+                break;
+            case 14: //Por aprobrar
+                $background = "#1C84C6";
+                break;
+            case 15: //Pagada parcial
+                $background = "#23C6C8";
+                break;
+            case 16: //Pagada completa
+                $background = "#1AB394";
+                break;
+            case 17: //Anulado
+                $background = "black";
+                break;
         }
-        elseif($this->id == 14)//Por pagar
-        {
-            $estado     = $this->valor;
-            $background = "#1C84C6";
-        }
-        elseif($this->id == 15)//Pagada parcial
-        {
-            $estado     = $this->valor;
-            $background = "#23C6C8";
-        }
-        elseif($this->id == 16)//Pagada completa
-        {
-            $estado     = $this->valor;
-            $background = "#1AB394";
-        }
-        elseif($this->id == 17)//Anulado
-        {
-            $estado     = $this->valor;
-            $background = "black";
-        }
-        
         return '<span class="label" style="color:white;background-color:'.$background.'">'.$estado.'</span>';
     }
 }

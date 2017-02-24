@@ -437,15 +437,22 @@ class Entradas extends CRM_Controller
     		'public/assets/js/modules/entradas/tabla_item.js'
     	));
 
-        $sp_array_var = explode('=', $sp_string_var);
-        if (count($sp_array_var) == 2) {
+        if(is_array($sp_string_var))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($sp_string_var)
+            ]);
 
-            $this->assets->agregar_var_js(array(
-                $sp_array_var[0] => $sp_array_var[1]
-            ));
+        }else{
+            $sp_array_var = explode('=', $sp_string_var);
+            if (count($sp_array_var) == 2) {
 
+                $this->assets->agregar_var_js(array(
+                    $sp_array_var[0] => $sp_array_var[1]
+                ));
+
+            }
         }
-
     	$this->load->view('tabla');
 
     }
@@ -471,14 +478,21 @@ class Entradas extends CRM_Controller
      */
     public function ocultoformulario($data = array())
     {
+
+    //  ini_set('memory_limit','256M');
     	$this->assets->agregar_js(array(
             'public/assets/js/modules/entradas/formulario.js'
     	));
 
+
+      //$arreglo_de_items = "ids de los items de la operacion relacionadada a la o/c";
+
+        $entrada = Flexio\Modulo\Entradas\Models\Entradas::where("uuid_entrada",hex2bin($data["uuid_orden"]))->first();
+        $arreglo_de_items = $entrada->operacion->items->pluck("id");
         //catalogos
         $data["bodegas"]    = $this->bodegasRep->get(["empresa_id" => $this->empresa_id, "transaccionales" => true]);
         $data["estados"]    = $this->entradasCatRep->get(["valor" => "estado"]);
-        $data["items"]      = $this->itemsRep->get(["empresa_id" => $this->empresa_id]);
+        $data["items"]      = $this->itemsRep->get(["empresa_id" => $this->empresa_id,"item_ids" => $arreglo_de_items]);
 
         $this->load->view('formulario', $data);
     }
@@ -590,7 +604,7 @@ class Entradas extends CRM_Controller
             }
 
               echo "Entrando completo";
-            
+
 
 
             $this->transaccionFactura->hacerTransaccionParcial($registro, $cuenta, $cantidad_recibida, $cantidad_restante);
@@ -683,7 +697,7 @@ class Entradas extends CRM_Controller
 
         $data["campos"]["campos"]           = $this->entradasRep->getColletionCampos($entrada);
         $data["campos"]["campos"]["items"]  = $this->entradasRep->getColletionCamposItems($entrada->items);
-
+        $data["campos"]['uuid_orden'] = $uuid;
         $this->template->agregar_titulo_header('Entradas');
     	$this->template->agregar_breadcrumb($breadcrumb);
     	$this->template->agregar_contenido($data);

@@ -1,18 +1,18 @@
 <?php ?><template id="tabla_entregas">
 
 	<div class="table-responsive">
-	
+
 	<div id="devolucionesAlquilerItemsError" class="error"></div>
  		<table class="table table-bordered tabla-dinamica" id="itemsTable">
 			<thead>
-				 
+
 				<tr>
 					<th scope="colgroup" width="1%" scope="mainheader">&nbsp;</th>
-					<th v-if="showNoEntrega == true" width="16%" class="item" scope="colgroup">No. entrega</th>
-					<th width="16%" scope="colgroup">Categor&iacute;a de item</th>
-					<th width="16%" scope="colgroup">Itema a entregar</th>
-					<th width="16%" scope="colgroup">Cantidad en alquiler</th>
- 
+					<th v-if="showNoEntrega == true" width="12%" class="item" scope="colgroup">No. entrega</th>
+					<th width="14%" scope="colgroup">Categor&iacute;a de item</th>
+					<th width="30%" scope="colgroup">Item a entregar</th>
+					<th width="12%" scope="colgroup">Cantidad en alquiler</th>
+
 					<th width="5%" scope="colgroup" colspan="2">&nbsp;</th>
 				</tr>
 			</thead>
@@ -20,7 +20,7 @@
 				<tr>
 					  <td rowspan="2">
 						<h3><a hrfe="#" @click="toggleSubTabla($event)"><i class="fa fa-caret-right"></i></a></h3>
-					</td>  
+					</td>
 					<td  v-if="showNoEntrega == true">
 						<select  :disabled="true"  id="entrega_id{{$index}}" name="items[{{$index}}][entrega_id]" class="form-control" v-model="entregaValor.entrega_id">
 							<option value="">Seleccione</option>
@@ -28,7 +28,7 @@
 								<option v-bind:value="option.id">{{{option.codigo}}}</option>
 							</template>
 						</select>
-					</td> 
+					</td>
 					<td>
 						<select :disabled="disabledCategoria"   class="form-control" id="categoria_id{{$index}}" name="items[{{$index}}][categoria_id]" v-model="entregaValor.categoria_id"  >
 							<option  value="">Seleccione</option>
@@ -40,8 +40,12 @@
 							<option  value="">Seleccione</option>
 							<option  value="{{option.id}}" v-for="option in entregaValor.items | orderBy 'nombre'">{{option.nombre}}</option>
 						</select>
+						<input type="hidden" name="items[{{$index}}][atributo_id]" v-model="entregaValor.atributo_id">
+						<input type="hidden" name="items[{{$index}}][atributo_text]" v-model="entregaValor.atributo_text">
+						<input type="hidden" name="items[{{$index}}][ciclo_id]" v-model="entregaValor.ciclo_id">
+						<input type="hidden" name="items[{{$index}}][tarifa]" v-model="entregaValor.tarifa">
 					</td>
- 
+
 					<td>
 						<input :disabled="true"  type="text"  class="form-control" name="items[{{$index}}][cantidad_alquiler]" id="cantidad_alquiler{{$index}}" v-model="entregaValor.cantidad_alquiler" />
 					</td>

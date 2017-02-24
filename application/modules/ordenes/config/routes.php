@@ -19,6 +19,7 @@ $route['ordenes/ajax-eliminar-orden-item']  = 'ordenes/ajax_eliminar_orden_item'
 $route['ordenes/ajax-reabrir']              = 'ordenes/ajax_reabrir';
 $route['ordenes/ajax-guardar-documentos'] = 'ordenes/ajax_guardar_documentos';
 $route['ordenes/ajax-enviar-correo'] = 'ordenes/ajax_enviar_correo';
+$route['ordenes/ajax-get-empezable'] = 'ordenes/ajax_get_empezable';
 
 
 //Formulario crear/editar

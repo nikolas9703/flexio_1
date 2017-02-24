@@ -18,6 +18,10 @@ use Flexio\Modulo\EntradaManuales\Repository\EntradaManualRepository;
 class Entrada_manual extends CRM_Controller
 {
   protected $entradaManual;
+  protected $empresa_id;
+  protected $empresaObj;
+
+
   function __construct(){
     parent::__construct();
     $this->load->model('usuarios/Empresa_orm');
@@ -30,6 +34,10 @@ class Entrada_manual extends CRM_Controller
     setlocale(LC_TIME, 'Spanish');
     //Cargar Clase Util de Base de Datos
     //$this->load->dbutil();
+    $uuid_empresa = $this->session->userdata('uuid_empresa');
+    $empresaObj  = new Buscar(new Empresa_orm,'uuid_empresa');
+  	$this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
+  	$this->empresa_id = $this->empresaObj->id;
     $this->entradaManual = new EntradaManualRepository;
   }
 
@@ -40,23 +48,20 @@ class Entrada_manual extends CRM_Controller
       'public/assets/css/default/ui/base/jquery-ui.theme.css',
       'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
       'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
-
+      'public/assets/css/plugins/bootstrap/select2.min.css',
+      'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
     ));
     $this->assets->agregar_js(array(
-      'public/assets/js/default/jquery-ui.min.js',
-      'public/assets/js/default/lodash.min.js',
-      'public/assets/js/plugins/jquery/jquery.sticky.js',
-      'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
-      'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-      'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
       'public/assets/js/plugins/jquery/jquery.progresstimer.min.js',
       'public/assets/js/modules/entrada_manual/routes.js',
+      'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+      'public/assets/js/plugins/bootstrap/select2/es.js',
       'public/assets/js/modules/entrada_manual/listar.js',
     ));
     $menuOpciones = array(
-      "#activarLnk" => "Habilitar",
-      "#inactivarLnk" => "Deshabilitar",
-      "#exportarEntradasList" => "Exportar",
+      //"#activarLnk" => "Habilitar",
+      //"#inactivarLnk" => "Deshabilitar",
+      "#exportarEntradasList" => '<i class="fa fa-print"></i> Imprimir',
     );
     //Breadcrum Array
 
@@ -73,7 +78,9 @@ class Entrada_manual extends CRM_Controller
       )
     );
 
-
+    $centrosContableObj = new Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
+    $centros_contables = $centrosContableObj->get(['empresa_id'=>$this->empresa_id,'transaccionales'=>true]);
+    $data['centros_contable'] = $centros_contables;
     $this->template->agregar_titulo_header('Entrada Manual');
     $this->template->agregar_breadcrumb($breadcrumb);
     $this->template->agregar_contenido($data);
@@ -82,6 +89,7 @@ class Entrada_manual extends CRM_Controller
 
   function ocultotabla(){
     $this->assets->agregar_js(array(
+      'public/assets/js/modules/entrada_manual/subgridPanel.js',
       'public/assets/js/modules/entrada_manual/tabla.js'
     ));
 
@@ -95,48 +103,14 @@ class Entrada_manual extends CRM_Controller
     $uuid_empresa = $this->session->userdata('uuid_empresa');
     $empresa = Empresa_orm::findByUuid($uuid_empresa);
 
-    list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+    $clause = [];
+    $clause = ['empresa' => $empresa->id];
 
-   //fix count
-    //$count = Entrada_orm::where('empresa_id',$empresa->id)->count();
-    $entradas = $this->entradaManual->listar(['empresa_id'=>$empresa->id]);
-    $count = count($entradas);
-
-    list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-
-    $clause= array('empresa_id' => $empresa->id);
-    $entradas = $this->entradaManual->listar($clause ,$sidx, $sord, $limit, $start);
-
-    //Constructing a JSON
-    $response = new stdClass();
-    $response->page     = $page;
-    $response->total    = $total_pages;
-    $response->record  = $count;
-    $i=0;
-
-   if(!empty($entradas->toArray())){
-     foreach($entradas as $row){
-       $hidden_options = "";
-       $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->id .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-       $hidden_options = '<a href="'. base_url('entrada_manual/ver/'. $row->uuid_entrada) .'" data-id="'. $row->uuid_entrada .'" class="btn btn-block btn-outline btn-success">Ver Entrada Manual</a>';
-
-       $response->rows[$i]["id"] = $row->id;
-       $response->rows[$i]["cell"] = array(
-        $row->id,
-        '<a href="'. base_url('entrada_manual/ver/'. $row->uuid_entrada) .'">'. $row->codigo . '</a>',
-        $row->nombre,
-        $row->created_at,
-        $row->transacciones->sum('debito'),
-        $row->transacciones->sum('credito'),
-        $link_option,
-        $hidden_options
-       );
-       $i++;
-     }
-
-   }
-   echo json_encode($response);
-   exit;
+    $jqgrid = new Flexio\Modulo\EntradaManuales\Services\EntradaManualJqgrid;
+    $response = $jqgrid->listar($clause);
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+    exit;
   }
 
   public function exportar()
@@ -144,16 +118,26 @@ class Entrada_manual extends CRM_Controller
     	if(empty($_POST)){
     		die();
     	}
+        $request = Illuminate\Http\Request::capture();
+        $campo = $request->only('fecha_min','fecha_max', 'centro_contable');
+
+        $campo['empresa'] = $this->empresa_id;
+        $campo = array_filter($campo);
+        $entradaManualGets = new Flexio\Modulo\EntradaManuales\Repository\RepositorioEntradaManual;
+        $entradaManual = $entradaManualGets->conFiltro($campo)
+                                           ->sort('codigo')
+                                           ->fetch();
+        $entradaManual->load('transacciones');
+
+        $templatePdf =  $this->load->view('pdf/entrada_manual',['entradaManual'=>$entradaManual,'empresa'=>$this->empresaObj->nombre],true);
+        $nombre_pdf = "Entrada_manuales-".time();
+        (new  Flexio\Provider\FlexioPdf)->render($templatePdf,$nombre_pdf);
+        die;
+
+        /*dd($campo,$entradaManual->toArray());
+        $csv = $entradaManualExcell->crear($campo);
 
 
-
-    	$ids =  $this->input->post('ids', true);
-
-		$id = explode(",", $ids);
-
-		if(empty($id)){
-			return false;
-		}
 
 		$csv = array();
 		$clause = array("id" => $id);
@@ -188,7 +172,7 @@ class Entrada_manual extends CRM_Controller
 			'Credito'
 		]);
 		$csv->insertAll($csvdata);
-		$csv->output("entradasManuales-". date('ymd') .".csv");
+		$csv->output("entradasManuales-". date('ymd') .".csv");*/
 		die;
     }
 
@@ -197,7 +181,6 @@ class Entrada_manual extends CRM_Controller
     $this->assets->agregar_js(array(
       'public/assets/js/modules/entrada_manual/crear.js'
     ));
-
     $this->load->view('formulario', $data);
   }
 
@@ -211,7 +194,7 @@ class Entrada_manual extends CRM_Controller
       'public/assets/css/modules/stylesheets/entrada_manual_crear.css',
     ));
     $this->assets->agregar_js(array(
-      'public/assets/js/default/jquery-ui.min.js',
+      //'public/assets/js/default/jquery-ui.min.js',
       'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
       'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
       'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
@@ -251,6 +234,23 @@ class Entrada_manual extends CRM_Controller
     $this->template->agregar_contenido($data);
     $this->template->visualizar();
 
+  }
+
+  function ajax_listar_transacciones(){
+    if(!$this->input->is_ajax_request()){
+      return false;
+    }
+    $uuid_empresa = $this->session->userdata('uuid_empresa');
+    $empresa = Empresa_orm::findByUuid($uuid_empresa);
+
+    $clause = [];
+    $clause = ['empresa' => $this->empresa_id];
+
+    $jqgrid = new Flexio\Modulo\EntradaManuales\Services\TransaccionJqgrid;
+    $response = $jqgrid->listar($clause);
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+    exit;
   }
 
   function ajax_guardar_entada_manual(){

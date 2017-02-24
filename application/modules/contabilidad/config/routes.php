@@ -10,6 +10,7 @@ $route['contabilidad/ocultotabla'] = 'contabilidad/ocultotabla';
 $route['contabilidad/crear'] = 'contabilidad/crear';
 $route['contabilidad/ver/(:any)'] = 'contabilidad/editar/$1';
 $route['contabilidad/ocultoformulario'] = 'contabilidad/ocultoformulario';
+$route['contabilidad/exportar_historial_transacciones'] = 'contabilidad/exportar_historial_transacciones';
 
 //configuracion
 $route['contabilidad/configuracion'] = 'contabilidad/configuracion';

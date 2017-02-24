@@ -4,19 +4,23 @@ $config['modulo_config'] = array(
 	'nombre'        => 'Ordenes de Venta',
 	'descripcion'	=> 'Modulo para Administracion de Ordenes de Venta.',
 	'autor'			=> 'Pensanomica Team',
-	'icono'			=> 'fa-line-chart', 
+	'icono'			=> 'fa-line-chart',
 	'version'		=> '1.0',
 	'tipo'			=> 'addon', // core, addon
 	'grupo'			=> 'Ordenes de Venta',
-	//'agrupador'		=> 'Ventas',
-    'agrupador'		=> array(
-         'Contratos' => array(
+	'agrupador'		=> [
+		'Contratos',
+		'Ventas',
+		],
+   /*'agrupador'		=> array(
+			'Ventas' => array(
+						"grupo_orden" => 3
+				),
+        'Contratos' => array(
              "grupo_orden" =>7
-	),
-        'Ventas' => array(
-            "grupo_orden" => 3
-        )
-     ),
+				)
+
+  ),*/
 	'prefijo'		=> 'ord',
 	'menu' => array(
 		'nombre' =>'Ordenes de Venta' ,

@@ -19,6 +19,7 @@ use Flexio\Modulo\Catalogos\Repository\CatalogoRepository;
 use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository;
 use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
+use Flexio\Modulo\SubContratos\Models\SubContrato      as SubContrato;
 
 //utils
 use Flexio\Library\Util\FlexioAssets;
@@ -39,7 +40,7 @@ class Subcontratos extends CRM_Controller
     protected $ProveedoresRepository;
     protected $CentrosContablesRepository;
     protected $CuentasRepository;
-
+    protected $DocumentosRepository;
     protected $FlexioAssets;
     protected $Toast;
 
@@ -57,7 +58,8 @@ class Subcontratos extends CRM_Controller
         $this->load->model('contabilidad/Centros_orm');
         $this->load->model('facturas/Factura_orm');
         $this->load->model('cobros/Cobro_orm');
-
+        //HMVC Load Modules
+        $this->load->module(array('documentos'));
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresaObj = new Buscar(new Empresa_orm,'uuid_empresa');
         $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
@@ -103,7 +105,7 @@ class Subcontratos extends CRM_Controller
             ],
             "menu" => ["nombre" => "Crear", "url" => "subcontratos/crear", "opciones" => []]
         ];
-        
+
         $this->assets->agregar_var_js(array(
             "flexio_mensaje" => Flexio\Library\Toast::getStoreFlashdata()
             ));
@@ -142,78 +144,13 @@ class Subcontratos extends CRM_Controller
             return false;
         }
 
-        $proveedor      = $this->input->post('proveedor', true);
-        $uuid_proveedor = $this->input->post('proveedor_id', true);
-        $monto1          = $this->input->post('monto1', true);
-        $monto2          = $this->input->post('monto2', true);
-        $codigo         = $this->input->post('numero_subcontrato', true);
-        $centro         = $this->input->post('centro', true);
-        $estado         = $this->input->post('estado', true);
-        $clause         = array('empresa_id' => $this->empresa_id);
+        $clause = array('empresa' => $this->empresa_id);
+        //se pasa el objecto para poder validar las rutas
+        $jqgrid = new Flexio\Modulo\SubContratos\Services\SubContratoJqgrid($this->auth);
+        $response = $jqgrid->listar($clause);
 
-        if(!empty($uuid_proveedor))
-        {
-            $proveedorObj = new Buscar(new Proveedores_orm, 'uuid_proveedor');
-            $proveedor = $proveedorObj->findByUuid($uuid_proveedor);
-            $clause['proveedor_id'] = $proveedor->id;
-        } elseif(!empty($proveedor)){
-            $clause['proveedor_id'] = $proveedor;
-        }
-
-        if(!empty($monto1))  $clause['monto1'] = $monto1;
-        if(!empty($monto2))  $clause['monto2'] = $monto2;
-        if(!empty($codigo)) $clause['codigo'] = $codigo;
-        if(!empty($centro)) $clause['centro_id'] = $centro;
-        if(!empty($estado)) $clause['estado'] = $estado;
-
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-        $count = $this->subcontratosRepositorio->lista_totales($clause);
-
-        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-        $subcontratos = $this->subcontratosRepositorio->listar($clause ,$sidx, $sord, $limit, $start);
-
-        $response          = new stdClass();
-        $response->page    = $page;
-        $response->total   = $total_pages;
-        $response->records = $count;
-
-        if(!empty($subcontratos->toArray()))
-        {
-            $i = 0;
-            foreach ($subcontratos as $row)
-            {
-                $hidden_options = "";
-                $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_subcontrato .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-                $hidden_options = '<a href="'. base_url('subcontratos/ver/'. $row->uuid_subcontrato) .'" data-id="'. $row->uuid_subcontrato .'" class="btn btn-block btn-outline btn-success">Ver Contrato</a>';
-
-                if($row->facturable and $this->auth->has_permission('acceso', 'facturas_compras/crear/(:any)')){
-                    $hidden_options .= '<a href="'.base_url('facturas_compras/crear/subcontrato'. $row->id).'" class="btn btn-block btn-outline btn-success">Agregar Factura</a>';
-                }
-
-                $hidden_options .= '<a href="'. base_url('subcontratos/agregar_adenda/'. $row->uuid_subcontrato) .'" data-id="'. $row->uuid_subcontrato .'" class="btn btn-block btn-outline btn-success">Crear adenda</a>';
-                $hidden_options .= '<a href="' . base_url('anticipos/crear/?subcontrato=' . $row->uuid_subcontrato) . '" data-id="'. $row->uuid_subcontrato .'" class="btn btn-block btn-outline btn-success">Crear anticipo</a>';
-                $response->rows[$i]["id"] = $row->uuid_subcontrato;
-                $response->rows[$i]["cell"] = array(
-                    $row->uuid_subcontrato,
-                    '<a style="color:blue;" class="link" href="'. base_url('subcontratos/ver/'. $row->uuid_subcontrato) .'">'.$row->codigo.'</a>',
-                    '<a class="link">'.$row->proveedor->nombre.' '.$row->proveedor->apellido.'</a>',
-                    $row->present()->monto_original,
-                    $row->present()->monto_adenda,
-                    $row->present()->monto_subcontrato,
-                    $row->present()->facturado,
-                    $row->present()->por_facturar,
-                    $row->centro_contable->nombre,
-                    $row->present()->estado,
-                    $link_option,
-                    $hidden_options
-                    );
-                $i++;
-            }
-        }
-        $this->output->set_status_header(200)
-            ->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
-            ->_display();
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
         exit;
     }
 
@@ -223,42 +160,11 @@ class Subcontratos extends CRM_Controller
         {
             return false;
         }
-        $subcontrato_id = $this->input->post('subcontrato_id', true);
-        $clause = array('empresa_id' => $this->empresa_id);
 
-        if(!empty($subcontrato_id)) $clause['subcontrato_id'] = $subcontrato_id;
+        $clause = array('empresa' => $this->empresa_id);
+        $jqgrid = new Flexio\Modulo\SubContratos\Services\SubContratoAdendaJqgrid();
+        $response = $jqgrid->listar($clause);
 
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-        $count = $this->adendaRepository->lista_totales($clause);
-
-        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-        $adendas = $this->adendaRepository->listar($clause ,$sidx, $sord, $limit, $start);
-
-        $response          = new stdClass();
-        $response->page    = $page;
-        $response->total   = $total_pages;
-        $response->records = $count;
-
-        if(!empty($adendas->toArray()))
-        {
-            $i = 0;
-            foreach ($adendas as $row) {
-                $hidden_options = "";
-                $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_adenda .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-                $hidden_options = '<a href="'. base_url('subcontratos/editar_adenda/'. $row->uuid_adenda) .'" data-id="'. $row->uuid_adenda .'" class="btn btn-block btn-outline btn-success">Ver Adenda</a>';
-                $response->rows[$i]["id"] = $row->uuid_adenda;
-                $response->rows[$i]["cell"] = array(
-                    $row->uuid_adenda,
-                    '<a style="color:blue;" class="link" href="'. base_url('subcontratos/editar_adenda/'. $row->uuid_adenda) .'">'.$row->codigo.'</a>',
-                    $row->fecha,
-                    "$".number_format($row->monto_adenda, 2, '.', ','),
-                    "$".number_format($row->monto_acumulado, 2, '.', ','),
-                    $link_option,
-                    $hidden_options
-                    );
-                $i++;
-            }
-        }
         $this->output->set_status_header(200)
             ->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
@@ -271,7 +177,7 @@ class Subcontratos extends CRM_Controller
      */
     public function crear()
     {
-        //permisos
+         //permisos
         $acceso = $this->auth->has_permission('acceso');
         $this->Toast->runVerifyPermission($acceso);
 
@@ -279,7 +185,8 @@ class Subcontratos extends CRM_Controller
         $this->FlexioAssets->run();//css y js generales
         $this->FlexioAssets->add('vars', [
             "vista" => 'crear',
-            "acceso" => $acceso ? 1 : 0
+            "acceso" => $acceso ? 1 : 0,
+            "permiso_adenda" =>  $acceso ? 1 : 0,
         ]);
 
         //breadcrumb
@@ -305,7 +212,8 @@ class Subcontratos extends CRM_Controller
         $catalogos = $this->CatalogoRepository->get(['modulo' => 'subcontratos']);
         $this->FlexioAssets->add('js',['public/resources/compile/modulos/subcontratos/formulario.js']);
         $this->FlexioAssets->add('vars',[
-            'proveedores' => $this->ProveedoresRepository->getCollectionProveedores($this->ProveedoresRepository->get($clause)),
+            //'proveedores' => $this->ProveedoresRepository->getCollectionProveedores($this->ProveedoresRepository->get($clause)),
+            'proveedores' => collect([]),
             'centros_contables' => $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause)),
             'estados' => $catalogos->filter(function($option){return $option->tipo == 'estado';}),
             'cuentas' => $this->CuentasRepository->get($clause),
@@ -339,7 +247,10 @@ class Subcontratos extends CRM_Controller
         $data = [];
 
         //permisos
-        $acceso = $this->auth->has_permission('acceso');
+        $acceso = $this->auth->has_permission('acceso','subcontratos/ver/(:any)');
+          $permiso_adenda = 0;
+
+
         $this->Toast->runVerifyPermission($acceso);
 
         //Cargo el registro
@@ -349,13 +260,46 @@ class Subcontratos extends CRM_Controller
 
         //assets
         $this->FlexioAssets->run();//css y js generales
+
+        $this->assets->agregar_css(array(
+            'public/assets/css/plugins/jquery/jquery.fileupload.css'
+        ));
+        $this->assets->agregar_js(array(
+            'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
+            'public/assets/js/plugins/bootstrap/daterangepicker.js',
+            'public/assets/js/modules/subcontratos/detalle.js'
+        ));
+
+
+        if($acceso == 1 && $registro->estado == 'por_aprobar' )
+          $permiso_adenda = true;
+
         $this->FlexioAssets->add('vars', [
             "vista" => 'ver',
             "acceso" => $acceso ? 1 : 0,
+            "permiso_adenda" => $permiso_adenda,
             "subcontrato" => $this->subcontratosRepositorio->getCollectionSubcontrato($registro),
         ]);
 
-        //breadcrumb
+        if($registro->estado == 'vigente'){
+            $breadcrumb = [
+                "titulo" => '<i class="fa fa-file-text"></i> Detalle del Contrato: ' .$registro->codigo,
+                "ruta" =>[
+                    ["nombre" => "Contratos", "activo" => false],
+                    ["nombre" => 'Subcontratos',"activo" => false, 'url' => 'subcontratos/listar'],
+                    ["nombre" => '<b>Detalle</b>',"activo" => true]
+                ],
+                "menu" => [
+                    "nombre" => "Acci&oacute;n",
+                    "url" => "#",
+                    "opciones" => array(
+                        '/subcontratos/agregar_adenda/'.$registro->uuid_subcontrato => 'Crear Adenda',
+                        '#exportar_adenda'=>'Exportar Adenda',
+                        '#subirArchivoBtn' => 'Subir Documento'
+                    )
+                ]
+            ];
+        }else{
         $breadcrumb = [
             "titulo" => '<i class="fa fa-file-text"></i> Detalle del Contrato: ' .$registro->codigo,
             "ruta" =>[
@@ -366,14 +310,23 @@ class Subcontratos extends CRM_Controller
             "menu" => [
                 "nombre" => "Acci&oacute;n",
                 "url" => "#",
-                "opciones" => array('/subcontratos/agregar_adenda/'.$registro->uuid_subcontrato => 'Crear Adenda',
-                    '#exportar_adenda'=>'Exportar Adenda')
+                "opciones" => array(
+                    '#exportar_adenda'=>'Exportar Adenda',
+                    '#subirArchivoBtn' => 'Subir Documento'
+                )
             ]
         ];
-
+        }
         //subpanels
         $data['subcontrato_id'] = $registro->id;
-
+        $subpanels = [
+          'adendas'=>['subcontrato'=>$registro->id],
+          'facturas_compras'=>['subcontrato'=>$registro->id],
+          'anticipos' => ['subcontrato'=>$registro->id],
+          'pagos' => ['subcontrato'=>$registro->id],
+          'documentos' => ['subcontrato' => $registro->id]
+        ];
+        $data['subpanels'] = $subpanels;
         //render
         $this->template->agregar_titulo_header('Subcontrato');
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -405,7 +358,7 @@ class Subcontratos extends CRM_Controller
             'public/assets/js/modules/subcontratos/formulario_ver.js',
             'public/assets/js/modules/subcontratos/eventos.js',
         ));
-        $subcontrato->load('subcontrato_montos', 'tipo_abono', 'tipo_retenido', 'proveedor', 'adenda');
+        $subcontrato->load('subcontrato_montos', 'tipo_abono', 'tipo_retenido', 'proveedor', 'adenda', 'comentario_timeline');
         $data['subcontrato'] = $subcontrato->toArray();
         $this->assets->agregar_var_js(array(
             "vista"        => 'ver',
@@ -418,8 +371,8 @@ class Subcontratos extends CRM_Controller
             "titulo" => '<i class="fa fa-file-text-o"></i> Contratos: adendas',
             "ruta" => array(
                 0 => ["nombre" => "Subcontrato", "activo" => false],
-                1 => ["nombre" => '<b>'.$subcontrato->codigo.'</b>', 
-                      "activo" => true, 
+                1 => ["nombre" => '<b>'.$subcontrato->codigo.'</b>',
+                      "activo" => true,
                       "url" => 'subcontratos/ver/'.$uuid],
                 2 => ["nombre" => '<b>'.$this->_generar_codigo_adenda().'</b>', "activo" => false]
                 ),
@@ -499,7 +452,7 @@ class Subcontratos extends CRM_Controller
             "titulo" => '<i class="fa fa-file-text-o"></i> Contratos: adendas',
             "ruta" => array(
                 0 => ["nombre" => "Subcontrato", "activo" => false],
-                1 => ["nombre" => '<b>'.$subcontrato->codigo.'</b>', 
+                1 => ["nombre" => '<b>'.$subcontrato->codigo.'</b>',
                       "activo" => true,
                       "url" => 'subcontratos/ver/'.$adenda->subcontrato->uuid_subcontrato],
                 2 => ["nombre" => '<b>'.$subcontrato->adenda[0]->codigo.'</b>', "activo" => false]
@@ -518,7 +471,12 @@ class Subcontratos extends CRM_Controller
         $this->assets->agregar_js(array(
             'public/assets/js/modules/subcontratos/tabla_adendas.js'
         ));
-        if(!is_null($id))
+        if(is_array($id))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($id)
+            ]);
+        }else if(!is_array($id) && !is_null($id))
         {
             $this->assets->agregar_var_js(array(
                 "subcontrato_id" => $id
@@ -559,11 +517,11 @@ class Subcontratos extends CRM_Controller
         if($_POST)
         {
             $post = $this->input->post();
-
-            if(empty($post['campo']['id']))
+             if(empty($post['campo']['id']))
             {
                 $post['campo']['codigo'] = $this->_generar_codigo();
                 $post["campo"]["empresa_id"] = $this->empresa_id;
+                $post["campo"]["creado_por"] = $this->session->userdata('id_usuario');
             }
 
             Capsule::beginTransaction();
@@ -595,7 +553,7 @@ class Subcontratos extends CRM_Controller
     {
         if($_POST)
         {
-            
+
 //            echo "<pre>";
 //            print_r($_POST);
 //            echo "<pre>";
@@ -627,7 +585,7 @@ class Subcontratos extends CRM_Controller
                     log_message('error', __METHOD__." ->". ", Linea: ". __LINE__ ." --> ". $e->getMessage()."\r\n");
                 }
             });
-            
+
             if(!is_null($adenda))
             {
                 $this->disparador->fire(new ActualizarSubContratoMontoEvent($adenda, $subcontrato));
@@ -670,6 +628,7 @@ class Subcontratos extends CRM_Controller
             'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
             'public/assets/css/plugins/bootstrap/select2.min.css',
             'public/assets/css/modules/stylesheets/subcontratos.css',
+            'public/assets/css/plugins/jquery/jquery.fileupload.css'
         ));
     }
 
@@ -701,7 +660,8 @@ class Subcontratos extends CRM_Controller
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
             'public/assets/js/default/toast.controller.js',
             'public/assets/js/modules/subcontratos/plugins.js',
-            'public/assets/js/default/vue/directives/select2.js'
+            'public/assets/js/default/vue/directives/select2.js',
+            'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js'
         ));
     }
 
@@ -735,5 +695,28 @@ class Subcontratos extends CRM_Controller
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($subcontrato->comentario_timeline->toArray()))->_display();
         exit;
+    }
+
+    function documentos_campos(){
+    return array(
+            array(
+                "type" => "hidden",
+                "name" => "subcontrato_id",
+                "id" => "subcontrato_id",
+                "class" => "form-control",
+                "readonly" => "readonly",
+            ));
+    }
+
+    function ajax_guardar_documentos()
+    {
+    	if(empty($_POST)){
+    		return false;
+    	}
+
+    	$subcontrato_id = $this->input->post('subcontrato_id', true);
+    	$modeloInstancia = SubContrato::find($subcontrato_id);
+
+    	$this->documentos->subir($modeloInstancia);
     }
 }

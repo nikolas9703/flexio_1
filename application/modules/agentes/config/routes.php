@@ -39,17 +39,20 @@
 */
 
 $route['agentes/listar'] = 'agentes/listar';
-$route['agentes/listar-agentes'] = 'agentes/listar_agentes';
+//$route['agentes/listar-agentes'] = 'agentes/listar_agentes';
 $route['agentes/ajax-listar'] = 'agentes/ajax_listar';
 $route['agentes/ajax-seleccionar-porcentaje'] = 'agentes/ajax_seleccionar_porcentaje';
 $route['agentes/ocultotabla'] = 'agentes/ocultotabla';
 
 //Formulario crear/editar
 $route['agentes/crear'] = 'agentes/crear';
-$route['agentes/guardar'] = 'agentes/guardar';
-$route['agentes/crear-agente'] = 'agentes/crear_agente';
+//$route['agentes/editar'] = 'agentes/editar';
+//$route['agentes/guardar'] = 'agentes/guardar';
+//$route['agentes/crear-agente'] = 'agentes/crear_agente';
 $route['agentes/ver/(:any)'] = 'agentes/ver/$1';
-$route['agentes/ver-agente/(:any)'] = 'agentes/editar/$1';
+//$route['agentes/ver-agente/(:any)'] = 'agentes/editar/$1';
+
+$route['agentes/ajax_cambiar_estados'] = 'agentes/ajax_cambiar_estados';
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

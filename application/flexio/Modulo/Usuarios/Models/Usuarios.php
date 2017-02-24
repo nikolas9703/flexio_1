@@ -25,7 +25,7 @@ class Usuarios extends Model
     public function __construct(array $attributes = array()) {
         $this->setRawAttributes(array_merge($this->attributes, array(
             'uuid_usuario' => Capsule::raw("ORDER_UUID(uuid())")
-                )), true);
+            )), true);
         parent::__construct($attributes);
     }
     /**
@@ -43,13 +43,13 @@ class Usuarios extends Model
 
     public function roles() {
         return $this->belongsToMany('Flexio\Modulo\Roles\Models\Roles','usuarios_has_roles','usuario_id','role_id')
-                    ->withPivot('empresa_id');
+        ->withPivot('empresa_id');
     }
 
     public function centros_contables()
     {
         return $this->belongsToMany('Flexio\Modulo\CentrosContables\Models\CentrosContables','usuarios_has_centros','usuario_id','centro_id')
-                    ->withPivot('empresa_id');
+        ->withPivot('empresa_id');
     }
 
 
@@ -70,52 +70,57 @@ class Usuarios extends Model
     /*relacion dueño de emprea*/
     public function owenerEmpresa() {
       return $this->morphedByMany('Flexio\Modulo\Empresa\Models\Empresa', 'relacion','relacions','usuario_orm_id');
-    }
+  }
 
-    public function organizacion(){
+  public function organizacion(){
       return $this->morphedByMany(Organizacion::class, 'relacion','relacions','usuario_orm_id');
-    }
+  }
 
-    public function scopeDeEmpresa($query, $empresa_id) {
-        return $query->whereHas('empresas', function($empresa) use ($empresa_id){
-            $empresa->where('empresas.id', $empresa_id);
-        });
-    }
+  public function scopeDeEmpresa($query, $empresa_id) {
+    return $query->whereHas('empresas', function($empresa) use ($empresa_id){
+        $empresa->where('empresas.id', $empresa_id);
+    });
+}
 
-    public function scopeVendedor($query, $empresa_id){
+public function scopeVendedor($query, $empresa_id){
 
-        return $query->whereHas('roles',function($rol) use($empresa_id){
-            $rol->where('roles.nombre','like','%vendedor%');
-            $rol->where('roles.empresa_id',$empresa_id);
-        });
+    return $query->whereHas('roles',function($rol) use($empresa_id){
+        $rol->where('roles.nombre','like','%vendedor%');
+        $rol->where('roles.empresa_id',$empresa_id);
+    });
 
-    }
+}
 
-    public function scopeComprador($query, $empresa_id){
+public function scopeComprador($query, $empresa_id){
 
-        return $query->whereHas('roles',function($rol) use($empresa_id){
+    return $query->whereHas('roles',function($rol) use($empresa_id){
             //$rol->where('roles.nombre','like','%compra%');descomentar cuando se pase a qa
-            $rol->where('roles.empresa_id',$empresa_id);
-        });
+        $rol->where('roles.empresa_id',$empresa_id);
+    });
 
-    }
+}
 
-    public static function registrar(){
-      return new static;
-    }
+public static function registrar(){
+  return new static;
+}
 
-    public function scopeActivo($query)
-    {
-        return $query->where("estado", "Activo");
-    }
+public function scopeActivo($query)
+{
+    return $query->where("estado", "Activo");
+}
 
-    public function getActiveUsersByRol($empresa_id,$rol){
+public function getActiveUsersByRol($empresa_id,$rol){
 
-        return Usuarios::join('usuarios_has_roles', 'usuario_id', '=', 'usuarios.id')
-        ->where('usuarios_has_roles.empresa_id', '=', $empresa_id)
-        ->where('usuarios.estado', '=', 'Activo')
-        ->whereIn('role_id',$rol)
-        ->select('usuarios.id', 'nombre','apellido')
-        ->get();
-    }
+    return Usuarios::join('usuarios_has_roles', 'usuario_id', '=', 'usuarios.id')
+    ->where('usuarios_has_roles.empresa_id', '=', $empresa_id)
+    ->where('usuarios.estado', '=', 'Activo')
+    ->whereIn('role_id',$rol)
+    ->select('usuarios.id', 'nombre','apellido')
+    ->get();
+}
+
+public static function findByUuid($uuid){
+    return self::where('uuid_usuario',hex2bin($uuid))->first();
+}
+
 }

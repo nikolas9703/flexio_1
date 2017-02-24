@@ -7,13 +7,7 @@
         <tbody style="border: 1px solid white;">
             <tr class="item-listing" v-for="articulo in articulos" track-by="$index" :id="'entrega_item' + $index">
                 <td width="14%" v-show="articulo.serializable == true">
-                    <div class="form-group" style="margin-bottom: 5px !important">
-                        <label class="control-label">Serie: </label>
-                        <select name="articulos[{{parent_index}}][detalles][{{$index}}][serie]" class="form-control" id="series{{$index}}" data-rule-required="{{articulo.serializable == true ? 'true' : 'false'}}" v-model="articulo.serie" :disabled="disabledEditar || disabledEditarTabla" @change="cambiarSerie(articulo, parent_articulo, $index)">
-                            <option value="">Seleccione</option>
-                            <option :value="serie.nombre" v-for="serie in parent_articulo.series">{{serie.nombre}}</option>
-                        </select>
-                    </div>
+                    <lista-seriales :subfila.sync="articulo" :parent_articulo.sync="parent_articulo" :parent_articulos.sync="parent_articulos" :parent_index="parent_index" :subparent_index="$index"></lista-seriales>
                 </td>
                 <td width="14%" v-show="articulo.serializable != true">
                     <div class="form-group" style="margin-bottom: 5px !important">

@@ -22,5 +22,8 @@ class Ramos extends Model{
 		return $this->hasMany('Flexio\Modulo\Ramos\Models\RamosUsuarios','id_ramo');
 	}
 	
+	public function ramos_item() {
+		return $this->hasMany(Ramos::class,'padre_id','id')->orderBy('nombre','ASC');
+	}
 	
 }

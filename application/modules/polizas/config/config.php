@@ -10,7 +10,7 @@ $config['modulo_config'] = array(
     'grupo'			=> 'Producción',
     'agrupador'		=> array(
         'Seguros' => array(
-            "grupo_orden" => 2
+            "grupo_orden" => 1
         ),
     ),
     'prefijo'		=> 'pol',

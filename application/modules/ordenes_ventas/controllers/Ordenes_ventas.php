@@ -33,6 +33,8 @@ use Flexio\Modulo\Bodegas\Repository\BodegasRepository;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\FacturasVentas\Events\OrdenVentaFacturableEvent as OrdenVentaFacturableEvent;
 use Flexio\Modulo\FacturasVentas\Listeners\CrearOrdenFacturableListener as CrearOrdenFacturableListener;
+use Flexio\Library\Util\AuthUser;
+use League\Csv\Writer as Writer;
 
 class Ordenes_ventas extends CRM_Controller {
 
@@ -140,7 +142,6 @@ class Ordenes_ventas extends CRM_Controller {
             // No, tiene permiso, redireccionarlo.
             redirect('/');
         }
-
         $data = array();
 
         $this->_Css();
@@ -197,10 +198,16 @@ class Ordenes_ventas extends CRM_Controller {
             }
         }
 
+        if(!AuthUser::is_owner()){
+        $vendedores = array_filter($vendedores,function($v) {
+            return $v->id == $this->usuario_id;
+        });
+        }
+
         $data['clientes'] = Cliente_orm::where($clause)->get(array('id', 'nombre'));
         $data['etapas'] = $this->ordenVentaCatalogo->getEtapas();
         $data['vendedores'] = $vendedores;
-        $breadcrumb["menu"]["opciones"]["#exportarListaCotizaciones"] = "Exportar";
+        $breadcrumb["menu"]["opciones"]["#exportarListaOrdenesVenta"] = "Exportar";
         $this->template->agregar_titulo_header('Listado de &Oacute;rdenes de Ventas');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
@@ -208,6 +215,11 @@ class Ordenes_ventas extends CRM_Controller {
     }
 
     public function ocultoformulario($cotizacion = array()) {
+
+        //add temporal solution for more that 150
+        //cotizaciones in state aprobado.
+        //Desing Departament have a notifications of this temporal solution
+        ini_set('memory_limit','256M');
 
         $this->assets->agregar_js(array(
             'public/assets/js/plugins/ckeditor/ckeditor.js',
@@ -223,6 +235,8 @@ class Ordenes_ventas extends CRM_Controller {
 
         //catalogos
         $clause = ['empresa_id' => $this->empresa_id, 'transaccionales' => true, 'conItems' => true, 'vendedor' => true, 'tipo_precio' => 'venta'];
+        $cotizaciones = $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause));
+
         $this->assets->agregar_var_js(array(
             'bodegas' => $this->BodegasRepository->getCollectionBodegas($this->BodegasRepository->get($clause)),
             'cotizaciones' => $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause)),
@@ -285,10 +299,27 @@ class Ordenes_ventas extends CRM_Controller {
             "editar_precio" => $editar_precio
         ));
 
-        $breadcrumb = array(
+        /*$breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Orden de venta: Crear',
-        );
+        );*/
+        $breadcrumb = array("titulo" => '<i class="fa fa-line-chart"></i> Orden de venta: Crear',
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Ventas",
+                    "activo" => false
+                ),
+                1 => array(
+                    "nombre" => '&Oacute;rdenes de Venta',
+                    "url"=> 'ordenes_ventas/listar',
+                    "activo" => false
+                ),
+                2 => array(
+                    "nombre" => '<b>Crear</b>',
+                    "activo" => true
+                )
+            ),
 
+        );
         $data = array();
         $data['mensaje'] = $mensaje;
         $this->template->agregar_titulo_header('Crear Orden de Ventas');
@@ -343,9 +374,25 @@ class Ordenes_ventas extends CRM_Controller {
                     //"permiso_descuento" => $this->auth->has_permission('Ordenes_ventasver__descuentoOrdenesVentas', 'ordenes_ventas/ver/(:any)') == true ? 1 : 0,
             ));
 
-            $breadcrumb = array(
-                "titulo" => '<i class="fa fa-line-chart"></i> Orden de venta: ' . $ordenVenta->codigo,
+            $breadcrumb = array(  "titulo" => '<i class="fa fa-line-chart"></i> Orden de venta: ' . $ordenVenta->codigo,
+                "ruta" => array(
+                    0 => array(
+                        "nombre" => "Ventas",
+                        "activo" => false
+                    ),
+                    1 => array(
+                        "nombre" => '&Oacute;rdenes de Venta',
+                        "url"=> 'ordenes_ventas/listar',
+                        "activo" => false
+                    ),
+                    2 => array(
+                        "nombre" => '<b>Detalle</b>',
+                        "activo" => true
+                    )
+                ),
+
             );
+
             ///setear, centro,inicio,periodo
             $this->template->agregar_titulo_header('Editar Orden de Ventas');
             $this->template->agregar_breadcrumb($breadcrumb);
@@ -363,7 +410,7 @@ class Ordenes_ventas extends CRM_Controller {
         /*
           paramentos de busqueda aqui
          */
-        
+
         $uuid_cliente = $this->input->post("cliente_id");
         $cliente = $this->input->post('cliente', TRUE);
         $hasta = $this->input->post('desde', TRUE);
@@ -371,22 +418,17 @@ class Ordenes_ventas extends CRM_Controller {
         $monto = $this->input->post('monto', TRUE);
         $estado = $this->input->post('etapa', TRUE);
         $vendedor = $this->input->post('vendedor', TRUE);
+        $factura_id = $this->input->post('factura_id', TRUE);
+        $cotizacion_id = $this->input->post('cotizacion_id', TRUE);
+        $ordenes_ventas_id = $this->input->post('ordenes_ventas_id', TRUE);
         $clause = array('empresa_id' => $this->empresaObj->id, 'formulario' => 'orden_venta');
-
-        if (!empty($uuid_cliente)) {
-            $clienteObj = new ClienteRepository();
-            $cliente = $clienteObj->findByUuid($uuid_cliente);
-
-            $clause['cliente_id'] = $cliente->id;
-        } elseif (!empty($cliente)) {
-            $clause['cliente_id'] = $cliente;
+        if(!AuthUser::is_owner())$clause['creado_por'] = $this->usuario_id;
+        if(!empty($factura_id)){
+            $clause['factura_id'] = $factura_id;
         }
-
-        if (!empty($this->input->post('cotizacion_id'))) {
-            $clause['cotizacion_id'] = $this->input->post('cotizacion_id');
+        if (!empty($cotizacion_id)){
+            $clause['cotizacion_id'] = $cotizacion_id;
         }
-
-
         if (!empty($desde))
             $clause['fecha_desde'] = Carbon::createFromFormat('d/m/Y', $desde, 'America/Panama')->format('Y-m-d');
         if (!empty($hasta))
@@ -398,6 +440,10 @@ class Ordenes_ventas extends CRM_Controller {
             $clause['etapa'] = $estado;
         if (!empty($vendedor))
             $clause['creado_por'] = $vendedor;
+        if(!empty($ordenes_ventas_id))
+            $clause['id'] = $ordenes_ventas_id;
+
+        $clause['campo'] = $this->input->post('campo');
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
 
         $count = $this->ordenVentaRepository->lista_totales($clause);
@@ -415,7 +461,7 @@ class Ordenes_ventas extends CRM_Controller {
         if (!empty($ordenes->toArray())) {
             $i = 0;
             foreach ($ordenes as $row) {
-               
+
                 $hidden_options = "";
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->uuid_venta . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $hidden_options = '<a href="' . base_url('ordenes_ventas/ver/' . $row->uuid_venta) . '" data-id="' . $row->uuid_venta . '" class="btn btn-block btn-outline btn-success">Ver Orden de Venta</a>';
@@ -426,7 +472,7 @@ class Ordenes_ventas extends CRM_Controller {
                 if ($row->facturar()) {
                     $hidden_options .= '<a href="' . base_url('ordenes_ventas/facturar/' . $row->uuid_venta) . '" data-id="' . $row->uuid_venta . '" class="btn btn-block btn-outline btn-success">Facturar</a>';
                 }
-                    
+
                 $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_venta . '" class="exportarTablaCliente btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documento</a>';
                 $cliente = $row->cliente;
                 $vendedor = $row->vendedor;
@@ -612,6 +658,8 @@ class Ordenes_ventas extends CRM_Controller {
                     $orden_venta['codigo'] = $codigo;
                 }
 
+                //check estado de factura and if por_facturar then change
+                //oportunidad estado por ganado if exist
 
                 $data = array('ordenventa' => $orden_venta, 'lineitem' => $lineitems);
                 if (empty($orden_venta['id'])) {
@@ -628,7 +676,7 @@ class Ordenes_ventas extends CRM_Controller {
             }
             if (!is_null($modelOrdenVenta)) {
                 Capsule::commit();
-                if (!empty($_POST['empezable_id'])) {
+                if (!empty($_POST['empezable_id']) AND $odern_venta->estado == 'por_facturar') {
                     $cotizacion = $this->cotizacionRepository->find($_POST['empezable_id']);
                     $cotizacion->estado = 'ganado';
                     $cotizacion->save();
@@ -853,4 +901,58 @@ class Ordenes_ventas extends CRM_Controller {
         $this->documentos->subir($modeloInstancia);
     }
 
+    public function exportar() {
+        if (empty($_POST)) {
+            exit();
+        }
+
+
+        $ids = $this->input->post('ids', true);
+
+        $id = explode(",", $ids);
+
+        if (empty($id)) {
+            return false;
+        }
+
+        $csv = array();
+        $clause = array("uuid_venta" => $id);
+
+        $ordenes = $this->ordenVentaRepository->exportar($clause);
+
+
+        if (empty($ordenes)) {
+            return false;
+        }
+
+        $i = 0;
+        foreach ($ordenes AS $row) {
+
+          //  $total_facturado = $row->total_facturado();
+            $csvdata[$i]['no_venta'] = utf8_decode(Util::verificar_valor($row->codigo));
+            $csvdata[$i]['cliente'] = isset($row->cliente->nombre)?utf8_decode(Util::verificar_valor($row->cliente->nombre)):'';
+            $csvdata[$i]["fecha_desde"] = utf8_decode(Carbon::createFromFormat('m/d/Y', Util::verificar_valor($row->fecha_desde))->format('d/m/Y'));
+            $csvdata[$i]["fecha_hasta"] = utf8_decode(Carbon::createFromFormat('m/d/Y', Util::verificar_valor($row->fecha_hasta))->format('d/m/Y'));
+            $csvdata[$i]["monto"] = utf8_decode(Util::verificar_valor(number_format(($row->total), 2, '.', ',')));
+        //    $csvdata[$i]["saldo"] = utf8_decode(Util::verificar_valor(number_format(($row->total - $total_facturado), 2, '.', ',')));
+            $csvdata[$i]['vendedor'] = utf8_decode(Util::verificar_valor($row->vendedor->nombre . " " . $row->vendedor->apellido));
+            $csvdata[$i]["estado"] = isset($row->etapa_catalogo->valor)?utf8_decode(Util::verificar_valor($row->etapa_catalogo->valor)):'';
+            $i++;
+        }
+
+        //we create the CSV into memory
+        $csv = Writer::createFromFileObject(new SplTempFileObject());
+        $csv->insertOne([
+            'No. O/V',
+            'Cliente',
+            'Fecha de emision',
+            'Fecha de vencimiento',
+            'Monto',
+            'Vendedor',
+            'Estado'
+        ]);
+        $csv->insertAll($csvdata);
+        $csv->output("OrdenVenta-" . date('ymd') . ".csv");
+        die;
+    }
 }

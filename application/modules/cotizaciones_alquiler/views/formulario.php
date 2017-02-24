@@ -85,7 +85,7 @@
 
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
       <label for="centro_facturacion_id">Centro de facturaci&oacute;n </label>
-      <select data-placeholder="Seleccione" name="campo[centro_facturacion_id]" class="form-control chosen-select" v-model="formulario.centro_facturacion_id" :disabled="disabledEditar || (catalogoFormulario.centro_facturable.length === 0)">
+      <select data-placeholder="Seleccione" name="campo[centro_facturacion_id]" class="form-control chosen-select" v-model="formulario.centro_facturacion_id" :disabled="centrofacturadisable">
           <option value="">Seleccione</option>
           <option :value="centro_facturacion.id" v-for="centro_facturacion in catalogoFormulario.centro_facturable">{{centro_facturacion.nombre}}</option>
       </select>

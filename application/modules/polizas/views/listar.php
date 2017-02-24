@@ -11,9 +11,9 @@
         <div class="col-lg-12">
             <div class="wrapper-content">
                 <div class="row">
-                    <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
+                    <div class="alert alert-dismissable <?php echo!empty($mensaje) ? 'show ' . $mensaje["clase"] : 'hide' ?>">
                         <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
-                        <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
+                        <?php echo!empty($mensaje) ? $mensaje["contenido"] : '' ?>
                     </div>
                 </div>
 
@@ -35,50 +35,109 @@
 
                                     <?php
                                     $formAttr = array(
-                                        'method'        => 'POST',
-                                        'id'            => 'buscarPolizaForm',
-                                        'autocomplete'  => 'off'
+                                        'method' => 'POST',
+                                        'id' => 'buscarPolizaForm',
+                                        'autocomplete' => 'off'
                                     );
                                     echo form_open(base_url(uri_string()), $formAttr);
                                     ?>
                                     <div class="row">
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                            <label for="">Ramo</label>
-                                            <select type="text" id="ramo" class="form-control chosen" value="" placeholder="">
-                                                <option>
-                                                    sd
-                                                </option>
-                                                <option>
-                                                    sd
-                                                </option>
-                                            </select>
-                                        </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Cliente</label>
                                             <input type="text" id="cliente" class="form-control" value="" placeholder="">
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Aseguradora</label>
-                                            <input type="text" id="aseguradora" class="form-control" value="" placeholder="">
+                                            <select id="aseguradora" class="form-control chosen">
+                                                <option value="">Seleccione</option>
+                                                <?php
+                                                if (!empty($aseguradoras)) {
+                                                    foreach ($aseguradoras AS $aseguradora) {
+                                                        echo '<option value="' . $aseguradora->id . '">' . $aseguradora->nombre . '</option>';
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Ramo</label>
+                                            <select id="ramo" class="form-control" multiple="multiple">
+                                                <?php
+                                                if (!empty($ramos)) {
+                                                    foreach ($ramos AS $ramo) {
+                                                        if ($ramo->padre_id != 0 && in_array($ramo->id, $rolesArray) && in_array($ramo->id, $usuariosArray)) {
+                                                        echo '<option value="' . $ramo->nombre . '">' . $ramo->nombre . '</option>';
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">No. Póliza</label>
+                                            <input type="text" id="no_poliza" class="form-control" value="" placeholder="">
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Vigencia</label>
+                                            <div class="input-group">
+                                                <input type="text" id="inicio_vigencia" class="form-control" value="" placeholder="">
+                                                <span class="input-group-addon">a</span>
+                                                <input type="text" id="fin_vigencia" class="form-control" value="" placeholder="">
+                                            </div>
+                                        </div>
+                                        <!--<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Usuario</label>
+                                            <select id="usuario" class="form-control">
+                                                <option value="">Seleccione</option>
+                                                <?php
+                                                if (!empty($usuarios)) {
+                                                    foreach ($usuarios AS $usuario) {
+                                                        echo '<option value="' . $usuario->id . '">' . $usuario->nombre . ' ' . $usuario->apellido . '</option>';
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>-->
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Categoria</label>
+                                            <select id="categoria" class="form-control chosen">
+                                                <option value="">Seleccione</option>
+                                                <?php
+                                                if (!empty($categorias)) {
+                                                    foreach ($categorias AS $categoria) {
+                                                        echo '<option value="' . $categoria->id . '">' . $categoria->valor . '</option>';
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="">Declarativa</label>
+                                            <select id="declarativa" class="form-control">
+                                                <option value="">Seleccione</option>
+                                                <option value="si">Si</option>
+                                                <option value="no">No</option>
+                                            </select>
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Estado</label>
-                                            <input type="text" id="estado" class="form-control" value="" placeholder="">
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                            <label for="">Fecha de inicio de vigencia</label>
-                                            <input type="text" id="inicio_vigencia" class="form-control" value="" placeholder="">
-                                        </div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                            <label for="">Fecha de fin de vigencia</label>
-                                            <input type="text" id="fin_vicencia" class="form-control" value="" placeholder="">
-                                        </div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                            <label for="">Usuario</label>
-                                            <input type="text" id="usuario" class="form-control" value="" placeholder="">
+                                            <select id="estado" class="form-control chosen">
+                                                <option value="">Seleccione</option>
+                                                <?php
+                                                if (!empty($estados)) {
+                                                    foreach ($estados AS $estado) {
+                                                        echo '<option value="' . $estado->valor . '">' . $estado->valor . '</option>';
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
                                         </div>
 
                                     </div>
@@ -120,8 +179,8 @@
                         </div>
 
                         <div role="tabpanel" class="tab-pane" id="grid">
-                            <?php Grid::visualizar_grid($grid); ?>
-			</div>
+                            <?php //Grid::visualizar_grid($grid); ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -129,12 +188,43 @@
         </div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
+<?php
+$formAttr = array('method' => 'POST', 'id' => 'exportarPolizas', 'autocomplete' => 'off');
+echo form_open(base_url('polizas/exportar'), $formAttr);
+?>
+<input type="hidden" name="ids" id="ids" value="" />
+<?php
+echo form_close();
+?>
+<?php 
+$formAttr = array('method' => 'POST', 'id' => 'ReclamosForm', 'autocomplete' => 'off');
+echo form_open(base_url('reclamos/crear'), $formAttr);
+echo '<input type="text" id="ramo_id" name="ramo_id" />';
+echo '<input type="text" id="poliza_id" name="poliza_id" />';
+echo form_close();
+ ?>
 
 <?php
-
 echo Modal::config(array(
     "id" => "opcionesModal",
     "size" => "sm"
 ))->html();
+echo Modal::config(array(
+    "id" => "opcionesModalCambioEstado",
+    "size" => "sm"
+))->html();
+echo Modal::config(array(
+    "id" => "documentosModal",
+    //"size" => "md",
+    "titulo" => "Subir Documentos",
+    "contenido" => modules::run("Polizas/formularioModal")
+))->html();
+?>
 
+<?php
+echo Modal::config(array(
+    "id" => "opcionesModalRenovation",
+    "size" => "sm",
+    "contenido" => modules::run('Polizas/renovationView')
+))->html();
 ?>

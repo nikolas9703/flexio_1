@@ -164,7 +164,7 @@ class Subpanel
         if ($id_modulo_data == NULL || empty(self::$subpaneles)) {
             return false;
         }
-
+        
         //SUBPANEL FORMULARIO CONTENIDO
         $html = '<div id="sub-panel">';
         $html .= '<div id="sub-panel-formulario-modulos" class="tab-content">';

@@ -1,18 +1,17 @@
 /**
  * Created by victor on 01/03/16.
  */
+ 
 $(function() {
-    
-    if(typeof id_cliente === 'undefined'){
-        id_cliente="";
-    }
+     
+     var uuid_asegura=$('input[name="campo[uuid]').val();
 
     //verificar si la url actual es contactos
     //de lo contrario no mostrar multiselect del jqgrid
     var multiselect = window.location.pathname.match(/planes/g) ? true : false;
 
     //Init Contactos Grid
-    $("#planesGrid").jqGrid({
+    $("#PlanesGrid").jqGrid({
         url: phost() + 'planes/ajax-listar-planes',
         datatype: "json",
         colNames:[
@@ -40,7 +39,7 @@ $(function() {
         mtype: "POST",
         postData: {
             erptkn: tkn,
-            id_cliente: id_cliente
+            uuid: uuid_asegura
         },
         height: "auto",
         autowidth: true,

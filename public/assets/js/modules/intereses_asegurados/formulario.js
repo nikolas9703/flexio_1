@@ -506,31 +506,117 @@ $(function(){
 		changeMonth: true,
 		numberOfMonths: 1		
 	});	
+
+    //jQuery Daterange
+    $("#fecha_despacho").datepicker({
+        defaultDate: "+1w",
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        numberOfMonths: 1       
+    }); 
+
+    //jQuery Daterange
+    $("#fecha_arribo").datepicker({
+        defaultDate: "+1w",
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        numberOfMonths: 1       
+    }); 
+
+    //jQuery Daterange
+    $("#fecha_concurso").datepicker({
+        defaultDate: "+1w",
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        numberOfMonths: 1       
+    }); 
+
+    $(".campodesde").val(desde);
+    
+    var counter = 2;
+    //$('#del_file_vehiculo').hide();
+    $('#add_file').click(function(){
+            
+        $('#file_tools').before('<div class="file_upload" id="f'+counter+'"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"></div>');
+        $('#del_file').fadeIn(0);
+    counter++;
+    });
+    $('#del_file').click(function(){
+        /*if(counter==3){
+            $('#del_file_vehiculo').hide();
+        } */  
+        counter--;
+        $('#f'+counter).remove();
+    });
+    
+    //Mostrar barra de filtro formulario
+        $('.filtro-formularios').removeClass('hide');
+        
+        //Evento: Cambio de formulario
+        $('#formulario').on('change', function(e){
+            e.preventDefault();
+            var seleccionado = $(this).find('option:selected').val();
+            //console.log( seleccionado );
+            
+            $('.filtro-formularios').find('ul').find('a[href="#'+ seleccionado +'"]').trigger('click');
+        });
+
+        //Inicializar Chosen plugin
+        if ($().chosen){
+            if($(".chosen-filtro").attr("class") != undefined){
+                $(".chosen-filtro").chosen({
+                    width: '100%',
+                    disable_search: true,
+                    inherit_select_classes: true
+                });
+            }
+        }
+
+        //Funcion para inicializar plugins
+        var actualizar_chosen = function() {
+            
+            //refresh chosen
+            setTimeout(function(){
+                $('.filtro-formularios').find('select.chosen-filtro').trigger('chosen:updated');
+            }, 50);
+        };
+
+        //Verificar si existe variable "formulario_seleccionado"
+        if(typeof formulario_seleccionado != "undefined"){
+            setTimeout(function(){
+                $('.filtro-formularios').find('#formulario').find('option[value*="'+ formulario_seleccionado +'"]').prop("selected", "selected").trigger('change');
+                actualizar_chosen();
+            }, 800)
+            
+        }
+
+    
 });
-$(function(){
-	//jQuery Daterange
-	$("#fecha_despacho").datepicker({
-		defaultDate: "+1w",
-		dateFormat: 'dd/mm/yy',
-		changeMonth: true,
-		numberOfMonths: 1		
-	});	
-});
-$(function(){
-	//jQuery Daterange
-	$("#fecha_arribo").datepicker({
-		defaultDate: "+1w",
-		dateFormat: 'dd/mm/yy',
-		changeMonth: true,
-		numberOfMonths: 1		
-	});	
-});
-$(function(){
-	//jQuery Daterange
-	$("#fecha_concurso").datepicker({
-		defaultDate: "+1w",
-		dateFormat: 'dd/mm/yy',
-		changeMonth: true,
-		numberOfMonths: 1		
-	});	
+
+
+$(document).ready(function () {
+
+    $('#crearSolicitudLnk').click(function(e){
+        
+        var opcionesModal = $('#optionsModal');
+
+        var pantalla = $('#menu_solicitud');
+        pantalla.css('display', 'block');
+        e.preventDefault();
+        e.returnValue=false;
+        e.stopPropagation();        
+       
+        //Inicializar opciones del Modal
+        opcionesModal.modal({
+                backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+                show: false
+        });
+        opcionesModal.find('.modal-title').empty().append('<b>Solicitudes</b>');
+        opcionesModal.find('.modal-body').empty().append(pantalla);
+        opcionesModal.find('.modal-footer').empty();
+        opcionesModal.modal('show');    
+
+    });
+
+
 });

@@ -46,7 +46,7 @@ $info = !empty($info) ? $info : array();
                     </div>
                     <div class="modal-body">
 
-                        <p style="font-size: 10px;text-align:center;">Ingrese balance en el banco al {{campo.fecha_inicio}}</p>
+                        <p style="font-size: 10px;text-align:center;">Ingrese balance en el banco al fin de día del {{campo.fecha_inicio}}</p>
 
                         <div class="form-group has-success" style="margin-top: 20px;margin-bottom: 20px !important;">
                             <input type="text" class="form-control" placeholder="0.00" v-model="balances.balance_banco.monto | redondeo"  style="border: 2px solid #27AAE1;color:#27AAE1;font-weight:bold;text-align:center;">

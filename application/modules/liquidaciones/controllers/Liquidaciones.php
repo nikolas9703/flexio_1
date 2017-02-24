@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 /**
  * Colaboradores
- * 
+ *
  * Modulo para administrar la creacion, edicion de colaboradores.
  *
  * @package    PensaApp
@@ -14,6 +14,7 @@
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\FormularioDocumentos AS FormularioDocumentos;
+use Flexio\Modulo\DescuentosDirectos\Repository\DescuentosDirectosRepository as descuentoRep;
 use League\Csv\Writer as Writer;
 use Carbon\Carbon;
 
@@ -23,27 +24,29 @@ class Liquidaciones extends CRM_Controller
 	 * @var int
 	 */
 	protected $usuario_id;
-	
+
 	/**
 	 * @var int
 	 */
 	protected $empresa_id;
-	
+
 	/**
 	 * @var int
 	 */
 	protected $modulo_id;
-	
+
 	/**
 	 * @var string
 	 */
 	protected $nombre_modulo;
-	
+
+	private $descuentoRep;
+
 	/**
 	 * @var string
 	 */
 	protected $upload_folder = './public/uploads/';
-	
+
 	function __construct()
     {
         parent::__construct();
@@ -58,23 +61,23 @@ class Liquidaciones extends CRM_Controller
         $this->load->model('configuracion_rrhh/cargos_orm');
         $this->load->model('configuracion_rrhh/departamentos_orm');
         $this->load->model('contabilidad/centros_orm');
-        
+				$this->load->model('descuentos/descuentos_orm');
         //Obtener el id de usuario de session
         $uuid_usuario = $this->session->userdata('huuid_usuario');
         $usuario = Usuario_orm::findByUuid($uuid_usuario);
-        
+
         $this->usuario_id = $usuario->id;
-         
+
         //Obtener el id_empresa de session
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
         $this->empresa_id = $empresa->id;
-        
+
         //Obtener el id de modulo
         $controllername = $this->router->fetch_class();
         $modulo = Modulos_orm::where("controlador", $controllername)->get()->toArray();
         $this->modulo_id = $modulo[0]["id"];
-        
+				$this->descuentoRep = new descuentoRep();
         $this->nombre_modulo = $this->router->fetch_class();
     }
 
@@ -88,10 +91,10 @@ class Liquidaciones extends CRM_Controller
     	$this->assets->agregar_js(array(
     		'public/assets/js/modules/liquidaciones/formulario.controller.js'
     	));
-    	 
+
     	$this->load->view('formulario', $data);
     }
-    
+
     /**
      * Cargar Vista Parcial de Crear Ausencia
      *
@@ -104,38 +107,38 @@ class Liquidaciones extends CRM_Controller
     		'crear'
     	));
     }
-    
+
     function ajax_seleccionar_liquidacion()
     {
     	$liquidacion_id =  $this->input->post('id', true);
-    	 
+
     	if(empty($liquidacion_id)){
     		return false;
     	}
-    	 
+
     	$liquidacion = Liquidaciones_orm::where("id", $liquidacion_id)->where("empresa_id", $this->empresa_id)->get()->toArray();
-    
+
     	if(!empty($liquidacion)){
     		$liquidacion = $liquidacion[0];
-    
+
     		if(!empty($liquidacion["fecha_apartir"])){
     			$liquidacion["fecha_apartir"] = date("d/m/Y", strtotime($liquidacion["fecha_apartir"]));
     		}
     	}
-    	 
+
     	echo json_encode($liquidacion);
     	exit;
     }
-    
+
     function ajax_guardar_liquidacion()
     {
     	/**
     	 * Inicializar Transaccion
     	 */
     	Capsule::beginTransaction();
-    	
+
     	try {
-    		 
+
     		$liquidacion_id		= $this->input->post('liquidacion_id', true);
     		$colaborador_id 	= $this->input->post('colaborador_id', true);
     		$tipo_liquidacion_id = $this->input->post('tipo_liquidacion_id', true);
@@ -148,12 +151,12 @@ class Liquidaciones extends CRM_Controller
     		$estado_id 			= $this->input->post('estado_id', true);
 			$solicitud 			= $this->input->post('solicitud', true);
 			$solicitud 			= $solicitud == true ? 1 : 0;
-			
-    		//Verificar si existe $liquidacion_id	
+
+    		//Verificar si existe $liquidacion_id
     		$liquidaciones = Liquidaciones_orm::find($liquidacion_id);
     		$colaborador = Colaboradores_orm::where("id", $colaborador_id)->with(['centro_contable', 'departamento', 'cargo'])->get()->toArray();
     		$colaborador = !empty($colaborador) ? $colaborador[0] : array();
-    		
+
     		if(!empty($liquidaciones))
     		{
     			$liquidaciones->empresa_id 			= $this->empresa_id;
@@ -166,7 +169,7 @@ class Liquidaciones extends CRM_Controller
     			$liquidaciones->solicitud 			= $solicitud;
     			$liquidaciones->creado_por 			= $this->usuario_id;
     			$liquidaciones->save();
-    			
+
     			//Actualizar tabla accion personal
     			$liquidaciones->acciones()->where("accionable_id", $liquidacion_id)->update([
     				"colaborador_id" => $colaborador_id,
@@ -194,7 +197,7 @@ class Liquidaciones extends CRM_Controller
     				"solicitud"			=> $solicitud,
     				"creado_por" 		=> $this->usuario_id
     			);
-    	
+
     			//--------------------
     			// Guardar
     			//--------------------
@@ -213,10 +216,24 @@ class Liquidaciones extends CRM_Controller
     				"cedula" => !empty($colaborador) ? $colaborador["cedula"] : "",
     			])]);
                         $liquidaciones->contrato()->where("colaborador_id", $colaborador_id)->update([
-                                "fecha_salida" => $fecha_apartir                         
+                                "fecha_salida" => $fecha_apartir
                         ]);
+					// Actualizar los descuentos directos del colaborador requerimiento #1658
+					$descuentos_colaborador = Descuentos_orm::where('colaborador_id', '=', $colaborador_id)->get()->toArray();
+					if(!empty($descuentos_colaborador)){
+					$i = 0;
+					foreach($descuentos_colaborador AS $row){
+						$descuento_id[$i] = $row['id'];
+						$i++;
+					};
+					$values = array(
+						'estado_id' => 7
+					);
+
+					$descuento = Descuentos_orm::whereIn('id', $descuento_id)->update($values);
+					}
     		}
-    	
+
     		//--------------------
     		// Subir documento
     		//--------------------
@@ -225,7 +242,7 @@ class Liquidaciones extends CRM_Controller
     			$modulo_folder = $this->upload_folder . trim($this->nombre_modulo);
     			$empresa_folder = $modulo_folder ."/". $this->empresa_id;
     			$archivo_ruta = "public/uploads/" . trim($this->nombre_modulo) ."/". $this->empresa_id;
-    	
+
     			//Verificar si existe la carpeta
     			//del modulo de colaboradores en uploads
     			if (!file_exists($modulo_folder)) {
@@ -235,7 +252,7 @@ class Liquidaciones extends CRM_Controller
     					log_message("error", "MODULO: ". __METHOD__ .", Linea: ". __LINE__ ." --> ". $e->getMessage().".\r\n");
     				}
     			}
-    	
+
     			//Verificar si existe la carpeta
     			//de la empresa existe, dentro
     			//del modulo.
@@ -246,51 +263,51 @@ class Liquidaciones extends CRM_Controller
     					log_message("error", "MODULO: ". __METHOD__ .", Linea: ". __LINE__ ." --> ". $e->getMessage().".\r\n");
     				}
     			}
-    	
+
     			$config = new \Flow\Config(array(
     				'tempDir' => $modulo_folder
     			));
-    	
+
     			//Inicializar Flow
     			$request = new \Flow\Request();
-    	
+
     			//Armar Nomre de archivo corto.
     			$filename = $this->input->post('flowFilename', true);
     			$extension = pathinfo($filename, PATHINFO_EXTENSION);
     			$file_name = "liq-". rand().time() . "." . $extension;
-    	
+
     			//Subir Archivo
     			if(Flow\Basic::save($empresa_folder . '/' . $file_name, $config, $request)){
-    	
+
     				$liquidaciones = Liquidaciones_orm::find($liquidaciones->id);
     				$liquidaciones->archivo_ruta = $archivo_ruta;
     				$liquidaciones->archivo_nombre = $file_name;
     				$liquidaciones->save();
-    	
+
     			}else{
     				log_message("error", "MODULO: ". __METHOD__ .", Linea: ". __LINE__ ." --> No se pudo subir el archivo de liquidacion.\r\n");
     			}
     		}
-    		 
+
     	} catch(ValidationException $e){
-    	
+
     		// Rollback
     		Capsule::rollback();
-    	
+
     		log_message("error", "MODULO: ". __METHOD__ .", Linea: ". __LINE__ ." --> ". $e->getMessage().".\r\n");
-    	
+
     		echo json_encode(array(
     			"guardado" => false,
     			"mensaje" => "Hubo un error tratando de ". (!empty($liquidacion_id) ? "actualizar" : "guardar") ." la liquidacion."
     		));
     		exit;
     	}
-    	
+
     	// If we reach here, then
     	// data is valid and working.
     	// Commit the queries!
     	Capsule::commit();
-    	
+
     	$this->session->set_flashdata('mensaje', "Se ha ". (!empty($liquidacion_id) ? "actualizado" : "guardado") ." la liquidacion satisfactoriamente.");
 
     	echo json_encode(array(

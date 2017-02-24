@@ -10,7 +10,7 @@
 
     	<div class="col-lg-12">
         	<div class="wrapper-content">
-
+            			<div ng-controller="toastController"></div>
 			    <?php
                 $formAttr = array(
                     'method'        => 'POST',
@@ -39,7 +39,7 @@
 		                        <label>Centro contable<span class="required">*</span></label>
 		                        <select id="centro_contable_id" class="chosen-select form-control chosen-select" name="centro_contable_id" ng-model="caja.centro_contable_id" data-rule-required="true" data-msg-required="">
 		                        	<option value="">Seleccione</option>
-				                    <option ng-repeat="centro_contable in centroContableList track by $index" value="{{centro_contable.id && '' || centro_contable.id}}">{{centro_contable.nombre && '' || centro_contable.nombre}}</option>
+				                    <option ng-repeat="centro_contable in centroContableList track by $index" value="{{centro_contable.centro_contable_id && '' || centro_contable.centro_contable_id}}">{{centro_contable.nombre && '' || centro_contable.nombre}}</option>
 		                        </select>
 		                    </div>
 		                    <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
@@ -116,7 +116,7 @@
 							<li class="dropdown"><a role="tab" data-toggle="tab" href="#tablaPagos">Pagos</a></li>
 							<li class="dropdown"><a role="tab" data-toggle="tab" href="#tablaTransferencias">Transferencias</a></li>
 							<li class="dropdown"><a role="tab" data-toggle="tab" href="#tablaDocumentos">Documentos</a></li>
-							
+
 						</ul>
 					</div>
 

@@ -121,6 +121,7 @@ class Login extends CRM_Controller {
                             'id_usuario' => $this->user_info['id'],
                             'nombre' => $this->user_info['nombre'],
                             'apellido' => $this->user_info['apellido'],
+                            'correo_electronico' => $this->user_info['email'],
                             'estado' => $this->user_info['estado'],
                             'por_vencer' => ($tipo_error == 'pocos dias') ? $mensaje : '',
                             'imagen_archivo' => $this->user_info['imagen_archivo'],
@@ -128,7 +129,17 @@ class Login extends CRM_Controller {
                         );
 
                         if (isset($usuario_empresa->uuid_empresa)) {
+                            $data['nombre_empresa'] = $usuario_empresa->nombre;
                             $data['uuid_empresa'] = $usuario_empresa->uuid_empresa;
+                            /**
+                             * Agregado datos de no-reply
+                             */
+                            if(isset($usuario_empresa->no_replay_email))
+                            {
+                                $data['no_reply_email'] = $usuario_empresa->no_reply_email;
+                                $data['no_reply_name'] = $usuario_empresa->no_reply_name;
+
+                            }
                         }
                         $this->session->set_userdata($data);
 
@@ -282,10 +293,33 @@ class Login extends CRM_Controller {
         $htmlmail = str_replace("__URL_PASSWORD_RECOVER__", $url, $htmlmail);
         $htmlmail = str_replace("__YEAR__", date('Y'), $htmlmail);
 
+
+        /**
+         * Default value to no_reply email and name
+         */
+        $no_reply_email='no-reply@starholding.com';
+        $no_reply_name=  'Pensanomica SA';
+
+        $usuario_found = Usuario_orm::where("email", $email)->get();
+        if($usuario_found!=null){
+            /** @var Usuario_orm $usuario_found */
+            $usuario_found =$usuario_found->first();
+            if($usuario_found){
+                foreach ($usuario_found->empresas as $empresa) {
+                    if($empresa->no_reply_email != null && $empresa->no_reply_email != "" ){
+                        $no_reply_email=$empresa->no_reply_email;
+                        $no_reply_name=  $empresa->no_reply_name;
+                        break;
+                    }
+                }
+            }
+        }
+
         //Enviar el correo
-        $this->email->from('no-reply@starholding.com', 'CRM+');
+        $this->email->from($no_reply_email, $no_reply_name  );
+
         $this->email->to($email);
-        $this->email->subject('Recuperación de Contraseña CRM+');
+        $this->email->subject('Recuperación de Contraseña - '.$no_reply_name);
         $this->email->message($htmlmail);
 
         //Guardar Token y fecha en que se esta solicitando la recuperacion
@@ -470,7 +504,8 @@ class Login extends CRM_Controller {
             $htmlmail = str_replace("__YEAR__", date('Y'), $htmlmail);
 
             //Enviar el correo
-            $this->email->from('no-reply@pensanomica.com', 'Flexio');
+            $empresa = Empresa_orm::findByUuid($this->session->userdata('uuid_empresa'));
+            $this->email->from($empresa->no_reply_email, $empresa->no_reply_name  );
             $this->email->to($usuario->email);
             $this->email->subject('Creación de cuenta Flexio');
             $this->email->message($htmlmail);

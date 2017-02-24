@@ -25,6 +25,6 @@
     </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
         <input type="hidden" name="campo[id]" id="contrato_alquiler_id" value="{{contrato_alquiler.id}}" />
-        <input type="submit" id="guardarBtn"  class="btn btn-primary btn-block" value="Guardar"  :disabled="disabledEditar"/>
+        <input type="submit" id="guardarBtn"  class="btn btn-primary btn-block" value="Guardar"  :disabled="disabledEditar || getItemsDuplicados"/>
     </div>
 </div>

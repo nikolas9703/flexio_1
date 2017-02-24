@@ -55,7 +55,7 @@
     <table style="width: 100%;">
         <!--seccion de cabecera-->
         <tr>
-            <td rowspan="3"><img id="logo" src="<?php $logo = !empty($factura->empresa->logo)?$factura->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').'/'.$logo;?>" alt="Logo" border="0" height="85px" width="85px" /></td>
+            <td rowspan="3"><img id="logo" src="<?php $logo = !empty($factura->empresa->logo)?$factura->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').'/'.$logo;?>" alt="Logo" border="0" height="96px" /></td>
             <td class="titulo1">FACTURA</td>
         </tr>
         <tr>
@@ -164,7 +164,7 @@
 
         <!--pie de tabla de items-->
         <tr>
-            <td>Modo de pago: <?php echo $factura->termino_pago2->valor;?></td>
+            <td>Término de pago: <?php echo $factura->termino_pago2->valor;?></td>
             <td rowspan="3">
 
                 <table style="width: 100%">

@@ -1,6 +1,6 @@
 //Modulo
 var tablaAseguradoras = (function(){
-	var url = 'Configuracion_seguros/ajax_listar';
+	var url = 'configuracion_seguros/ajax_listar';
 	var grid_id = "RamosGrid";
 	var grid_obj = $("#RamosGrid");
 	var opcionesModal = $('#opcionesModal');	

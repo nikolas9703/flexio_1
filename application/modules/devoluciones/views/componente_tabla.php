@@ -59,7 +59,7 @@
     <td>
      <div class="input-group">
          <span class="input-group-addon">$</span>
-         <input type="input-left-addon" id="precio_total{{$index}}" name="items[{{$index}}][precio_total]" class="form-control precio_total" placeholder="0.00" :disabled="camposDisable" v-model="item.precio_total">
+         <input type="input-left-addon" id="precio_total{{$index}}" name="items[{{$index}}][precio_total]" class="form-control precio_total" placeholder="0.00" :disabled="camposDisable" v-model="item.precio_total | currency ''">
      </div>
     </td>
     </tr>

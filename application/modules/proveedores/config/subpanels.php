@@ -34,12 +34,12 @@ $config['subpanels'] = array(
         'view'      => 'ocultotabla',
         'nombre'    => 'Anticipos',
         'icono'     => ''
-    ]
+    ],
     //comentado porque no lo vi en prototipo a fecha 19 de octubre de 2016
-    /*'proveedores.documentos' => [
+    'proveedores.documentos' => [
         'modulo'    => 'documentos',
         'view'      => 'ocultotabla',
         'nombre'    => 'Documentos',
         'icono'     => ''
-    ]*/
+    ]
 );

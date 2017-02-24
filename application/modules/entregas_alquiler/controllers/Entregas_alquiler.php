@@ -24,7 +24,10 @@ use Flexio\Modulo\CentroFacturable\Repository\CentroFacturableRepository;
 use Flexio\Modulo\Inventarios\Repository\SerialesRepository;
 use Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquilerItems;
 use Flexio\Jobs\ContratosAlquiler\CronCargosAlquiler;
-
+use Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler;
+use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 class Entregas_alquiler extends CRM_Controller
 {
     /**
@@ -37,6 +40,7 @@ class Entregas_alquiler extends CRM_Controller
     protected $EntregasAlquilerCatalogosRepository;
     protected $ClienteRepository;
     protected $UsuariosRepository;
+    protected $CentrosContablesRepository;
     protected $ContratosAlquilerRepository;
     protected $ItemsCategoriasRepository;
     protected $ContratosAlquilerCatalogosRepository;
@@ -75,18 +79,25 @@ class Entregas_alquiler extends CRM_Controller
         $this->SerialesRepository = new SerialesRepository();
         $this->EntregasAlquilerItems = new EntregasAlquilerItems();
         $this->CronCargosAlquiler = new CronCargosAlquiler();
+        $this->CentrosContablesRepository = new CentrosContablesRepository();
     }
 
 
 
     public function ocultotabla($key_valor = NULL)
     {
-        if($key_valor and count(explode("=", $key_valor)) > 1)
+        if(is_array($key_valor))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($key_valor)
+            ]);
+        }
+        elseif($key_valor and count(explode("=", $key_valor)) > 1)
         {
             $aux = explode("=", $key_valor);
             $this->assets->agregar_var_js([$aux[0]=>$aux[1]]);
         }
-
+        
         $this->assets->agregar_js(array(
             'public/assets/js/modules/entregas_alquiler/tabla.js'
         ));
@@ -188,21 +199,24 @@ class Entregas_alquiler extends CRM_Controller
         $this->load->view('formulario_items_entregados', $data);
         $this->load->view('templates/entrega_items');
         $this->load->view('templates/entrega_item');
+        $this->load->view('templates/lista-seriales');
     }
 
     /**
      * Método listar los registros de los subentregas en ocultotabla()
      */
     public function ajax_listar()
-    {
+    {   
+        
         if(!$this->input->is_ajax_request()){return false;}
-
+        
         $clause                 = $this->input->post();
+        $clause['campo']        = $this->input->post("campo");
         $clause['empresa_id']   = $this->empresa_id;
 
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
         $count = $this->EntregasAlquilerRepository->count($clause);
-
+        
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
         $entregas_alquiler = $this->EntregasAlquilerRepository->get($clause ,$sidx, $sord, $limit, $start);
 
@@ -276,6 +290,7 @@ class Entregas_alquiler extends CRM_Controller
                 redirect(base_url('entregas_alquiler/listar'));
                 //echo $e->getMessage();
             }
+
             Capsule::commit();
 
             $entrega_alquiler->load('estado','contrato_alquiler','contrato_alquiler.facturar_contra_entrega');
@@ -347,7 +362,7 @@ class Entregas_alquiler extends CRM_Controller
 
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'entregas_alquiler/crear')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
@@ -359,12 +374,14 @@ class Entregas_alquiler extends CRM_Controller
        	$this->_css();
         $this->_js();
         $this->assets->agregar_js(array(
+            'public/assets/js/default/vue/directives/select2.js',
             'public/assets/js/modules/entregas_alquiler/components/entrega_items.js',
             'public/assets/js/modules/entregas_alquiler/components/entrega_item.js',
+            'public/assets/js/modules/entregas_alquiler/components/lista-seriales.js',
             'public/assets/js/modules/entregas_alquiler/formulario.js',
         ));
         $items_disponibles = EntregasAlquilerItems::where($clause)->get(array('item_id', 'serie'));
-
+        
         $this->assets->agregar_var_js(array(
             "vista"                 => 'crear',
             "acceso"                => $acceso == 0 ? $acceso : $acceso,
@@ -376,7 +393,7 @@ class Entregas_alquiler extends CRM_Controller
             "titulo" => '<i class="fa fa-car"></i> Entregas: Crear ',
             "ruta" => [
                 ["nombre" => "Alquileres", "activo" => false],
-                ["nombre" => "Entregas", "activo" => false],
+                ["nombre" => "Entregas", "activo" => false, "url" => "entregas_alquiler/listar"],
                 ["nombre" => "<b>Crear</b>","activo" => true]
             ]
         );
@@ -392,7 +409,7 @@ class Entregas_alquiler extends CRM_Controller
 
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'entregas_alquiler/editar/(:any)')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
@@ -400,8 +417,10 @@ class Entregas_alquiler extends CRM_Controller
         $this->_css();
         $this->_js();
         $this->assets->agregar_js(array(
+            'public/assets/js/default/vue/directives/select2.js',
             'public/assets/js/modules/entregas_alquiler/components/entrega_items.js',
             'public/assets/js/modules/entregas_alquiler/components/entrega_item.js',
+            'public/assets/js/modules/entregas_alquiler/components/lista-seriales.js',
             'public/assets/js/modules/entregas_alquiler/formulario.js',
         ));
 
@@ -420,12 +439,14 @@ class Entregas_alquiler extends CRM_Controller
         $data['mensaje']            = $mensaje;
         $data['entrega_alquiler']   = $entrega_alquiler;
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-car"></i> Entregas de alquiler: Editar ',
+            "titulo" => '<i class="fa fa-car"></i> Entregas de alquiler: '. $entrega_alquiler->codigo,
             "ruta" => [
                 ["nombre" => "Alquileres", "activo" => false],
-                ["nombre" => "Entregas", "activo" => false],
+                ["nombre" => "Entregas", "activo" => false, "url" => "entregas_alquiler/listar"],
                 ["nombre" => "<b>{$entrega_alquiler->codigo}</b>","activo" => true]
-            ]
+            ],
+            "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array("entregas_alquiler/imprimir/{$uuid}" => "Imprimir")]
+
         );
 
         $this->template->agregar_titulo_header('Entregas de alquiler: Editar ');
@@ -468,27 +489,27 @@ class Entregas_alquiler extends CRM_Controller
     private function _js()
     {
         $this->assets->agregar_js(array(
-            'public/assets/js/default/jquery-ui.min.js',
-            'public/assets/js/plugins/jquery/jquery.sticky.js',
-            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
-            'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+            //'public/assets/js/default/jquery-ui.min.js',
+            //'public/assets/js/plugins/jquery/jquery.sticky.js',
+            //'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+            //'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
+            //'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
-            'public/assets/js/default/lodash.min.js',
-            'public/assets/js/default/accounting.min.js',
+            //'public/assets/js/default/lodash.min.js',
+            //'public/assets/js/default/accounting.min.js',
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
-            'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
+            //'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
             'public/assets/js/moment-with-locales-290.js',
             'public/assets/js/plugins/bootstrap/select2/select2.min.js',
             'public/assets/js/plugins/bootstrap/select2/es.js',
             'public/assets/js/plugins/bootstrap/daterangepicker.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
             'public/assets/js/default/toast.controller.js',
-            'public/assets/js/default/lodash.min.js',
+            //'public/assets/js/default/lodash.min.js',
             'public/assets/js/modules/entregas_alquiler/plugins.js',
         ));
     }
@@ -507,6 +528,41 @@ class Entregas_alquiler extends CRM_Controller
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($entregas->comentario_timeline->toArray()))->_display();
         exit;
+    }
+
+    public function imprimir($uuid=null)
+    {
+        if($uuid==null){
+            return false;
+        }
+
+        $entrega_alquiler = $this->EntregasAlquilerRepository->findBy(['uuid_entrega_alquiler'=>$uuid]);
+        $entrega_alquiler->load('contrato_alquiler');
+        $contrato = $this->ContratosAlquilerRepository->findByUuid($entrega_alquiler->contrato_alquiler->uuid_contrato_alquiler);
+        $variable = collect($this->ContratosAlquilerRepository->getCollectionCampo($contrato));
+        $centro_facturable = !empty($entrega_alquiler->centro_facturacion_id) ? $this->CentroFacturableRepository->find($entrega_alquiler->centro_facturacion_id) : '';
+        $ResultEntregas = EntregasAlquiler::with(array("contrato_alquiler.contratos_items.item", "items_entregados2"))->where('uuid_entrega_alquiler', hex2bin($uuid))->get();
+        $empresa = $this->empresaObj->find($entrega_alquiler->empresa_id);
+        $cliente = $this->ClienteRepository->find($entrega_alquiler->cliente_id);
+        $cliente->load('telefonos_asignados');
+        $centro = $this->CentrosContablesRepository->find($entrega_alquiler->contrato_alquiler->centro_contable_id);
+        $usuario = $this->UsuariosRepository->find($entrega_alquiler->created_by);
+        $creador = $this->UsuariosRepository->find($entrega_alquiler->contrato_alquiler->created_by);
+        $options = new Options();
+        $options->set('isRemoteEnabled', TRUE);
+        $dompdf = new Dompdf($options);
+        $data   = ['entrega_info'=>$entrega_alquiler, 'empresa' => $empresa, 'usuario' => $usuario, 'centro_contable' => $centro->nombre, 'cliente' => $cliente, 'items_entregados' => $ResultEntregas, 'creador' => $creador, 'centro_facturacion' => $centro_facturable, 'atributos' => $variable['articulos']];
+
+        $html = $this->load->view('pdf/entrega_alquiler', $data, true);
+
+        //render
+        //echo '<pre>'.$html.'</pre>'; die;
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream($entrega_alquiler->codigo);
+
+        exit();
     }
 
 

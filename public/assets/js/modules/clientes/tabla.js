@@ -46,7 +46,7 @@ var tablaClientes = (function () {
             loadtext: '<p>Cargando...',
             hoverrows: false,
             viewrecords: true,
-            loadonce:false,           
+            loadonce:false,
             refresh: true,
             gridview: true,
             multiselect: true,
@@ -118,7 +118,7 @@ var tablaClientes = (function () {
         });
 
     };
-    
+
     //Documentos Modal
     $("#optionsModal").on("click", ".subirArchivoBtn", function(e){
             e.preventDefault();
@@ -143,7 +143,7 @@ var tablaClientes = (function () {
         });
             $('#documentosModal').modal('show');
     });
-    
+
     $(botones.limpiar).click(function (e) {
         e.preventDefault();
         e.returnValue = false;
@@ -153,6 +153,8 @@ var tablaClientes = (function () {
         $('#buscarClientesForm').find('#categoria').prop("value", "");
         $('#buscarClientesForm').find('#estado').prop("value", "");
         $('#buscarClientesForm').find('#identificacion').prop("value", "");
+        $('#buscarClientesForm').find('#telefono').prop("value", "");
+        $('#buscarClientesForm').find('#email').prop("value", "");
         recargar();
     });
     $(botones.buscar).click(function (e) {
@@ -210,7 +212,7 @@ var tablaClientes = (function () {
     });
     //Nueva cotizacion
     $(opcionesModal).on("click", botones.cotizaciones, function(e){
-        
+
         e.preventDefault();
         e.returnValue=false;
         e.stopPropagation();

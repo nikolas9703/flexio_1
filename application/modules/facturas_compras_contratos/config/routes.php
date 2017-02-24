@@ -13,5 +13,5 @@ $route['facturas_compras_contratos/ajax-get-empezar-desde']   = 'facturas_compra
 $route['facturas_compras_contratos/ajax-get-factura']         = 'facturas_compras_contratos/ajax_get_factura';
 $route['facturas_compras_contratos/ajax-get-factura-all']     = 'facturas_compras_contratos/ajax_getFacturadoCompleto';
 $route['facturas_compras_contratos/ajax-factura-info']        = 'facturas_compras_contratos/ajax_factura_info';
-
+$route['facturas_compras_contratos/ajax-guardar-documentos']  = 'facturas_compras_contratos/ajax_guardar_documentos';
 //No se coloca la ruta "Guardar" porque esta no tiene vista

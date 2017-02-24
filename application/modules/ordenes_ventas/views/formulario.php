@@ -34,7 +34,7 @@
             <label id="comentario-error" class="error" for="comentario"></label>
         </div>
     </div>
-
+<input type="hidden" id="cliente_ID" value="" />
 </div>
 
 <style type="text/css">

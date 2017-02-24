@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	
 
 	$('#searchBtn').bind('click');
 
@@ -9,14 +10,15 @@ $(document).ready(function(){
 		grid.jqGrid({
 			url: phost() + 'agentes/ajax-listar',
 			datatype: "json",
-			colNames: ['','Nombre','Cédula','Teléfono','E-mail','Participación ','',''],
+			colNames: ['','Nombre','Cédula','Teléfono','E-mail','Participación ', 'Estado','',''],
 			colModel: [
 				{name:'id', index:'id', hidedlg:true,key: true, hidden: true},
 				{name:'nombre', index:'nombre',sorttype:"text",sortable:true,width:150},
-				{name:'identificacion', index:'identificacion',sorttype:"identificacion",sortable:true,width:150},
-				{name:'telefono', index:'telefono',sorttype:"text",sortable:true,width:150},
+				{name:'identificacion', index:'identificacion',sorttype:"identificacion",sortable:true,width:90},
+				{name:'telefono', index:'telefono',sorttype:"text",sortable:true,width:90},
 				{name:'correo', index:'correo',sorttype:"text",sortable:true,width:150},
-				{name:'porcentaje_parcipacion', index:'porcentaje_parcipacion',sorttype:"text",sortable:true,width:150},
+				{name:'porcentaje_participacion', index:'porcentaje_participacion',sorttype:"text",sortable:true,width:90},
+				{name:'estado', index:'estado',sorttype:"text",sortable:true,width:90},
 				{name:'opciones', index:'opciones', sortable:false, align:'center'},
 				{name:'link', index:'link', hidedlg:true, hidden: true}
 			],
@@ -87,9 +89,9 @@ $(document).ready(function(){
 			e.stopPropagation();
 
 			var id = $(this).attr("data-id");
-			console.log("id -"+id);
+			//console.log("id -"+id);
 			var rowINFO = $("#AgentesGrid").getRowData(id);
-			console.log(rowINFO);
+			//console.log(rowINFO);
 			var options = rowINFO["link"];
 			//Init boton de opciones
 			$('#opcionesModal').find('.modal-title').empty().html('Opciones: '+ rowINFO["nombre"] +'');
@@ -98,7 +100,7 @@ $(document).ready(function(){
 			$('#opcionesModal').modal('show');
 		});
                
-            $("#exportarBtn").on("click", function(e){             
+		$("#exportarBtn").on("click", function(e){             
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();                        
@@ -109,13 +111,345 @@ $(document).ready(function(){
 				
 				//Verificar si hay seleccionados
 				if(ids.length > 0){
-				console.log(ids);	
-				$('#ids').val(ids);
-			        $('form#exportarAgentes').submit();
-			        $('body').trigger('click');
+					//console.log(ids);	
+					$('#ids').val(ids);
+					$('form#exportarAgentes').submit();
+					$('body').trigger('click');
 				}
-	        }
+			}	        
 		});
+
+		var moduloAgentes = (function() {
+			return {
+				ajaxcambiarEstados:function(parametros){
+					//console.log("parametros");
+					//console.log(parametros);
+					return $.post(phost() + 'agentes/ajax_cambiar_estados', $.extend({
+						erptkn: tkn
+					}, parametros));
+				},
+				ajaxcambiarObtenerPoliticas:function(){
+					return $.ajax({
+						url: "agentes/obtener_politicas",
+						dataType: "json",
+					});
+				},
+				ajaxcambiarObtenerPoliticasGeneral:function(){
+					return $.ajax({
+						url: "agentes/obtener_politicas_general",
+						dataType: "json",
+					});
+				},
+			};
+		})();
+
+		$("#cambiarEstadosBtn").on("click", function(e){ 
+
+			var opcionesModal = $('#opcionesModal');
+
+			e.preventDefault();
+			e.returnValue=false;
+			e.stopPropagation();
+
+			$("#opcionesModal").on("click", ".activo", function(){
+
+					//Seleccionados del jQgrid
+					var ids = [];	
+					var ids_aprobados=0;
+					var ids_activos=0;
+					var ids_inactivos=0;
+					ids = grid.jqGrid('getGridParam','selarrrow');
+					//console.log(ids);
+					if(ids.length > 0){
+						ids_aprobados = _.filter(ids,function(fila){
+							var infoFila = $.extend({}, grid.getRowData(fila));
+							if($(infoFila.estado).text() == 'Por Aprobar'){
+								return infoFila.id;
+							}
+						});
+						ids_activos = _.filter(ids,function(fila){
+							var infoFila = $.extend({}, grid.getRowData(fila));
+							if($(infoFila.estado).text() == 'Activo'){
+								return infoFila.id;
+							}
+						});
+						ids_inactivos = _.filter(ids,function(fila){
+							var infoFila = $.extend({}, grid.getRowData(fila));
+							if($(infoFila.estado).text() == 'Inactivo'){
+								return infoFila.id;
+							}
+						});
+					};
+					
+					var politicas_general=moduloAgentes.ajaxcambiarObtenerPoliticasGeneral();
+					var permisos_generales=politicas_general.success(function (data){
+
+						if(data >0)
+						{
+
+							var politicas = moduloAgentes.ajaxcambiarObtenerPoliticas();
+							var permisos1=politicas.success(function (data) {
+
+								var permisos=[];
+								$.each(data, function(i,filename) {
+									permisos.push(filename);
+								});
+								if(permisos.indexOf(16,0)!=-1 || permisos.indexOf(17,0)!=-1 || permisos.indexOf(18,0)!=-1)
+								{
+
+									if(ids_aprobados.length>0)
+									{
+										if(permisos.indexOf(16,0)!=-1)
+										{
+											var datos = {campo:{estado:'Activo',ids:ids_aprobados}};
+											var cambio = moduloAgentes.ajaxcambiarEstados(datos);
+											cambio.done(function(response){
+												var agentes =response;
+												_.map(agentes,function(ant){
+													$("#AgentesGrid").jqGrid('setCell', ant.id, 'estado', ant.estado);
+												});
+												opcionesModal.modal('hide');
+												$("#mensaje").hide();
+
+												recargar();
+											});
+										}
+										else{
+											opcionesModal.modal('hide');
+											$("#mensaje").show();
+											$("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+										}
+									}
+									else if(ids_inactivos.length>0)
+									{
+										var datos = {campo:{estado:'Activo',ids:ids_inactivos}};
+										
+										if(permisos.indexOf(18,0)!=-1)
+										{					
+											//console.log(datos);							
+											var cambio = moduloAgentes.ajaxcambiarEstados(datos);
+											cambio.done(function(response){
+												//console.log(response);
+												var agentes =response;
+												_.map(agentes,function(ant){
+													$("#AgentesGrid").jqGrid('setCell', ant.id, 'estado', ant.estado);
+												});
+												opcionesModal.modal('hide');
+												$("#mensaje").hide();
+
+												recargar();
+											});
+										}
+										else{											
+											opcionesModal.modal('hide');
+											$("#mensaje").show();
+											$("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+										}
+									}
+								}
+								else{									
+									opcionesModal.modal('hide');
+									$("#mensaje").show();
+									$("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+								}
+								return permisos;
+							});
+						}
+						else
+						{
+							if(ids_inactivos.length>0)
+							{
+								var datos = {campo:{estado:'Activo',ids:ids_inactivos}};
+							}
+							if(ids_aprobados.length>0)
+							{
+								var datos = {campo:{estado:'Activo',ids:ids_aprobados}};
+							}
+							if(ids_inactivos.length>0 || ids_aprobados.length>0)
+							{
+								var cambio = moduloAgentes.ajaxcambiarEstados(datos);
+								cambio.done(function(response){
+									var agentes =response;
+									_.map(agentes,function(ant){
+										$("#AgentesGrid").jqGrid('setCell', ant.id, 'estado', ant.estado);
+									});
+									opcionesModal.modal('hide');
+									$("#mensaje").hide();
+
+									recargar();
+								});
+							}
+						}
+						
+					});
+				});
+			$("#opcionesModal").on("click", ".inactivo", function(){
+				  //Seleccionados del jQgrid
+				  var ids = [];
+				  var ids_aprobados=0;
+				  var ids_activos=0;
+				  var ids_inactivos=0;
+				  ids = grid.jqGrid('getGridParam','selarrrow');
+				  if(ids.length > 0){
+				  	ids_aprobados = _.filter(ids,function(fila){
+				  		var infoFila = $.extend({}, grid.getRowData(fila));
+				  		if($(infoFila.estado).text() == 'Por Aprobar'){
+				  			return infoFila.id;
+				  		}
+				  	});
+				  	ids_activos = _.filter(ids,function(fila){
+				  		var infoFila = $.extend({}, grid.getRowData(fila));
+				  		if($(infoFila.estado).text() == 'Activo'){
+				  			return infoFila.id;
+				  		}
+				  	});
+				  	ids_inactivos = _.filter(ids,function(fila){
+				  		var infoFila = $.extend({}, grid.getRowData(fila));
+				  		if($(infoFila.estado).text() == 'Inactivo'){
+				  			return infoFila.id;
+				  		}
+				  	});
+				  };
+
+				  var politicas_general=moduloAgentes.ajaxcambiarObtenerPoliticasGeneral();
+				  var permisos_generales=politicas_general.success(function (data){
+				  	
+				  	if(data >0)
+				  	{
+				  		var politicas = moduloAgentes.ajaxcambiarObtenerPoliticas();
+
+				  		var permisos1=politicas.success(function (data) {
+				  			var permisos=[];
+				  			$.each(data, function(i,filename) {
+				  				permisos.push(filename);
+				  			});
+				  			if(permisos.indexOf(16,0)!=-1 || permisos.indexOf(17,0)!=-1 || permisos.indexOf(18,0)!=-1)
+				  			{
+				  				if(ids_activos.length>0)
+				  				{
+				  					if(permisos.indexOf(17,0)!=-1)
+				  					{
+				  						var datos = {campo:{estado:'Inactivo',ids:ids_activos}};
+				  						var cambio = moduloAgentes.ajaxcambiarEstados(datos);
+				  						cambio.done(function(response){
+				  							//console.log(response);				  							
+				  							var agentes = response;
+				  							_.map(agentes,function(ant){
+				  								$("#AgentesGrid").jqGrid('setCell', ant.id, 'estado', ant.estado);
+				  							});
+				  							opcionesModal.modal('hide');
+				  							$("#mensaje").hide();
+
+				  							recargar();
+				  						});
+				  					}
+				  					else{
+				  						opcionesModal.modal('hide');
+				  						$("#mensaje").show();
+				  						$("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+				  					}
+				  				}
+				  			}
+				  			else{
+				  				opcionesModal.modal('hide');
+				  				$("#mensaje").show();
+				  				$("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
+				  			}
+				  			return permisos;
+				  		});
+				  	}
+				  	else
+				  	{
+				  		if(ids_activos.length>0)
+				  		{
+				  			var datos = {campo:{estado:'Inactivo',ids:ids_activos}};
+				  			var cambio = moduloAgentes.ajaxcambiarEstados(datos);
+				  			cambio.done(function(response){
+				  				//console.log(response);
+				  				var agentes =response;
+				  				_.map(agentes,function(ant){
+				  					$("#AgentesGrid").jqGrid('setCell', ant.id, 'estado', ant.estado);
+				  				});
+				  				opcionesModal.modal('hide');
+				  				$("#mensaje").hide();
+
+				  				recargar();
+				  			});
+				  		}
+				  	}
+				  });
+				});
+
+				//Seleccionados del jQgrid
+				var ids = [];
+				var ids_aprobados=0;
+				var ids_activos=0;
+				var ids_inactivos=0;
+				ids = grid.jqGrid('getGridParam','selarrrow');
+				//console.log(ids);
+				//console.log("bbbbb");
+				if(ids.length > 0){
+					ids_aprobados = _.filter(ids,function(fila){
+						var infoFila = $.extend({}, grid.getRowData(fila));
+						if($(infoFila.estado).text() == 'Por Aprobar'){
+							return infoFila.id;
+						}
+					});
+					ids_activos = _.filter(ids,function(fila){
+						var infoFila = $.extend({}, grid.getRowData(fila));
+						if($(infoFila.estado).text() == 'Activo'){
+							return infoFila.id;
+						}
+					});
+					ids_inactivos = _.filter(ids,function(fila){
+						var infoFila = $.extend({}, grid.getRowData(fila));
+						if($(infoFila.estado).text() == 'Inactivo'){
+							return infoFila.id;
+						}
+					});
+				};
+				
+				
+				if((ids_aprobados.length >0 && ids_activos.length ==0 && ids_inactivos.length ==0) || (ids_aprobados.length ==0 && ids_activos.length >0 && ids_inactivos.length ==0) || (ids_aprobados.length ==0 && ids_activos.length ==0 && ids_inactivos.length >=0))
+				{
+					
+					if(ids_aprobados.length >0 && ids_activos.length ==0 && ids_inactivos.length ==0)
+					{
+						var options = '<a href="#" id="activargrupal" class="btn btn-block btn-outline btn-success activo">Activo</a>';
+					}
+					
+					if(ids_aprobados.length ==0 && ids_activos.length >0 && ids_inactivos.length ==0)
+					{
+						var options = '<a href="#" class="btn btn-block btn-outline btn-success inactivo">Inactivo</a>';
+					}
+					
+					if(ids_aprobados.length ==0 && ids_activos.length ==0 && ids_inactivos.length >0)
+					{
+						var options = '<a href="#" class="btn btn-block btn-outline btn-success activo">Activo</a>';
+					}
+					
+					opcionesModal.find('.modal-title').empty().append('Cambiar estado');
+					opcionesModal.find('.modal-body').empty().append(options);
+					opcionesModal.find('.modal-footer').empty();
+					opcionesModal.modal('show');
+					$("#mensaje").hide();
+				}
+				else
+				{
+					if(ids.length==0)
+					{
+						$("#mensaje").show();
+						opcionesModal.modal('hide');
+						$("#mensaje").html('<button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>Por favor seleccione los registros');
+					}
+					else
+					{
+						$("#mensaje").show();
+						opcionesModal.modal('hide');
+						$("#mensaje").html('<button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button> Los Agentes seleccionados tienen estados diferentes');
+					}
+				}      
+			});
 
 
 	});
@@ -164,7 +498,22 @@ $(document).ready(function(){
 
 });
 
+var recargar = function(){
 
+	//Reload Grid
+	$("#AgentesGrid").setGridParam({
+		url: phost() + 'agentes/ajax-listar',
+		datatype: "json",
+		postData: {
+			nombre: '',
+			apellido: '',
+			identificacion: '',
+			telefono: '',
+			correo: '',
+			erptkn: tkn
+		}
+	}).trigger('reloadGrid');
+}
 
 $('#clearBtn').on("click",function(e){
 	e.preventDefault();

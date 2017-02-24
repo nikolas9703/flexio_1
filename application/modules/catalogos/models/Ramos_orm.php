@@ -2,16 +2,19 @@
 
 use \Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Modulo\Ramos\Models\CatalogoTipoIntereses;
+use Flexio\Modulo\Ramos\Models\CatalogoTipoPoliza;
+
 
 class Ramos_orm extends Model
 {
-	protected $table = 'seg_ramos';
-	protected $fillable = ['codigo','nombre','descripcion','codigo_ramo','id_tipo_int_asegurado','id_tipo_poliza','agrupador','empresa_id','padre_id'];
-	protected $guarded = ['id'];
+  protected $table = 'seg_ramos';
+  protected $fillable = ['codigo','nombre','descripcion','codigo_ramo','id_tipo_int_asegurado','id_tipo_poliza','agrupador','empresa_id','padre_id'];
+  protected $guarded = ['id'];
   private  static $ramos_ = array();
-	private static $total_estado = 0;
+  private static $total_estado = 0;
         protected $appends = ['is_padre'];
-	public function __construct(array $attributes = array()) {
+  public function __construct(array $attributes = array()) {
     $this->setRawAttributes(array_merge($this->attributes, array(
       'uuid_ramos' => Capsule::raw("ORDER_UUID(uuid())")
     )), true);
@@ -19,13 +22,13 @@ class Ramos_orm extends Model
 }
 
 
-	public function getUuidCuentaAttribute($value) {
-		return strtoupper(bin2hex($value));
-	}
+  public function getUuidCuentaAttribute($value) {
+    return strtoupper(bin2hex($value));
+  }
         
     public function getIsPadreAttribute() {
-			return $this->ramos_item->count() > 0;
-	}
+      return $this->ramos_item->count() > 0;
+  }
     
     public static function findByUuid($uuid) {
         return self::where('uuid_ramos',hex2bin($uuid))->first();
@@ -43,16 +46,16 @@ class Ramos_orm extends Model
     return $this->belongsTo('Empresa_orm');
   }
   public function interesAsegurado() {
-    return $this->belongsTo('Catalogo_tipo_intereses_orm',"id_tipo_int_asegurado");
+    return $this->belongsTo(CatalogoTipoIntereses::class,"id_tipo_int_asegurado");
   }
   public function tipoPoliza() {
-    return $this->belongsTo('Catalogo_tipo_poliza_orm',"id_tipo_poliza");
+    return $this->belongsTo(CatalogoTipoPoliza::class,"id_tipo_poliza");
   }
   
 
-	public function impuesto() {
-		return $this->belongsTo('Impuesto_orm');
-	}
+  public function impuesto() {
+    return $this->belongsTo('Impuesto_orm');
+  }
 
 
 public static function listar($clause = array(), $nombre, $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
@@ -60,7 +63,7 @@ public static function listar($clause = array(), $nombre, $sidx=NULL, $sord=NULL
       /*/$padres = Ramos_orm::where('padre_id', 0)->where($clause)->toSql();
       echo $padres;*/
       self::$ramos_ = array();
-			$empresa_id = $clause['empresa_id'];
+      $empresa_id = $clause['empresa_id'];
       if(empty($nombre))$clause['padre_id'] = 0;
 
       $result_search = Ramos_orm::where(function($query) use ($clause, $nombre){
@@ -84,24 +87,24 @@ public static function listar($clause = array(), $nombre, $sidx=NULL, $sord=NULL
 }
 
 static function listar_cuentas($clause = array()) {
-	self::$ramos_ = array();
-	$empresa_id = $clause['empresa_id'];
-	$clause['padre_id'] = 0;
+  self::$ramos_ = array();
+  $empresa_id = $clause['empresa_id'];
+  $clause['padre_id'] = 0;
 
-	$result_search = Ramos_orm::where(function($query) use ($clause){
-		$query->where($clause)->orderBy('nombre','ASC');
-	})->orderBy('nombre','ASC');
+  $result_search = Ramos_orm::where(function($query) use ($clause){
+    $query->where($clause)->orderBy('nombre','ASC');
+  })->orderBy('nombre','ASC');
 
-	$padres = $result_search->get();
-	$padres->map(function($ramos) use($empresa_id){
+  $padres = $result_search->get();
+  $padres->map(function($ramos) use($empresa_id){
             $i = 0; //level 0 padres
-		self::recursiva($ramos, $empresa_id,$i);
-	});
-	return self::$ramos_;
+    self::recursiva($ramos, $empresa_id,$i);
+  });
+  return self::$ramos_;
 }
 
 static function  recursiva(Ramos_orm $cuenta,$empresa_id, $level) {
-		$cuenta->where('empresa_id', $empresa_id)->orderBy('nombre','ASC')->get();
+    $cuenta->where('empresa_id', $empresa_id)->orderBy('nombre','ASC')->get();
                 $cuenta->interesAsegurado;
                 $cuenta->tipoPoliza;
                 $level++;
@@ -109,7 +112,7 @@ static function  recursiva(Ramos_orm $cuenta,$empresa_id, $level) {
                 $AUX["level"] = $level;
                 array_push(self::$ramos_, $AUX);
                 if($cuenta->ramos_item->where('empresa_id', $empresa_id)->count() > 0){
-
+                  
                   $cuenta->ramos_item->where('empresa_id', $empresa_id)->map(function($item) use($empresa_id,$level){
                       
                     self::recursiva($item,$empresa_id,$level);
@@ -136,29 +139,29 @@ public static function is_parent($id) {
 
 
 public static function codigo($codigo) {
-	$code_array = explode('.',$codigo);
-	$count = count($code_array) - 2;
-	$selecionado = $code_array[$count];
-	$digito = strlen($selecionado);
-	$nuevo = sprintf("%0$digito".'d',$selecionado + 1);
-	$code_array[$count] = $nuevo;
-	$new_code = implode(".", $code_array);
-	return $new_code;
+  $code_array = explode('.',$codigo);
+  $count = count($code_array) - 2;
+  $selecionado = $code_array[$count];
+  $digito = strlen($selecionado);
+  $nuevo = sprintf("%0$digito".'d',$selecionado + 1);
+  $code_array[$count] = $nuevo;
+  $new_code = implode(".", $code_array);
+  return $new_code;
 }
 
 public static function cambiar_estado($id, $estado) {
   $ramos = self::find($id);
-	self::$total_estado = 0;
-	self::recursiva_cambiar_estado($ramos, $estado);
+  self::$total_estado = 0;
+  self::recursiva_cambiar_estado($ramos, $estado);
   return self::$total_estado;
 }
 
 static function recursiva_cambiar_estado(Ramos_orm $cuenta, $estado) {
-		//$cuenta->where('empresa_id', $empresa_id)->get();
-		$cuenta->estado = $estado;
-		if($cuenta->save()){
-			self::$total_estado++;
-		}
+    //$cuenta->where('empresa_id', $empresa_id)->get();
+    $cuenta->estado = $estado;
+    if($cuenta->save()){
+      self::$total_estado++;
+    }
 
     if($cuenta->ramos_item->count() > 0){
       $cuenta->ramos_item->map(function($item) use($estado){
@@ -190,4 +193,10 @@ static function recursiva_cambiar_estado(Ramos_orm $cuenta, $estado) {
     public static function findCodigo($clause) {
         return self::where($clause)->first();
     }
+
+
+    public static function getRamoById($id_ramo) {
+        return self::where('id', $id_ramo)->first();
+    }
+
 }

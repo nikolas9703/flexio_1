@@ -74,5 +74,8 @@ class Categorias_proveedores_orm extends Model
     public function estadoReferencia() {
         return $this->belongsTo('Items_estados_orm', 'estado', 'id_cat');
     }
+    function present() {
+        return new \Flexio\Modulo\ConfiguracionCompras\Presenter\ConfiguracionCompraPresenter($this);
+    }
 
 }

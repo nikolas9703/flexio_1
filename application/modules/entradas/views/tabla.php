@@ -9,6 +9,6 @@
     <table class="table table-striped" id="entradasGrid"></table>
 
     <!-- pager definition -->
-    <div id="pager"></div>
+    <div id="pagerTablaItem"></div>
 </div>
 <!-- /Listado de entradas de inventario -->

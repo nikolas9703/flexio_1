@@ -93,6 +93,21 @@ class Proveedores_orm extends Model
         return strtoupper(bin2hex($value));
     }
 
+    public function  getFormaDePagoAttribute(){
+
+            if(is_null($this->metodo_pagos)){
+                return '';
+            }
+            $forma_pago = [];
+            $tipos = [1 => "efectivo", 2 => "credito_favor", 3 => "cheque", 4 => "tarjeta_credito", 5 => "ach"];
+            $catalogo = $this->metodo_pagos->first();
+
+            if ($catalogo && isset($tipos[$catalogo->catalogo_id])) {
+                $forma_pago = $tipos[$catalogo->catalogo_id];
+            }
+            return $forma_pago;
+    }
+
     public function ordenesAbiertas()
     {
         return  Ordenes_orm
@@ -279,6 +294,9 @@ class Proveedores_orm extends Model
         })->get();
     }
 
+    public function metodo_pagos(){
+        return $this->hasMany('Flexio\Modulo\Proveedores\Models\ProveedoresCatalogos', 'proveedor_id');
+    }
     function agregarComentario($id, $comentarios) {
         $proveedor = Proveedores_orm::find($id);
         $comentario = new Comentario($comentarios);

@@ -1,6 +1,7 @@
 <div id="wrapper">
     <?php
     Template::cargar_vista('sidebar');
+	$data["disabled"] = "";
     ?>
     <div id="page-wrapper" class="gray-bg row">
 
@@ -18,10 +19,9 @@
                 </div>
 
                 <div class="row">
-                	<?php echo modules::run('polizas/ocultoformulario'); ?>
+                	<?php echo modules::run('polizas/ocultoformulario',$data); ?>
                 </div>
             </div>
-
         </div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->

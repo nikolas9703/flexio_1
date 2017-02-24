@@ -198,9 +198,10 @@
                             <td><?php echo $CategoriasRepository->find($item->pivot->categoria_id)->nombre;?></td>
                             <td><?php echo $item->codigo.' - '.$item->nombre;?></td>
                             <td>
-							<?php
-							 	$atributo = (count($coleccion["articulos"][$i]["atributo_text"]))?$coleccion["articulos"][$i]["atributo_text"]:$coleccion["articulos"][$i]["atributos"][0]["nombre"]; echo $atributo;
-							?>
+                							<?php
+                							 	$atributo = !empty($coleccion["articulos"][$i]) && !empty($coleccion["articulos"][$i]["atributo_text"]) ? $coleccion["articulos"][$i]["atributo_text"] : (!empty($coleccion["articulos"][$i]) && !empty($coleccion["articulos"][$i]["nombre"]) ? $coleccion["articulos"][$i]["atributos"][0]["nombre"] : "");
+                                echo $atributo;
+                							?>
                             </td>
                             <td><?php echo $CuentasRepository->find($item->pivot->cuenta_id)->nombre;?></td>
                             <td class="numero">
@@ -210,7 +211,18 @@
 									$sum_art += $art_by_line;
 								?>
                             </td>
-                            <td style="text-align: center;"><?php echo $UnidadesRepository->find($item->pivot->unidad_id)->nombre;?></td>
+                            <td style="text-align: center;">
+                              <?php
+                              /*$unidad_info = $UnidadesRepository->find($item->pivot->unidad_id);
+                              echo !empty($unidad_info->toArray()) ? $unidad_info->nombre : "";*/
+                              $unidad_info = $UnidadesRepository->find($item->pivot->unidad_id);
+                               
+                              if(count($unidad_info)>0)
+                                echo !empty($unidad_info->toArray()) ? $unidad_info->nombre : "";
+                              else
+                                 echo "";
+                              ?>
+                            </td>
                             <td class="numero"><?php echo $item->pivot->precio_unidad;?></td>
                             <td class="numero"><?php echo $item->pivot->descuento;?>%</td>
                             <td class="numero"><?php echo number_format($aux_subtotal,2);?></td>
@@ -276,8 +288,8 @@
         <td class="titulo4">Observaciones:</td>
      </tr>
      <tr>
-     	<td><?php echo $orden_compra->comprador->nombre.' '.$orden_compra->comprador->apellido?></td>
-        <td><?php echo $orden_compra->observaciones;?></td>
+       <td><?php echo (!empty($orden_compra->aprobadopor) ? $orden_compra->aprobadopor->nombre : "") .' '. (!empty($orden_compra->aprobadopor) ? $orden_compra->aprobadopor->apellido : "") ?></td>
+         <td><?php echo $orden_compra->observaciones;?></td>
      </tr>
      <tr>
      	<td><?php /*echo date('d-m-Y    H:i a', time())*/?></td>

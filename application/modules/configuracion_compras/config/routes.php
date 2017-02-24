@@ -20,3 +20,10 @@ $route['configuracion_compras/ajax-listar-tipos']           = 'configuracion_com
 $route['configuracion_compras/ajax-guardar-tipos']          = 'configuracion_compras/ajax_guardar_tipos';
 $route['configuracion_compras/ajax-get-tipos']               = 'configuracion_compras/ajax_get_tipos';
 $route['configuracion_compras/ajax-cambiar-estado-tipos']    = 'configuracion_compras/ajax_cambiar_estado_tipos';
+//Ajax tipos de documentos.
+$route['configuracion_compras/ajax-listar-tipos-documentos']           = 'configuracion_compras/ajax_listar_tipos_documentos';
+$route['configuracion_compras/ajax-guardar-tipos-documentos']           = 'configuracion_compras/ajax_guardar_tipos_documentos';
+$route['configuracion_compras/ajax-get-tipos-documentos']           = 'configuracion_compras/ajax_get_tipos_documentos';
+$route['configuracion_compras/ajax-cambiar-estado-tipos-documentos']           = 'configuracion_compras/ajax_cambiar_estado_tipos_documentos';
+
+

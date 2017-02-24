@@ -84,4 +84,7 @@ class Tipos_proveedores_orm extends Model
   			$query->where('valor', '=', 'activo')->where('etiqueta', 'LIKE', '%Activo%');
   		});
   	}
+    function present() {
+        return new \Flexio\Modulo\ConfiguracionCompras\Presenter\ConfiguracionCompraPresenter($this);
+    }
 }

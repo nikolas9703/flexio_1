@@ -9,6 +9,9 @@ class Contacto_orm extends Model
     protected $table = 'con_contactos';
     protected $fillable = ['nombre', 'empresa_id', 'telefono', 'correo', 'cargo', 'direccion', 'comentario', 'celular', 'cliente_id', 'id_aseguradora', 'tipo_identificacion', 'identificacion', 'provincia', 'letra', 'tomo', 'asiento', 'pasaporte'];
     protected $guarded = ['id', 'uuid_contacto'];
+    protected $casts = [
+        "detalle_identificacion" => "array"
+    ];
 
     public function __construct(array $attributes = array()) {
         $this->setRawAttributes(array_merge($this->attributes, array(
@@ -30,9 +33,12 @@ class Contacto_orm extends Model
         return strtoupper(bin2hex($value));
     }
 
+
+
     static function lista_totales($clause = array()) {
         return self::where(function ($query) use ($clause) {
             $query->where('empresa_id', '=', $clause['empresa_id'])->where('estado', '=', 'activo');
+            if (isset($clause['campo']) && !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
             if (isset($clause['cliente_id'])) $query->where('cliente_id', '=', $clause['cliente_id']);
             else if (isset($clause['id_aseguradora'])) $query->where('id_aseguradora', '=', $clause['id_aseguradora']);
         })->count();
@@ -44,8 +50,9 @@ class Contacto_orm extends Model
     public static function listar($clause = array(), $sidx = NULL, $sord = NULL, $limit = NULL, $start = NULL) {
         $contactos = self::where(function ($query) use ($clause, $sidx, $sord, $limit, $start) {
             $query->where('empresa_id', '=', $clause['empresa_id'])->where('estado', '=', 'activo');
+            if (isset($clause['campo']) && !empty($clause['campo'])){$query->deFiltro($clause['campo']);}
             if (isset($clause['cliente_id'])) $query->where('cliente_id', '=', $clause['cliente_id']);
-            else if (isset($clause['id_aseguradora'])) $query->where('id_aseguradora', '=', $clause['id_aseguradora']);            
+            else if (isset($clause['id_aseguradora'])) $query->where('id_aseguradora', '=', $clause['id_aseguradora']);
             if ($limit != NULL) $query->skip($start)->take($limit);
         });
         if ($sidx != NULL && $sord != NULL) $contactos->orderBy($sidx, $sord);
@@ -72,5 +79,11 @@ class Contacto_orm extends Model
         $result->save();
         return true;
 
+    }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Contactos\Services\ContactoFilters;
+        return $queryFilter->apply($query, $campo);
     }
 }

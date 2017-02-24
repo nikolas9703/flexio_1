@@ -11,6 +11,10 @@ $config['modulo_config'] = array(
     //'agrupador'     => 'Compras',
     'agrupador'		=> array
         (
+            'Alquileres' => array
+            (
+                "grupo_orden" => 8
+            ),
             'Compras' => array
             (
                 "grupo_orden" => 8
@@ -18,6 +22,10 @@ $config['modulo_config'] = array(
             'Ventas' => array
             (
                 "grupo_orden" => 8
+            ),
+            'Seguros' => array
+            (
+                "grupo_orden" => 10
             ),
         ),
     'prefijo'       => 'CA',

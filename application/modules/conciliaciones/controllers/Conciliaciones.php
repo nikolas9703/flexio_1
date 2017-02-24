@@ -178,7 +178,7 @@ class Conciliaciones extends CRM_Controller
         {
             return false;
         }
-
+        
         $clause                 = $this->input->post();
         $clause["empresa_id"]   = $this->empresa_id;
 
@@ -188,9 +188,9 @@ class Conciliaciones extends CRM_Controller
           "cuenta_id"   =>   $clause["cuenta_id"]
         ];
 
-
+        
         if($clause["vista"] == "crear"){$clause["no_conciliados"] = true;}
-
+        
         $transacciones          = $this->transaccionesRep->getCollectionTransacciones($this->transaccionesRep->get($clause));
 
         $ultima_conciliacion    = $this->conciliacionesRep->get($clause_ultima_conciliacion, 'fecha_fin', 'desc', 1, 0);
@@ -200,7 +200,6 @@ class Conciliaciones extends CRM_Controller
             "balance_flexio"    => $balance_flexio,
             "transacciones"     => $transacciones
         ];
-
         $this->output->set_status_header(200)
                 ->set_content_type('application/json', 'utf-8')
                 ->set_output(json_encode($registro, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->_display();

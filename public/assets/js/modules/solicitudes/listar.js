@@ -5,7 +5,13 @@ $(".ramo").select2({
 });
 "use strict";
 //Init Bootstrap Calendar Plugin
-$('#fecha_creacion').daterangepicker({
+$('#inicio_creacion').daterangepicker({
+ format: 'DD/MM/YYYY',
+ showDropdowns: true,
+ defaultDate: '',
+ singleDatePicker: true
+}).val('');
+$('#fin_creacion').daterangepicker({
  format: 'DD/MM/YYYY',
  showDropdowns: true,
  defaultDate: '',
@@ -17,6 +23,7 @@ var botones = {
     modalOpcionesCrear: ".modalOpcionesCrear",
     boton_accion : "#botonAccionar"
 };
+        
         
 //var botones_crear = $('body').text();
         
@@ -59,6 +66,9 @@ var eventos = function(){
         formularioSolicitudesModal.submit();
     });
     
+    
+
+
     }
                 
 return{
@@ -68,3 +78,21 @@ init: function() {
       };
 })();
 listarSolicitudes.init();
+
+$(document).ready(function(){
+    var counter = 2;
+    $('#del_file_solicitud').hide();
+    $('#add_file_solicitud').click(function(){
+            
+        $('#file_tools_solicitud').before('<div class="file_upload_solicitud row" id="fsolicitud'+counter+'"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
+        $('#del_file_solicitud').fadeIn(0);
+    counter++;
+    });
+    $('#del_file_solicitud').click(function(){
+        if(counter == 3){
+            $('#del_file_solicitud').hide();
+        }   
+        counter--;
+        $('#fsolicitud'+counter).remove();
+    });  
+});

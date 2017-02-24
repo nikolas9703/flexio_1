@@ -146,11 +146,27 @@ class Descuentos extends CRM_Controller
     	$menuOpciones = array();
 
 
-    	//Breadcrum Array
-    	$breadcrumb = array(
-    		"titulo" => '<i class="fa fa-users"></i> Descuentos Directos'
 
-    	);
+      $breadcrumb = array(
+        "titulo" => '<i class="fa fa-users"></i> Descuentos Directos',
+        "filtro" => true,
+        "menu" => array(
+          "nombre" => $this->auth->has_permission('acceso', 'descuentos/crear')?"Crear":'',
+          "url"	 => $this->auth->has_permission('acceso', 'descuentos/crear')?"descuentos/crear":'',
+          "opciones" => array()
+        ),
+        "ruta" => array(
+          0 => array(
+              "nombre" => "Recursos humanos",
+              "activo" => false,
+           ),
+             1=> array(
+                "nombre" => '<b>Descuentos directos</b>',
+                "activo" => true
+              )
+        ),
+    );
+
 
 
        /* echo '<h2>Consultando Antes:</h2><pre>';
@@ -553,7 +569,9 @@ class Descuentos extends CRM_Controller
     	$titulo_formulario = '<i class="fa fa-users"></i> Descuentos directos: Crear';
 
     	//Verificar si existe variable $descuento_uuid
+      $formulario = '<b>Crear</b>';
     	if(!empty($descuento_uuid)){
+        $formulario = '<b>Detalle</b>';
           //  $descuento_info = Descuentos_orm::where(Capsule::raw("HEX(uuid_descuento)"), "=", $descuento_uuid)->get()->toArray();
         //  $descuento_info = Descuentos::
         //$descuento_info = $this->descuentoRep->findByUuid($descuento_uuid);
@@ -626,9 +644,31 @@ class Descuentos extends CRM_Controller
 
     	));
 
-    	$breadcrumb = array(
-    		"titulo" => $titulo_formulario,
-    	);
+
+      $breadcrumb = array(
+      	"titulo" => $titulo_formulario,
+        "filtro" => true,
+        "menu" => array(
+          "nombre" => $this->auth->has_permission('acceso', 'descuentos/crear')?"Crear":'',
+          "url"	 => $this->auth->has_permission('acceso', 'descuentos/crear')?"descuentos/crear":'',
+          "opciones" => array()
+        ),
+        "ruta" => array(
+          0 => array(
+              "nombre" => "Recursos humanos",
+              "activo" => false,
+           ),
+          1=> array(
+                "nombre" => 'Descuentos directos',
+                "activo" => true,
+                "url"=> 'descuentos/listar'
+          ),
+          2=> array(
+                "nombre" => $formulario,
+                "activo" => false
+          ),
+        ),
+    );
 
     	$this->template->agregar_titulo_header('Descuentos');
     	$this->template->agregar_breadcrumb($breadcrumb);
@@ -896,26 +936,24 @@ class Descuentos extends CRM_Controller
     			)
     		);
     	}
-
     	//Verificar que tipo de salrio tiene el colaborador
     	//y calcular salario mensual
     	if(preg_match("/mensual/i", $colaboradorINFO[0]["tipo_salario"])){
-
     		//Capacidad Endeudamiento
-    		$capacidad_endeudamiento = ($monto==NULL ? 100 : 0) - ($descuentos_total / $salario_mensual * 100);
+    		//$capacidad_endeudamiento = ($monto==NULL ? 100 : 0) - ($descuentos_total / $salario_mensual * 100);
+        $capacidad_endeudamiento = ($salario_mensual==NULL ? 0.00 : $salario_mensual) * (20 / 100) - ($descuentos_total=NULL ? 0.00 : $descuentos_total);
 
-    	}else{
-
+      }else{
     		//Calcular Salario Mensual
     		$salario_mensual = $rata_hora * 208;
-
     		//Capacidad Endeudamiento
-    		$capacidad_endeudamiento = ($monto==NULL ? 100 : 0) - ($descuentos_total / $salario_mensual * 100);
+    		//$capacidad_endeudamiento = ($monto==NULL ? 100 : 0) - ($descuentos_total / $salario_mensual * 100);
+        $capacidad_endeudamiento = ($salario_mensual==NULL ? 0.00 : $salario_mensual) * (20 / 100) - ($descuentos_total=NULL ? 0.00 : $descuentos_total);
     	}
-
+     //print_r($capacidad_endeudamiento);
     	return array(
     		"completo" => true, //Para saber si el usuario tiene sus datos completos o no.
-    		"capacidad" => number_format(abs($capacidad_endeudamiento), 0, '', '')
+    		"capacidad" => number_format($capacidad_endeudamiento, 0, '', '')
     	);
     }
 

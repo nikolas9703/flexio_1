@@ -64,6 +64,19 @@ class Pagos_orm extends Model {
                 ->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
 
+    //Se eliminó, la relacion es con el tipo de pago directamente (Transferencias)
+    /*public function cajas()
+    {
+        return $this->morphedByMany('Flexio\Modulo\Cajas\Models\Cajas','pagable', 'pag_pagos_pagables','pago_id')
+                ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+    }*/
+
+    public function transferencias()
+    {
+        return $this->morphedByMany('Flexio\Modulo\Cajas\Models\Transferencias','pagable', 'pag_pagos_pagables','pago_id')
+                ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+    }
+
     public function planillas() {
         return $this->morphedByMany('Flexio\Modulo\Planilla\Models\Planilla', 'pagable', 'pag_pagos_pagables', 'pago_id')
                         ->withPivot('monto_pagado', 'empresa_id')->withTimestamps();
@@ -75,7 +88,12 @@ class Pagos_orm extends Model {
                 ->where("pagable_type", "Flexio\Modulo\Comisiones\Models\Comisiones")
                 ->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
-    
+    public function retiros()
+    {
+        return $this->belongsToMany('Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros', 'pag_pagos_pagables', 'pago_id', 'pagable_id')
+                ->where("pagable_type", "Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros")
+                ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+    }
     public function colaborador()
     {
         return $this->belongsTo('Flexio\Modulo\Colaboradores\Models\Colaboradores', 'proveedor_id');
@@ -158,16 +176,18 @@ class Pagos_orm extends Model {
 
     public function scopeDeDocumentoPago($query, $numeroDocumento) {
       return  $query->whereHas("facturas", function($factura)  use ($numeroDocumento) {
-               $factura->where("factura_proveedor", $numeroDocumento);
+              $factura->where("factura_proveedor", $numeroDocumento);
        })->orWhereHas("planillas", function($planilla)  use ($numeroDocumento) {
-                 $planilla->where("codigo", $numeroDocumento);
-        });
+              $planilla->where("codigo", $numeroDocumento);
+      })->orWhereHas("pagos_extraordinarios",function($pagos_extraordinarios) use ($numeroDocumento){
+              $pagos_extraordinarios->where("numero",$numeroDocumento);
+      });
 
     }
 
 
     public function scopeDeTipo($query, $tipo) {
-        if ($tipo === "planilla") {
+        if ($tipo === "planilla" || $tipo === "pago_extraordinario") {
             return $query->where("formulario", $tipo);
         } else {
             return $query->where(function($q) {
@@ -199,6 +219,11 @@ class Pagos_orm extends Model {
 
     }
 
+    public function scopeDeFiltro($pagos, $campo){
+        $queryFilter = new \Flexio\Modulo\Pagos\Services\PagoFilters;
+        return $queryFilter->apply($pagos, $campo);
+    }
+
     public function getNumeroDocumentoAttribute()
     {
 
@@ -224,6 +249,18 @@ class Pagos_orm extends Model {
     }
     function documentos(){
     	return $this->morphMany(Documentos::class, 'documentable');
+    }
+
+    public function empezable()
+    {
+       return $this->morphTo();
+    }
+
+    public function scopeDeSubContrato($query, $subContrato_id)
+    {
+        return $query->whereHas("facturas", function($factura) use ($subContrato_id){
+            $factura->where("faccom_facturas.operacion_id", $subContrato_id);
+        });
     }
 
 }

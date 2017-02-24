@@ -48,6 +48,13 @@ $route['polizas/ajax-guardar-ramos'] = 'polizas/ajax_guardar_ramos';
 $route['polizas/ajax-buscar-ramo'] = 'polizas/ajax_buscar_ramo';
 $route['polizas/crear'] 			= 'polizas/crear';
 $route['polizas/editar'] 			= 'polizas/editar';
+$route['polizas/ver'] 				= 'polizas/ver';
+$route['polizas/crear renovación']  = 'polizas/crear_renovacion';
+$route['polizas/editar comisión plan']  = 'polizas/editar_comision_plan';
+$route['polizas/editar agentes']  = 'polizas/editar_agentes';
+$route['polizas/editar participación']   = 'polizas/editar_participacion';
+
+
 
 
 

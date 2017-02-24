@@ -9,7 +9,7 @@ $config['modulo_config'] = array(
 	'tipo'			=> 'addon', // core, addon
 	'grupo'			=> 'Precio fijo con proveedores',
 	//'agrupador'		=> 'Contratos',
- 
+
         'agrupador'		=> array(
 
              'Contratos' => array(
@@ -23,6 +23,7 @@ $config['modulo_config'] = array(
 	),
 	'prefijo'	 => 'sub',
     'permisos'	 => array(
-		'acceso' => 'Acceso'
+		'acceso' => 'Acceso',
+		'ver__editarSubcontrato' => 'Editar subcontrato'
 	)
 );

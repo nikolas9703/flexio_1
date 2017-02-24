@@ -6,6 +6,17 @@ a::after {
 form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
 	height: none;
 }
+.ui-jqdialog {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50%!important;
+  transform: translate(-50%, -50%) !important; /* Yep! */
+  width: 35% !important;
+  height: 12% !important;
+}
+.fm-button{
+    height: 25px !important;
+}
 
 </style>
 <div id="wrapper">
@@ -48,102 +59,191 @@ form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
 								</div>
 								<div class="panel-collapse collapse in" id="collapseFormOne" aria-expanded="true" style="">
 									<div class="panel-body">
+                    <div class="row">
+  							        	<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+ 							            	<label for="">Tipo de planilla</label>
+
+
+                  							 <select id="tipo_id" name="tipo_id" class="form-control select2" <?php echo $disabled;?>>
+  								                <?php
+ 								                if(!empty($tipo_planilla))
+ 								                {
+ 									                foreach ($tipo_planilla AS $tipo)
+ 									                {
+ 									                	$selected = '';
+ 									                	if(isset($info['info']['tipo']['id_cat'])){
+ 									                		$selected = ($tipo->id_cat ==$info['info']['tipo']['id_cat'] ? 'selected="selected"' : "");
+ 									                	}
+  									               		echo '<option value="'. $tipo->id_cat .'" '.$selected.'>'. $tipo->etiqueta .'</option>';
+ 									                }
+ 								                }
+ 								                ?>
+ 							                </select>
+
+
+
+
+ 										</div>
+
+ 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+ 							            	<label for="">Rango de fechas</label>
+ 							            	 <div class="form-inline">
+ 				                                <div class="form-group">
+ 				                                    <div class="input-group">
+ 				                                      <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+ 				                                      <input   type="text" name="rango_fecha1" id="rango_fecha1" value="<?php echo !empty($info['info']['rango_fecha1'])?date("d/m/Y", strtotime($info['info']['rango_fecha1'])):''?>" class="form-control">
+ 				                                      <span class="input-group-addon">a</span>
+ 				                                      <input  type="text" class="form-control" name="rango_fecha2"  value="<?php echo !empty($info['info']['rango_fecha2'])?date("d/m/Y", strtotime($info['info']['rango_fecha2'])):''?>"   id="rango_fecha2">
+ 				                                    </div>
+ 				                                </div>
+ 				                            </div>
+
+ 										</div>
+
+
+ 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+ 							            	<label for="">Deducciones aplicables</label>
+
+ 							            	<select id="deducciones[]"  name="deducciones[]" class="form-control select2" multiple="multiple"  data-rule-required="true">
+                                          <?php
+                                         if(!empty($deducciones))
+                                         {
+                                             foreach ($deducciones AS $deduccion) {
+
+                                               $selected = '';
+                                                if(isset($info['info']->deducciones2) && count($info['info']->deducciones2) > 0){
+                                                  foreach ($info['info']->deducciones2 AS $deduccion2) {
+                                                      if($deduccion2->deduccion_id == $deduccion->id){
+                                                          $selected = ' selected="selected"';
+                                                          continue;
+                                                      }
+                                                  }
+                                                }
+                                                echo '<option '.$selected.' value="'. $deduccion->id .'">'. $deduccion->nombre .'</option>';
+                                             }
+                                           }
+                                         ?>
+                                     </select>
+
+ 							            	</div>
+
+ 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+ 							            	<label for="">Acumulados aplicables</label>
+ 									<select id="acumulados[]"  name="acumulados[]" class="form-control select2" multiple="multiple" data-rule-required="true">
+                                         <?php
+                                         if(!empty($acumulados))
+                                         {
+                                              foreach ($acumulados AS $acumulado) {
+                                               $selected = '';
+                                                   if(isset($info['info']->acumulados2) && count($info['info']->acumulados2) > 0)
+                                                   {
+                                                     foreach ($info['info']->acumulados2 AS $acumulados2) {
+                                                         if($acumulados2->acumulado_id == $acumulado->id){
+                                                             $selected = ' selected="selected"';
+                                                             continue;
+                                                         }
+                                                     }
+                                                   }
+
+                                                 echo '<option '.$selected.' value="'. $acumulado->id .'">'. $acumulado->nombre .'</option>';
+                                             }
+                                         }
+                                         ?>
+                                     </select>										</div>
+ 									</div>
 									 <div class="row">
- 							        	<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-							            	<label for="">Tipo de planilla</label>
 
-
-                 							 <select id="tipo_id" name="tipo_id" class="form-control" >
- 								                <?php
-								                if(!empty($tipo_planilla))
-								                {
-									                foreach ($tipo_planilla AS $tipo)
-									                {
-									                	$selected = '';
-									                	if(isset($info['info']['tipo']['id_cat'])){
-									                		$selected = ($tipo->id_cat ==$info['info']['tipo']['id_cat'] ? 'selected="selected"' : "");
-									                	}
- 									               		echo '<option value="'. $tipo->id_cat .'" '.$selected.'>'. $tipo->etiqueta .'</option>';
-									                }
-								                }
-								                ?>
-							                </select>
-
-
-
-
+ 							      <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+							            	  <label for="">Cuenta a debitar</label> <span required="" aria-required="true">*</span>
+                              <select id="cuenta_debito_id" name="cuenta_debito_id" class="form-control select2"  data-rule-required="true">
+                                 <option value="">Seleccione</option>
+                                 <?php
+                                 if(!empty($cuentas_debito))
+                                 {
+                                   foreach ($cuentas_debito AS $cuenta)
+                                   {
+                                     $selected = '';
+                                     if(isset($info['info']->cuenta_debito_id)){
+                                       $selected = ($cuenta->id == $info['info']->cuenta_debito_id ? 'selected="selected"' : "");
+                                     }
+                                     echo '<option value="'. $cuenta->id .'" '.$selected.'>'. $cuenta->codigo.' - '.$cuenta->nombre .'</option>';
+                                   }
+                                 }
+                                 ?>
+                               </select>
 										</div>
 
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-							            	<label for="">Rango de fechas</label>
-							            	 <div class="form-inline">
-				                                <div class="form-group">
-				                                    <div class="input-group">
-				                                      <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-				                                      <input   type="text" name="rango_fecha1" id="rango_fecha1" value="<?php echo !empty($info['info']['rango_fecha1'])?date("d/m/Y", strtotime($info['info']['rango_fecha1'])):''?>" class="form-control">
-				                                      <span class="input-group-addon">a</span>
-				                                      <input  type="text" class="form-control" name="rango_fecha2"  value="<?php echo !empty($info['info']['rango_fecha2'])?date("d/m/Y", strtotime($info['info']['rango_fecha2'])):''?>"   id="rango_fecha2">
-				                                    </div>
-				                                </div>
-				                            </div>
+                      <label for="">Cuenta por pagar</label> <span required="" aria-required="true">*</span>
+                         <select id="pasivo_id" name="pasivo_id" class="form-control select2" data-rule-required="true" >
+                            <option value="">Seleccione</option>
+                            <?php
+                            if(!empty($cuentas_pasivos))
+                            {
+                              foreach ($cuentas_pasivos AS $cuenta)
+                              {
+                                $selected = '';
+                                if(isset($info['info']->pasivo_id)){
+                                  $selected = ($cuenta->id == $info['info']->pasivo_id? 'selected="selected"' : "");
+                                }
+                                echo '<option value="'. $cuenta->id .'" '.$selected.'>'. $cuenta->codigo.' - '.$cuenta->nombre .'</option>';
+                              }
+                            }
+                            ?>
+                          </select>
+ 										</div>
 
-										</div>
-										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-							            	<label for="">Deducciones aplicables</label>
 
+                       <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                <label for="">Centro Contable</label>
+                                <select id="centro_contable_id" name="centro_contable_id[]"  class="form-control select2" multiple="multiple" <?php echo $disabled;?> data-rule-required="true" >
+                                    <?php
+                                   if(!empty($centro_contables))
+                                   {
+                                     foreach ($centro_contables AS $centro)
+                                     {
 
-							            	<select id="deducciones[deducciones][]"  name="deducciones[deducciones][]" class="form-control" multiple="multiple"  data-rule-required="true">
-										<option value="">Seleccione</option>
-                                        <?php
-                                        if(!empty($deducciones))
-                                        {
-                                            foreach ($deducciones AS $deduccion) {
-                                                echo '<option value="'. $deduccion->id .'">'. $deduccion->nombre .'</option>';
-                                            }
-                                        }
-                                        ?>
-                                    </select>
+                                       $selected ='';
+                                        if(isset($info['info']->centros_contables) && count($info['info']->centros_contables) > 0)
+                                             foreach ($info['info']->centros_contables AS $valor) {
 
-							            	</div>
-										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-							            	<label for="">Acumulados aplicables</label>
-									<select id="acumulados[acumulados][]"  name="acumulados[acumulados][]" class="form-control" multiple="multiple" data-rule-required="true">
-										<option value="">Seleccione</option>
-                                       <?php
-                                        if(!empty($acumulados))
-                                        {
-                                            foreach ($acumulados AS $acumulado) {
-                                                echo '<option value="'. $acumulado->id .'">'. $acumulado->nombre .'</option>';
-                                            }
-                                        }
-                                        ?>
-                                    </select>										</div>
-									</div>
+                                                 if($valor->centro_contable_id == $centro->id){
+                                                     $selected = ' selected="selected"';
+                                                     continue;
+                                                 }
+                                             }
+                                       echo '<option value="'. $centro->id .'" '.$selected.'>'.$centro->nombre .'</option>';
+                                     }
+                                   }
+                                   ?>
+                                 </select>
+                      </div>
+
+                       <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                <label for="">&Aacute;rea de negocio</label>
+                                <select id="area_negocio_id" name="area_negocio_id" class="form-control select2"   <?php echo $disabled;?>>
+                                  <option value="">Seleccione</option>
+                                  <?php
+                                  if(!empty($areas_negocio))
+                                  {
+                                    foreach ($areas_negocio AS $area)
+                                    {
+                                      $selected = '';
+                                      if(isset($info['info']->area_negocio)){
+                                        $selected = ($area->id ==$info['info']->area_negocio ? 'selected="selected"' : "");
+                                      }
+                                      echo '<option value="'. $area->id .'" '.$selected.'>'.$area->nombre .'</option>';
+                                    }
+                                  }
+                                  ?>
+                                </select>
+                      </div>
+ 									</div>
 									 <div class="row">
 
-
- 							        	<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-							            	<label for="">Cuenta de pasivo</label>
-							            	<select id="pasivo_id" name="pasivo_id" class="form-control" >
-								                <option value="">Seleccione</option>
-								                <?php
-								                if(!empty($cuentas_pasivos))
-								                {
-									                foreach ($cuentas_pasivos AS $cuenta)
-									                {
-									                	$selected = '';
-									                	if(isset($info['info']['pasivos']['id'])){
-									                		$selected = ($cuenta->id == $info['info']['pasivos']['id'] ? 'selected="selected"' : "");
-									                	}
- 									               		echo '<option value="'. $cuenta->id .'" '.$selected.'>'. $cuenta->nombre .'</option>';
-									                }
-								                }
-								                ?>
-							                </select>
-										</div>
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	<label for="">Ciclo de pago</label>
-							            	<select id="ciclo_id" name="ciclo_id" class="form-control" >
+							            	<select id="ciclo_id" name="ciclo_id" class="form-control select2" <?php echo $disabled;?> data-rule-required="true">
 								                <option value="">Seleccione</option>
 								                <?php
 								                if(!empty($ciclos))
@@ -169,7 +269,7 @@ form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
 									</div>
 
 									 <?php
-                 					 if(preg_match("/ver/i", $_SERVER['REQUEST_URI'])){ ?>
+                  					 if(preg_match("/ver/i", $_SERVER['REQUEST_URI']) ){ ?>
 
 									 <div class="row">
                                         <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
@@ -242,7 +342,7 @@ form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
 									                }
 									                ?>
 							</select>
-							<select id="cuenta_costo_id" name="cuenta_costo_id" class="form-control"  style="display:none;">
+							<select id="cuenta_costo_id" name="cuenta_costo_id" class="form-control"  style="display:none;" >
 									                <option value="">Seleccione</option>
 									                <?php
 									                if(!empty($cuenta_costos))
@@ -272,6 +372,7 @@ form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
 						</div>
 
                  	 <?php
+
                    	 if(preg_match("/ver/i", $_SERVER['REQUEST_URI'])){
  						if($tipo_planilla_creacion =='vacaciones' || $tipo_planilla_creacion =='liquidaciones' || $tipo_planilla_creacion =='licencias'){
 
@@ -292,80 +393,30 @@ form div.form-group, form[enctype="multipart/form-data"] div.Mapa{
                 	if($tipo_planilla_creacion == 'regular'){
                 	?>
                  	<div id="accordion" class="panel-group">
-							<div class="panel panel-white">
-								<div class="panel-heading">
-									<h5 class="panel-title">
 
-      									 	<a href="#collapseOne" data-parent="#accordion" data-toggle="collapse" aria-expanded="true" class="">
-       										 <input type="checkbox" class=""   href="#collapseOne" name='ch_centro' id='ch_centro' >
-       									    </a>
-      										Centro contable
-									</h5>
-								</div>
-								<div class="panel-collapse collapse" id="collapseOne" aria-expanded="true" style="">
-									<?php
-
-									$opciones = '';
-									foreach($centro_contables as $centro_contable){
- 										if(!empty($centro_contable['children'])){
-										 	 foreach($centro_contable['children']  as $subcentro){
- 						 							if(!empty($subcentro['area_negocio'])){
-														foreach($subcentro['area_negocio'] as $area_data){
-																$llave_unica = $centro_contable['id'].'-'.$subcentro['id'].'-'.$area_data['id']; //Centro-subcentro-area
-																$header =  $centro_contable['name'].'/'.$subcentro['name'];
-																$opciones .= '<option value="'.$llave_unica.'" data-section="'.$header.'"  data-index="'.$area_data['id'].'">'.$area_data['nombre'].'</option>';
-						 								}
-													}
-   											}
-										}
-									}
-
-									?>
-										 <select id="centro_contable_id"  name="centro_contable_id[]"  multiple="multiple">
-									  		   	  <?php   echo $opciones;?>
-									 	 </select><br />
-									 <div class="row">
-                                        <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                            <input type="button" id="cancelarBtnCC" class="btn btn-default btn-block" value="Cancelar" />
-                                        </div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                            <input type="button" id="guardarBtnCC" class="btn btn-primary btn-block" value="Guardar" />
-                                        </div>
-
-                                    </div>
-								</div>
-
-
-							</div>
 
 							<div class="panel panel-white">
 								<div class="panel-heading">
 									<h5 class="panel-title">
-										 <a href="#collapseTwo" data-parent="#accordion" data-toggle="collapse" aria-expanded="true" class="">
-										 <input type="checkbox" class=""    name='ch_centro' id='ch_colaboradores' >
- 										   </a>
-										Colaboradores
+ 										Colaboradores
 									</h5>
 								</div>
-								<div class="panel-collapse collapse" id="collapseTwo" aria-expanded="true" style="">
+								<div class="panel-collapse " id="collapseTwo" aria-expanded="true" style="">
 
  									<div class="row">
 										<div class="col-xs-5">
  											<select name="from[]" id="lista_colaboradores" class="form-control" size="8" multiple="multiple">
+                         <?php
+                        /*if(!empty($lista_colaboradores))
+                        {
+                          foreach ($lista_colaboradores AS $colaborador)
+                          {
+                             echo '<option value="'. $colaborador->id .'">'. $colaborador->cedula." - ".$colaborador->nombre_completo.'</option>';
+                          }
+                        }*/
+                        ?>
  											</select>
-											<?php /*
-
-									$opciones = '';
- 									if(!empty($colaboradores->toArray())){
-										foreach ($colaboradores->toArray() AS $i => $row){
- 									*/?>
-											<!--  <option value="<?php echo $row['id']; ?>"><?php echo $row['apellido'].', '.$row['nombre']." - ".$row['cedula']; ?></option> -->
-
-									<?php /* }} */?>
-
-											</select>
-										</div>
+  										</div>
 
 										<div class="col-xs-2">
 											<button type="button" id="lista_colaboradores_rightAll" class="btn btn-block"><i class="fa fa-forward"></i></button>

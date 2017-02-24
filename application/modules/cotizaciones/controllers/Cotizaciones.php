@@ -1,9 +1,5 @@
-
 <?php
-
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
-
+if (!defined('BASEPATH')) exit('No direct script access allowed');
 /**
  *
  * @package    Erp
@@ -33,6 +29,9 @@ use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategoriasRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
+use Flexio\Modulo\Cotizaciones\Models\CotizacionHistorial as CotizacionHistorial;
+use Flexio\Library\Util\AuthUser;
+use League\Csv\Writer as Writer;
 
 class Cotizaciones extends CRM_Controller {
 
@@ -57,6 +56,8 @@ class Cotizaciones extends CRM_Controller {
     protected $CuentasRepository;
     protected $ImpuestosRepository;
     protected $upload_folder = './public/uploads/';
+    protected $cotizacionHistorial;
+    protected $Objusuario;
 
     function __construct() {
         parent::__construct();
@@ -91,7 +92,7 @@ class Cotizaciones extends CRM_Controller {
 
         $empresaObj = new Buscar(new Empresa_orm, 'uuid_empresa');
         $usuario = Usuario_orm::findByUuid($uuid_usuario);
-
+        $this->Objusuario = $usuario;
         $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
 
         $this->id_empresa = $this->empresaObj->id;
@@ -114,6 +115,7 @@ class Cotizaciones extends CRM_Controller {
         $this->ItemsCategoriasRepository = new ItemsCategoriasRepository();
         $this->CuentasRepository = new CuentasRepository();
         $this->ImpuestosRepository = new ImpuestosRepository();
+        $this->cotizacionHistorial = new CotizacionHistorial();
     }
 
     public function index() {
@@ -121,6 +123,7 @@ class Cotizaciones extends CRM_Controller {
     }
 
     function listar() {
+
         if (!$this->auth->has_permission('acceso')) {
             // No, tiene permiso, redireccionarlo.
             redirect('/');
@@ -172,7 +175,7 @@ class Cotizaciones extends CRM_Controller {
                 "opciones" => array()
             )
         );
-        //dd($this->session->set_flashdata('mensaje'));
+
         if (!is_null($this->session->flashdata('mensaje'))) {
             $mensaje = json_encode($this->session->flashdata('mensaje'));
         } else {
@@ -187,7 +190,6 @@ class Cotizaciones extends CRM_Controller {
         ));
         $clause = array('empresa_id' => $this->id_empresa);
         $roles_users = Rol_orm::where('nombre', 'like', '%vendedor%')->get();
-
         $usuarios = array();
         $vendedores = array();
         foreach ($roles_users as $roles) {
@@ -198,7 +200,11 @@ class Cotizaciones extends CRM_Controller {
                 }
             }
         }
-
+        if(!AuthUser::is_owner()){
+        $vendedores = array_filter($vendedores,function($v) {
+            return $v->id == $this->id_usuario;
+        });
+        }
         $data['clientes'] = Cliente_orm::where($clause)->get(array('id', 'nombre'));
         $data['etapas'] = $this->cotizacionCatalogoRepository->getEtapas();
         $data['vendedores'] = $vendedores;
@@ -225,9 +231,14 @@ class Cotizaciones extends CRM_Controller {
         $vendedor = $this->input->post('vendedor', TRUE);
         $uuid_cotizacion = $this->input->post('uuid_cotizacion', TRUE);
 
+        if($this->input->post('tipoFiltro', TRUE) && $this->input->post('tipoFiltro', TRUE) =='cotizaciones_alquiler'){
+          $clause = array('empresa_id' => $this->empresaObj->id, 'tipo'=>'alquiler');
+        }else{
+          $clause = array('empresa_id' => $this->empresaObj->id, 'tipo'=>'venta');
+        }
 
-        $clause = array('empresa_id' => $this->empresaObj->id);
         $clause["no_cotizacion"] = $no_cotizacion;
+        if(!AuthUser::is_owner())$clause['creado_por'] =$this->id_usuario;
 
         if (!empty($uuid_cliente)) {
             $clienteObj = new Buscar(new Cliente_orm, 'uuid_cliente');
@@ -237,6 +248,12 @@ class Cotizaciones extends CRM_Controller {
             $clause['cliente_id'] = $cliente;
         }
 
+        if (!empty($this->input->post('factura_id'))){
+            $clause['factura_id'] = $this->input->post('factura_id');
+        }
+        if (!empty($this->input->post('cotizacion_id'))){
+            $clause['id'] = $this->input->post('cotizacion_id');
+        }
         if (!empty($this->input->post('sp_orden_venta_id'))) {
             $clause['orden_venta_id'] = $this->input->post('sp_orden_venta_id');
         }
@@ -250,6 +267,7 @@ class Cotizaciones extends CRM_Controller {
         if (!empty($vendedor))
             $clause['creado_por'] = $vendedor;
 
+        $clause["campo"] = $this->input->post('campo', TRUE);
 
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
         $count = $this->cotizacionRepository->lista_totales($clause);
@@ -271,8 +289,9 @@ class Cotizaciones extends CRM_Controller {
                 $hidden_options = "";
                 $orden = $row->ordenes_validas()->count();
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->uuid_cotizacion . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-                $hidden_options = '<a href="' . base_url($modulo . '/' . $row->uuid_cotizacion) . '" data-id="' . $row->uuid_cotizacion . '" class="btn btn-block btn-outline btn-success">Ver Cotizacion</a>';
-
+                $hidden_options = '<a href="' . base_url($modulo . '/' . $row->uuid_cotizacion) . '" data-id="' . $row->uuid_cotizacion . '" class="btn btn-block btn-outline btn-success">Ver cotizaci&oacute;n</a>';
+                $hidden_options .= '<a href="' . base_url('cotizaciones/crear' . '/' . $row->uuid_cotizacion) . '" data-id="' . $row->uuid_cotizacion . '" class="btn btn-block btn-outline btn-success">Duplicar cotizaci&oacute;n</a>';
+                $hidden_options .= '<a href="'.$row->enlace_bitacora.'" data-id="'. $row->uuid_cotizacion .'" class="btn btn-block btn-outline btn-success">Ver bit&aacute;cora</a>';
                 //para convertir a cotizacion debe estar aprobada, ser de venta y no estar asociada a un cliente potencial
                 if ($orden == 0 && ($row->estado == 'aprobado') && $row->cliente_tipo == "cliente" && $row->tipo == "venta")
                     $hidden_options .= '<a href="' . base_url('ordenes_ventas/crear/cotizacion' . $row->id) . '" class="btn btn-block btn-outline btn-success convertirOrdenVenta">Convertir a Órden de Venta</a>';
@@ -280,11 +299,11 @@ class Cotizaciones extends CRM_Controller {
                 $cliente = $row->cliente;
                 $vendedor = $row->vendedor;
 
-                if ($this->auth->has_permission('acceso', 'oportunidades/crear/') && ($row->estado == 'aprobado')) {
+                if ($this->auth->has_permission('acceso', 'oportunidades/crear') && ($row->estado == 'aprobado')) {
                     $hidden_options .= '<a href="#" data-uuid="' . $row->uuid_cotizacion . '" data-id="' . $row->id . '" data-cliente_id="' . $row->cliente_id . '" class="btn btn-block btn-outline btn-success agregar-oportunidad">Agregar a oportunidad</a>';
                 }
                 $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_cotizacion . '" class="exportarTablaCliente btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documento</a>';
-                if ($this->auth->has_permission('acceso', 'contratos_alquiler/crear/') &&  $row->estado == 'ganado' && $row->tipo == 'alquiler') {
+                if ($this->auth->has_permission('acceso', 'contratos_alquiler/crear') &&  $row->estado == 'ganado' && $row->tipo == 'alquiler') {
                     $hidden_options .= '<a href="' . base_url('contratos_alquiler/crear/cotizacion' . $row->uuid_cotizacion) . '" data-uuid="' . $row->uuid_cotizacion . '"   class="btn btn-block btn-outline btn-success">Convertir a contrato de alquiler</a>';
                 }
                 $response->rows[$i]["id"] = $row->uuid_cotizacion;
@@ -302,8 +321,9 @@ class Cotizaciones extends CRM_Controller {
                 $i++;
             }
         }
+
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->_display();
+                ->set_output(json_encode($response))->_display();
         exit;
     }
 
@@ -371,7 +391,13 @@ class Cotizaciones extends CRM_Controller {
     public function ocultotabla($uuid = NULL, $modulo = NULL) {
 
         //If ajax request
-        if ($modulo == 'facturas') {
+        if(is_array($uuid))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($uuid)
+            ]);
+        }
+        elseif ($modulo == 'facturas') {
 
             $this->assets->agregar_var_js(array(
                 "factura_id" => $uuid
@@ -410,24 +436,28 @@ class Cotizaciones extends CRM_Controller {
     }
 
     public function crear($foreing_key = '') {
+
         if (preg_match('/oportunidad/', $foreing_key)) {
             $oportunidad_id = str_replace('oportunidad', '', $foreing_key);
             $oportunidad = $this->OportunidadesRepository->findBy(['oportunidad_id' => $oportunidad_id]);
             $empezable_id = $oportunidad->cliente_id;
             $empezable_type = $oportunidad->cliente_tipo;
-        }
-        
-
-        if (preg_match('/cliente/', $foreing_key)) {
+        }elseif (preg_match('/cliente/', $foreing_key)) {
             $cliente_id = str_replace('cliente', '', $foreing_key);
             $cliente =  $this->clienteRepo->find($cliente_id);
             $empezable_id = $cliente->id;
             $empezable_type = 'cliente';
+        }elseif (!empty($foreing_key)) {
+            $cotizacion = $this->cotizacionRepository->findByUuid($foreing_key);
+            $this->assets->agregar_var_js(array(
+                "cotizacion" => $this->cotizacionRepository->getCollectionCotizacionDuplicar($cotizacion),
+            ));
         }
-        
+
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+
+        if (!$this->auth->has_permission('acceso', 'cotizaciones/crear')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => ' <b>Usted no cuenta con permiso para esta solicitud</b>', 'clase' => 'alert-danger');
         }
@@ -441,24 +471,44 @@ class Cotizaciones extends CRM_Controller {
             'clientes' => [],
             'cliente_potencials' => []
         ]);
+
         $editar_precio = 1;
-        if(!$this->auth->has_permission('crear__editarPrecioCotizacion')){
+        if(!$this->auth->has_permission('crear__editarPrecioCotizacion', 'cotizaciones/crear')){
             $editar_precio= 0;
         }
+
 
         $this->assets->agregar_var_js(array(
             "vista" => 'crear',
             "acceso" => $acceso,
             "empezable" => $empezable,
-            "editar_precio" => $editar_precio
+            "editar_precio" => $editar_precio,
         ));
 
         $data = array(
             'info' => isset($oportunidad_id) ? ['oportunidad_id' => $oportunidad_id] : []
         );
-        
-        $breadcrumb = array(
+
+        /*$breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Crear Cotización',
+        );*/
+        $breadcrumb = array( "titulo" => '<i class="fa fa-line-chart"></i> Crear Cotización',
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Ventas",
+                    "activo" => false
+                ),
+                1 => array(
+                    "nombre" => 'Cotizaciones',
+                    "url"=> 'cotizaciones/listar',
+                    "activo" => false
+                ),
+                2 => array(
+                    "nombre" => '<b>Crear</b>',
+                    "activo" => true
+                )
+            ),
+
         );
 
         $data['mensaje'] = $mensaje;
@@ -515,7 +565,6 @@ class Cotizaciones extends CRM_Controller {
         $this->_js();
 
         $cotizacion = $this->cotizacionRepository->findByUuid($uuid);
-
         if (is_null($uuid) || is_null($cotizacion)) {
             $mensaje = array('estado' => 500, 'mensaje' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
             $this->session->set_flashdata('mensaje', $mensaje);
@@ -527,31 +576,57 @@ class Cotizaciones extends CRM_Controller {
             $data['mensaje'] = $mensaje;
 
             $empezable = collect([
-                "{$cotizacion->cliente_tipo}s" => [0 => ['id' => $cotizacion->cliente_id, 'nombre' => $cotizacion->cliente->nombre]],
+                "{$cotizacion->cliente_tipos}" => [0 => ['id' => $cotizacion->cliente_id, 'nombre' => $cotizacion->cliente->nombre]],
                 "id" => $cotizacion->cliente_id,
                 "type" => $cotizacion->cliente_tipo
             ]);
+
 
             $this->assets->agregar_var_js(array(
                 "vista" => "editar",
                 "acceso" => $acceso,
                 "cotizacion" => $this->cotizacionRepository->getCollectionCotizacion($cotizacion),
                 "empezable" => $empezable
+
             ));
 
-            $breadcrumb = array(
-                "titulo" => '<i class="fa fa-line-chart"></i> Cotización: ' . $cotizacion->codigo,
+
+            $breadcrumb = array( "titulo" => '<i class="fa fa-line-chart"></i> Cotización: ' . $cotizacion->codigo,
+                "menu" => array(
+                    "nombre" => 'Acci&oacute;n',
+                    "url"	 => '#',
+                    "opciones" => array()
+                ),
+                "ruta" => array(
+                    0 => array(
+                        "nombre" => "Ventas",
+                        "activo" => false
+                    ),
+                    1 => array(
+                        "nombre" => 'Cotizaciones',
+                        "url"=> 'cotizaciones/listar',
+                        "activo" => false
+                    ),
+                    2 => array(
+                        "nombre" => '<b>Detalle</b>',
+                        "activo" => true
+                    )
+                ),
+                "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array("cotizaciones/historial/{$uuid}" => "Ver bit&aacute;cora")]
+
             );
+
             if ($cotizacion->imprimible) {
                 $breadcrumb["menu"]["opciones"]["cotizaciones/imprimir/" . $cotizacion->uuid_cotizacion] = "Imprimir";
             }
 
             $editar_precio = 1;
-            if(!$this->auth->has_permission('ver__editarPrecioCotizacion')){
-                $editar_precio= 0;
+            if(!$this->auth->has_permission('ver__editarPrecioCotizacion', 'cotizaciones/ver/(:any)')){
+                $editar_precio = 0;
             }
+
             $this->assets->agregar_var_js(array(
-                "editar_precio" => !empty($editar_precio) ? $editar_precio : 1
+                "editar_precio" => $editar_precio
             ));
 
             $this->template->agregar_titulo_header('Editar Cotizacion');
@@ -567,11 +642,13 @@ class Cotizaciones extends CRM_Controller {
         }
 
         $cotizacion = $this->cotizacionRepository->findByUuid($uuid);
-        $cotizacion->load("empresa");
+        $cotizacion->load("empresa",'centro_contable');
         $dompdf = new Dompdf();
+        $dompdf->set_option("isPhpEnabled", true);
         $data = ['cotizacion' => $cotizacion];
 
-        $html = $this->load->view('cotizacion', $data, true);
+        $html = $this->load->view('pdf/cotizacion', $data, true);
+        //echo $html; die;
         $dompdf->loadHtml($html);
 
         $dompdf->setPaper('A4', 'portrait');
@@ -597,7 +674,7 @@ class Cotizaciones extends CRM_Controller {
 
         //catalogos
         $clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true, 'conItems' => true, 'vendedor' => true, 'tipo_precio' => 'venta'];
-        
+
         $this->assets->agregar_var_js(array(
             'usuario_id' => $this->id_usuario,
             'clientes' => $this->clienteRepo->getCollectionClientes($this->clienteRepo->getClientesEstadoActivo($clause)->get()),
@@ -720,6 +797,72 @@ class Cotizaciones extends CRM_Controller {
         $this->load->view('tabla');
     }
 
+    function ocultotimeline(){
+        $this->load->view('timeline');
+    }
+
+    function historial($cotizacion_uuid = NULL){
+
+        $acceso = 1;
+        $mensaje =  array();
+        $data = array();
+       // dd($cotizacion_uuid);
+
+        $cotizacion = $this->cotizacionRepository->findByUuid($cotizacion_uuid);
+        if(!$this->auth->has_permission('acceso','contratos_alquiler/historial') && is_null($cotizacion)){
+            // No, tiene permiso
+            $acceso = 0;
+            $mensaje = array('estado'=>500, 'mensaje'=>' <b>Usted no cuenta con permiso para esta solicitud</b>','clase'=>'alert-danger');
+        }
+
+        $this->_Css();
+        $this->_js();
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/cotizaciones/vue.componente.timeline.js',
+            'public/assets/js/modules/cotizaciones/vue.timeline.js',
+
+        ));
+
+
+        $breadcrumb = array(
+            "titulo" => '<i class="fa fa-car"></i> Bit&aacute;cora: Contrato de alquiler '.$cotizacion->codigo,
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Ventas",
+                    "activo" => false,
+
+                ),
+                1 => array(
+                    "nombre" => "Cotizaciones",
+                    "activo" => false,
+                    "url" => 'cotizaciones/listar'
+                ),
+                2 => array(
+                    "nombre" => $cotizacion->codigo,
+                    "activo" => false,
+                    "url" => 'cotizaciones/editar/'.$cotizacion_uuid
+                ),
+                3 => array(
+                    "nombre" => '<b>Bitácora</b>',
+                    "activo" => true
+                )
+            ),
+            "filtro"    => false,
+            "menu"      => array()
+        );
+
+
+        $cotizacion->load('historial');
+        //dd($cotizacion);
+        $this->assets->agregar_var_js(array(
+            "timeline" => $cotizacion,
+        ));
+        $data['codigo'] = $cotizacion->codigo;
+        $this->template->agregar_titulo_header('Cotizaciones');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar();
+    }
     private function _Css() {
         $this->assets->agregar_css(array(
             'public/assets/css/default/ui/base/jquery-ui.css',
@@ -788,6 +931,7 @@ class Cotizaciones extends CRM_Controller {
         ));
     }
 
+
     function ajax_guardar_documentos() {
         if (empty($_POST)) {
             return false;
@@ -797,4 +941,143 @@ class Cotizaciones extends CRM_Controller {
         $modeloInstancia = $this->cotizacionRepository->findByUuid($cotizacion_id);
         $this->documentos->subir($modeloInstancia);
     }
+
+    public function exportar() {
+        if (empty($_POST)) {
+            exit();
+        }
+
+
+        $ids = $this->input->post('ids', true);
+
+        $id = explode(",", $ids);
+
+        if (empty($id)) {
+            return false;
+        }
+
+        $csv = array();
+        $clause = array("uuid_cotizacion" => $id);
+
+        $cotizaciones = $this->cotizacionRepository->exportar($clause);
+
+
+        if (empty($cotizaciones)) {
+            return false;
+        }
+
+        $i = 0;
+        foreach ($cotizaciones AS $row) {
+          //  $total_facturado = $row->total_facturado();
+            $csvdata[$i]['no_factura'] = utf8_decode(Util::verificar_valor($row->codigo));
+            $csvdata[$i]['cliente'] = utf8_decode(Util::verificar_valor($row->cliente->nombre));
+            $csvdata[$i]["fecha_desde"] = utf8_decode(Carbon::createFromFormat('m/d/Y', Util::verificar_valor($row->fecha_desde))->format('d/m/Y'));
+            $csvdata[$i]["fecha_hasta"] = utf8_decode(Carbon::createFromFormat('m/d/Y', Util::verificar_valor($row->fecha_hasta))->format('d/m/Y'));
+            $csvdata[$i]["estado"] = utf8_decode(Util::verificar_valor($row->etapa_catalogo->valor));
+            $csvdata[$i]["monto"] = utf8_decode(Util::verificar_valor(number_format(($row->total), 2, '.', ',')));
+            $csvdata[$i]['vendedor'] = utf8_decode(Util::verificar_valor($row->vendedor->nombre . " " . $row->vendedor->apellido));
+            $i++;
+        }
+
+        //we create the CSV into memory
+        $csv = Writer::createFromFileObject(new SplTempFileObject());
+        $csv->insertOne([
+            'No. Cotizacion',
+            'Cliente',
+            'Fecha de emision',
+            'Valido hasta',
+            'Estado',
+            'Monto',
+            'Vendedor'
+        ]);
+        $csv->insertAll($csvdata);
+        $csv->output("Cotizacion-" . date('ymd') . ".csv");
+        die;
+    }
+
+   /* public function duplicar($uuid = NULL){
+        $acceso = 1;
+        $mensaje = array();
+        if (!$this->auth->has_permission('acceso', 'cotizaciones/ver/(:any)')) {
+            // No, tiene permiso, redireccionarlo.
+            $acceso = 0;
+            $mensaje = array('estado' => 500, 'mensaje' => ' <b>Usted no cuenta con permiso para esta solicitud</b>', 'clase' => 'alert-danger');
+        }
+
+        $this->_Css();
+        $this->_js();
+
+        $cotizacion = $this->cotizacionRepository->findByUuid($uuid);
+        if (is_null($uuid) || is_null($cotizacion)) {
+            $mensaje = array('estado' => 500, 'mensaje' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
+            $this->session->set_flashdata('mensaje', $mensaje);
+            redirect(base_url('cotizaciones/listar'));
+        } else {
+
+            $data = array();
+            $data['cotizacion_id'] = $cotizacion->id;
+            $data['mensaje'] = $mensaje;
+
+            $empezable = collect([
+               // "{$cotizacion->cliente_tipos}" => [0 => ['id' => $cotizacion->cliente_id, 'nombre' => $cotizacion->cliente->nombre]],
+                "id" => '',//$cotizacion->cliente_id,
+                "type" => '',//$cotizacion->cliente_tipo,
+                'clientes' => [],
+                'cliente_potencials' => []
+            ]);
+            //dd($cotizacion);
+
+            $this->assets->agregar_var_js(array(
+                "vista" => "duplicar",
+                "acceso" => $acceso,
+                "cotizacion" => $this->cotizacionRepository->getCollectionCotizacionDuplicar($cotizacion),
+                "empezable" => $empezable
+
+            ));
+
+
+            $breadcrumb = array( "titulo" => '<i class="fa fa-line-chart"></i> Cotización: ' . $cotizacion->codigo,
+                "menu" => array(
+                    "nombre" => 'Acci&oacute;n',
+                    "url"	 => '#',
+                    "opciones" => array()
+                ),
+                "ruta" => array(
+                    0 => array(
+                        "nombre" => "Ventas",
+                        "activo" => false
+                    ),
+                    1 => array(
+                        "nombre" => 'Cotizaciones',
+                        "url"=> 'cotizaciones/listar',
+                        "activo" => false
+                    ),
+                    2 => array(
+                        "nombre" => '<b>Detalle</b>',
+                        "activo" => true
+                    )
+                ),
+                "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array("cotizaciones/historial/{$uuid}" => "Ver bit&aacute;cora")]
+
+            );
+
+            if ($cotizacion->imprimible) {
+                $breadcrumb["menu"]["opciones"]["cotizaciones/imprimir/" . $cotizacion->uuid_cotizacion] = "Imprimir";
+            }
+
+            $editar_precio = 1;
+            if(!$this->auth->has_permission('ver__editarPrecioCotizacion', 'cotizaciones/ver/(:any)')){
+                $editar_precio = 0;
+            }
+
+            $this->assets->agregar_var_js(array(
+                "editar_precio" => $editar_precio
+            ));
+
+            $this->template->agregar_titulo_header('Duplicar Cotizacion');
+            $this->template->agregar_breadcrumb($breadcrumb);
+            $this->template->agregar_contenido($data);
+            $this->template->visualizar();
+        }
+    }*/
 }

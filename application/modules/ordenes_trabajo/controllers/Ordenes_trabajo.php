@@ -84,7 +84,7 @@ class Ordenes_trabajo extends CRM_Controller {
     protected $facturaVentaRepository;
     protected $CentrosContablesRepository;
     protected $FacturaVentaCatalogoRepository;
-
+		protected $DocumentosRepository;
 
 	function __construct() {
 		parent::__construct ();
@@ -93,7 +93,7 @@ class Ordenes_trabajo extends CRM_Controller {
 		$this->load->model("ajustes/Ajustes_orm");
 		$this->load->model("traslados/Traslados_orm");
 		$this->load->model("ordenes/Ordenes_orm");
-		$this->load->module('inventarios/Inventarios');
+		$this->load->module(array('inventarios/Inventarios', 'documentos'));
 		$this->load->model('contabilidad/Cuentas_orm');
 
 
@@ -144,6 +144,7 @@ class Ordenes_trabajo extends CRM_Controller {
 			'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
 			'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
 			'public/assets/css/modules/stylesheets/ordenes_trabajo.css',
+			'public/assets/css/plugins/jquery/jquery.fileupload.css',
 		));
 		$this->assets->agregar_js(array(
 			'public/assets/js/default/jquery-ui.min.js',
@@ -154,6 +155,7 @@ class Ordenes_trabajo extends CRM_Controller {
 			'public/assets/js/plugins/bootstrap/daterangepicker.js',
 			'public/assets/js/default/toast.controller.js',
 			'public/assets/js/default/formulario.js',
+			'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
 		));
 
 		//------------------------------------------
@@ -197,6 +199,7 @@ class Ordenes_trabajo extends CRM_Controller {
 		$clause = array(
 				"empresa_id" => $this->empresa_id
 		);
+       // dd($this->empresa_id, $this->usuario_id);
 		$no_orden 		= $this->input->post('no_orden', true);
 		$cliente 		= $this->input->post('cliente', true);
 		$estado_id 		= $this->input->post('estado_id', true);
@@ -253,12 +256,13 @@ class Ordenes_trabajo extends CRM_Controller {
 				$link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
 				$hidden_options .= '<a href="' . base_url("ordenes_trabajo/ver/$uuid_orden") . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
-				$hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success">Ver Bit&aacute;cora</a>';
+				$hidden_options .= '<a href="' . base_url("ordenes_trabajo/historial/$uuid_orden") . '" data-id="'. $uuid_orden .'" class="btn btn-block btn-outline btn-success">Ver Bit&aacute;cora</a>';
 
 				//motrar boton facturar si es facturable(si)
 				if(preg_match("/por facturar/i", Util::verificar_valor($row["estado"]["etiqueta"]))){
 					$hidden_options .= '<a href="' . base_url("cajas/transferir/$uuid_orden") . '" class="btn btn-block btn-outline btn-success m-t-xs" data-id="' . $row['id'] . '">Facturar</a>';
 				}
+				$hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success subirArchivoBtn" data-id="'. $row['id'] .'" data-uuid="'. $uuid_orden .'" >Subir archivo</a>';
 
 				$label_estado = str_replace(" ", "-", strtolower($row["estado"]["etiqueta"]));
 
@@ -369,7 +373,17 @@ class Ordenes_trabajo extends CRM_Controller {
 			$info = $this->OrdenesTrabajoRepository->findByUuid($orden_uuid);
 			$titulo_formulario 	= '<i class="fa fa-wrench"></i> &Oacute;rdenes de trabajo: '. (!empty($info->numero) ? $info->numero : "");
 
+			//subpanels
+			$data['ordenes_trabajo_id'] = $info->id;
+			$subpanels = [
+				'ordenes_trabajo'=>$info->id,
+				'clientes'=>$info->id,
+			];
+			$data['subpanels'] = $subpanels;
 
+			$this->assets->agregar_var_js(array(
+					'cliente' => $info->cliente_id
+			));
 		}
 
 		$breadcrumb = array(
@@ -379,6 +393,7 @@ class Ordenes_trabajo extends CRM_Controller {
                         if ($info->tipo_orden_id==1) {
                             //imprimir solo para servicio
                             $breadcrumb["menu"]["opciones"]["ordenes_trabajo/imprimir_orden_trabajo/" . $info->uuid_orden_trabajo] = "Imprimir";
+                            $breadcrumb["menu"]["opciones"]["ordenes_trabajo/historial/" . $info->uuid_orden_trabajo] = "Ver bit&aacute;cora";
                         }
                 }
 		$this->template->agregar_titulo_header('Nueva Orden de Trabajo');
@@ -397,8 +412,8 @@ class Ordenes_trabajo extends CRM_Controller {
 
                 $data = ['info' => $info, 'history' => $history];
 
-                $html = $this->load->view('ordendetrabajo', $data, true);
-
+                $html = $this->load->view('pdf/ordendetrabajo', $data, true);
+                //echo '<pre>'. $html . '</pre>'; die;
 
                 $dompdf->loadHtml($html);
                 $dompdf->setPaper('A4', 'portrait');
@@ -481,7 +496,7 @@ class Ordenes_trabajo extends CRM_Controller {
 
 	public function ajax_guardar_orden() {
 
-		/*echo "<pre>";
+		 /*echo "<pre>";
 		print_r($_POST);
 		echo "</pre>";
 		die('HERE YES');*/
@@ -498,7 +513,7 @@ class Ordenes_trabajo extends CRM_Controller {
 			$id = $this->input->post('id', true);
 			$servicios = $this->input->post('servicios', true);
 
-            //dd($_POST);
+           /// dd($_POST);
 			$delete_item = $this->input->post('delete_items', true);
 			unset($_POST["servicios"]);
 			unset($_POST["credito_favor"]);
@@ -515,10 +530,12 @@ class Ordenes_trabajo extends CRM_Controller {
 
 			$fieldset["equipo_trabajo_id"] = !empty($_POST["equipo_trabajo_id"]) ? $_POST["equipo_trabajo_id"] : "0";
 			$fieldset["centro_facturable_id"] = !empty($_POST["centro_facturable_id"]) ? $_POST["centro_facturable_id"] : "0";
-
+           // dd($fieldset);
             //Darle mformato a la fecha
             $fieldset["fecha_inicio"] = Carbon::createFromFormat('d/m/Y', $_POST["fecha_inicio"])->format('Y-m-d');
-            $fieldset["fecha_planificada_fin"] = Carbon::createFromFormat('d/m/Y', $_POST["fecha_planificada_fin"])->format('Y-m-d');
+            if (!empty($_POST["fecha_planificada_fin"])) {
+                $fieldset["fecha_planificada_fin"] = Carbon::createFromFormat('d/m/Y', $_POST["fecha_planificada_fin"])->format('Y-m-d');
+            }
             if (!empty($_POST["fecha_real_fin"])){
                 $fieldset["fecha_real_fin"] = Carbon::createFromFormat('d/m/Y',$_POST["fecha_real_fin"])->format('Y-m-d');
             }
@@ -531,7 +548,7 @@ class Ordenes_trabajo extends CRM_Controller {
            // $fieldset["descuento"] = $_POST["descuento"];
            // $fieldset["impuestos"] = $_POST["impuestos"];
            // $fieldset["total"] = $_POST["total"];
-            $fieldset["comentarios"] = $_POST["comentario"];
+            $fieldset["comentario"] = $_POST["comentario"];
             $fieldset["id"] = $_POST["id"];
 
            // dd($servicios);
@@ -550,17 +567,23 @@ class Ordenes_trabajo extends CRM_Controller {
 				$ids = explode(',', $delete_item);
 				$this->lineItemRepository->delete($ids);
 			}
-
+            $clause = array(
+                "empresa_id" => $this->empresa_id
+            );
 			//--------------------
 			// Guardar/Actualizar
 			// Orden de TRabajo
 			//--------------------
 			if(empty($id)) {
-                $fieldset["uuid_orden_trabajo"] = Capsule::raw("ORDER_UUID(uuid())");
-                $fieldset["numero"] = Capsule::raw("NO_ORDEN_TRABAJO('ODT', " . $this->empresa_id . ")");
-                $fieldset["empresa_id"] = $this->empresa_id;
-                $fieldset["creado_por"] = $this->usuario_id;
-                //dd($fieldset);
+                                $fieldset["uuid_orden_trabajo"] = Capsule::raw("ORDER_UUID(uuid())");
+                                $total = $this->OrdenesTrabajoRepository->listar($clause, NULL, NULL, NULL, NULL)->count();
+                                $year = Carbon::now()->format('y');
+                                $codigo = Util::generar_codigo('ODT' . $year, $total + 1, strlen(($total + 1) . "") > 1 ? 6 : 4);
+                                $fieldset["numero"] = $codigo;
+                              //  $fieldset["numero"] = Capsule::raw("NO_ORDEN_TRABAJO('ODT', " . $this->empresa_id . ")");
+                                $fieldset["empresa_id"] = $this->empresa_id;
+                                $fieldset["creado_por"] = $this->usuario_id;
+                                //dd($fieldset);
 				$modelOrdenTrabajo = $this->OrdenesTrabajoRepository->create($fieldset);
 			} else {
 				$modelOrdenTrabajo = $this->OrdenesTrabajoRepository->update($fieldset);
@@ -579,18 +602,32 @@ class Ordenes_trabajo extends CRM_Controller {
             ));
             exit;
         }
-
+        if (!is_null($modelOrdenTrabajo)) {
+            Capsule::commit();
+            $model = $modelOrdenTrabajo->fresh();
+            $mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente ' . $model->codigo);
+            echo json_encode(array(
+                "guardado" => true,
+                "mensaje" => "Se ha " . (!empty($id) ? "actualizado" : "guardado") . " la orden satisfactoriamente."
+            ));
+        } else {
+            $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error! Su solicitud no fue procesada</b> ');
+            echo json_encode(array(
+                "guardado" => false,
+                "mensaje" => "Hubo un error tratando de " . (!empty($id) ? "actualizar" : "guardar") . " la orden."
+            ));
+        }
         $this->session->set_flashdata('mensaje', "Se ha " . (!empty($id) ? "actualizado" : "guardado") . " la orden satisfactoriamente.");
 
         // If we reach here, then
         // data is valid and working.
         // Commit the queries!
-        Capsule::commit();
+       // Capsule::commit();
 
-        echo json_encode(array(
+        /*echo json_encode(array(
             "guardado" => true,
             "mensaje" => "Se ha " . (!empty($id) ? "actualizado" : "guardado") . " la orden satisfactoriamente."
-        ));
+        ));*/
         exit;
 	}
 
@@ -1304,4 +1341,127 @@ class Ordenes_trabajo extends CRM_Controller {
             ->set_output(json_encode($orden->comentario_timeline->toArray()))->_display();
         exit;
     }
+
+		function documentos_campos(){
+			return array(
+			array(
+				"type"		=> "hidden",
+				"name" 		=> "ordenes_trabajo_id",
+				"id" 		=> "ordenes_trabajo_id",
+				"class"		=> "form-control",
+				"readonly"	=> "readonly",
+			));
+
+    }
+
+    function ajax_guardar_documentos()
+    {
+    	if(empty($_POST)){
+    		return false;
+    	}
+    	$ordenes_trabajo_id = $this->input->post('ordenes_trabajo_id', true);
+    	$modeloInstancia = $this->OrdenesTrabajoRepository->find($ordenes_trabajo_id);
+    	$this->documentos->subir($modeloInstancia);
+    }
+
+   public function historial($uuid = NULL){
+
+        $acceso = 1;
+        $mensaje =  array();
+        $data = array();
+
+        $odt = $this->OrdenesTrabajoRepository->findByUuid($uuid);
+        if(!$this->auth->has_permission('acceso','ordenes_trabajo/historial') && is_null($odt)){
+            // No, tiene permiso
+            $acceso = 0;
+            $mensaje = array('estado'=>500, 'mensaje'=>' <b>Usted no cuenta con permiso para esta solicitud</b>','clase'=>'alert-danger');
+        }
+
+        $this->assets->agregar_css(array(
+            'public/assets/css/default/ui/base/jquery-ui.css',
+            'public/assets/css/default/ui/base/jquery-ui.theme.css',
+            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
+            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
+            'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
+            'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
+            'public/assets/css/plugins/jquery/chosen/chosen.min.css',
+            'public/assets/js/plugins/jquery/sweetalert/sweetalert.css',
+            'public/assets/css/modules/stylesheets/cotizaciones.css',
+            'public/assets/css/plugins/jquery/jquery.fileupload.css',
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css',
+            'public/assets/css/plugins/jquery/jquery.webui-popover.css',
+        ));
+        $this->assets->agregar_js(array(
+            'public/assets/js/default/jquery-ui.min.js',
+            'public/assets/js/plugins/jquery/jquery.sticky.js',
+            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+            'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
+            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
+            'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
+            'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
+            'public/assets/js/plugins/jquery/combodate/combodate.js',
+            'public/assets/js/plugins/jquery/combodate/momentjs.js',
+            'public/assets/js/default/lodash.min.js',
+            'public/assets/js/default/accounting.min.js',
+            'public/assets/js/plugins/jquery/chosen.jquery.min.js',
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
+            'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
+            'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
+            'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
+            'public/assets/js/moment-with-locales-290.js',
+            'public/assets/js/default/vue/directives/datepicker2.js',
+            'public/assets/js/default/vue/directives/inputmask.js',
+            'public/assets/js/default/vue/directives/select2.js',
+            'public/assets/js/plugins/bootstrap/daterangepicker.js',
+            'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
+            'public/assets/js/plugins/jquery/jquery.webui-popover.js',
+            'public/assets/js/modules/ordenes_trabajo/vue.componente.timeline.js',
+            'public/assets/js/modules/ordenes_trabajo/vue.timeline.js',
+        ));
+
+
+
+        $breadcrumb = array(
+            "titulo" => '<i class="fa fa-car"></i> Bit&aacute;cora: Orden de trabajo '.$odt->codigo,
+            "ruta" => array(
+                0 => array(
+                    "nombre" => "Servicios",
+                    "activo" => false,
+
+                ),
+                1 => array(
+                    "nombre" => "Ordenes de Trabajo",
+                    "activo" => false,
+                    "url" => 'ordenes_trabajo/listar'
+                ),
+                2 => array(
+                    "nombre" => $odt->codigo,
+                    "activo" => false,
+                    "url" => 'ordenes_trabajo/ver/'.$uuid
+                ),
+                3 => array(
+                    "nombre" => '<b>Bitácora</b>',
+                    "activo" => true
+                )
+            ),
+            "filtro"    => false,
+            "menu"      => array()
+        );
+
+
+        $odt->load('historial');
+
+        $this->assets->agregar_var_js(array(
+            "timeline" => $odt,
+        ));
+        $data['codigo'] = $odt->codigo;
+        $this->template->agregar_titulo_header('Ordenes de trabajo');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar();
+    }
+
 }

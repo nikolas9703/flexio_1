@@ -24,6 +24,7 @@ use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\Inventarios\Repository\UnidadesRepository;
 use Flexio\Modulo\Inventarios\Repository\ItemsCatRepository;
+use Flexio\Modulo\OrdenesCompra\Repository\OrdenesCompraRepository;
 
 //utils
 use Flexio\Library\Util\FlexioSession;
@@ -47,6 +48,7 @@ class Pedidos extends CRM_Controller
     protected $ImpuestosRepository;
     protected $UnidadesRepository;
     protected $ItemsCatRepository;
+    protected $OrdenesCompraRepo;
 
     //utils
     protected $FlexioSession;
@@ -90,7 +92,7 @@ class Pedidos extends CRM_Controller
         $this->ImpuestosRepository = new ImpuestosRepository;
         $this->UnidadesRepository = new UnidadesRepository;
         $this->ItemsCatRepository = new ItemsCatRepository;
-
+        $this->OrdenesCompraRepo = new OrdenesCompraRepository;
         //utils
         $this->FlexioSession = new FlexioSession;
 
@@ -106,8 +108,7 @@ class Pedidos extends CRM_Controller
 
     public function listar()
     {
-
-    	//Verificar permisos de acceso a esta vista
+        //Verificar permisos de acceso a esta vista
     	if(!$this->auth->has_permission('acceso', 'pedidos/listar')){
     		//Redireccionar
     		redirect(base_url('/'));
@@ -212,7 +213,7 @@ class Pedidos extends CRM_Controller
                 //IMPORTANTE A MODO DE DESARROLLO ANADI LA CONDICION OR 1
                 //PARA QUE TODAS LAS CONDICIONES DIERAN TRUE
 
-                if(1 OR $this->auth->has_permission('acceso', 'pedidos/ver/(:any)')){
+                if($this->auth->has_permission('acceso', 'pedidos/ver/(:any)')){
                     $hidden_options .= '<a href="'. base_url('pedidos/ver/'. $row->uuid_pedido) .'" class="btn btn-block btn-outline btn-success">Ver Pedido</a>';
                 }
 
@@ -223,7 +224,7 @@ class Pedidos extends CRM_Controller
                 //4.- En orden
                 //5.- Completado
                 //6.- Anulado
-                if(1 OR ($row->id_estado > 1 and $row->id_estado < 4) and $this->auth->has_permission('acceso', 'ordenes_compra/crear-orden-compra/(:any)')){
+                if(($row->id_estado > 1 and $row->id_estado < 4) and $this->auth->has_permission('acceso', 'ordenes_compra/crear-orden-compra/(:any)')){
                     $hidden_options .= '<a href="'. base_url('ordenes_compra/crear-orden-compra/pedido='. $row->uuid_pedido) .'" class="btn btn-block btn-outline btn-success">Convertir a Orden de Compra</a>';
                 }
 
@@ -234,7 +235,7 @@ class Pedidos extends CRM_Controller
                 //4.- En orden
                 //5.- Completado
                 //6.- Anulado
-                if(1 OR ($row->id_estado > 1 and $row->id_estado < 4) and $this->auth->has_permission('acceso', 'traslados/crear-traslado/(:any)')){
+                if(($row->id_estado > 1 and $row->id_estado < 4) and $this->auth->has_permission('acceso', 'traslados/crear-traslado/(:any)')){
                     $hidden_options .= '<a href="'. base_url('traslados/crear-traslado/pedido='. $row->uuid_pedido) .'" class="btn btn-block btn-outline btn-success">Convertir a Traslado</a>';
                 }
 
@@ -281,12 +282,13 @@ class Pedidos extends CRM_Controller
                                 ::where("id_campo", "=", "7")
                                 ->orderBy("id_cat", "ASC")
                                 ->get();
-
-            $data["centros"]    = Centros_orm::deEmpresa($this->id_empresa)
+            $clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true];
+            $data["centros"] = $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause));
+           /* $data["centros"]    = Centros_orm::deEmpresa($this->id_empresa)
                                 ->activa()
                                 ->deMasJuventud($this->id_empresa)
                                 ->orderBy("nombre", "ASC")
-                                ->get();
+                                ->get();*/
 
             $data           = array_merge($data,$camposGrid);
         }
@@ -392,6 +394,38 @@ class Pedidos extends CRM_Controller
 
     }
 
+
+    public function ajax_validar_pedido() {
+      // Just Allow ajax request
+      if (! $this->input->is_ajax_request ()) {
+       return false;
+      }
+
+      Capsule::beginTransaction();
+      try {
+       $pedido_id = $this->input->post ('pedido_id', true);
+
+       $pedido = $this->PedidoRepository->find($pedido_id);
+       $pedido->validado = 'si';
+       $pedido->save();
+
+       } catch(ValidationException $e){
+       Capsule::rollback();
+       echo json_encode(array(
+           "response" => false,
+           "mensaje" => "Hubo un error tratando de actualizar el registro."
+       ));
+       exit;
+      }
+      Capsule::commit();
+
+      echo json_encode(array(
+         "response" => true,
+         "mensaje" => "Se ha actualizado el registro satisfactoriamente."
+      ));
+      exit;
+ }
+
     public function ajax_listar()
     {
     	//Just Allow ajax request
@@ -444,6 +478,7 @@ class Pedidos extends CRM_Controller
             //subpanels
             $orden_compra_id    = $this->input->post('orden_compra_id', true);
             $factura_compra_id  = $this->input->post('factura_compra_id', true);
+            $item_id    = $this->input->post('item_id', true);
 
             //filtros de centros contables del usuario
             $centros = $this->FlexioSession->usuarioCentrosContablesHex();
@@ -461,6 +496,10 @@ class Pedidos extends CRM_Controller
             if(!empty($factura_compra_id)){
                 $registros          = $registros->deFacturaDeCompra($factura_compra_id);
                 $registros_count    = $registros_count->deFacturaDeCompra($factura_compra_id);
+            }
+            if(!empty($item_id)){
+                $registros          = $registros->deItem($item_id);
+                $registros_count    = $registros_count->deItem($item_id);
             }
 
             if(!empty($fecha1)||!empty($fecha2)){
@@ -564,12 +603,16 @@ class Pedidos extends CRM_Controller
                         $hidden_options .= '<a href="'. base_url('ordenes/crear/'. $row->uuid_pedido) .'" class="btn btn-block btn-outline btn-success">Convertir a &oacute;rden de compra</a>';
                     }
 
-                    if($row->comprable and $this->auth->has_permission('acceso', 'traslados/crear/(:any)')){
-                        $hidden_options .= '<a href="'. base_url('traslados/crear/'. $row->uuid_pedido) .'" class="btn btn-block btn-outline btn-success">Convertir a traslado</a>';
+                    if($row->comprable and $this->auth->has_permission('acceso', 'traslados/crear')){
+                        $hidden_options .= '<a href="'. base_url('traslados/crear/?pedido_id='. $row->id) .'" class="btn btn-block btn-outline btn-success">Convertir a traslado</a>';
                     }
 
                     if(($row->id_estado < 3) and $this->auth->has_permission('acceso', 'pedidos/ajax-anular')){
                         $hidden_options .= '<a href="#" data-uuid="'.$row->uuid_pedido.'" class="btn btn-block btn-outline btn-success anular">Anular pedido</a>';
+                    }
+
+                    if(1 or $this->auth->has_permission('acceso', 'pedidos/historial/(:any)')){
+                        $hidden_options .= '<a href="'. base_url('pedidos/historial/'. $row->uuid_pedido) .'" data-id="'.$row->id.'" class="btn btn-block btn-outline btn-success ">ver bit&aacute;cora</a>';
                     }
 
                     if($this->auth->has_permission('acceso', 'pedidos/ver/(:any)')){
@@ -585,6 +628,12 @@ class Pedidos extends CRM_Controller
                     else{
                         $enlace_estado = '<span class="label label-information" style="background-color:#1C84C6; color:#ffffff;">'. $row->estado->etiqueta .'</span>';
                     }
+                    $validado = $row->validado == 'si'?'  <span class="btn btn-info btn-circle"><i class="fa fa-check"></i></span>':'';
+
+                    if( $row->validado == 'no' )
+                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success validarPedido" >Validar</a>';
+
+
                     //Si no tiene acceso a ninguna opcion
                     //ocultarle el boton de opciones
                     if($hidden_options == ""){
@@ -594,7 +643,7 @@ class Pedidos extends CRM_Controller
                     $response->rows[$i]["id"]   = $row->uuid_pedido;
                     $response->rows[$i]["cell"] = array(
                         $row->fecha_creacion,
-                        $enlace,
+                        $enlace.$validado,
                         isset($row->referencia) ? $row->referencia : "",
                         count($row->centro) ? $row->centro->nombre : '',
                         $enlace_estado,
@@ -799,7 +848,8 @@ class Pedidos extends CRM_Controller
         ));
 
         //catalogos
-        $clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true, 'conItems' => true, 'comprador' => true];
+        //$clause = ['empresa_id' => $this->id_empresa, 'transaccionales' => true, 'conItems' => true, 'comprador' => true, 'tipo_cuenta_id' => 5];
+        $clause = ['empresa_id'=>$this->id_empresa,'ordenables'=>true,'transaccionales'=>true,'conItems'=>true, 'estado != por_aprobar']; // Requerimiento: listar todas las cuentas
         $this->assets->agregar_var_js(array(
             'bodegas' => $this->BodegasRepository->getCollectionBodegas($this->BodegasRepository->get($clause)),
             'usuario_id' => $this->id_usuario,
@@ -981,10 +1031,13 @@ class Pedidos extends CRM_Controller
 
         $pedido = $this->PedidoRepository->findByUuid($uuid);
 
+        $ordenes = $this->OrdenesCompraRepo->getOrdenesPedidoWithItems($uuid);
+
         $this->assets->agregar_var_js(array(
             "vista" => 'editar',
             "acceso" => $acceso,
             "pedido" => $this->PedidoRepository->getCollectionPedido($pedido),
+            'ordenesPedido' => collect($ordenes->toarray()),
             'politica_transaccion' => $pedido->politica()
         ));
 
@@ -992,11 +1045,29 @@ class Pedidos extends CRM_Controller
     	//para mostrarlo en caso de haber error
     	$data["message"] = $mensaje;
 
-        $breadcrumb = array(
-            "titulo" => '<i class="fa fa-shopping-cart"></i> Pedido '.$pedido->numero
-    	);
+ 
+      $breadcrumb = array(
+          "titulo" => '<i class="fa fa-shopping-cart"></i> Pedido '.$pedido->numero,
+          "ruta" => array(
+            0 => array(
+                "nombre" => "Compras",
+                "activo" => false,
+              ),
+             1 => array(
+                 "nombre" => "Pedidos",
+                 "activo" => false,
+                   "url" => 'pedidos/listar'
+              ),
+              2 => array(
+                  "nombre" => "<b>Detalle</b>",
+                  "activo" => true,
 
+              )
 
+          ),
+      );
+   
+        $breadcrumb["menu"]["opciones"]["pedidos/historial/" . $pedido->uuid_pedido] = "Ver bit&aacute;cora";
         //Importante -> para subpanel -> cambiar por id...
         $data["pedido_id"] = $pedido->id;
         $this->template->agregar_titulo_header('Pedidos');
@@ -1028,6 +1099,53 @@ class Pedidos extends CRM_Controller
     	$modeloInstancia = PedidosModel::find($pedido_id);
 
     	$this->documentos->subir($modeloInstancia);
+    }
+
+   public function historial($uuid = null){
+       $acceso = 1;
+       $mensaje =  array();
+       $data = array();
+
+       $pedido = $this->PedidoRepository->findByUuid($uuid);
+
+       if(!$this->auth->has_permission('acceso','pedidos/historial/(:any)') && is_null($pedido)){
+          $acceso = 0;
+          $mensaje = array('estado'=>500, 'mensaje'=>' <b>Usted no cuenta con permiso para esta solicitud</b>','clase'=>'alert-danger');
+      }
+
+      $this->_css();
+      $this->_js();
+      $this->assets->agregar_js(array(
+           'public/resources/compile/modulos/pedidos/historial.js'
+      ));
+
+      $pedido->load('historial');
+
+      $historial =  $pedido->historial->map(function($historial)use($pedido){
+           return [
+               'titulo' => $historial->titulo,
+               'descripcion' => $historial->descripcion,
+               'antes' => $historial->antes,
+               'codigo' => $pedido->numero,
+               'despues' => $historial->despues,
+               'tipo' => $historial->tipo,
+               'nombre_usuario' => $historial->nombre_usuario,
+               'hora' => $historial->hora,
+               'fecha_creacion' => $historial->fecha_creacion
+           ];
+      });
+      $this->assets->agregar_var_js(array(
+          'historial' => $historial
+      ));
+      $breadcrumb = array(
+        "titulo" => '<i class="fa fa-shopping-cart"></i> Bit&aacute;cora: Pedido '.$pedido->numero,
+      );
+
+      $this->template->agregar_titulo_header('&Oacute;rdenes de compras');
+      $this->template->agregar_breadcrumb($breadcrumb);
+      $this->template->agregar_contenido($data);
+      $this->template->visualizar();
+
     }
 
 }

@@ -8,11 +8,11 @@
     <tbody>
     <tr>
         <td>
-            <div id="cuentas_activo">cuentas</div>
+            <div id="cuentas_activo_planilla">cuentas</div>
         </td>
         <td  valign="top" style="vertical-align:top">
-            <div id="cuenta_seleccionada"></div>
-            <input type="hidden" id="id_seleccion" value=""/>
+            <div id="cuenta_seleccionada_planilla"></div>
+            <input type="hidden" id="id_seleccion_planilla" value=""/>
         </td>
     </tr>
     </tbody>

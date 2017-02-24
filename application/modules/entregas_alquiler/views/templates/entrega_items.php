@@ -8,10 +8,10 @@
                 <tr>
                     <td width="1%" style="border:1px solid white"></td>
                     <th width="14%">Categor&iacute;a del &iacute;tem</th>
-                    <th width="14%">&Iacute;tem a entregar</th>
+                    <th width="30%">&Iacute;tem a entregar</th>
                     <th width="14%">Atributo</th>
-                    <th width="14%">Periodo tarifario</th>
-                    <th width="14%">Tarifa por periodo</th>
+                    <th width="10%">Periodo tarifario</th>
+                    <th width="10%">Tarifa por periodo</th>
                     <th width="1%" style="background-color: white;"></th>
                 </tr>
             </thead>
@@ -62,7 +62,7 @@
                 <tr v-show="articulo.caret == 'fa-caret-down'">
                     <td style="border:1px solid white"></td>
                     <td colspan="5">
-                        <entrega_item v-bind:parent_index="$index" v-bind:parent_articulo="articulo"></entrega_item>
+                        <entrega_item v-bind:parent_index="$index" v-bind:parent_articulo.sync="articulo" :parent_articulos.sync="articulos"></entrega_item>
                     </td>
                     <td></td>
                 </tr>

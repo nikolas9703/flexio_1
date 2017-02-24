@@ -137,8 +137,10 @@ class Ordenes_alquiler extends CRM_Controller {
 
     function listar() {
         // Verificar si tiene permiso para listar
-        if (!$this->auth->has_permission('acceso')) {
+
+        if (!$this->auth->has_permission('acceso', 'ordenes_alquiler/listar')) {
             // No, tiene permiso, redireccionarlo.
+
             redirect('/');
         }
 
@@ -252,11 +254,11 @@ class Ordenes_alquiler extends CRM_Controller {
         $acceso = 1;
         $mensaje = array();
 
-        /*if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'ordenes_alquiler/crear/(:any)/(:num)')) {
             // No, tiene permiso, redireccionarlo.
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => ' <b>Usted no cuenta con permiso para esta solicitud</b>', 'clase' => 'alert-danger');
-        }*/
+        }
 
         $this->_Css();
         $this->_js();
@@ -271,7 +273,7 @@ class Ordenes_alquiler extends CRM_Controller {
             "vista" => 'crear',
             "acceso" => $acceso,
             "empezable" => $empezable,
-            "editar_precio" => $this->auth->has_permission('crear__editarPrecioOrdenAlquiler') == true ? 1 : 0
+            "editar_precio" => $this->auth->has_permission('crear__editarPrecioOrdenAlquiler', 'ordenes_alquiler/crear') == true ? 1 : 0
         ));
 
         $breadcrumb = array(
@@ -322,11 +324,13 @@ class Ordenes_alquiler extends CRM_Controller {
             ]) : "";
 
             $ov = $this->OrdenVentaAlquilerRepository->getCollectionOrdenVenta($ordenVenta);
-            //dd($ov);
+            $ovinfo = $ov->toArray();
 
             $this->assets->agregar_var_js(array(
                 "vista" => 'editar',
                 "orden_venta" => $ov,
+                "campo" => collect(["cliente" => $ovinfo["cliente_id"]]),
+                //"ova_cliente_id" => $ovinfo["cliente_id"],
                 "acceso" => $acceso,
                 "empezable" => $empezable,
                 "uuid_orden" => $uuid,
@@ -367,6 +371,7 @@ class Ordenes_alquiler extends CRM_Controller {
         /*
           paramentos de busqueda aqui
          */
+
         $uuid_cliente = $this->input->post("cliente_id");
 
         $no_orden = $this->input->post('no_orden', TRUE);
@@ -407,8 +412,9 @@ class Ordenes_alquiler extends CRM_Controller {
         if (!empty($vendedor))
             $clause['creado_por'] = $vendedor;
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-
+        $clause['campo'] = $this->input->post('campo');
         $count = $this->OrdenVentaAlquilerRepository->lista_totales($clause);
+
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
 
         $ordenes = $this->OrdenVentaAlquilerRepository->listar($clause, $sidx, $sord, $limit, $start);
@@ -418,7 +424,8 @@ class Ordenes_alquiler extends CRM_Controller {
         $response->total = $total_pages;
         $response->records = $count;
 
-        if (!empty($ordenes->toArray())) {
+        if (!empty($ordenes->toArray())&&count($ordenes)>0) {
+
             $i = 0;
             foreach ($ordenes as $row) {
                 $hidden_options = "";
@@ -459,6 +466,18 @@ class Ordenes_alquiler extends CRM_Controller {
 
     public function ocultotabla($uuid = NULL, $modulo = NULL) {
 
+        if(is_array($uuid))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($uuid)
+            ]);
+        }
+        elseif($uuid and count(explode("=", $uuid)) > 1)
+        {
+            $aux = explode("=", $uuid);
+            $this->assets->agregar_var_js([$aux[0]=>$aux[1]]);
+        }
+
         $this->assets->agregar_js(array(
             'public/assets/js/modules/ordenes_alquiler/tabla.js'
         ));
@@ -489,8 +508,6 @@ class Ordenes_alquiler extends CRM_Controller {
     }
 
     public function guardar() {
-
-      //dd($_POST);
 
         if ($_POST) {
 
@@ -541,7 +558,7 @@ class Ordenes_alquiler extends CRM_Controller {
                 if (empty($orden_alquiler['id'])) {
                     $total = $this->OrdenVentaAlquilerRepository->lista_totales(['empresa_id' => $this->empresa_id]);
                     $year = Carbon::now()->format('y');
-                    $codigo = Util::generar_codigo('SO' . $year, $total + 1);
+                    $codigo = Util::generar_codigo('SOA' . $year, $total + 1);
                     $orden_alquiler['codigo'] = $codigo;
                 }
 

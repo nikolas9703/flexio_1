@@ -71,7 +71,7 @@
                      </select>
                 </div>
 
-                                               <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" v-if="formulario.modulo !=='pedido'">
+                                               <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" v-if="formulario.modulo !=='pedido' && formulario.modulo !=='aseguradora' && formulario.modulo !=='ramos' && formulario.modulo !=='ajustadores' && formulario.modulo !=='agentes' && formulario.modulo !=='intereses_asegurados' && formulario.modulo !=='solicitudes' && formulario.modulo !=='polizas'">
                                                    <label for="">Monto l&iacute;mite (hasta) <span required="" aria-required="true">*</span></label>
                                                     <div class="input-group">
                                                        <span class="input-group-addon">$</span>

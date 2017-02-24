@@ -1,9 +1,9 @@
 <div id="wrapper">
-    <?php 
-	Template::cargar_vista('sidebar'); 
+    <?php
+	Template::cargar_vista('sidebar');
 	?>
     <div id="page-wrapper" class="gray-bg row">
-    
+
 	    <?php Template::cargar_vista('navbar'); ?>
 		<div class="row border-bottom"></div>
 	    <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
@@ -11,12 +11,12 @@
     	<div class="col-lg-12">
         	<div class="wrapper-content">
 	            <div ng-controller="toastController"></div>
-	
+
 				<div role="tabpanel">
 				 	<!-- Tab panes -->
 				  	<div class="row tab-content">
 				    	<div role="tabpanel" class="tab-pane active" id="tabla">
-				    	
+
 							<!-- BUSCADOR -->
 							<div class="ibox border-bottom">
 								<div class="ibox-title">
@@ -26,10 +26,10 @@
 							    	</div>
 								</div>
 								<div class="ibox-content" style="display:none;">
-									
+
 							     	<?php
 			                        $formAttr = array(
-			                            'method'        => 'POST', 
+			                            'method'        => 'POST',
 			                            'id'            => 'buscarOrdenForm',
 			                            'autocomplete'  => 'off'
 			                          );
@@ -57,7 +57,7 @@
 							            	<label for="">Estado</label>
 							            	<select class="form-control chosen-select" id="estado_id">
 			                                	<option value="">Seleccione</option>
-			                                	<?php 
+			                                	<?php
 			                                	if(!empty($estados))
 			                                	{
 			                                		foreach ($estados AS $option){
@@ -78,22 +78,22 @@
 										</div>
 									</div>
 									<?php echo form_close(); ?>
-									
-								
+
+
 								</div>
 							</div>
 							<!-- /BUSCADOR -->
-		
-				    	
+
+
 				    		<!-- JQGRID -->
 				    		<?php echo modules::run('ordenes_trabajo/ocultotabla'); ?>
 				    		<!-- /JQGRID -->
 				    	</div>
-				    	
+
 				  	</div>
 				</div>
         	</div>
-        	
+
     	</div><!-- cierra .col-lg-12 -->
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
@@ -102,12 +102,18 @@ $formAttr = array('method' => 'POST', 'id' => 'exportarOrdenesForm','autocomplet
 echo form_open(base_url('ordenes_trabajo/exportar'), $formAttr);
 ?>
 <input type="hidden" name="ids" id="ids" value="" />
-<?php 
-echo form_close(); 
+<?php
+echo form_close();
+
+echo Modal::config(array(
+	"id" => "documentosModal",
+	"size" => "lg",
+	"titulo" => "Subir Documentos",
+	"contenido" => modules::run("documentos/formulario", array())
+))->html();
 
 echo Modal::config(array(
 	"id" => "opcionesModal",
 	"size" => "sm"
-))->html(); 
+))->html();
 ?>
-

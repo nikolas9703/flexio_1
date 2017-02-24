@@ -21,7 +21,7 @@ use Flexio\Modulo\Cliente\Models\Cliente;
 class Cliente_orm extends Model {
 
     protected $table = 'cli_clientes';
-    protected $fillable = ['codigo', 'nombre', 'empresa_id', 'telefono', 'correo', 'web', 'direccion', 'comentario', 'credito', 'tipo_identificacion', 'identificacion', 'toma_contacto_id', 'letra', 'exonerado_impuesto', 'tipo', 'categoria', 'estado'];
+    protected $fillable = ['codigo', 'nombre', 'empresa_id', 'telefono', 'correo', 'web', 'direccion', 'comentario', 'credito', 'tipo_identificacion', 'identificacion', 'toma_contacto_id', 'letra', 'exonerado_impuesto', 'tipo', 'categoria', 'estado','credito_favor'];
     protected $guarded = ['id', 'uuid_cliente'];
     protected $appends = ['saldo_pendiente'];
 
@@ -49,7 +49,7 @@ class Cliente_orm extends Model {
 
     }
 
-    public function getCreditoFavorAttribute() {
+    /*public function getCreditoFavorAttribute() {
 
           //$abonos = $this->total_credito_cliente()->sum('monto_abonado');
           //nota en las trasaciones de notas y devuliciones
@@ -57,7 +57,7 @@ class Cliente_orm extends Model {
           $notas_credito = $this->nota_credito()->where('venta_nota_creditos.estado','aprobado')->sum('total');
           $devoluciones = $this->devoluciones()->where('dev_devoluciones.estado','aprobada')->sum('total');
           return (float)  $notas_credito + $devoluciones + $this->attributes['credito_favor'];
-      }
+      }*/
 
     /*public function getCreditoAttribute() {
 

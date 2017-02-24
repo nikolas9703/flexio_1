@@ -62,7 +62,7 @@ $formAttr = array(
                             </div>
                             <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                                 <label>Estado <span required="" aria-required="true">*</span></label>
-                                <select name="campo[estado]" class="chosen" id="estado" data-rule-required="true" aria-required="true" :disabled="acceso == ''">
+                                <select name="campo[estado]" class="chosen" id="estado" data-rule-required="true" aria-required="true" :disabled="acceso == '' || cambio_estado == 0">
                                     <option value="">Seleccione</option>
                                     <?php foreach ($info['estados'] as $estados) { ?>
                                         <option <?php if($estados->valor =='por_aprobar'){echo "selected='selected'";}?>value="<?php echo $estados->valor?>"><?php echo $estados->etiqueta;?></option>
@@ -90,32 +90,32 @@ $formAttr = array(
                                 <!--div tipo == pasaporte-->
                                 <div id="pasaporte" class="form-group col-xs-12 col-sm-12 col-md-6 col-lg-6" v-if="mostarPasaporte">
                                     <label>No. Pasaporte <span required="" aria-required="true">*</span></label>
-                                    <input data-rule-required="true" type="text" name="campo[pasaporte]" id="campo[pasaporte]" v-model="proveedor.pasaporte" class="form-control">
+                                    <input data-rule-required="true" type="text" name="campo[pasaporte]" id="campo[pasaporte]" v-model="proveedor.pasaporte" class="form-control" @blur="validate()">
                                 </div>
 
                                 <!-- div oculto para enseñar campos juridico natural -->
                                 <div id="juridico" class="col-xs-12 col-sm-12 col-md-12 col-lg-12" v-if="mostrarJuridico">
                                     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                         <label>Tomo/Rollo <span required="" aria-required="true">*</span></label>
-                                        <input data-rule-required="true" type="text" name="juridico[tomo]" id="juridico[tomo]"  v-model="proveedor.tomo_rollo" class="form-control">
+                                        <input data-rule-required="true" type="text" name="juridico[tomo]" id="juridico[tomo]"  v-model="proveedor.tomo_rollo" class="form-control" @blur="validate()">
                                     </div>
                                     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                         <label>Fol./Img./Doc. <span required="" aria-required="true">*</span></label>
-                                        <input data-rule-required="true" type="text" name="juridico[folio]" id="juridico[folio]"   v-model="proveedor.folio_imagen_doc" class="form-control">
+                                        <input data-rule-required="true" type="text" name="juridico[folio]" id="juridico[folio]"   v-model="proveedor.folio_imagen_doc" class="form-control" @blur="validate()">
                                     </div>
                                     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                         <label>Asiento/Ficha <span required="" aria-required="true">*</span></label>
-                                        <input data-rule-required="true" type="text" name="juridico[asiento]" id="juridico[asiento]"  v-model="proveedor.asiento_ficha" class="form-control">
+                                        <input data-rule-required="true" type="text" name="juridico[asiento]" id="juridico[asiento]"  v-model="proveedor.asiento_ficha" class="form-control" @blur="validate()">
                                     </div>
                                     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                         <label>Dígito verificador <span required="" aria-required="true">*</span></label>
-                                        <input data-rule-required="true" type="text" name="juridico[verificador]"  v-model="proveedor.digito_verificador" id="juridico[verificador]" class="form-control">
+                                        <input data-rule-required="true" type="text" name="juridico[verificador]"  v-model="proveedor.digito_verificador"   id="juridico[verificador]" class="form-control  " @blur="validate()">
                                     </div>
                                 </div>
                                 <div id="natural" class="col-xs-12 col-sm-12 col-md-12 col-lg-12" v-if="mostrarNatural">
                                     <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                         <label>Provincia <span required="" aria-required="true">*</span></label>
-                                        <select data-rule-required="true" v-model="proveedor.provincia" class="form-control" name="natural[provincia]" id="natural[provincia]">
+                                        <select data-rule-required="true" v-model="proveedor.provincia" class="form-control validate_dni" name="natural[provincia]" id="natural[provincia]" >
                                             <option value="">Seleccione</option>
                                             <?php foreach ($info['provincias'] as $provincia) { ?>
                                                 <option <?php if (isset($info['proveedor']['provincia'])) {
@@ -138,17 +138,17 @@ $formAttr = array(
                                     <div v-if="mostrarCamposNaturales">
                                         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                             <label>Tomo <span required="" aria-required="true">*</span></label>
-                                            <input data-rule-required="true" type="text" id="natural[tomo]" name="natural[tomo]"  v-model="proveedor.tomo_rollo" class="form-control" >
+                                            <input data-rule-required="true" type="text" id="natural[tomo]" name="natural[tomo]"  v-model="proveedor.tomo_rollo" class="form-control" @blur="validate()" >
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                                             <label>Asiento <span required="" aria-required="true">*</span></label>
-                                            <input data-rule-required="true" type="text" id="natural[asiento]" name="natural[asiento]" v-model="proveedor.asiento_ficha" class="form-control">
+                                            <input data-rule-required="true" type="text" id="natural[asiento]" name="natural[asiento]" v-model="proveedor.asiento_ficha" class="form-control" @blur="validate()">
                                         </div>
                                     </div>
                                     <div v-if="mostrarLetra">
                                         <div class="form-group col-xs-12 col-sm-12 col-md-6 col-lg-6">
                                             <label>No. Pasaporte <span required="" aria-required="true">*</span></label>
-                                            <input data-rule-required="true" type="text"  id="natural[pasaporte]" name="natural[pasaporte]" v-model="proveedor.pasaporte" class="form-control">
+                                            <input data-rule-required="true" type="text"  id="natural[pasaporte]" name="natural[pasaporte]" v-model="proveedor.pasaporte"  @blur="validate()" class="form-control">
                                         </div>
                                     </div>
                                 </div>

@@ -34,7 +34,7 @@
 						</div>
 					<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
                                            
-                                            <select id="cliente_proveedor" class="white-bg chosen-filtro" data-rule-required="true" aria-required="true">
+                                            <select id="cliente_proveedor" class="white-bg select2" data-rule-required="true" aria-required="true">
 								<option value=""></option>
 							</select>
 						</div>	

@@ -14,6 +14,10 @@ $config['modulo_config'] = array(
         ),
     ),
     'prefijo'   => 'seg',
+    /*'menu' => array(
+        'nombre' =>'Configuración' ,
+        'url' => 'configuracion_seguros/configuracion'
+    ),*/
     'permisos'	=> array(
         'acceso'                                    => 'Acceso',
         'listar-usuarios__desactivarActivarUsuario' => 'Desactivar/Activar cuenta de Usuarios',

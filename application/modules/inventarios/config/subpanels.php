@@ -65,5 +65,11 @@ $config['subpanels'] = array(
         'nombre' => 'Series',
         'icono' => '',
         'html_id' => 'inventarios4'
+    ],
+    'pedidos' => [
+        'modulo' => 'pedidos',
+        'view' => 'ocultotabla',
+        'nombre' => 'Pedidos',
+        'icono' => ''        
     ]
 );

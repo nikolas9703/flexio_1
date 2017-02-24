@@ -9,13 +9,19 @@ $config['modulo_config'] = array(
     'tipo'          => 'addon', // core, addon
     'grupo'         => 'Anticipos',
     'agrupador'     => [
-        'Compras' => array(
-           "grupo_orden" => 6
-       ),
-       'Ventas' => array(
-           "grupo_orden" => 6
-        )
-        ],
+		'Compras' => array(
+		"grupo_orden" => 6
+		),
+		'Alquileres' => array(
+		"grupo_orden" => 3
+		),
+		'Ventas' => array(
+		"grupo_orden" => 0
+		),
+		'Seguros' => array(
+		"grupo_orden" => 9
+		)
+	],
     'prefijo'       => 'atc',
     'menu'          => array(
         'nombre'    => 'Anticipos' ,
@@ -27,3 +33,5 @@ $config['modulo_config'] = array(
         'listar'   => 'Listar'
     )
 );
+
+

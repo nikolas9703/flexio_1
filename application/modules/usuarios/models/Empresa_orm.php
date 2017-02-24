@@ -11,11 +11,14 @@ use Flexio\Modulo\ConfiguracionContabilidad\Models\CuentaAbonar;
 class Empresa_orm extends Model{
   protected $table = 'empresas';
   protected $guarded = ['id'];
-  protected $fillable = ['nombre','uuid_empresa', 'empresa_id','fecha_creacion','ruc','description','telefono','logo','id_organizacion'];
+  protected $fillable = ['nombre','uuid_empresa', 'empresa_id','fecha_creacion','ruc','description','telefono','logo','id_organizacion','modules_hidden'];
   protected $nodos = array();
   protected $appends  = ['imagenlogo'];
-  
-  
+  protected $casts = [
+      'modules_hidden' => 'array',
+  ];
+
+
   /**
      * Instancia de CodeIgniter
      */
@@ -98,14 +101,14 @@ public function padresRecursive()
     return Empresa_orm::where('uuid_empresa',hex2bin($uuid))->first();
   }
   public function getImagenlogoAttribute(){
-       
+
       /* $attrs = [
        "class" => "fa fa-shopping-cart",
        ];
       $html   = new \Flexio\Modulo\Base\Services\Html(new \Flexio\Modulo\Base\Services\HtmlTypeFactory());
       return  $html->setType("htmlI")->setAttrs($attrs)->setHtml('')->getSalida();
       */
-  
+
       return "sedes.png";
   }
   public static function guardar_usuario_empresa($campo){

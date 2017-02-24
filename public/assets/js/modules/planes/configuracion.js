@@ -1,3 +1,11 @@
+var sumcob=1;
+var sumded=1;
+var sumcomi=1;
+var pramohijo=0;
+var x=0;
+var xant=0;
+var y=0;
+var eli=0;
 var config = {
 
     checks: {
@@ -26,7 +34,7 @@ var planesCrear,
             primertab: $("#primertab"),
             ramo_nombre: $("#nombre_plan"),
             aseguradora: $("#aseguradora"),
-            impuesto: $("#impuesto"),
+            impuesto: $("#impuesto2"),
             coberturas: $(".coberturas"),
             iAcordeon: "#accordion",
             iCheckComision: "#ch_comision",
@@ -42,8 +50,12 @@ var planesCrear,
         init: function () {
             planesCrear = this.settings;
             this.eventos();
-            $("#p_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
-            $("#p_sobre_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
+            $("#ramoplanes-error").hide();
+            $(".comisiones").inputmask('Regex', {regex: "^[0-9]{1,20}(\\,\\d{1,2})?$"});
+            $(".sobrecomisiones").inputmask('Regex', {regex: "^[0-9]{1,20}(\\,\\d{1,2})?$"});
+            $("#coberturasmonet").inputmask('Regex', {regex: "^[0-9]{1,20}(\\.\\d{1,2})?$"});
+            $("#deduciblesmonet").inputmask('Regex', {regex: "^[0-9]{1,20}(\\.\\d{1,2})?$"});
+            $("#primaneta").inputmask('Regex', {regex: "^[0-9]{1,20}(\\.\\d{1,2})?$"});
         },
         suscribeEvents: function () {
             //checkbox
@@ -54,7 +66,11 @@ var planesCrear,
 
         },
         agregarfila: function (evt,tabla) {
+            var idco="";
+            var idde="";
+            
             var $tr = $('#'+tabla).find("tbody tr:last").clone();
+            //var $tr = $('#'+tabla).find("tbody tr:last").clone();
             $(evt).parent().parent().find("#agregarbtn").attr('style', 'margin-top: 5px;display: none');
             $(evt).parent().parent().find("#eliminarbtn").attr('style', 'margin-top: 5px');
             $tr.attr('style', '');
@@ -64,19 +80,44 @@ var planesCrear,
                 var name = this.name;
                 return name;
             }).attr("id", function () {
-                var id = this.id;
+                if (tabla=="tabla_fact") {
+                    var id = this.id+sumcob;
+                    sumcob++;
+                    idco=id;
+                    //                  
+                }else if (tabla=="tabla_deduc") {
+                    var id = this.id+sumded;
+                    sumded++;
+                    idde=id;
+                    //
+                }else{
+                    var id = this.id;
+                }                
                 return id;
             });
+            
+            
+            if (idco!="") { $tr.find("#"+idco+"").inputmask('Regex', {regex: "^[0-9]{1,20}(\\.\\d{1,2})?$"}); }
+            if (idde!="") { $tr.find("#"+idde+"").inputmask('Regex', {regex: "^[0-9]{1,20}(\\.\\d{1,2})?$"}); }
+
+
             //.removeAttr()
             if(tabla == 'tabla_comisiones'){
-                var fila=1;
+                //console.log("filaa="+fila);
+                var fila=0;
                 $("#tabla_comisiones tbody tr").each(function (index){
                     fila++;
+                    //console.log("filad="+fila);
                 });
-                $tr.find("#anio_inicio").attr('name', 'anio_inicio['+fila+']');
-                $tr.find("#anio_fin").attr('name', 'anio_fin['+fila+']');
-                $tr.find("#p_comision").attr('name', 'p_comision['+fila+']');
-                $tr.find("#p_sobre_comision").attr('name', 'p_sobre_comision['+fila+']');
+                var fi=fila-1;
+                //console.log("fi="+fi);
+                //console.log("fila="+fila);
+                $tr.find("#anio_inicio").attr('name', 'anio_inicio['+fi+']');
+                $tr.find("#anio_fin").attr('name', 'anio_fin['+fi+']');
+                
+                $tr.find("#p_comision").attr('name', 'p_comision['+fi+']');
+                $tr.find("#p_sobre_comision").attr('name', 'p_sobre_comision['+fi+']');
+                
                 var inicio = $(evt).parent().parent().parent().find("#anio_fin").val();
                 $tr.find("#anio_final").val(Number(inicio)+1);
                 $tr.find("#anio_inicio option").remove();
@@ -89,9 +130,9 @@ var planesCrear,
                 }
                 //$(evt).parent().parent().parent().find("#anio_fin").removeAttr('onchange');
                 $tr.attr('style', 'padding-top: 10px;');
-                $tr.attr('data-num', fila);
-                $tr.find("#p_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
-                $tr.find("#p_sobre_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
+                $tr.attr('data-num', fila);                
+                $tr.find("#p_comision").inputmask('Regex', {regex: "^[0-9]{1,20}(\\,\\d{1,2})?$"});
+                $tr.find("#p_sobre_comision").inputmask('Regex', {regex: "^[0-9]{1,20}(\\,\\d{1,2})?$"});
             }
             $('#'+tabla).find("tbody tr:last").after($tr);
             
@@ -99,6 +140,10 @@ var planesCrear,
             //$('select option').remove();
         },
         copyTabla: function (tabla1,tabla2) {
+
+            //console.log("tabla1="+tabla1);
+            //console.log("tabla2="+tabla2);
+
             var Clonedtable = $("#"+tabla1).clone();
             Clonedtable.find("input,select").attr("disabled", true);
             Clonedtable.find("a").remove();
@@ -115,11 +160,22 @@ var planesCrear,
             $("#"+tabla2).find("#"+tabla1).addClass( "col-lg-12" );
             $("#"+tabla2).find(".form-group").attr("style", 'margin-bottom: 0px ! important; padding-left: 0px; padding-right: 0px;padding-bottom: 5px;');
             
+            if (tabla2=="tabla_final_comisiones") {
+                //console.log("aqui");
+                var con=0;
+                $("#"+tabla2+" tbody tr").each(function (index){
+                    con++;
+                    $(this).find("#p_comision").inputmask('Regex', {regex: "^[0-9]{1,20}(\\,\\d{1,2})?$"});
+                    $(this).find("#p_sobre_comision").inputmask('Regex', {regex: "^[0-9]{1,20}(\\,\\d{1,2})?$"});
+                });
+            }                     
+            
         },
         eliminarfila: function (evt) {
             $(evt).parent().parent().parent().remove();
             var con=0;
-            $("#tabla_comisiones tbody tr").each(function (index){
+            
+            $("#tabla_comisiones tbody tr").each(function (index){   
                 con++;
                 $(this).find("#anio_inicio").attr('name', 'anio_inicio['+con+']');
                 $(this).find("#anio_fin").attr('name', 'anio_fin['+con+']');
@@ -127,6 +183,8 @@ var planesCrear,
                 $(this).find("#p_sobre_comision").attr('name', 'p_sobre_comision['+con+']');
                 $(this).attr('data-num', (Number(con)));
             });
+
+
         },
         anioFin: function (evt) {
             if($(evt).val() == '+'){
@@ -191,11 +249,33 @@ var planesCrear,
             });
             planesCrear.siguiente1.on("click", function (e) {
                 e.preventDefault();
-                $(segundotab).trigger('click');
-                $( "#tab2-1" ).removeClass( "active" );
-                $( "#tab_aseguradora" ).removeClass( "active" );
-                $( "#tab2-2" ).addClass( "active" );
-                $( "#tab_coberturas" ).addClass( "active" );
+
+                var validaf = $( "#crearplanesForm" ).validate();
+               /* $('input[name="nombre_plan').rules(
+                   "add",{ required: true, 
+                    regex:'^[a-zA-Z0-9áéíóúñ ]+$',
+                    //message: "Campo es Alfanumerico"
+                });*/
+                var n1 = validaf.element( "#nombre_plan" );
+                var n2 = validaf.element( "#aseguradora" );
+                var n3 = validaf.element( "#impuesto2" );
+                var n4 = $("#ramo_plan_final").val();                
+
+                if (n4=="") {
+                    $("#ramoplanes-error").show();
+                }else{
+                    $("#ramoplanes-error").hide();
+                }
+                
+                if(n1==true && n2==true && n3==true && n4!=""){
+                    $(segundotab).trigger('click');
+                    $( "#tab2-1" ).removeClass( "active" );
+                    $( "#tab_aseguradora" ).removeClass( "active" );
+                    $( "#tab2-2" ).addClass( "active" );
+                    $( "#tab_coberturas" ).addClass( "active" );
+
+                }
+                
             });
             planesCrear.siguientedos.on("click", function (e) {
                 e.preventDefault();
@@ -209,6 +289,63 @@ var planesCrear,
 
 
             planesCrear.siguientetres.on("click", function (e) {
+
+                //-----------------------
+                //Verificar Cero en Comisiones
+                var con = 0;
+                var c = 0;
+                var arreglo = [];
+                var res = "";
+                var v = 0;
+                var mensaj = "";
+                var vacio = 0;
+                while(con==0){
+                    if (typeof $('input[name="p_comision['+c+']').val() != "undefined") {
+                        console.log($('input[name="p_comision['+c+']').val());
+                        arreglo.push($('input[name="p_comision['+c+']').val());                        
+                    }else{ 
+                        if (c>=20) 
+                            con=1;                                          
+                    }  
+                    c++;                  
+                }
+                console.log(arreglo.length);
+                if (arreglo.length>0) {
+                    for (var i = 0; i <= arreglo.length - 1; i++) {
+                        if (arreglo[i]!="") {
+                            if (parseFloat(arreglo[i])>0) 
+                                v=1;
+                        }else{
+                            vacio=1;
+                        }                                                
+                    }
+                    if (vacio==0) {
+                        if (v==1) { 
+                            res = true; 
+                        }else{ 
+                            res = false; mensaj = "Alguno de los campos de comision debe ser mayor a cero." ;
+                        }
+                    }else{
+                        res = false;
+                        mensaj = "Los campos de comisiones no deben estar vacios";
+                    }
+                }else{
+                    if (arreglo[i]!="") {
+                        if (parseFloat(arreglo[0])>0) {
+                            mensaj = "El campo de la comision debe ser mayor a cero.";
+                            res = false;
+                        }else{ res = true; }
+                    }else{
+                        vacio=1;
+                        mensaj = "Los campos de comisiones no deben estar vacios";
+                        res = false;
+                    }
+                    
+                }
+                //-------------------------------
+
+
+                $("#p_comision-error").remove();
                 e.preventDefault();
                 var formValidado = $('#crearplanesForm').validate({
                     focusInvalid: true,
@@ -216,26 +353,48 @@ var planesCrear,
                     wrapper: ''
                 });
 
-                $('input[name="nombre_plan').rules(
+
+                /*$('input[name="nombre_plan').rules(
                    "add",{ required: true, 
                     regex:'^[a-zA-Z0-9áéíóúñ ]+$',
+                    //message: "Campo es Alfanumerico"
+                });*/
+                $('input[name="primaneta').rules(
+                   "add",{ required: false, 
+                    regex2:'^[0-9.]+$',
+                    //message: "Campo es Numerico"
                 });
                 $('input[name="coberturas[]').rules(
                    "add",{ required: false, 
                     regex:'^[a-zA-Z0-9áéíóúñ ]+$',
+                    //message: "Campo es Alfanumerico"
                 });
-                /*$('input[name="campo[asiento]').rules(
+                $('input[name="deducibles[]').rules(
                    "add",{ required: false, 
                     regex:'^[a-zA-Z0-9áéíóúñ ]+$',
+                   // message: "Campo es Alfanumerico"
+                });
+                /*$('input[name="coberturasmonet[]').rules(
+                   "add",{ required: false, 
+                    regex2:'^[0-9][.][0-9]+$',
+                    //message: "Campo es Numerico"
+                });
+                $('input[name="deduciblesmonet[]').rules(
+                   "add",{ required: false, 
+                    regex2:'^[0-9.]+$',
+                    //message: "Campo es Numerico"
                 });*/
-
-
+                console.log(res);
                 if (formValidado.form() === true) {
-                    $(cuartotab).trigger('click');
-                    $( "#tab2-3" ).removeClass( "active" );
-                    $( "#tab_comision" ).removeClass( "active" );
-                    $( "#tab2-4" ).addClass( "active" );
-                    $( "#tab_confirmar" ).addClass( "active" );
+                    if (res==true) {
+                        $(cuartotab).trigger('click');
+                        $( "#tab2-3" ).removeClass( "active" );
+                        $( "#tab_comision" ).removeClass( "active" );
+                        $( "#tab2-4" ).addClass( "active" );
+                        $( "#tab_confirmar" ).addClass( "active" );
+                    }else{
+                        toastr.error(mensaj);
+                    }                    
                 }
             });
 
@@ -304,12 +463,63 @@ $(document).ready(function () {
         },
         "Campo es alfanumerico."
     );
+    //AddValidator
+    $.validator.addMethod(
+        "regex2",
+        function(value, element, regexp) {
+            var re = new RegExp(regexp);
+            return this.optional(element) || re.test(value);
+        },
+        "Campo es Numerico."
+    );
 
+    /*$(".jstree-children").click(function(){
+        pramohijo=1;
+        console.log("click ramo hijo");
+    });*/
+
+    $("#tab_ramos").click(function(){
+        console.log("click ramos");
+        $("#moduloOpciones").show();
+    });
+    $("#tab_planes").click(function(){
+        console.log("click planes");
+        $("#moduloOpciones").show();
+    });
+
+    $('#cancelarcrearplan').on("click",function() {
+     var id_aseguradora=$('#uuid_a').val();
+	 var regreso=$('#regreso').val();
+     
+	 if(regreso=='aseg')
+	 {
+		 window.location.href = phost()+'aseguradoras/editar/'+id_aseguradora+'';   
+	 }
+     else
+	 {
+		 window.location.href = phost()+'catalogos/ver/planes'; 
+	 }
+				 
+ });
+    
+    $("#volver").click(function(){
+        var uuid_asegura = $("#uuid_aseguradora").val();
+		var regreso=$('#regreso').val();
+		if(regreso=='aseg')
+		{
+			window.location.href =(phost() + "aseguradoras/editar/"+uuid_asegura+"");
+		}
+		else
+		{
+			window.location.href = phost()+'catalogos/ver/planes'; 	
+		}
+			
+    });
     
     //popular desde asegurados
     if(typeof vista !== 'undefined'){
         if(vista == 'planes-editar' || vista == 'planes-ver' ) {
-            
+                
               var data_plan = JSON.parse(data_planes);
               $('#tab_ramos').removeClass( "active" );  
               $('#tab_planes').addClass( "active" );
@@ -320,6 +530,7 @@ $(document).ready(function () {
                   $('#ch_comision_final').trigger('click') ;
               }
               $("#treeRamos2").bind("loaded.jstree",function(e,data){
+
                 data.instance.select_node(data_plan.id_ramo);
               });
               new Vue({
@@ -364,104 +575,17 @@ $(document).ready(function () {
               });
         }
     }
+
+    planes.copyTabla('tabla_comis','tabla_final_comisiones');
+    planes.copyTabla('tabla_planes','tabla_final');
+
 });
 
     
 
-bluapp.controller("configRamosController", function ($scope, $http) {
-    $scope.ramolimpiar = {
-        nombre: '',
-        descripcion: '',
-        codigo: '',
-        cuenta_id: ''
-    };
-
+bluapp.controller("configPlanesController", function ($scope, $http) {
     var vista = {
-        formRamo: $('#crearRamosForm')
-    };
-    var botonModal = {
-        editar: 'a.editarImpuestoBtn',
-        cambiarEstado: 'a.cambiarEstadoImpuestoBtn'
-    };
-
-
-    $scope.guardarRamo = function (ramo) {
-
-        $scope.ramo = angular.copy(ramo);
-
-        var formValidado = vista.formRamo.validate();
-        if (formValidado.form() === true) {
-            //$(selfButton).unbind("click");
-            var guardar = moduloAseguradora.guardarRamos(vista.formRamo);
-            guardar.done(function (data) {
-                var respuesta = $.parseJSON(data);
-                if (respuesta.estado == 200) {
-                    $("#mensaje_info").empty().html('<div id="success-alert" class="alert alert-' + respuesta.clase + '"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' + respuesta.mensaje + '</div>');
-                    $('html, body').animate({
-                        scrollTop: $("#mensaje_info").offset().top
-                    }, 500);
-                    if(respuesta.clase != "danger"){
-                        $scope.cargar_tree();
-                        $scope.cargar_tree_planes();
-                        
-                        tablaRamos.grid_obj.setGridParam({
-                            url: tablaRamos.url,
-                            datatype: "json",
-                            postData: {
-                                nombre: '',
-                                erptkn: tkn
-                            }
-                        }).trigger('reloadGrid');
-                        $(".requerido").html("");
-                        $('#tipo_interes_ramo').attr('required', false);
-                        $('#tipo_poliza_ramo').attr('required', false);
-                        $('#idEdicion').remove();
-                        $('#cuenta_id').val('').trigger('chosen:updated');
-                        vista.formRamo.trigger('reset');
-                        $scope.inicializar_plugin(ramo);
-                    }
-                    
-                }
-                //$(selfButton).bind("click");
-                //$("#addCuentaModal").modal('hide');
-            });
-
-        }
-    };
-
-    $scope.limpiarFormRamo = function (e) {
-        vista.formRamo.trigger('reset');
-        $scope.cargar_tree();
-        $('#idEdicion').remove();
-    };
-    
-
-
-    $scope.cargar_tree = function () {
-        var cuentas = moduloAseguradora.listarRamosTree();
-        cuentas.success(function () {
-            $("#cuentas_tabs li:first-child").addClass('active');
-            $("#nombre").val('');
-            $("#codigo").val('');
-            $("#codigo").val('');
-            $("#padre_id").val('');
-            $('#codigo').prop('readonly', true);
-            $("#treeRamos").jstree("destroy");
-        });
-        cuentas.done(function (data) {
-
-            var arbol = jQuery.parseJSON(data);
-            $('#treeRamos').jstree(arbol)
-                .bind("select_node.jstree", function (e, data) {
-
-                    var nodo = data.node;
-                    var nodo_id = nodo.id;
-                    $('#codigo').val(nodo_id);
-                });
-            $('#treeRamos').jstree(true).redraw(true);
-            
-
-        }); // fin del done
+        formPlanes: $('#crearplanesForm')
     };
 
     $scope.cargar_tree_planes = function () {
@@ -471,20 +595,25 @@ bluapp.controller("configRamosController", function ($scope, $http) {
             $("#treeRamosP").jstree("destroy");
         });
         cuentas.done(function (data) {
-
             var arbol = jQuery.parseJSON(data);
-            $('#treeRamosP').jstree(arbol)
-                .bind("select_node.jstree", function (e, data) {
+            var hijos = [];
+
+
+            $('#treeRamosP').jstree(arbol).bind("select_node.jstree", function (e, data) {  
+
                     var nodo = data.node;
                     var nodo_id = nodo.id;
                     $('#idRamo').val(nodo_id);
                     var i = 0;
                     var nombre = []
                     for (i in data.node.parents) {
+                        
                         if (data.node.parents[i] != "#") {
+                            //console.log("n="+$('#treeRamosP').find("#" + data.node.parents[i] + "_anchor").find("#labelramo")[0].lastChild.nodeValue);
                             nombre.push($('#treeRamosP').find("#" + data.node.parents[i] + "_anchor").find("#labelramo")[0].lastChild.nodeValue);
                         }
                     }
+                    console.log("hijos="+nombre);
                     var labelNombre = "";
                     for (i = nombre.length - 1; i >= 0; i = i - 1) {
                         labelNombre += nombre[i] + "/";
@@ -493,33 +622,23 @@ bluapp.controller("configRamosController", function ($scope, $http) {
                     
                     labelNombre += " "+$(data.node.text).find("#labelramo").prevObject[0].innerText;
                     console.log(labelNombre);
-                    $("#ramo_plan_final").val(labelNombre);
+                    if(labelNombre.indexOf('/') != -1){
+                        $("#ramo_plan_final").val(labelNombre);
+                    }else{
+                        $("#ramo_plan_final").val("");
+                    }                    
                 });
             $('#treeRamosP').jstree(true).redraw(true);
+
+            $("#treeRamosP").bind("loaded.jstree",function(e,data){
+                if (typeof id_ramo_plan!="undefined") {
+                    console.log(id_ramo_plan);
+                    data.instance.select_node(id_ramo_plan);
+                }               
+            });
             
         }); // fin del done
     };
-
-    $scope.inicializar_plugin = function () {
-        vista.formRamo.validate({
-            focusInvalid: true,
-            ignore: ".ignore",
-            wrapper: '',
-        });
-    };
-
-
-    $scope.inicializar_plugin();
-    $scope.cargar_tree();
-    $scope.cargar_tree_planes();
-
-});
-
-bluapp.controller("configPlanesController", function ($scope, $http) {
-    var vista = {
-        formPlanes: $('#crearplanesForm')
-    };
-
 
     $scope.guardarPlanes = function () {
 
@@ -545,5 +664,6 @@ bluapp.controller("configPlanesController", function ($scope, $http) {
         });
     };
     $scope.inicializar_plugin();
+    $scope.cargar_tree_planes();
 });
 

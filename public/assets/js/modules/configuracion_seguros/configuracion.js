@@ -11,41 +11,41 @@ var config = {
 };
 var planesCrear,
 
-planes = {
+    planes = {
 
-    settings: {
-        siguiente1: $("#siguiente1"),
-        siguientedos: $("#siguientedos"),
-        siguientetres: $("#siguientetres"),
-        anterior1: $("#anterior1"),
-        anterior2: $("#anterior2"),
-        anterior3: $("#anterior3"),
-        segundotab: $("#segundotab"),
-        tercertab: $("#tercertab"),
-        cuartotab: $("#cuartotab"),
-        primertab: $("#primertab"),
-        ramo_nombre: $("#nombre_plan"),
-        aseguradora: $("#aseguradora"),
-        impuesto: $("#impuesto"),
-        coberturas: $(".coberturas"),
-        iAcordeon: "#accordion",
-        iCheckComision: "#ch_comision",
-        comision: $("#comision"),
-        sobre_comision: $("#sobre_comision"),
-        ch_comision: $("#ch_comision"),
-        codigo_ramo: $("#codigo_ramo"),
-        treeRamos: $("#treeRamos"),
-        anio_inicio: $("#anio_inicio"),
-        anio_fin: $(".anio_fin")
-    },
+        settings: {
+            siguiente1: $("#siguiente1"),
+            siguientedos: $("#siguientedos"),
+            siguientetres: $("#siguientetres"),
+            anterior1: $("#anterior1"),
+            anterior2: $("#anterior2"),
+            anterior3: $("#anterior3"),
+            segundotab: $("#segundotab"),
+            tercertab: $("#tercertab"),
+            cuartotab: $("#cuartotab"),
+            primertab: $("#primertab"),
+            ramo_nombre: $("#nombre_plan"),
+            aseguradora: $("#aseguradora"),
+            impuesto: $("#impuesto"),
+            coberturas: $(".coberturas"),
+            iAcordeon: "#accordion",
+            iCheckComision: "#ch_comision",
+            comision: $("#comision"),
+            sobre_comision: $("#sobre_comision"),
+            ch_comision: $("#ch_comision"),
+            codigo_ramo: $("#codigo_ramo"),
+            treeRamos: $("#treeRamos"),
+            anio_inicio: $("#anio_inicio"),
+            anio_fin: $(".anio_fin")
+        },
 
-    init: function () {
-        planesCrear = this.settings;
-        this.eventos();
-        $("#p_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
-        $("#p_sobre_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
-    },
-    suscribeEvents: function () {
+        init: function () {
+            planesCrear = this.settings;
+            this.eventos();
+            $("#p_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
+            $("#p_sobre_comision").inputmask('integer',{min:1, max:100}).css("text-align", "left");
+        },
+        suscribeEvents: function () {
             //checkbox
             planesCrear.switcheryComision = new Switchery(planesCrear.iCheckComision[0], config.checks);
 
@@ -169,7 +169,7 @@ planes = {
                     });
                 }
                 
-                
+               
             }
             planes.copyTabla('tabla_comis','tabla_final_comisiones');
         },
@@ -207,11 +207,7 @@ planes = {
             });
             planesCrear.siguientetres.on("click", function (e) {
                 e.preventDefault();
-                var formValidado = $('#crearplanesForm').validate({
-                    rules:{
-                        descripcion:"required"
-                    }
-                });
+                var formValidado = $('#crearplanesForm').validate();
                 if (formValidado.form() === true) {
                     $(cuartotab).trigger('click');
                     $( "#tab2-3" ).removeClass( "active" );
@@ -272,100 +268,103 @@ planes = {
 
     };
     
-    $(document).ready(function () {
-        planes.init();
-        
+$(document).ready(function () {
+    planes.init();
+    
     //popular desde asegurados
     if(typeof vista !== 'undefined'){
         
         if(vista == 'planes-editar' || vista == 'planes-ver') {
-          var data_plan = JSON.parse(data_planes);
-          $('#tab_ramos').removeClass( "active" );  
-          $('#tab_planes').addClass( "active" );
-          $('#tab-1').removeClass( "active" );  
-          $('#tab-3').addClass( "active" ); 
-          if(data_plan.desc_comision =='SI'){
-              $('#ch_comision').trigger('click') ;
-              $('#ch_comision_final').trigger('click') ;
-          }
-          $("#treeRamos2").bind("loaded.jstree",function(e,data){
-            data.instance.select_node(data_plan.id_ramo);
-        });
-          new Vue({
-            el: '#crearplanesForm',
-            data: {
-                nombre_plan: data_plan.nombre,
-                aseguradora: data_plan.id_aseguradora,
-                impuesto: data_plan.id_impuesto,
-                ch_comision: (data_plan.desc_comision =='SI')? true : false,
-                nombre_plan_final:data_plan.nombre,
-                aseguradora_final: data_plan.id_aseguradora,
-                impuesto_final: data_plan.id_impuesto,
-                comision_final: data_plan.comision,
-                sobre_comision_final: data_plan.sobre_comision,
-                id_planes: id_planes
-            }
-        });
-          planes.copyTabla("tabla_planes","tabla_final");
-          planes.copyTabla('tabla_comis','tabla_final_comisiones');
-          if(vista == 'planes-ver'){
-            $(cuartotab).trigger('click');
-            $( "#tab2-1" ).removeClass( "active" );
-            $( "#tab_aseguradora" ).removeClass( "active" );
-            $( "#tab2-4" ).addClass( "active" );
-            $( "#tab_confirmar" ).addClass( "active" );
-            planesCrear.anterior3.remove();
-            
+              var data_plan = JSON.parse(data_planes);
+              $('#tab_ramos').removeClass( "active" );  
+              $('#tab_planes').addClass( "active" );
+              $('#tab-1').removeClass( "active" );  
+              $('#tab-3').addClass( "active" ); 
+              if(data_plan.desc_comision =='SI'){
+                  $('#ch_comision').trigger('click') ;
+                  $('#ch_comision_final').trigger('click') ;
+              }
+              $("#treeRamos2").bind("loaded.jstree",function(e,data){
+                data.instance.select_node(data_plan.id_ramo);
+              });
+              new Vue({
+                el: '#crearplanesForm',
+                data: {
+                    nombre_plan: data_plan.nombre,
+                    aseguradora: data_plan.id_aseguradora,
+                    impuesto: data_plan.id_impuesto,
+                    ch_comision: (data_plan.desc_comision =='SI')? true : false,
+                    nombre_plan_final:data_plan.nombre,
+                    aseguradora_final: data_plan.id_aseguradora,
+                    impuesto_final: data_plan.id_impuesto,
+                    comision_final: data_plan.comision,
+                    sobre_comision_final: data_plan.sobre_comision,
+                    id_planes: id_planes
+                }
+              });
+              planes.copyTabla("tabla_planes","tabla_final");
+              planes.copyTabla('tabla_comis','tabla_final_comisiones');
+              if(vista == 'planes-ver'){
+                    $(cuartotab).trigger('click');
+                    $( "#tab2-1" ).removeClass( "active" );
+                    $( "#tab_aseguradora" ).removeClass( "active" );
+                    $( "#tab2-4" ).addClass( "active" );
+                    $( "#tab_confirmar" ).addClass( "active" );
+                    planesCrear.anterior3.remove();
+                    
+              }
+
+        }else if(vista == 'planes-crear'){
+            $('#tab_ramos').removeClass( "active" );  
+            $('#tab_planes').addClass( "active" );
+            $('#tab-1').removeClass( "active" );  
+            $('#tab-3').addClass( "active" );
+            new Vue({
+                el: '#crearplanesForm',
+                data: {
+                    aseguradora: id_aseguradora,
+                    aseguradora_final: id_aseguradora,
+                    vista:vista
+                }
+              });
         }
-
-    }else if(vista == 'planes-crear'){
-        $('#tab_ramos').removeClass( "active" );  
-        $('#tab_planes').addClass( "active" );
-        $('#tab-1').removeClass( "active" );  
-        $('#tab-3').addClass( "active" );
-        new Vue({
-            el: '#crearplanesForm',
-            data: {
-                aseguradora: id_aseguradora,
-                aseguradora_final: id_aseguradora,
-                vista:vista
-            }
-        });
     }
-}
-
+    
 });
 
     
 
-    bluapp.controller("configRamosController", function ($scope, $http) {
+bluapp.controller("configRamosController", function ($scope, $http) {
 
-        $scope.ramolimpiar = {
-            nombre: '',
-            descripcion: '',
-            codigo: '',
-            cuenta_id: ''
-        };
+    $scope.ramolimpiar = {
+        nombre: '',
+        descripcion: '',
+        codigo: '',
+        cuenta_id: ''
+    };
 
-        var vista = {
-            formRamo: $('#crearRamosForm')
-        };
-        var botonModal = {
-            editar: 'a.editarImpuestoBtn',
-            cambiarEstado: 'a.cambiarEstadoImpuestoBtn'
-        };
+    var vista = {
+        formRamo: $('#crearRamosForm')
+    };
+    var botonModal = {
+        editar: 'a.editarImpuestoBtn',
+        cambiarEstado: 'a.cambiarEstadoImpuestoBtn'
+    };
 
 
-        $scope.guardarRamo = function (ramo) {
+    $scope.guardarRamo = function (ramo) {
 
-            $scope.ramo = angular.copy(ramo);
-
-            var formValidado = vista.formRamo.validate({
-             rules:{
-                descripcion:"required"
-            }
+        $scope.ramo = angular.copy(ramo);
+        $('input[name="nombre').rules(
+           "add",{ required: true, 
+            regex:'^[a-zA-Z0-9áéíóúñ ]+$',
         });
-            if (formValidado.form() === true) {
+        $('input[name="descripcion').rules(
+           "add",{ required: false, 
+            regex:'^[a-zA-Z0-9áéíóúñ ]+$',
+        });
+        var formValidado = vista.formRamo.validate();
+        if (formValidado.form() === true) {
             //$(selfButton).unbind("click");
             var guardar = moduloAseguradora.guardarRamos(vista.formRamo);
             guardar.done(function (data) {
@@ -427,12 +426,12 @@ planes = {
 
             var arbol = jQuery.parseJSON(data);
             $('#treeRamos').jstree(arbol)
-            .bind("select_node.jstree", function (e, data) {
+                .bind("select_node.jstree", function (e, data) {
 
-                var nodo = data.node;
-                var nodo_id = nodo.id;
-                $('#codigo').val(nodo_id);
-            });
+                    var nodo = data.node;
+                    var nodo_id = nodo.id;
+                    $('#codigo').val(nodo_id);
+                });
             $('#treeRamos').jstree(true).redraw(true);
             
 
@@ -448,20 +447,20 @@ planes = {
 
             var arbol = jQuery.parseJSON(data);
             $('#treeRamos2').jstree(arbol)
-            .bind("select_node.jstree", function (e, data) {
-                var nodo = data.node;
-                var nodo_id = nodo.id;
-                $('#idRamo').val(nodo_id);
-                var i = 0;
-                var nombre = []
-                for (i in data.node.parents) {
-                    if (data.node.parents[i] != "#") {
-                        nombre.push($('#treeRamos2').find("#" + data.node.parents[i] + "_anchor").find("#labelramo")[0].lastChild.nodeValue);
+                .bind("select_node.jstree", function (e, data) {
+                    var nodo = data.node;
+                    var nodo_id = nodo.id;
+                    $('#idRamo').val(nodo_id);
+                    var i = 0;
+                    var nombre = []
+                    for (i in data.node.parents) {
+                        if (data.node.parents[i] != "#") {
+                            nombre.push($('#treeRamos2').find("#" + data.node.parents[i] + "_anchor").find("#labelramo")[0].lastChild.nodeValue);
+                        }
                     }
-                }
-                var labelNombre = "";
-                for (i = nombre.length - 1; i >= 0; i = i - 1) {
-                    labelNombre += nombre[i] + "/";
+                    var labelNombre = "";
+                    for (i = nombre.length - 1; i >= 0; i = i - 1) {
+                        labelNombre += nombre[i] + "/";
                         //console.log(nombre[i]);
                     }
                     
@@ -504,8 +503,8 @@ bluapp.controller("configPlanesController", function ($scope, $http) {
         } else {
             $("#mensaje").html("");
             $("#mensaje").append('<div class="alert alert-dismissable alert-danger" >\n\
-                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>\n\
-                Debe completar el formulario </div>');
+            <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>\n\
+            Debe completar el formulario </div>');
         }
 
     };
@@ -520,4 +519,47 @@ bluapp.controller("configPlanesController", function ($scope, $http) {
     };
     $scope.inicializar_plugin();
 });
-
+$("#isGrouper").change(function() {
+     alert("hola");
+    var form =$('#crearRamosForm').validate();
+    if(this.checked) {
+     $('#codigo_ramo').rules(
+           "add",{ required: true, 
+            
+        });
+     $('input[name="descripcion').rules(
+           "add",{ required: true, 
+            
+        });
+    $('#tipo_interes_ramo').rules(
+           "add",{ required: true, 
+            
+        });
+    $('#tipo_poliza_ramo').rules(
+           "add",{ required: true, 
+            
+        });
+     $('#crearRamosForm').validate();
+ }else{
+    
+    form.resetForm();
+    
+    $('#codigo_ramo').rules(
+           "add",{ required: false, 
+            
+        });
+    $('#tipo_interes_ramo').rules(
+           "add",{ required: false, 
+            
+        });
+    $('#tipo_poliza_ramo').rules(
+           "add",{ required: false, 
+            
+        });
+    $('input[name="descripcion').rules(
+           "add",{ required: false, 
+            
+        });
+    $('#crearRamosForm').validate();
+}
+});

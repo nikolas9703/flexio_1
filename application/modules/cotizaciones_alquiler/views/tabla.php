@@ -1,1 +1,1 @@
-<?php echo Jqgrid::cargar("tablaCotizacionesGrid")  ?>
+<?php echo Jqgrid::cargar("tablaCotizacionesAlquilerGrid")  ?>

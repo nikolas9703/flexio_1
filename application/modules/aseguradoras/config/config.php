@@ -10,18 +10,18 @@ $config['modulo_config'] = array(
 	'grupo'			=> 'Administración',
         'agrupador'		=> array(
         'Seguros' => array(
-            'grupo_orden' => 1
+            'grupo_orden' => 6
         ),
         ),
         'permisos'  => array(
-	'acceso' => 'Acceso'
+			'acceso' => 'Acceso'
 	),
-        'prefijo'   => 'sol',
-        'menu' => array(
-            
-         'nombre' =>'Aseguradoras' ,
-         'url' => 'aseguradoras/listar',
-         'orden'=> 1
-                           
-        ),
+	'prefijo'   => 'sol',
+	'menu' => array(
+		
+	 'nombre' =>'Aseguradoras' ,
+	 'url' => 'aseguradoras/listar',
+	 'orden'=> 1
+					   
+	)
 );

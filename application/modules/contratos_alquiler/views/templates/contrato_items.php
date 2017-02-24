@@ -6,16 +6,16 @@
         <table class="table" id="contratosAlquilerItems">
             <thead>
                 <tr>
-                    <th width="14%" colspan="2">Categor&iacute;a del item</th>
-                    <th width="14%">Item para alquiler</th>
-                    <th width="14%" >Atributo</th>
-                    <th width="14%"  >Cantidad</th>
+                    <th width="12%" colspan="2">Categor&iacute;a del item</th>
+                    <th width="30%">Item para alquiler</th>
+                    <th width="12%" >Atributo</th>
+                    <th width="8%"  >Cantidad</th>
                     <!-- <th width="7%" v-show="vista!='crear'"  class="hide">Contratado</th>
                     <th width="7%" v-show="vista!='crear'"  class="hide">Entregado</th>
                     <th width="7%" v-show="vista!='crear'"  class="hide">Devuelto</th>
                     <th width="7%" v-show="vista!='crear'"  class="hide">En alquiler</th> -->
-                    <th width="14%">Periodo tarifario</th>
-                    <th width="14%">Tarifa pactada</th>
+                    <th width="8%">Periodo tarifario</th>
+                    <th width="8%">Tarifa pactada</th>
                     <th width="1%" style="background-color: white;"></th>
                 </tr>
             </thead>

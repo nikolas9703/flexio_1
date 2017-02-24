@@ -19,5 +19,8 @@ class FacturaCompraCatalogo extends Model
     {
         return $query->where("tipo", "termino_pago");
     }
+    public function estado($id = null){
+        return $this->where("id" , $id)->get();
+    }
 
 }

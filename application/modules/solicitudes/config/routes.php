@@ -4,6 +4,8 @@
 $route['solicitudes/listar']        = 'solicitudes/listar';
 $route['solicitudes/ocultotabla']   = 'solicitudes/ocultotabla';
 $route['solicitudes/ocultoformulario']   = 'solicitudes/ocultoformulario';
+$route['solicitudes/editar participación']   = 'solicitudes/editar_participacion';
+$route['solicitudes/editar asignación']   = 'solicitudes/editar_asignacion';
 
 //Ajax
 $route['solicitudes/ajax-listar']        = 'solicitudes/ajax_listar';
@@ -15,8 +17,9 @@ $route['solicitudes/ajax-get-comision']        = 'solicitudes/ajax_get_comision'
 $route['solicitudes/ajax-get-porcentaje']        = 'solicitudes/ajax_get_porcentaje';
 $route['solicitudes/ajax-get-centro-facturable']        = 'solicitudes/ajax_get_centro_facturable';
 $route['solicitudes/ajax-get-direccion']        = 'solicitudes/ajax_get_direccion';
+$route['solicitudes/ajax-guardar-documentos']  = 'solicitudes/ajax_guardar_documentos';
 
 //Formulario crear/editar
 $route['solicitudes/crear']         = 'solicitudes/crear';
-$route['solicitudes/guardar']         = 'solicitudes/guardar';
 $route['solicitudes/ver/(:any)']    = 'solicitudes/editar/$1';
+$route['solicitudes/editar/(:any)']         = 'solicitudes/editar/$1';

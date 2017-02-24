@@ -49,7 +49,7 @@ echo $this->config->item('logo_path') . $logo; ?>" height="56.69px" alt="Logo" b
         </tr>
         <tr>
             <th  class="columnasnombres">Tipo de fianza:</th>
-            <td><?php if ($datos->proyecto_actividad->tipo_fianza !=""){ if($datos->proyecto_actividad->tipo_fianza =="propuesta") { echo "Propuesta"; } else if  ($datos->proyecto_actividad->tipo_fianza =="cumplimiento") { echo "Cumplimiento"; } else if  ($datos->proyecto_actividad->tipo_fianza =="anticipo") { echo "Anticipo"; } else if ($datos->proyecto_actividad->tipo_fianza =="otro") { echo "Otro"; } } ?></td>
+            <td><?php if($datos->proyecto_actividad->tipo_fianza !="") echo $datos->proyecto_actividad->tipodeFianza->etiqueta?></td>
         </tr>
         <tr>
             <th  class="columnasnombres">Monto del contratado:</th>
@@ -61,7 +61,7 @@ echo $this->config->item('logo_path') . $logo; ?>" height="56.69px" alt="Logo" b
         </tr>
         <tr>
             <th  class="columnasnombres">Tipo de propuesta:</th>
-           <td> <?php if ($datos->proyecto_actividad->tipo_propuesta !=""){ if($datos->proyecto_actividad->tipo_propuesta =="111") { echo "Licitación pública"; } else if  ($datos->proyecto_actividad->tipo_propuesta =="112") { echo "Solicitud de precios"; } else if  ($datos->proyecto_actividad->tipo_propuesta =="113") { echo "Concurso precios"; } else if  ($datos->proyecto_actividad->tipo_propuesta =="114") { echo "Acto público"; } else if ($datos->proyecto_actividad->tipo_propuesta =="115") { echo "Compra menor"; } else if ($datos->proyecto_actividad->tipo_propuesta =="otro") { echo "Otro"; } } ?></td>
+            <td><?php if($datos->proyecto_actividad->tipo_propuesta !="") { if ($datos->proyecto_actividad->validez_fianza_pr !="otro") { echo $datos->proyecto_actividad->tipodePropuesta->etiqueta; } else { echo "Otro";}}?></td>
         </tr>
         <tr>
             <th  class="columnasnombres">Asignado al acreedor %:</th>
@@ -73,11 +73,11 @@ echo $this->config->item('logo_path') . $logo; ?>" height="56.69px" alt="Logo" b
         </tr>
         <tr>
             <th  class="columnasnombres">Acreedor:</th>
-            <td><?php echo ucwords($datos->proyecto_actividad->acreedor) ?></td>
+            <td><?php if($datos->proyecto_actividad->acreedor !="") { if ($datos->proyecto_actividad->acreedor !="otro") { echo $datos->proyecto_actividad->datosAcreedor->nombre; } else { echo "Otro"; }}?></td>
         </tr>
         <tr>
             <th  class="columnasnombres">Validez de la fianza:</th>
-            <td><?php if ($datos->proyecto_actividad->validez_fianza_pr !=""){ if($datos->proyecto_actividad->validez_fianza_pr =="116") { echo "60 días"; } else if  ($datos->proyecto_actividad->validez_fianza_pr =="117") { echo "90 días"; } else if  ($datos->proyecto_actividad->validez_fianza_pr =="118") { echo "120 días"; } else if  ($datos->proyecto_actividad->validez_fianza_pr =="119") { echo "120 días"; } else if ($datos->proyecto_actividad->validez_fianza_pr =="otro") { echo "Otro"; } } ?></td>
+            <td><?php if ($datos->proyecto_actividad->validez_fianza_pr !="") { if ($datos->proyecto_actividad->validez_fianza_pr !="otro") { echo $datos->proyecto_actividad->tipodeFianzapr->etiqueta; } else { echo "Otro"; }}?></td>
         </tr>
         
         <tr>
@@ -86,7 +86,7 @@ echo $this->config->item('logo_path') . $logo; ?>" height="56.69px" alt="Logo" b
         </tr>
         <tr>
             <th  class="columnasnombres">Estado:</th>
-            <td><?php echo $datos->proyecto_actividad->estado ?></td>
+            <td><?php echo $datos->estado; ?></td>
         </tr>
     </table>
 </div>

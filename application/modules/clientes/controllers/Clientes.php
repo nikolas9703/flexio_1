@@ -28,7 +28,21 @@ use Flexio\Modulo\ConfiguracionVentas\Models\CategoriaClientes as CategoriaClien
 use Flexio\Modulo\ConfiguracionVentas\Repository\CategoriaClienteRepository as CategoriaClienteRepository;
 use Flexio\Modulo\ConfiguracionVentas\Repository\TipoClienteRepository as TipoClienteRepository;
 use Flexio\Modulo\ClientesPotenciales\Repository\ClientesPotencialesRepository;
+use Flexio\Modulo\Inventarios\Repository\PreciosRepository;
+use Flexio\Modulo\Modulos\Repository\ModulosRepository;
+use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
+
+//utils
+use Flexio\Library\Util\FlexioAssets;
+use Flexio\Library\Util\FlexioSession;
+use Flexio\Library\Toast;
+
 class Clientes extends CRM_Controller {
+
+    //utils
+    protected $FlexioAssets;
+    protected $FlexioSession;
+    protected $Toast;
 
     private $id_empresa;
     private $id_usuario;
@@ -42,6 +56,9 @@ class Clientes extends CRM_Controller {
     protected $categoriaClienteRepository;
     protected  $tipoClienteRepository;
     protected $ClientesPotencialesRepository;
+    protected $PreciosRepository;
+    protected $ModulosRepository;
+    protected $UsuariosRepository;
 
     function __construct() {
         parent::__construct();
@@ -76,6 +93,13 @@ class Clientes extends CRM_Controller {
         $this->listarCategorias = new CategoriaClientes();
         $this->categoriaClienteRepository = new CategoriaClienteRepository();
         $this->tipoClienteRepository = new TipoClienteRepository();
+        $this->PreciosRepository = new PreciosRepository;
+        $this->ModulosRepository = new ModulosRepository;
+        $this->UsuariosRepository = new UsuariosRepository;
+
+        $this->FlexioAssets = new FlexioAssets;
+        $this->FlexioSession = new FlexioSession;
+        $this->Toast = new Toast;
     }
 
     public function listar() {
@@ -145,6 +169,10 @@ class Clientes extends CRM_Controller {
             )
         );
 
+        $this->FlexioAssets->add('vars', [
+            "flexio_mensaje" => Flexio\Library\Toast::getStoreFlashdata()
+        ]);
+
         $menuOpciones["#agrupadorClientesBtn"] = "Agrupar";
         $menuOpciones["#exportarClienteBtn"] = "Exportar";
         $breadcrumb["menu"]["opciones"] = $menuOpciones;
@@ -162,15 +190,126 @@ class Clientes extends CRM_Controller {
         $registro = array();
 
         if (count($cliente)) {
+            $registro['cliente_id'] = $cliente->id;
             $centro_facturable = $cliente->centro_facturable;
+
+            $centro_facturacion_id = '';
+            $centro_facturacion_id = count($centro_facturable) == 1 ? $centro_facturable->first()->id : '';
+
+            foreach ($centro_facturable as $row) {
+                if($row->principal == 1){$centro_facturacion_id = $row->id;}
+            }
+
             $registro['saldo'] = $cliente->saldo_pendiente;
             $registro['credito_favor'] = $cliente->credito_favor;
             $registro['centros_facturacion'] = $centro_facturable;
-            $registro['centro_facturacion_id'] = count($centro_facturable) == 1 ? $centro_facturable->first()->id : '';
+            $registro['centro_facturacion_id'] = $centro_facturacion_id;
+            $registro['exonerado_impuesto'] = $cliente->exonerado_impuesto;
         }
 
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($registro))->_display();
+
+        exit;
+    }
+
+    public function ajax_listar_centros_facturacion() {
+
+        // Just Allow ajax request
+        if(!$this->input->is_ajax_request()){
+  	      return false;
+  	    }
+
+        $CentroFacturableRepository = new Flexio\Modulo\CentroFacturable\Repository\CentroFacturableRepository;
+
+        $clause = [];
+        $clause["campo"] = $this->input->post("campo");
+        $clause["empresa_id"] = $this->FlexioSession->empresaId();
+
+        //hacer repositorio de centros de facturacion
+        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+        $count = $CentroFacturableRepository->count($clause);
+        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+  		$centros_facturacion = $CentroFacturableRepository->get($clause ,$sidx, $sord, $limit, $start);
+
+        // Constructing a JSON
+        $response = new stdClass ();
+        $response->page = $page;
+        $response->total = $total_pages;
+        $response->records = $count;
+        $i = 0;
+
+
+        if (count($centros_facturacion)) {
+            foreach ($centros_facturacion as  $i => $row) {
+                $hidden_options = "";
+                $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-nombre="' . $row->nombre . '" data-centro="' . $row->id . '"><i class="fa fa-cog"></i> <span class="hidden-sm hidden-xs">Opciones</span></button>';
+                $response->rows[$i]["id"] = $row->id;
+                $nombre_link = "<a href='#'>" . $row->nombre . "</a> ";
+
+                $hidden_options = '<a href="javascript:" data-id="' . $row->id . '" class="btn btn-block btn-outline btn-success verCentroFacturacion">Ver centro de facturaci&oacute;n</a>';
+                if(count($centros_facturacion) > 1)
+                {
+                    $hidden_options .= '<a href="javascript:" data-id="' . $row->id . '" class="btn btn-block btn-outline btn-success eliminarCentroFacturacion">Eliminar</a>';
+                }
+
+                $label_principal = ($row->principal == 1) ? '<span class="label label-warning">Principal</span>':'';
+                $response->rows[$i]["cell"] = array(
+                    $row->principal,
+                    '<a href="javascript:" class="link verCentroFacturacion" data-id="'. $row->id .'">'.$row->nombre.'</a> ' .$label_principal ,
+                    count($row->provincia) ? $row->provincia->nombre : '',
+                    count($row->distrito) ? $row->distrito->nombre : '',
+                    count($row->corregimiento) ? $row->corregimiento->nombre : '',
+                    $row->direccion,
+                    $link_option,
+                    $hidden_options
+                );
+
+            }
+        }
+        echo json_encode($response);
+        exit ();
+    }
+
+    function ajax_asignar_centro_principal() {
+
+        //Just Allow ajax request
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+        $clause = array();
+        $centro_facturacion_id = $this->input->post('centro_facturacion_id', true);
+        $centros_facturacion = \Flexio\Modulo\CentroFacturable\Models\CentroFacturable::where('empresa_id', $this->FlexioSession->empresaId())->get();
+        foreach ($centros_facturacion as $row) {
+            $row->principal = 0;
+            $row->save();
+        }
+        $centro_facturacion = \Flexio\Modulo\CentroFacturable\Models\CentroFacturable::find($centro_facturacion_id);
+
+
+        if(count($centro_facturacion)){
+            $centro_facturacion->principal = 1;
+            $json = json_encode($centro_facturacion->save());
+            echo $json;
+        }
+
+        exit;
+    }
+
+    function ajax_eliminar_centro() {
+
+        //Just Allow ajax request
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+        $centro_facturacion_id = $this->input->post('centro_facturacion_id', true);
+        $centro_facturacion = \Flexio\Modulo\CentroFacturable\Models\CentroFacturable::find($centro_facturacion_id);
+
+        if(count($centro_facturacion)){
+            $centro_facturacion->eliminado = 1;
+            $json = json_encode($centro_facturacion->save());
+            echo $json;
+        }
 
         exit;
     }
@@ -190,7 +329,7 @@ class Clientes extends CRM_Controller {
         $estado              = $this->input->post('estado');
         $tipo_identificacion = $this->input->post('identificacion');
 
-
+        $clause = [];
         $clause = array('empresa_id' => $this->empresaObj->id);
         $var = '';
 
@@ -198,23 +337,30 @@ class Clientes extends CRM_Controller {
             $clause['nombre'] = $nombre;
         if (!empty($telefono)){
             $var = Telefonos::where('telefono','=', $telefono)->get()->toArray();
-            $clause['id'] = $var[0]["cliente_id"];
-        //dd($var[0]["cliente_id"]);
+            if(isset($var[0]["cliente_id"]))
+                $clause['id'] = $var[0]["cliente_id"];
+            else
+                $clause['id'] = -1;
         }
         if (!empty($correo)){
             $var = Correos::where('correo','=', $correo)->get()->toArray();
-            $clause['id'] = $var[0]["cliente_id"];
+            if(isset($var[0]["cliente_id"]))
+                $clause['id'] = $var[0]["cliente_id"];
+            else
+                $clause['id'] = -1;
+            //$clause['id'] = $var[0]["cliente_id"];
         }
         if (!empty($tipo)) $clause['tipo'] = $tipo;
         if (!empty($categoria)) $clause['categoria'] = $categoria;
         if (!empty($estado)) $clause['estado'] = $estado;
         if (!empty($tipo_identificacion)) $clause['tipo_identificacion'] = $tipo_identificacion;
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+
+         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
         $count = Cliente_orm::lista_totales($clause);
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
         $clientes = Cliente_orm::listar($clause, $sidx, $sord, $limit, $start);
 
-        // dd($agrupador);
+
         //Constructing a JSON
         $response = new stdClass();
         $response->page = $page;
@@ -228,6 +374,7 @@ class Clientes extends CRM_Controller {
             foreach ($clientes as $row) {
                 //Se agrega primer telefono y correo guardado en la base de datos de cada uno respectivamente.
                 //Se agrego asi por solicitud de diseño hasta previo cambio.
+                
                 $telefono ="";
                 if (count($row->telefonos_asignados) > 0){ $telefono =$row->telefonos_asignados[0]->telefono;}
                 $correo ="";
@@ -236,7 +383,8 @@ class Clientes extends CRM_Controller {
                 $hidden_options = "";
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->uuid_cliente . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $hidden_options = '<a href="' . base_url('clientes/ver/' . $row->uuid_cliente) . '" data-id="' . $row->uuid_cliente . '" class="btn btn-block btn-outline btn-success">Ver Cliente</a>';
-                $hidden_options .= '<a href="' . base_url('clientes/ver/' . $row->uuid_cliente . "#contacto") . '" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Agregar Contacto</a>';
+                $hidden_options .= '<a href="' . base_url('clientes/ver/' . $row->uuid_cliente . "?func=agregar_contacto") . '" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Agregar Contacto</a>';
+                $hidden_options .= '<a href="' . base_url('clientes/ver/' . $row->uuid_cliente . "?func=agregar_centro_facturacion") . '" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Agregar Centro de Facturaci&oacute;n</a>';
                 $hidden_options .= '<a href="' . base_url('cotizaciones/crear/cliente' . $row->id) .'" data-id="' . $row->uuid_cliente . '" class="btn btn-block btn-outline btn-success">Nueva Cotizaci&oacute;n</a>';
                // $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Registrar Actividad</a>'; //COMENTADO TEMPORALMENTE HASTA NUEVO AVISO
                 $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_cliente . '" class="exportarTablaCliente btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documento</a>';
@@ -275,6 +423,22 @@ class Clientes extends CRM_Controller {
         $this->load->view('tabla');
     }
 
+    public function ocultotabla_centros_facturacion($campo_array = []) {
+
+        if(is_array($campo_array))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($campo_array)
+            ]);
+        }
+        //If ajax request
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/clientes/tabla_centros_facturacion.js'
+        ));
+
+        $this->load->view('tabla_centros_facturacion');
+    }
+
     /**
      * Cargar Vista Parcial de Tabla
      * Para Filtrar Clientes desde
@@ -291,107 +455,58 @@ class Clientes extends CRM_Controller {
         $this->load->view('tabla');
     }
 
-    public function crear($uuid_cliente_potencial = NULL) {
-        $this->assets->agregar_css(array(
-            'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
-            'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
-            'public/assets/css/plugins/jquery/chosen/chosen.min.css',
-            'public/assets/css/modules/stylesheets/clientes.css'
-        ));
-        $this->_js();
-        $this->assets->agregar_js(array(
-            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
-            //'public/assets/js/plugins/jquery/combodate/combodate.js',
-            'public/assets/js/plugins/jquery/combodate/momentjs.js',
-            //'public/assets/js/default/lodash.min.js',
-            //'public/assets/js/plugins/jquery/chosen.jquery.min.js',
-            //'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
-            'public/assets/js/moment-with-locales-290.js',
-            'public/assets/js/plugins/bootstrap/daterangepicker.js',
-            'public/assets/js/default/formulario.js',
-            'public/assets/js/default/jquery.inputmask.bundle.min.js',
-            'public/assets/js/default/formatos.js'
-          //  'public/assets/js/modules/clientes/vue.telefono-clientes.js',
-           // 'public/assets/js/modules/clientes/vue.correo-clientes.js'
-        ));
+    public function crear($uuid_cliente_potencial = NULL)
+    {
+        //permisos
+        $acceso = $this->auth->has_permission('acceso', 'clientes/crear/(:any)');
+        $this->Toast->runVerifyPermission($acceso);
 
-        $data = $cliente_potencial = array();
+        //assets
+        $this->FlexioAssets->run();//css y js generales
+        $this->FlexioAssets->add('vars', [
+            "vista" => 'crear',
+            "acceso" => $acceso ? 1 : 0,
+            "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0',
+            "desde_modal_cliente_ref" => $this->input->get("ref") ? $this->input->get("ref") : '0',
+        ]);
 
+        //breadcrumb
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-line-chart"></i> Crear Clientes',
-            "ruta" => array(
-                0 => array(
-                    "nombre" => "Ventas",
-                    "activo" => false
-                ),
-                1 => array(
-                  "nombre" => "Clientes",
-                  "activo" => false,
-                  "url" => 'clientes/listar'
-                ),
-                2=> array(
-                    "nombre" => '<b>Crear</b>',
-                    "activo" => true
-                )
-            ),
-            "filtro" => false,
-            "menu" => array()
+            "titulo" => '<i class="fa fa-line-chart"></i> Clientes',
+            "ruta" => [
+                ["nombre" => "Ventas", "activo" => false],
+                ["nombre" => "Clientes", "activo" => false, "url" => 'clientes/listar'],
+                ["nombre" => '<b>Crear</b>',"activo" => true]
+            ]
         );
 
-        $total = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->count();
-        $identificacion = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->get(array('identificacion'));
-       // dd($identificacion->toArray());
-
-        $data['info']['codigo'] = Util::generar_codigo('CUS', $total + 1);
-        $data['info']['provincias'] = Catalogo_orm::where('tipo', '=', 'provincias')->get(array('id', 'valor'));
-        $data['info']['letras'] = Catalogo_orm::where('tipo', '=', 'letras')->get(array('key', 'valor'));
-        //$data['info']['toma_contacto'] = Catalogo_toma_contacto_orm::all();
-        $data['info']['toma_contacto'] = $this->clienteRepo->getTomaContacto();
-
-        $data['info']['asignados'] = Usuario_orm::where('estado', '=', 'Activo')
-        ->leftJoin('usuarios_has_empresas', 'usuarios_has_empresas.id', '=', 'usuarios.id')
-        ->where('usuarios_has_empresas.empresa_id', '=', 1)->get(array('usuarios.id', 'usuarios.nombre', 'usuarios.apellido'));
-
-        $data['info']['categoria'] = $this->categoriaClienteRepository->getCatalogoCategoria($this->id_empresa);
-        $data['info']['tipo'] = $this->tipoClienteRepository->getCatalogoTipo($this->id_empresa);
-        $data['info']['estado'] = Catalogo_orm::where('tipo', '=', 'estado')->get(array('valor', 'etiqueta'));
-        $vista = "crear";
-        $cliente_potencial_id = 0;
-        if($uuid_cliente_potencial!= NULL){ //Viene del cliente potencial
-          //$cliente_id = $this->input->post('id', true);
-          $client = array('empresa_id'=>$this->id_empresa,'uuid_cliente_potencial' => $uuid_cliente_potencial);
-          $cliente_potencial = $this->ClientesPotencialesRepository->findBy($client);
-          $cliente_potencial->load("telefonos_asignados","correos_asignados");
-
-          $cliente_potencial_id = $cliente_potencial->id_cliente_potencial;
-          $vista = "creando_desde_potencial";
-
-          //$clientePot = Clientes_potenciales_orm::select_cliente_potencial($client);
-
-
-        }
-        $this->assets->agregar_var_js(array(
-            'tipo_id' => 'null',
-            'balance' => 0,
-            "vista"=>$vista,
-            "lista_telefonos"=>!empty($cliente_potencial)?$cliente_potencial->telefonos_asignados:'',
-            "lista_correo"=>!empty($cliente_potencial)?$cliente_potencial->correos_asignados:'',
-            "cliente_potencial_id" => $cliente_potencial_id
-        ));
+        //render
         $this->template->agregar_titulo_header('Crear Cliente');
         $this->template->agregar_breadcrumb($breadcrumb);
-        $this->template->agregar_contenido($data);
+        $this->template->agregar_contenido([]);
         $this->template->visualizar();
     }
 
-    public function ocultoformulario($data = NULL) {
-        $this->assets->agregar_js(array(
-            'public/assets/js/modules/clientes/provider.js',
-            'public/assets/js/modules/clientes/crear.js',
+    public function ocultoformulario($data = NULL)
+    {
+        $clause = ['empresa_id' => $this->FlexioSession->empresaId(), 'estado' => 1];
+        $catalogo_cliente = Flexio\Modulo\Cliente\Models\ClienteCatalogo::get();
+        $precios = $this->PreciosRepository->get($clause);
 
-        ));
+        $this->FlexioAssets->add('js', ['public/resources/compile/modulos/clientes/formulario.js']);
+        $this->FlexioAssets->add('vars', [
+            "tomas_contacto" => Flexio\Modulo\Cliente\Models\CatalogoTomaContacto::get(),
+            "categorias_cliente" => $this->categoriaClienteRepository->getCatalogoCategoria($clause['empresa_id']),
+            "tipos_cliente" => $this->tipoClienteRepository->getCatalogoTipo($clause['empresa_id']),
+            "estados_cliente" => $catalogo_cliente->filter(function($row){return $row->tipo == 'estado';}),
+            "lista_precios_venta" => $precios->filter(function($row){return $row->tipo_precio == 'venta';}),
+            "lista_precios_alquiler" =>  $precios->filter(function($row){return $row->tipo_precio == 'alquiler';}),
+            "terminos_pago" => $this->ModulosRepository->getTerminosDePago(),
+            "usuarios" => $this->UsuariosRepository->getCollectionUsuarios($this->UsuariosRepository->get($clause)),
+            "provincias" => Flexio\Modulo\Geo\Models\Provincia::orderBy('nombre', 'asc')->get(),
+            "distritos" => Flexio\Modulo\Geo\Models\Distrito::orderBy('nombre', 'asc')->get(),
+            "corregimientos" => Flexio\Modulo\Geo\Models\Corregimiento::orderBy('nombre', 'asc')->get(),
+        ]);
         $this->load->view('formulario', $data);
     }
 
@@ -412,203 +527,93 @@ class Clientes extends CRM_Controller {
 
         if ($_POST){
 
-            //$clause = array('empresa_id' => $this->empresaObj->id);
             $cliente = '';
+            //creo que estas lineas revisan sin proviene desde un cliente potencial
+            //de manera de inactivarlo -> pendiente de integrar en el refactory
             $cp_id = $this->input->post('id_cp', true);
-            if ($cp_id != NULL) {
+            if (!empty($cp_id)) {
                 Clientes_potenciales_orm::upDateClientePotencial($cp_id);
             }
-                try {
-                    $total = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->count();
-                    $cliente_request = new ClienteRequest;
-                    $codigo = $total + 1;
-                    $cliente = $cliente_request->guardar($this->id_empresa, $codigo);
-                } catch (\Exception $e) {
-                    log_message('error', $e);
-                }
 
-                if (!is_null($cliente)) {
-                    if ($cliente == 'con_identificacion'){
-                        $mensaje = array('clase' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada. El n&uacute;mero de identificaci&oacute;n ya existe.');
-                    }else{
-                        $mensaje = array('clase' => 'alert-success', 'contenido' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente');
-                    }
+            try {
+                $total = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->count();
+                $cliente_request = new ClienteRequest;
+                $codigo = $total + 1;
+                $registro = $cliente_request->guardar($this->id_empresa, $codigo, $this->id_usuario);
+            } catch (\Exception $e) {
+                log_message('error', $e);
+                $this->Toast->setUrl('clientes/listar')->run("exception",[$e->getMessage()]);
+            }
 
+            if(!is_null($registro)){
+                if ($cliente == 'con_identificacion'){
+                    $this->Toast->run("error",['<strong>¡Error!</strong> Su solicitud no fue procesada. El n&uacute;mero de identificaci&oacute;n ya existe.']);
                 }else{
-                    $mensaje = array('clase' => 'alert-danger', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
+                    $this->Toast->run("success",[$registro->codigo]);
                 }
+            }else{
+                $this->Toast->run("error");
+            }
+			
+			if($this->input->post('regreso')=='fact')
+				redirect(base_url('facturas_seguros/listar'));
+			else
+				redirect(base_url('clientes/listar'));
 
-        }else {
-            $mensaje = array('clase' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
+
+
         }
-
-        $this->session->set_flashdata('mensaje', $mensaje);
-        redirect(base_url('clientes/listar'));
     }
 
-    function ver($uuid = NULL) {
-        $data = array();
-        $this->assets->agregar_css(array(
-            'public/assets/css/default/ui/base/jquery-ui.css',
-            'public/assets/css/default/ui/base/jquery-ui.theme.css',
-            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
-            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
-            'public/assets/css/modules/stylesheets/clientes.css'
-        ));
-        $this->_js();
-        $this->assets->agregar_js(array(
-        		//'public/assets/js/default/vue.js',
-        		'public/assets/js/default/vue-validator.min.js',
-        		//'public/assets/js/default/vue-resource.min.js',
-            //'public/assets/js/default/jquery-ui.min.js',
-            //'public/assets/js/plugins/jquery/jquery.sticky.js',
-            //'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
-            //'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-            //'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
-            //'public/assets/js/plugins/jquery/jqgrid/plugins/jQuery.jqGrid.columnToggle.js',
-            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
-            //'public/assets/js/plugins/jquery/combodate/combodate.js',
-            'public/assets/js/plugins/jquery/combodate/momentjs.js',
-            'public/assets/js/plugins/jquery/chosen.jquery.min.js',
-            //'public/assets/js/default/lodash.min.js',
-            'public/assets/js/default/jquery.inputmask.bundle.min.js',
-            'public/assets/js/moment-with-locales-290.js',
-            //'public/assets/js/plugins/bootstrap/daterangepicker.js',
-            'public/assets/js/default/formulario.js',
-            //'public/assets/js/default/jqgrid-toggle-resize.js',
-            'public/assets/js/modules/clientes/acciones_ver.js',
-            'public/assets/js/modules/contactos/routes.js',
-            'public/assets/js/plugins/ckeditor/ckeditor.js',
-            'public/assets/js/plugins/ckeditor/adapters/jquery.js',
-            'public/resources/compile/modulos/clientes/formulario.js',
-            'public/assets/js/default/formatos.js'
-        ));
-        if (is_null($uuid)) {
-            $mensaje = array('clase' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
-            $this->session->set_flashdata('mensaje', $mensaje);
-            redirect(base_url('clientes/listar'));
-        } else {
+    public function ver($uuid = NULL)
+    {
+        //permisos
+        $acceso = $this->auth->has_permission('acceso', 'clientes/ver/(:any)');
+        $this->Toast->runVerifyPermission($acceso);
 
-            $cliente = $this->clienteRepo->findByUuid($uuid);
-            //dd($cliente);
-            $cliente->load('comentario_timeline','clientes_asignados','telefonos_asignados','correos_asignados');
-             if (is_null($cliente)) {
-                $mensaje = array('clase' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
-                $this->session->set_flashdata('mensaje', $mensaje);
-                redirect(base_url('clientes/listar'));
-            } else {
+        //variables
+        $cliente = $this->clienteRepo->findByUuid($uuid);
 
-                $this->assets->agregar_var_js(array(
-                    'tipo_id' => (!empty($cliente['tipo_identificacion']))?$cliente['tipo_identificacion']:'',
-                    'letra' => isset($cliente['letra']) ? $cliente['letra'] : 'null',
-                    'balance' => 1,
-                    "vista" => 'ver',
-                    'lista_facturacion'=>$cliente->centro_facturable,
-                    'lista_asignados'=> isset($cliente->clientes_asignados) ? $cliente->clientes_asignados : '',
-                    'lista_telefonos'=> isset($cliente->telefonos_asignados) ? $cliente->telefonos_asignados : '',
-                    'lista_correo'=> isset($cliente->correos_asignados) ? $cliente->correos_asignados : '',
-                    'cliente'=>$cliente,
-                    'clientes_id' => !empty($cliente['id']) ? $cliente['id'] : ''
-                ));
-                // dd($cliente->toArray());
-                 $estado = Catalogo_orm::where('tipo', '=', 'estado')->get(array('valor', 'etiqueta'));
-                 $credito = number_format($cliente->credito_favor, 2, '.', ',');
-                 $saldo = number_format($cliente->total_saldo_pendiente(), 2, '.', ',');
+        //assets
+        $this->FlexioAssets->run();//css y js generales
+        $this->FlexioAssets->add('css',['public/assets/css/modules/stylesheets/clientes.css']);
+        $this->FlexioAssets->add('vars', [
+            "vista" => 'ver',
+            "acceso" => $acceso ? 1 : 0,
+            'cliente' => $this->clienteRepo->getCollectionClienteCampo($cliente),
+            "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0'
+        ]);
 
-                 if($cliente['estado'] != 'por_aprobar'){
-                     $estado->splice(2, 1);
-                 }
-                 if($cliente['estado'] != 'inactivo'){
-                    // dd($credito, $saldo, count($cliente->estadoFacturaValidate));
-                     if(count($cliente->estadoFacturaValidate) > 0 || $credito != '0.00' || $saldo != '0.00' ){
-                         $estado->splice(1, 1);
-
-                     }
-                 }
-
-                $data['info']['categoria'] = $this->categoriaClienteRepository->getCatalogoCategoria($this->id_empresa);
-                $data['info']['tipo'] = $this->tipoClienteRepository->getCatalogoTipo($this->id_empresa);
-                $data['info']['estado'] = $estado->all();
-                $data['info']['cliente'] = $cliente->toArray();
-                //dd($data);
-                if ($cliente['tipo_identificacion'] == 'natural') {
-                    $identificacion = $cliente['identificacion'];
-                    if ($cliente['letra'] == '0') {
-                        list($provincia, $tomo, $asiento) = explode("-", $identificacion);
-                        $data['info']['cliente']['provincia'] = $provincia;
-                        $data['info']['cliente']['tomo'] = $tomo;
-                        $data['info']['cliente']['asiento'] = $asiento;
-                    } elseif ($cliente['letra'] == 'N' || $cliente['letra'] == 'PE' || $cliente['letra'] == 'E') {
-                        list($letra, $tomo, $asiento) = explode("-", $identificacion);
-                        $data['info']['cliente']['tomo'] = $tomo;
-                        $data['info']['cliente']['asiento'] = $asiento;
-                    } elseif ($cliente['letra'] == 'PI') {
-                        list($provincia, $tomo, $asiento) = explode("-", $identificacion);
-                        $data['info']['cliente']['tomo'] = $tomo;
-                        $data['info']['cliente']['asiento'] = $asiento;
-                        $provincia = str_replace("PI", "", $provincia);
-                        $data['info']['cliente']['provincia'] = $provincia;
-                    } elseif ($cliente['letra'] == 'PAS') {
-                        $data['info']['cliente']['pasaporte'] = $identificacion;
-                    }
-                } elseif ($cliente['tipo_identificacion'] == 'juridico') {
-                    $identificacion = $cliente['identificacion'];
-                    list($tomo, $folio, $asiento, $verificador) = explode("-", $identificacion);
-                    $data['info']['cliente']['tomo'] = $tomo;
-                    $data['info']['cliente']['folio'] = $folio;
-                    $data['info']['cliente']['asiento'] = $asiento;
-                    $data['info']['cliente']['verificador'] = $verificador;
-                }
-            }
-        }
-
+        //breadcrumb
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-line-chart"></i> Editar Clientes',
-             "ruta" => array(
-                0 => array(
-                    "nombre" => "Ventas",
-                    "activo" => false
-                ),
-                1 => array(
-                  "nombre" => "Clientes",
-                  "activo" => false,
-                  "url" => 'clientes/listar'
-                ),
-                2=> array(
-                    "nombre" => '<b>Detalle</b>',
-                    "activo" => true
-                )
-            ),
-            "filtro" => false,
-            "menu" => array(
+            "titulo" => '<i class="fa fa-line-chart"></i> Clientes',
+            "ruta" => [
+                ["nombre" => "Ventas", "activo" => false],
+                ["nombre" => "Clientes", "activo" => false, "url" => 'clientes/listar'],
+                ["nombre" => '<b>Detalle</b>',"activo" => true]
+            ],
+            "menu" => [
                 'url' => 'javascipt:',
                 'nombre' => "Acción",
-                "opciones" => array(
+                "opciones" => [
                     "#agregarContactoBtn" => "Agregar Contacto",
-                  //  "#crearCotizacion" => "Crear Cotización",
-                  //  "javascript2:" => "Crear Órden de Venta",
-                  //  "javascript3:" => "Crear Factura",
-                   // "javascript4:" => "Registrar Cobro",
-                  //  "javascript5:" => "Nueva Actividad",
-                  // "javascript6:" => "Subir Documentos",
-                )
-            ),
+                    "#agregarCentroFacturacionBtn" => "Agregar Centro de Facturaci&oacute;n"
+                ]
+            ],
         );
 
 
-        $data['uuid_cliente'] = $cliente['uuid_cliente'];
-        $data['info']['cliente']['saldo'] = "0.00";
-        //credito  a favor
-        $data['info']['codigo'] = $cliente['codigo'];
-        $data['info']['provincias'] = Catalogo_orm::where('tipo', '=', 'provincias')->get(array('id', 'valor'));
-        $data['info']['letras'] = Catalogo_orm::where('tipo', '=', 'letras')->get(array('key', 'valor'));
-        $data['info']['toma_contacto'] = Catalogo_toma_contacto_orm::all();
-        $data['info']['asignados'] = Usuario_orm::where('estado', '=', 'Activo')
-        ->leftJoin('usuarios_has_empresas', 'usuarios_has_empresas.id', '=', 'usuarios.id')
-        ->where('usuarios_has_empresas.empresa_id', '=', $this->id_empresa)->get(array('usuarios.id', 'usuarios.nombre', 'usuarios.apellido'));
+        //nuevo esquema de subpanels
+        $data = [];
+        $data['subpanels'] = [
+            'oportunidades' => ['cliente' => $cliente->id],
+            'contactos' => ['cliente' => $cliente->id],
+            'cotizaciones' => ['cliente' => $cliente->id],
+            'clientes_abonos' => ['cliente' => $cliente->id],
+            'documentos' => ['cliente' => $cliente->id]
+        ];
 
+        //render
         $this->template->agregar_titulo_header('Editar Cliente');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
@@ -681,8 +686,8 @@ class Clientes extends CRM_Controller {
             $datos[$i]['nombre'] = utf8_decode(Util::verificar_valor($row['nombre']));
             $datos[$i]['telefono'] = Util::verificar_valor($telefono);
             $datos[$i]['correo'] = Util::verificar_valor($correo);
-            $datos[$i]['tipo'] = utf8_decode(Util::verificar_valor($row->tipo_cliente[0]->nombre));
-            $datos[$i]['categoria'] = utf8_decode(Util::verificar_valor($row->categoria_cliente[0]->nombre));
+            $datos[$i]['tipo'] = count($row->tipo_cliente)?utf8_decode(Util::verificar_valor($row->tipo_cliente[0]->nombre)):'';
+            $datos[$i]['categoria'] = count($row->categoria_cliente)?utf8_decode(Util::verificar_valor($row->categoria_cliente[0]->nombre)):'';
             $datos[$i]['credito'] = Util::verificar_valor($row['credito_favor']);
             $datos[$i]['saldo'] = Util::verificar_valor($row->total_saldo_pendiente());
             $i++;
@@ -749,15 +754,14 @@ class Clientes extends CRM_Controller {
         exit;
     }
 
-    private function _js() {
-        $this->assets->agregar_js(array(
-            'public/assets/js/default/vue.js',
-            'public/assets/js/default/vue-resource.min.js',
-            'public/assets/js/modules/clientes/vue.centros-facturables.js',
-            'public/assets/js/modules/clientes/vue.asignados-clientes.js',
-            'public/assets/js/modules/clientes/vue.telefono-cliente.js',
-            'public/assets/js/modules/clientes/vue.correo-cliente.js'
-        ));
+    function ajax_get_centros_facturacion() {
+      $id = $this->input->post('cliente_id');
+      $cliente = \Flexio\Modulo\Cliente\Models\Cliente::with(array('centro_facturable'))->where("id", $id)->get(array("id","nombre"))->toArray();
+      $centros_facturable = !empty($cliente[0]) ? $cliente[0]["centro_facturable"] : "";
+
+      $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+                  ->set_output(json_encode(['centro_facturable'  => $centros_facturable], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->_display();
+      exit;
     }
 
     function ajax_guardar_comentario() {
@@ -813,6 +817,9 @@ class Clientes extends CRM_Controller {
     	$this->documentos->subir($modeloInstancia);
     }
 
+
+    
+
     /*function ajax_verificar_identificacion(){
 
         $response = [];
@@ -830,6 +837,16 @@ class Clientes extends CRM_Controller {
 
               exit;
     }*/
+
+    function ajax_catalogo_search(){
+        $response =$this->clienteRepo->clienteCatalogo ($this->clienteRepo->search($_POST,null,null,10));
+
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response))->_display();
+        exit;
+    }
 
 }
 

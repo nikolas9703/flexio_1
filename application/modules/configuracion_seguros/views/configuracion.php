@@ -28,7 +28,6 @@
                         <ul class="nav nav-tabs">
                             <li class="active" id="tab_ramos"><a data-toggle="tab" href="#tab-1" aria-expanded="true" data-targe="generales">Ramos</a></li>
                             <li class="" id="tab_planes"><a data-toggle="tab" href="#tab-3" aria-expanded="false"  data-targe="beneficios">Planes</a></li>
-                            <li class="" id="tab_catalogo"><a data-toggle="tab" href="#tab-3" aria-expanded="false"  data-targe="beneficios">Catálogos</a></li>
                         </ul>
                         <div class="tab-content">
                             <div id="tab-1" class="tab-pane active">

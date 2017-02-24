@@ -16,7 +16,7 @@ $config['modulo_config'] = array(
 			"grupo_orden" => 0
 		),
         'Alquileres' => array(
-			"grupo_orden" => 3
+			"grupo_orden" => 7
 		),
 		'Servicios' => array(
 			"grupo_orden" => 2

@@ -271,53 +271,49 @@ class Ordenes_orm extends Model
     return $query->get();
     }
 
+    /**
+     * Actualiza estado de la orden de compra actual
+     */
     public function actualizarEstado()
     {
-        $this->id_estado = 2;
-        //2.- Por facturar
-        //3.- Orden facturada parcial
-        //4.- Orden facturada completo
-
         //items de la orden de compra -> solo id
         $ordenes_items = [];
-        foreach($this->items as $item)
-        {
-            $ordenes_items[] = $item->id;
+        foreach ($this->items as $item) {
+            $ordenes_items[$item->id] = isset($ordenes_items[$item->id]) ? $ordenes_items[$item->id] + $item->pivot->cantidad : $item->pivot->cantidad;
         }
-
-        //items de las facturas asociadas a la orden de compra
-        $facturas_items = [];
 
         //obtengo las facturas asociadas a la orden de compra
         //facturas que no tengan el estado de aprobadas
         //facturas que no tengan el estado de anulada
         $facturas = Facturas_compras_orm::where("operacion_type", "Ordenes_orm")
-                ->where("operacion_id", $this->id);
+            ->where("operacion_id", $this->id);
 
-        foreach($facturas->get() as $factura){
-            if($factura->valida)
-            {
-                foreach($factura->facturas_compras_items as $factura_item)
-                {
-                    $facturas_items[] = $factura_item->item_id;
+        //items de las facturas asociadas a la orden de compra
+        $facturas_items = [];
+        foreach ($facturas->get() as $factura) {
+            if ($factura->valida) {
+                foreach ($factura->facturas_compras_items as $factura_item) {
+                    $facturas_items[$factura_item->item_id] = isset($facturas_items[$factura_item->item_id]) ? $facturas_items[$factura_item->item_id] + $factura_item->cantidad : $factura_item->cantidad;
+                }
+            }
+        }
+        // Se inicializa el valor a Por facturar si no tiene facturas asociadas
+        //2.- Por facturar
+        //3.- Orden facturada parcial
+        //4.- Orden facturada completo
+        $this->id_estado = count($facturas_items) > 0 ? 4 : 2;
+
+        if (count($facturas_items) < count($ordenes_items)) {
+            $this->id_estado = 3;
+        } else {
+            foreach ($ordenes_items as $key => $value) {
+                if ((isset($ordenes_items[$key]) && isset($facturas_items[$key])) && doubleval($facturas_items[$key]) < doubleval($ordenes_items[$key])) {
+                    $this->id_estado = 3;
+                    break;
                 }
             }
         }
 
-        if(count($facturas_items) > 0)
-        {
-            $aux = array_diff($ordenes_items, $facturas_items);
-
-            if(count($aux) > 0)
-            {
-                $this->id_estado = 3;
-            }
-            else
-            {
-                $this->id_estado = 4;
-            }
-
-        }
         $this->save();
     }
 

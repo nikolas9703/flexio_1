@@ -1,50 +1,33 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-/*
-| -------------------------------------------------------------------------
-| URI ROUTING
-| -------------------------------------------------------------------------
-| This file lets you re-map URI requests to specific controller functions.
-|
-| Typically there is a one-to-one relationship between a URL string
-| and its corresponding controller class/method. The segments in a
-| URL normally follow this pattern:
-|
-|	example.com/class/method/id/
-|
-| In some instances, however, you may want to remap this relationship
-| so that a different class/function is called than the one
-| corresponding to the URL.
-|
-| Please see the user guide for complete details:
-|
-|	http://codeigniter.com/user_guide/general/routing.html
-|
-| -------------------------------------------------------------------------
-| RESERVED ROUTES
-| -------------------------------------------------------------------------
-|
-| There area two reserved routes:
-|
-|	$route['default_controller'] = 'welcome';
-|
-| This route indicates which controller class should be loaded if the
-| URI contains no data. In the above example, the "welcome" class
-| would be loaded.
-|
-|	$route['404_override'] = 'errors/page_missing';
-|
-| This route will tell the Router what URI segments to use if those provided
-| in the URL cannot be matched to a valid route.
-|
-*/
 
-//rutas para accion de aseguradoras
-$route['ajustadores/listar']                = 'ajustadores/listar';
-$route['ajustadores/ajax-listar'] 	    = 'ajustadores/ajax_listar';
-$route['ajustadores/ajax-listar-contacto']  = 'ajustadores/ajax_listar_contacto';
-$route['ajustadores/crear']                 = 'ajustadores/crear';
-$route['ajustadores/ver/(:any)']            = 'ajustadores/ver/$1';
-$route['ajustadores/ajax-guardar-contacto'] = 'ajustadores/ajax_guardar_contacto';
-$route['ajustadores/ajax-contacto-principal'] = 'ajustadores/asignar_contacto_principal';
-/* End of file routes.php */
-/* Location: ./application/config/routes.php */
+
+$route['ajustadores/listar']= 'ajustadores/listar';
+$route['ajustadores/crear']= 'ajustadores/crear';
+$route['ajustadores/editar']= 'ajustadores/editar';
+$route['ajustadores/ver']= 'ajustadores/ver';
+
+/*
+$route['ajustadores/ajax_listar']= 'ajustadores/ajax_listar';
+$route['ajustadores/ocultotabla'] = 'ajustadores/ocultotabla';
+$route['ajustadores/ocultoformulario'] = 'ajustadores/ocultoformulario';
+$route['ajustadores/editoformulario'] = 'ajustadores/editoformulario';
+$route['ajustadores/crear'] = 'ajustadores/crear';
+$route['aseguradoras/ocultotabla'] = 'aseguradoras/ocultotabla';
+$route['ajustadores/guardar'] = 'ajustadores/guardar';
+/*
+//Ajax
+
+$route['solicitudes/ajax-get-clientes']        = 'solicitudes/ajax_get_clientes';
+$route['solicitudes/ajax-get-cliente']        = 'solicitudes/ajax_get_cliente';
+$route['solicitudes/ajax-get-planes']        = 'solicitudes/ajax_get_planes';
+$route['solicitudes/ajax-get-coberturas']        = 'solicitudes/ajax_get_coberturas';
+$route['solicitudes/ajax-get-comision']        = 'solicitudes/ajax_get_comision';
+$route['solicitudes/ajax-get-porcentaje']        = 'solicitudes/ajax_get_porcentaje';
+$route['solicitudes/ajax-get-centro-facturable']        = 'solicitudes/ajax_get_centro_facturable';
+$route['solicitudes/ajax-get-direccion']        = 'solicitudes/ajax_get_direccion';
+
+//Formulario crear/editar
+$route['solicitudes/crear']         = 'solicitudes/crear';
+$route['solicitudes/guardar']         = 'solicitudes/guardar';
+$route['solicitudes/ver/(:any)']    = 'solicitudes/editar/$1';*/
+?>

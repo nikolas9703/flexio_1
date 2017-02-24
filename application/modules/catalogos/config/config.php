@@ -11,7 +11,7 @@ $config['modulo_config'] = array(
     'grupo'         => 'Configuración',
     'agrupador'     => array(
         'Seguros' => array(
-            "grupo_orden" => 4
+            "grupo_orden" => 9
         ),
     ),
     'prefijo'       => 'pla',
@@ -25,10 +25,9 @@ $config['modulo_config'] = array(
                              ]
                            
     ),*/
-    'menu' => array(                       
-                             
-                             'nombre' =>'Catalogos' ,
-                             'url' => 'catalogos/crear',
+    'menu' => array(          
+                             'nombre' =>'Catálogos' ,
+                             'url' => 'catalogos/ver',
                              'orden'=> 1
                              
                            

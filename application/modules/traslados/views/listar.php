@@ -1,28 +1,22 @@
 <div id="wrapper">
-    <?php 
-	Template::cargar_vista('sidebar'); 
+    <?php
+	Template::cargar_vista('sidebar');
     ?>
-    
+
     <div id="page-wrapper" class="gray-bg row">
-    
+
         <?php Template::cargar_vista('navbar'); ?>
         <div class="row border-bottom"></div>
         <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
 
     	<div class="col-lg-12">
             <div class="wrapper-content">
-                <div class="row">
-                    <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
-                        <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-                        <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
-                    </div>
-                </div>
-	
+
                 <div role="tabpanel">
                     <!-- Tab panes -->
                     <div class="row tab-content">
                         <div role="tabpanel" class="tab-pane active" id="tabla">
-				    	
+
                             <!-- BUSCADOR -->
                             <div class="ibox border-bottom">
                                 <div class="ibox-title">
@@ -40,19 +34,19 @@
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="de_bodega">De bodega</label><br>
-                                            <select id="de_bodega" class="form-control" data-placeholder=" ">
-                                                <option value=""> </option>
+                                            <select id="de_bodega" class="form-control">
+                                                <option value="">Seleccione</option>
                                                 <?php foreach($bodegas as $bodega):?>
-                                                <option value="<?php echo $bodega->uuid_bodega?>"><?php echo $bodega->nombre?></option>
+                                                <option value="<?php echo $bodega['id']?>"><?php echo $bodega['nombre']?></option>
                                                 <?php endforeach;?>
                                             </select>
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="a_bodega">A bodega</label><br>
-                                            <select id="a_bodega" class="form-control" data-placeholder=" ">
-                                                <option value=""> </option>
+                                            <select id="a_bodega" class="form-control">
+                                                <option value="">Seleccione</option>
                                                 <?php foreach($bodegas as $bodega):?>
-                                                <option value="<?php echo $bodega->uuid_bodega?>"><?php echo $bodega->nombre?></option>
+                                                <option value="<?php echo $bodega['id']?>"><?php echo $bodega['nombre']?></option>
                                                 <?php endforeach;?>
                                             </select>
                                         </div>
@@ -72,8 +66,8 @@
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="estado">Estado</label><br>
-                                            <select id="estado" class="form-control" data-placeholder=" ">
-                                                <option value=""> </option>
+                                            <select id="estado" class="form-control">
+                                                <option value="">Seleccione</option>
                                                 <?php foreach($estados as $estado):?>
                                                 <option value="<?php echo $estado->id_cat?>"><?php echo $estado->etiqueta?></option>
                                                 <?php endforeach;?>
@@ -83,42 +77,34 @@
                                     <div class="row">
                                         <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                            <input type="button" id="searchBtn" class="btn btn-default btn-block" value="Filtrar" />
+                                            <input type="button" id="clearBtn" class="btn btn-default btn-block" value="Limpiar" />
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                            <input type="button" id="clearBtn" class="btn btn-default btn-block" value="Limpiar" />
+                                            <input type="button" id="searchBtn" class="btn btn-default btn-block" value="Filtrar" />
                                         </div>
                                     </div>
                                     <!-- Termina campos de Busqueda -->
                                 </div>
                             </div>
                             <!-- /BUSCADOR -->
-				    	
+
                             <!-- JQGRID -->
                             <?php echo modules::run('traslados/ocultotabla'); ?>
-				    		
+
                             <!-- /JQGRID -->
                         </div>
-                        
-                        <div role="tabpanel" class="tab-pane" id="grid">
-                            <?php
-                                //QUITO ESTOS ELEMENTOS DEL ARRAY
-                                //PARA EVITAR CONFLICTOS DE INDICES INDEFINIDOS
-                                unset($vars["estados"]);
-                                unset($vars["categorias"]);
-                            ?>
-                            <?php //Grid::visualizar_grid($vars); ?>
-                        </div>
+
+
 
                     </div>
                 </div>
             </div>
-        	
+
     	</div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 
-<?php 
+<?php
 
     echo    Modal::config(array(
                 "id"    => "optionsModal",

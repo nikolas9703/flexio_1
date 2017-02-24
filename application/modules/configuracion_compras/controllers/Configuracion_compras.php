@@ -17,6 +17,8 @@ use League\Csv\Writer as Writer;
 use Carbon\Carbon;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaBancoRepository as CuentaBanco;
+use Flexio\Modulo\Documentos\Repository\TipoDocumentoRepository as TipoDocumentoRepository;
+use Flexio\Modulo\Documentos\Models\TipoDocumentos as TipoDocumentos;
 
 class Configuracion_compras extends CRM_Controller
 {
@@ -26,6 +28,8 @@ class Configuracion_compras extends CRM_Controller
     protected $id_usuario;
     protected $CuentasRepository;
     protected $cuenta_banco;
+    protected $tipoDocumentoRepository;
+    protected $tipoDocumentos;
 
     public function __construct() {
         parent::__construct();
@@ -52,6 +56,8 @@ class Configuracion_compras extends CRM_Controller
 
           $this->CuentasRepository  = new CuentasRepository();
           $this->cuenta_banco = new CuentaBanco;
+          $this->tipoDocumentoRepository = new TipoDocumentoRepository();
+          $this->tipoDocumentos  = new TipoDocumentos();
     }
 
 
@@ -496,7 +502,7 @@ class Configuracion_compras extends CRM_Controller
                     $response->rows[$i]["cell"] = array(
                         $row->nombre,
                         $row->descripcion,
-                        $row->estadoReferencia->etiqueta,
+                        $row->present()->estado_label_doc,
                         $link_option,
                         $hidden_options,
                     );
@@ -617,7 +623,7 @@ class Configuracion_compras extends CRM_Controller
                     $response->rows[$i]["cell"] = array(
                         $row->nombre,
                         $row->descripcion,
-                        $row->estadoReferencia->etiqueta,
+                        $row->present()->estado_label_doc,
                         $link_option,
                         $hidden_options,
                     );
@@ -628,6 +634,130 @@ class Configuracion_compras extends CRM_Controller
             exit;
         }
     }
+
+    public function ajax_listar_tipos_documentos() {
+        //Just Allow ajax request
+        if($this->input->is_ajax_request())
+        {
+            /**
+             * Get the requested page.
+             * @var int
+             */
+            $page = (int)$this->input->post('page', true);
+
+            /**
+             * Get how many rows we want to have into the grid
+             * rowNum parameter in the grid.
+             * @var int
+             */
+            $limit = (int)$this->input->post('rows', true);
+
+            /**
+             * Get index row - i.e. user click to sort
+             * at first time sortname parameter - after that the index from colModel.
+             * @var int
+             */
+            $sidx = $this->input->post('sidx', true);
+
+            /**
+             * Sorting order - at first time sortorder
+             * @var string
+             */
+            $sord = $this->input->post('sord', true);
+
+            //Para aplicar filtros
+            $registros =
+            $registros = TipoDocumentos::deEmpresa($this->id_empresa);
+
+
+            /**
+             * Total rows found in the query.
+             * @var int
+             */
+            $count          = $registros->count();
+
+            /**
+             * Calcule total pages if $coutn is higher than zero.
+             * @var int
+             */
+            $total_pages = ($count > 0 ? ceil($count/$limit) : 0);
+
+            // if for some reasons the requested page is greater than the total
+            // set the requested page to total page
+            if ($page > $total_pages) $page = $total_pages;
+
+            /**
+             * calculate the starting position of the rows
+             * do not put $limit*($page - 1).
+             * @var int
+             */
+            $start = $limit * $page - $limit; // do not put $limit*($page - 1)
+
+            // if for some reasons start position is negative set it to 0
+            // typical case is that the user type 0 for the requested page
+            if($start < 0) $start = 0;
+
+
+            $registros->orderBy($sidx, $sord)
+                ->skip($start)
+                ->take($limit);
+
+            //Constructing a JSON
+            $response   = new stdClass();
+            $response->page     = $page;
+            $response->total    = $total_pages;
+            $response->records  = $count;
+            $i = 0;
+
+
+
+            if($count)
+            {
+                foreach ($registros->get() AS $i => $row)
+                {
+                    //dd($registros->get());
+                    $uuid = bin2hex($row->uuid_tipo);
+                    $hidden_options = "";
+                    $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-uuid="'. $uuid .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+
+                    $hidden_options.= '<a href="#" class="btn btn-block btn-outline btn-success editarTipos" data-uuid="'. $uuid .'">Editar</a>';
+
+
+                    if($row->estado == "19")
+                    {
+                        // $estado = "Activo";
+                        $hidden_options.= '<a href="#" class="btn btn-block btn-outline btn-success desactivarTipos" data-uuid="'. $uuid .'">Desactivar</a>';
+                    }
+                    else
+                    {
+                        //$estado = "Inactivo";
+                        $hidden_options.= '<a href="#" class="btn btn-block btn-outline btn-success activarTipos" data-uuid="'. $uuid .'">Activar</a>';
+                    }
+
+                    //Si no tiene acceso a ninguna opcion
+                    //ocultarle el boton de opciones
+                    if($hidden_options == ""){
+                        $link_option = "&nbsp;";
+                    }
+
+
+
+                    $response->rows[$i]["id"]   = $uuid;
+                    $response->rows[$i]["cell"] = array(
+                        $row->nombre,
+                        $row->descripcion,
+                        $row->present()->estado_label_doc,
+                        $link_option,
+                        $hidden_options,
+                    );
+                    $i++;
+                }
+            }
+            echo json_encode($response);
+            exit;
+        }
+    }
+
     public function ajax_guardar_categorias() {
 
         if($this->input->is_ajax_request())
@@ -695,7 +825,40 @@ class Configuracion_compras extends CRM_Controller
             exit();
         }
     }
+    public function ajax_guardar_tipos_documentos() {
+        if($this->input->is_ajax_request())
+        {
 
+            $uuid       = $this->input->post("uuid", true);
+
+            if($uuid)
+            {
+                $registro   = $this->tipoDocumentoRepository->findByUuid($uuid);
+            }
+            else
+            {
+
+                $registro                   = new TipoDocumentos();
+                $registro->empresa_id       = $this->id_empresa;
+                $registro->creado_por       = $this->id_usuario;
+                $registro->uuid_tipo   = Capsule::raw("ORDER_UUID(uuid())");
+
+            }
+
+            $nombre         = $this->input->post("tipo", true);
+            $descripcion    = $this->input->post("descripcion", true);
+            // dd($nombre.$descripcion);
+
+            $registro->nombre           = $nombre;
+            $registro->descripcion      = $descripcion;
+            //dd($registro);
+
+            $response["success"]        = $registro->save();
+
+            echo json_encode($response);
+            exit();
+        }
+    }
     public function ajax_get_categoria() {
 
         if($this->input->is_ajax_request())
@@ -741,6 +904,30 @@ class Configuracion_compras extends CRM_Controller
             exit();
         }
 
+    }
+
+    public function ajax_get_tipos_documentos() {
+        if($this->input->is_ajax_request())
+        {
+
+            $uuid                   = $this->input->post("uuid", true);
+            //dd($uuid);
+            $registro               = $this->tipoDocumentoRepository->findByUuid($uuid);
+             //dd($registro);
+            $response["success"]    = false;
+
+            if(count($registro))
+            {
+                $response["success"]    = true;
+                $response["nombre"]   = $registro->nombre;
+                $response["descripcion"]   = $registro->descripcion;
+                $response["uuid"]   = bin2hex($registro->uuid_tipo);
+            }
+
+
+            echo json_encode($response);
+            exit();
+        }
     }
     public function ajax_cambiar_estado_categoria() {
 
@@ -788,6 +975,28 @@ class Configuracion_compras extends CRM_Controller
         }
 
     }
+
+    public function ajax_cambiar_estado_tipos_documentos() {
+        if($this->input->is_ajax_request())
+        {
+
+            $uuid       = $this->input->post("uuid", true);
+            $estado     = $this->input->post("estado", true);
+            $registro   = $this->tipoDocumentoRepository->findByUuid($uuid);
+
+            $response               = array();
+            $response["success"]    = false;
+
+            if(count($registro))
+            {
+                $registro->estado       = $estado;
+                $response["success"]    = $registro->save();
+            }
+
+            echo json_encode($response);
+            exit();
+        }
+    }
     /**
      * Cargar Vista Parcial de Tabla
      *
@@ -827,6 +1036,13 @@ class Configuracion_compras extends CRM_Controller
 
         $this->load->view('tablaTipos');
 
+    }
+    public function ocultotablaTipoDoc() {
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_compras/tablaTiposDocumentos.js',
+        ));
+
+        $this->load->view('tablaTiposDocumentos');
     }
 
     public function exportar() {
@@ -894,7 +1110,7 @@ class Configuracion_compras extends CRM_Controller
             $csv->insertAll($datos);
             $csv->output("Compras_Chequeras-" . date('ymd') . ".csv");
             exit();
-        }else{
+        }elseif ($tabla == 'tipo'){
             $tipos = Tipos_proveedores_orm::exportar($uuuid);
             // dd($categotias);
             if (empty($tipos)) {
@@ -915,6 +1131,28 @@ class Configuracion_compras extends CRM_Controller
             ]);
             $csv->insertAll($datos);
             $csv->output("Tipos_Proveedor-" . date('ymd') . ".csv");
+            exit();
+        }else{
+            $tiposDoc = $this->tipoDocumentoRepository->exportar($uuuid);
+            // dd($categotias);
+            if (empty($tiposDoc)) {
+                return false;
+            }
+            $i = 0;
+            foreach ($tiposDoc as $row) {
+                $datos[$i]['nombre'] = utf8_decode(Util::verificar_valor( utf8_decode($row['nombre'])));
+                $datos[$i]['descripcion'] = Util::verificar_valor( utf8_decode($row['descripcion']));
+                $datos[$i]['estado'] = Util::verificar_valor($row['estadoReferencia']['etiqueta']);
+                $i++;
+            }
+            $csv = Writer::createFromFileObject(new SplTempFileObject());
+            $csv->insertOne([
+                'Nombre',
+                utf8_decode('Descripción'),
+                'Estado'
+            ]);
+            $csv->insertAll($datos);
+            $csv->output("Tipos_Documentos-" . date('ymd') . ".csv");
             exit();
         }
 

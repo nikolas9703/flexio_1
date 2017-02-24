@@ -47,6 +47,7 @@ $route['clientes/guardar-agrupador'] = 'clientes/guardar_agrupador';
 
 //ajax
 $route['clientes/ajax-listar'] = 'clientes/ajax_listar';
+$route['clientes/ajax-listar-centros-facturacion'] = 'clientes/ajax_listar_centros_facturacion';
 $route['clientes/ajax-cliente-potencial'] = 'clientes/ajax_cliente_potencial';
 $route['clientes/ajax-centro-facturable'] = 'clientes/ajax_centro_facturable';
 $route['clientes/ocultoformulariocomentarios'] = 'clientes/ocultoformulariocomentarios';
@@ -54,6 +55,9 @@ $route['clientes/ajax-guardar-comentario'] = 'clientes/ajax_guardar_comentario';
 $route['clientes/ajax-guardar-documentos'] = 'clientes/ajax_guardar_documentos';
 $route['clientes/ajax-get-montos'] = 'clientes/ajax_get_montos';
 $route['clientes/ajax-verificar-identificacion'] = 'clientes/ajax_verificar_identificacion';
+$route['clientes/ajax-asignar-centro-principal'] = 'clientes/ajax_asignar_centro_principal';
+$route['clientes/ajax-eliminar-centro'] = 'clientes/ajax_eliminar_centro';
+$route['clientes/catalogo/search'] = 'clientes/ajax_catalogo_search';
 
 //Creacion y Edicion de los formularios
 

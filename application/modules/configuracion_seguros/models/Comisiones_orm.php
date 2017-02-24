@@ -23,5 +23,8 @@ class Comisiones_orm extends Model
     //transformaciones para GET
     public function getUuidComisionesAttribute($value) {
         return strtoupper(bin2hex($value));
-    }    
+    }  
+    public static function findByIdP($id_planes){
+        return self::where('id_planes',$id_planes)->get();
+    }  
 }

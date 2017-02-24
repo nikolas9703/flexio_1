@@ -27,7 +27,7 @@
               echo form_open(base_url('cobros/guardar'), $formAttr);?>
 
   <!--loading-->
-  <div class="row"v-if="config.loading"><i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span>Cargando...</span></div>
+  <div class="row" v-if="config.loading"><i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span>Cargando...</span></div>
   <!--loading-->
   <!--permisos-->
 

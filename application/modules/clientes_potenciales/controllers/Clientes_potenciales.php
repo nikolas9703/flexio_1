@@ -189,7 +189,7 @@ class Clientes_potenciales extends CRM_Controller {
 
                  $hidden_options .= '<a href="'.$row->enlace.'" data-id="' . $row->id_cliente_potencial . '" class="exportarTablaCliente btn btn-block btn-outline btn-success">Ver Detalle</a>';
                 //$hidden_options .= '<a href="#" data-id="' . $row->id_cliente_potencial . '" class="exportarTablaCliente btn btn-block btn-outline btn-success" id="convertirACliente">Convertir a Cliente</a>';
-                $hidden_options .= '<a href="'. base_url('clientes/crear/'. $row->uuid_cliente_potencial) .'"   class="btn btn-block btn-outline btn-success">Convertir a Cliente</a>';
+                $hidden_options .= '<a href="'. base_url('clientes/crear/?func=cliente_potencial&ref='. $row->uuid_cliente_potencial) .'"   class="btn btn-block btn-outline btn-success">Convertir a Cliente</a>';
                 $hidden_options .= '<a href="#" data-id="' . $row->id_cliente_potencial . '" class="eliminarClientePotencialBtn btn btn-block btn-outline btn-success">Eliminar</a>';
 
                 $response->rows[$i]["id"] = $row['id_cliente_potencial'];
@@ -245,15 +245,16 @@ class Clientes_potenciales extends CRM_Controller {
      *
      * @return void
      */
+
+     	//if(!$this->auth->has_permission('acceso', 'planilla/crear')){ redirect(base_url('/'));}
     public function crear_cliente_potencial() {
         $data = array();
         $mensaje = array();
         $empresa_id = $this->empresaObj->id;
 
-// Verificar si tiene permiso de crear
-        if (!$this->auth->has_permission('crear-cliente-potencial__acceso', 'clientes_potenciales/crear')) {
-            redirect("/");
-        }
+        // Verificar si tiene permiso de crear
+
+	       if(!$this->auth->has_permission('acceso', 'clientes_potenciales/crear')){ redirect(base_url('/'));}
 
         if (!empty($_POST)) {
             $response = clientes_potenciales_orm::guardar_cliente_potencial($empresa_id);
@@ -572,6 +573,37 @@ class Clientes_potenciales extends CRM_Controller {
                 'tipo'  => $this->ClientesPotencialesRepository->delete($clause) ? 'success' : 'error'
             ]
         ];
+
+        $json = json_encode($response);
+        echo $json;
+        exit;
+    }
+
+    public function ajax_cliente_potencial_info()
+    {
+        if (!$this->input->is_ajax_request()) {return false;}
+
+        $clause = $this->input->post();
+        $clause['empresa_id'] = $this->id_empresa;
+
+        $cliente_potencial = $this->ClientesPotencialesRepository->findBy($clause);
+
+        $response = Collect(array_merge(
+            $cliente_potencial->toArray(),
+            [
+                'id' => '',
+                'telefonos' => $cliente_potencial->telefonos_asignados->map(function($row){
+                    return array_merge($row->toArray(),['id'=>'']);
+                }),
+                'correos' => $cliente_potencial->correos_asignados->map(function($row){
+                    return array_merge($row->toArray(),['id'=>'']);
+                }),
+                'toma_contacto_id' => $cliente_potencial->id_toma_contacto,
+                'comentario' => $cliente_potencial->comentarios,
+                'id_cp' => $cliente_potencial->id_cliente_potencial,
+                'estado' => 'por_aprobar'
+            ]
+        ));
 
         $json = json_encode($response);
         echo $json;

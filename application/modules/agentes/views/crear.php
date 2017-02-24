@@ -11,7 +11,7 @@
 		<div class="col-lg-12">
 			<div class="wrapper-content">
 				<div class="row">
-                                    <div id="mensaje_info"></div>
+                    <div id="mensaje_info"></div>
 					<div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
 						<button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
 						<?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>

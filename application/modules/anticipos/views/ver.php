@@ -52,7 +52,14 @@
             </div>
           </div>
               <?php  echo  form_close();?>
+              <div class="row">
 
+                <?php
+                        if($modulo =="compras"){
+                            SubpanelTabs::visualizar($subpanels);
+                        }
+                 ?>
+              </div>
 
               <!-- Comentarios -->
                <div class="row">

@@ -25,7 +25,7 @@ class Consumos extends CRM_Controller
     protected $id_empresa;
     protected $prefijo;
     protected $id_usuario;
-    
+
     //repositories
     private $bodegasRep;
     private $consumosRep;
@@ -67,7 +67,7 @@ class Consumos extends CRM_Controller
 
         //PREFIJO DE NOMEMCLATURA DE PEDIDO
         $this->prefijo = "CONS";
-        
+
         $this->bodegasRep   = new bodegasRep();
         $this->consumosRep  = new consumosRep();
         $this->itemsRep     = new itemsRep();
@@ -252,14 +252,14 @@ class Consumos extends CRM_Controller
             $uuid_unidad    = $this->input->post("uuid_unidad", true);
 
             $item           = $this->itemsRep->findByUuid($uuid_item);
-            
+
             $response               = array();
             $response["success"]    = false;
 
             if(count($item))
             {
                 $unidad = $this->unidadesRep->findByUuid($uuid_unidad);
-                
+
                 $response["success"]    = true;
                 $response["registro"]   = array(
                     "factor_conversion" => $item->factor_conversion($unidad->id)
@@ -299,7 +299,7 @@ class Consumos extends CRM_Controller
     	/*if(!$this->input->is_ajax_request()){
     		return false;
     	}*/
-    	
+
     	$clause = array();
     	$uuid_centro = hex2bin(strtolower($this->input->post('uuid_centro', true)));
     	/*echo '<h2>Consultando Antes colaboradores:</h2><pre>';
@@ -574,7 +574,7 @@ class Consumos extends CRM_Controller
         if(!empty($post) and isset($post["colaborador_id"]) and isset($post["colaborador_uuid"]))
     	{
             $colaborador = $this->colaboradoresRep->find($post["colaborador_id"]);
-            
+
             $data["campos"]["campos"]["colaborador"]        = $colaborador->id;
             $data["campos"]["campos"]["centro_contable"]    = $colaborador->centro_contable->uuid_centro;
             $data["campos"]["campos"]["areaNegocio"]        = '';
@@ -659,12 +659,12 @@ class Consumos extends CRM_Controller
      */
     public function guardar_consumo($fieldset_consumo=NULL, $fieldset_items=NULL)
     {
-    	return Capsule::transaction(function() use ($fieldset_consumo, $fieldset_items){
+        return Capsule::transaction(function() use ($fieldset_consumo, $fieldset_items){
 
                 $post               = $this->input->post();
                 $post["empresa_id"] = $this->id_empresa;
                 $post["usuario_id"] = $this->id_usuario;
-                
+
 	    	$registro   = $this->consumosRep->save($post, $fieldset_consumo, $fieldset_items);
 
     		//Si el consumo se esta guardando desde mismo
@@ -705,7 +705,7 @@ class Consumos extends CRM_Controller
                     $post["empresa_id"]             = $this->id_empresa;
                     $post["usuario_id"]             = $this->id_usuario;
                     $post["campo"]["uuid_consumo"]  = $uuid;
-                    
+
                     $this->consumosRep->save($post);
 
                     $this->session->set_userdata('updatedConsumo', 1);

@@ -33,7 +33,7 @@
 
               <div class="ibox border-bottom">
                   <div class="ibox-title">
-                      <h5>Datos de la nota de débito</h5>
+                      <h5>Datos de la nota de crédito de proveedor</h5>
                       <div class="ibox-tools">
                           <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
                       </div>

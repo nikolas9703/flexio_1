@@ -36,7 +36,7 @@
                                 <input type="text" id="nombre" class="chosen-select form-control" value="" name="numero" disabled="disbaled" />
                             </div>-->
                             <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
-                                <label>Transferir de cuenta de banco <span class="required">*</span></label>
+                                <label>Transferir de cuenta de banco<span class="required">*</span></label>
                                 <select id="cuenta_id" class="chosen-select form-control" name="cuenta_id"  data-rule-required="true" data-msg-required="">
                                     <option value="">Seleccione</option>
                                     <option ng-repeat="cuentas_banco in cuentas_bancosList track by $index" value="{{cuentas_banco.cuenta.id && ''|| cuentas_banco.cuenta.id}}">{{cuentas_banco.cuenta.nombre && ''|| cuentas_banco.cuenta.nombre}}</option>
@@ -55,6 +55,13 @@
                                     <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
                                     <input type="text" id="fecha" ng-model="transferir.fecha" readonly="readonly" class="form-control" value="" name="fecha">
                                 </div>
+                            </div>
+                            <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
+                                <label>Estado <span class="required">*</span></label>
+                                <select id="estado" class="chosen-select form-control" name="estado"  data-rule-required="true" data-msg-required="">
+                                    <option value="">Seleccione</option>
+                                    <option ng-repeat="estado in estados track by $index" value="{{estado.etiqueta}}">{{estado.valor}}</option>
+                                </select>
                             </div>
                         </div>
 
@@ -76,7 +83,7 @@
                                         }
                                         ?>
                                         </select>
-                                        <input type="hidden" id="no_cheque0" name="tipospago[0][no_cheque]" placeholder="N&uacute;mero de Cheque" value="" class="form-control m-t-sm hide" disabled="disabled" field-new-colum="false" />
+                                      <!--  <input type="hidden" id="no_cheque0" name="tipospago[0][no_cheque]" placeholder="N&uacute;mero de Cheque" value="" class="form-control m-t-sm hide" disabled="disabled" field-new-colum="false" />-->
                                         </td>
                                         <td class="textodos0" width="20%"><input type="text" id="textodos0" class="form-control" value="Total pagado" name="" readonly="readonly" style="border:0px;"></td>
                                         <td class="monto_pagar0" width="25%">
@@ -84,10 +91,11 @@
                                                 <span class="input-group-addon">$</span>
                                                 <input type="text" id="monto_a_pagar0" class="form-control" value="" name="tipospago[0][monto]" data-inputmask="'mask':'9{0,13}[.99]','greedy':false" ng-blur="CalcularMontoTotal($event)" data-rule-required="true" data-msg-required="" />
                                             </div>
-                                            <input type="hidden" id="banco0" name="tipospago[0][banco]"  placeholder="Banco" value="" class="form-control m-t-sm hide" disabled="disabled" field-new-colum="false" />
+                                            <!-- <input type="hidden" id="banco0" name="tipospago[0][banco]"  placeholder="Banco" value="" class="form-control m-t-sm hide" disabled="disabled" field-new-colum="false" />-->
                                         </td>
-                                        <td width="5%"><button agrupador="transferir" class="btn btn-default btn-block eliminarPagoBtn" type="button"><i class="fa fa-trash"></i><span class="hidden-xs hidden-sm hidden-md hidden-lg">&nbsp;Eliminar</span></button></td>
-                                        <td width="5%"><button agrupador="transferir" class="btn btn-default btn-block agregarPagosBtn" type="button"><i class="fa fa-plus"></i><span class="hidden-xs hidden-sm hidden-md hidden-lg">&nbsp;Agregar</span></button></td>
+                                        <!-- esta opcion se quito por peticion de Rboyd, dice que no se usa en ningun lado Card; 1823 !>
+                                        <!--<td width="5%"><button agrupador="transferir" class="btn btn-default btn-block eliminarPagoBtn" type="button"><i class="fa fa-trash"></i><span class="hidden-xs hidden-sm hidden-md hidden-lg">&nbsp;Eliminar</span></button></td>
+                                        <td width="5%"><button agrupador="transferir" class="btn btn-default btn-block agregarPagosBtn" type="button"><i class="fa fa-plus"></i><span class="hidden-xs hidden-sm hidden-md hidden-lg">&nbsp;Agregar</span></button></td>-->
                                         </tr>
                                         </tbody>
                                         <tfoot>

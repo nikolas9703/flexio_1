@@ -9,13 +9,13 @@ class FacturaCompraPresenter extends Presenter{
   protected $facturaCompra;
 
   private $labelEstado = [
-    
-    13 =>'label-warning',
+
+    13 =>'label-danger',
     14 =>'label-warning',
-    15 =>'label-warning',
+    15 =>'label-info',
     16 =>'label-successful',
     17 =>'label-dark',
-    20 =>'label-danger',
+    20 =>'label-gray',
   ];
 
   public function __construct($facturaCompra) {
@@ -41,7 +41,7 @@ class FacturaCompraPresenter extends Presenter{
   function total() {
    if(is_numeric($this->facturaCompra->total)) {
      return '<label class="label-outline outline-success">$' . FormatoMoneda::numero($this->facturaCompra->total) . '</label>';
-   }   
+   }
 
    return '';
   }
@@ -49,6 +49,11 @@ class FacturaCompraPresenter extends Presenter{
   function saldo() {
     return '<label class="label-outline outline-danger">$' . FormatoMoneda::numero($this->facturaCompra->saldo) . '</label>';
   }
+
+    public function pagos()
+    {
+        return $this->facturaCompra->pagos->implode('codigo', ', ');
+    }
 
   function vendedor(){}
 

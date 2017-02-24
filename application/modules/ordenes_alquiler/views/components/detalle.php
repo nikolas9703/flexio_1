@@ -66,8 +66,8 @@
 
         <!-- Lista de Precio de Alquiler -->
         <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3" ><!-- style='clear: both;' -->
-            <label for="vendedor_id">Lista de precio de alquiler <span required="" aria-required="true">*</span></label>
-            <select name="campo[precio_alquiler_id]" class="form-control" data-rule-required="true" v-model="detalle.precio_alquiler_id" disabled>
+            <label for="lista_precio_alquiler_id">Lista de precio de alquiler <span required="" aria-required="true">*</span></label>
+            <select name="campo[lista_precio_alquiler_id]" class="form-control" data-rule-required="true" v-model="detalle.lista_precio_alquiler_id" disabled>
                 <option value="">Seleccione</option>
                 <option value="{{option.id}}" v-for="option in catalogos.precios_alquiler" track-by="$index">{{option.nombre}}</option>
             </select>

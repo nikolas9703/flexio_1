@@ -11,7 +11,10 @@ $config['modulo_config'] = array(
 	//'agrupador'		=> 'Ventas',
     'agrupador'		=> array(
         'Ventas' => array(
-            "grupo_orden" => 5
+            "grupo_orden" => 0
+        ),
+        'Alquileres' => array(
+            "grupo_orden" => 6
         ),
     ),
 	'agrupador_orden'		=> 8,
@@ -19,7 +22,7 @@ $config['modulo_config'] = array(
 	'menu' => array(
 		'nombre' =>'Cobros' ,
 		'url' => 'cobros/listar',
-		'orden'=> 4
+		'orden'=> 7
 	),
         'permisos'		=> array(
 		'acceso' => 'Acceso',

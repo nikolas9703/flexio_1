@@ -34,7 +34,7 @@ $info = !empty($info) ? $info : array();
         <label></label>
           <div class="input-group">
             <span class="input-group-addon">$</span>
-            <input type="input-left-addon" disabled name="campo[lcredito]" value="{{datosFactura.cliente.credito | currency ''}}" class="form-control debito" id="campo[lcredito]">
+            <input type="input-left-addon" disabled name="campo[lcredito]" value="{{datosFactura.cliente.credito_favor | currency ''}}" class="form-control debito" id="campo[lcredito]">
           </div>
           <label class="label-success-text">Crédito a favor</label>
       </div>

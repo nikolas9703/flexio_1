@@ -16,6 +16,9 @@ use Flexio\Modulo\Inventarios\Repository\ItemActivoFijoRepository as ItemActivoF
 use Flexio\Modulo\Inventarios\Transform\ItemTransform as ItemTransform;
 use Flexio\Library\Util\FormRequest;
 use Flexio\Modulo\Inventarios\Models\Items as Items;
+use Flexio\Modulo\Inventarios\Models\ItemsCat;
+use Flexio\Modulo\Contabilidad\Models\Cuentas;
+
 
 //transacciones
 use Flexio\Modulo\DepreciacionActivosFijos\Transacciones\DepreciacionActivosFijosTransacciones;
@@ -188,10 +191,30 @@ class Depreciacion_activos_fijos extends CRM_Controller{
       'public/assets/js/modules/depreciacion/vue.select2.js',
 
     ));
-
+    $itemcat = new ItemsCat;
+    $catalogodetipos = $itemcat->DeValor('tipo')
+                                   ->where('etiqueta', 'Inventariado con serie')
+                                   ->orWhere('etiqueta', 'Activos fijos con serie')
+                                   ->get(array('id_cat', 'etiqueta'));
+    
+    $cuenta_transaccionales = Cuentas::transaccionalesDeEmpresa($this->empresa_id)->activas()
+    		->get(array('id', 'uuid_cuenta', 'nombre', 'codigo', Capsule::raw("HEX(uuid_cuenta) AS uuid")))->toArray();
+    
+    $cta = array();
+    $i=0;
+    foreach ($cuenta_transaccionales as $ctatran) {
+        $cta[$i] = array(
+            'id' => $ctatran['id'],
+            'nombre' => $ctatran['codigo'].' - '.$ctatran['nombre']
+        );
+        $i++;
+    }
+    $cuenta_transaccionales = $cta;
     $this->assets->agregar_var_js(array(
       "vista" => 'crear',
-      "acceso" => $acceso
+      "acceso" => $acceso,
+      "tiposdeitem" => $catalogodetipos,
+      "catalogo_cuentas_transaccionales" => collect($cuenta_transaccionales)
     ));
 
     $data=array();
@@ -211,12 +234,17 @@ class Depreciacion_activos_fijos extends CRM_Controller{
     $clause_empresas = ['empresa_id'=>$this->empresa_id,'estado'=>'Activo'];
 
     $data['clientes'] = Cliente_orm::where($clause_empresa)->get(array('id','nombre'));
-    $data['categorias'] = Categorias_orm::categoriasConItems($this->empresa_id);
+    $categorias_catalogo = Categorias_orm::categoriasConItems($this->empresa_id);
+    $data['categorias'] = $categorias_catalogo;
+    
+    
     //lista de centros contables
     $ids_centros = Centros_orm::where($clause_empresas)->lists('padre_id');
     $centros_contables = Centros_orm::whereNotIn('id', $ids_centros->toArray())->where(function($query) use($clause_empresas){
-      $query->where($clause_empresas);
+      $query->where($clause_empresas);      
     })->get(array('id','nombre','uuid_centro'));
+    
+    	
     $data['info'] = $info;
     $data['centros_contables']= $centros_contables;
     $this->load->view('formulario',$data);
@@ -246,6 +274,26 @@ class Depreciacion_activos_fijos extends CRM_Controller{
       'public/assets/js/modules/depreciacion/vue.crear.formulario.js',
       'public/assets/js/modules/depreciacion/vue.select2.js',
     ));
+    $itemcat = new ItemsCat;
+    $catalogodetipos = $itemcat->DeValor('tipo')
+                                   ->where('etiqueta', 'Inventariado con serie')
+                                   ->orWhere('etiqueta', 'Activos fijos con serie')
+                                   ->get(array('id_cat', 'etiqueta'));
+    
+    $cuenta_transaccionales = Cuentas::transaccionalesDeEmpresa($this->empresa_id)->activas()
+    		->get(array('id', 'uuid_cuenta', 'nombre', 'codigo', Capsule::raw("HEX(uuid_cuenta) AS uuid")))->toArray();
+    
+    $cta = array();
+    $i=0;
+    foreach ($cuenta_transaccionales as $ctatran) {
+        $cta[$i] = array(
+            'id' => $ctatran['id'],
+            'nombre' => $ctatran['codigo'].' - '.$ctatran['nombre']
+        );
+        $i++;
+    }
+    $cuenta_transaccionales = $cta;
+    
     $depreciacion->load('categoria_item', 'items','items.items_activo_fijo');
     $depreciacion->toArray();
 
@@ -253,7 +301,9 @@ class Depreciacion_activos_fijos extends CRM_Controller{
       "vista" => 'ver',
       "acceso" => $acceso,
       "depreciacion" => $depreciacion,
-      "depreciacion_id" => $depreciacion->id
+      "depreciacion_id" => $depreciacion->id,
+      "tiposdeitem" => $catalogodetipos,
+      "catalogo_cuentas_transaccionales" => collect($cuenta_transaccionales)
     ));
 
     $breadcrumb = array(
@@ -284,6 +334,7 @@ class Depreciacion_activos_fijos extends CRM_Controller{
 
     public function guardar(){
         if($_POST){
+            
             $request = Illuminate\Http\Request::createFromGlobals();
             $array_activo = $request->input('campo');
             $datos_activos = FormRequest::data_formulario($array_activo);
@@ -300,11 +351,12 @@ class Depreciacion_activos_fijos extends CRM_Controller{
                     $datos_activos_items[$key]['empresa_id'] = $this->empresa_id;
                 }
             }
-
+           
             Capsule::beginTransaction();
             try{
                 $data = array('depreciacion'=>$datos_activos,'items'=> $datos_activos_items);
                 $depreciacion = $this->depreciacionRepositorio->crear($data);
+                
                 $this->DepreciacionActivosFijosTransacciones->haceTransaccion($depreciacion);
             }catch(Illuminate\Database\QueryException $e){
                 log_message('error', __METHOD__." ->". ", Linea: ". __LINE__ ." --> ". $e->getMessage()."\r\n");
@@ -332,8 +384,22 @@ class Depreciacion_activos_fijos extends CRM_Controller{
     if(!$this->input->is_ajax_request()){
       return false;
     }
-    $clause = ['categoria_id'=> $this->input->post('categoria_id'), 'empresa_id' => $this->empresa_id];
+    $clause = ['empresa_id' => $this->empresa_id];
+    if(isset($_POST['categoria_id'])){
+        $clause['categoria_id'] = $this->input->post('categoria_id');
+    }
+    if(isset($_POST['cuenta_transaccional_id'])){
+        $clause['cuenta_transaccional_id'] = $this->input->post('cuenta_transaccional_id');
+    }
+    if(isset($_POST['tipo_item'])){
+        $clause['tipo_item'] = $this->input->post('tipo_item');
+    }
+    if(isset($_POST['categoria'])){
+        $clause['categoria'] = $this->input->post('categoria');
+    }
+    
     $items_activo_fijo = $this->activoFijo->activo_fijo($clause);
+    
     $data = ItemTransform::transform($items_activo_fijo);
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
         ->set_output(json_encode($data['data']))->_display();

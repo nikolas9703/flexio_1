@@ -17,3 +17,5 @@ $route['ordenes_trabajo/ajax-eliminar-servicio'] = 'ordenes_trabajo/ajax_elimina
 $route['ordenes_trabajo/ajax-seleccionar-orden'] = 'ordenes_trabajo/ajax_seleccionar_orden';
 $route['ordenes_trabajo/ajax-get-equipotrabajo-info'] = 'ordenes_trabajo/ajax_get_equipotrabajo_info';
 $route['ordenes_trabajo/ajax-guardar-comentario'] = 'ordenes_trabajo/ajax_guardar_comentario';
+$route['ordenes_trabajo/ajax-guardar-documentos'] = 'ordenes_trabajo/ajax_guardar_documentos';
+//$route['ordenes_trabajo/historial/(:any)'] = 'ordenes_trabajo/historial/$1';

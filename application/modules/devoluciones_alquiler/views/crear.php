@@ -25,24 +25,22 @@
 					);
  					echo form_open(base_url('devoluciones_alquiler/crear'), $formAttr);
 					?>
-					<div style="background-color: #D9D9D9; padding: 6px 0 39px 10px">
+
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="background-color: #D9D9D9;padding: 7px 0 7px 0px;">
 
 						<div class="col-xs-12 col-sm-3 col-md-2 col-lg-2">
 							<label class="m-t-xs">Empezar retorno desde</label>
 						</div>
-						<div class="col-xs-12 col-sm-3 col-md-2 col-lg-2">
-
-  						<select :disabled="disabledEditar" class="form-control" name="campo[empezar_desde_type]" required="" data-rule-required="true"   v-model="devolucion_alquiler.empezar_desde_type" @change="cambiarTipo(devolucion_alquiler.empezar_desde_type)">
-                                <option value="">Seleccione</option>
-                                <option value="entrega">Entrega</option>
-								<option value="Contrato de alquiler">Contrato de alquiler</option>
-                         </select>
-
-
+						<div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+  						      <select :disabled="disabledEditar" class="form-control" name="campo[empezar_desde_type]" required="" data-rule-required="true" v-select2="devolucion_alquiler.empezar_desde_type" v-model="devolucion_alquiler.empezar_desde_type" @change="cambiarTipo(devolucion_alquiler.empezar_desde_type)">
+                          <option value="">Seleccione</option>
+                          <option value="entrega">Entrega</option>
+					                <option value="Contrato de alquiler">Contrato de alquiler</option>
+                   </select>
   						</div>
-						<div class="col-xs-12 col-sm-3 col-md-2 col-lg-2">
+						<div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
 
-						 <select :disabled="disabledHeaderEmpezableId" class="form-control" id="empezar_desde_id"  required="" data-rule-required="true"  class="white-bg" name="campo[empezar_desde_id]"  v-model="devolucion_alquiler.empezar_desde_id"   @change="cambiarEmpezable(devolucion_alquiler.empezar_desde_type, devolucion_alquiler.empezar_desde_id)"  >
+						 <select :disabled="disabledHeaderEmpezableId" class="form-control" required="" data-rule-required="true" class="white-bg" name="campo[empezar_desde_id]" v-select2="devolucion_alquiler.empezar_desde_id" v-model="devolucion_alquiler.empezar_desde_id"  @change="cambiarEmpezable(devolucion_alquiler.empezar_desde_type, devolucion_alquiler.empezar_desde_id)"  >
 								<option value="">Seleccione</option>
  								<option v-for="retorno in empezables" v-bind:value="retorno.id">
                                         {{retorno.codigo}} - {{retorno.cliente_nombre}}
@@ -110,7 +108,7 @@
 									<label>Fecha y hora del retorno </label>
 									<div class="input-group">
 										<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-										<input :disabled="false" type="text" id="fecha_devolucion" value="" name="campo[fecha_devolucion]" class="form-control fecha-devolucion"  >
+										<input :disabled="false" type="text" id="fecha_devolucion" value="" name="campo[fecha_devolucion]" class="form-control"  >
 									</div>
 								</div>
 
@@ -124,9 +122,9 @@
 								</div>
 								<div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
 									<label>Vendedor <span class="required">*</span></label>
-									<select data-rule-required="true" name="campo[vendedor_id]" id="vendedor_id" v-chosen="vendedor_id" v-model="lista_precio_id" >
+									<select data-rule-required="true" name="campo[vendedor_id]" id="vendedor_id"   class="form-control"   :disabled="true"    v-model="vendedor_id" >
  										<template v-for="option in vendedoresOptions | orderBy option.nombre" track-by="$index" >
-		                                 	<option v-bind:value="option.id">{{{option.nombre}}}</option>
+		                                 	<option v-bind:value="option.id">{{{option.nombre}}} {{{option.apellido}}}</option>
 		                            	</template>
 									</select>
 								</div>
@@ -134,7 +132,7 @@
 
 								<div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
 									<label>Estado </label>
-									<select   :disabled="disabledEstadoId"  required="" data-rule-required="true"  name="campo[estado_id]" id="estado_id" v-chosen="estado_id" v-model="devolucion_alquiler.estado_id">
+									<select class="grey-bg"  :disabled="disabledEstadoId"  required="" data-rule-required="true"  name="campo[estado_id]" id="estado_id" v-chosen="estado_id" v-model="devolucion_alquiler.estado_id">
 										<option value="">Seleccione</option>
 										<template v-for="option in estadosOptions" track-by="$index" >
 		                                 	<option v-bind:value="option.id">{{{option.nombre}}}</option>
@@ -167,9 +165,8 @@
 									<a class="btn btn-default btn-block" href="<?= base_url("devoluciones_alquiler/listar");?>">Cancelar</a>
 								</div>
 								<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
-									<!-- <button class="btn btn-primary btn-block" id="guardarBtn" :disabled="guardarBtnDisabled" type="button" @click="guardar">{{{guardarBtn}}}</button> -->
-									 <input type="submit" id="guardarBtn" class="btn btn-primary btn-block" value="Guardar"  />
-
+									<button class="btn btn-primary btn-block" id="guardarBtn" :disabled="guardarBtnDisabled" type="button" @click="guardar">{{{guardarBtn}}}</button>
+									<!-- <input type="button" id="guardarBtn" class="btn btn-primary btn-block" v-model="guardarBtn" @click.stop.prevent="guardar" :disabled="guardarBtnDisabled==true" /> -->
 
  								</div>
 							</div>

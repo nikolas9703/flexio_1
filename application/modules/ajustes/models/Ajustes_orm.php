@@ -217,4 +217,17 @@ class Ajustes_orm extends Model
         return $prefijo.$numeroDocumento;
     }
 
+    public function lines_items()
+    {
+        return $this->hasMany('Flexio\Modulo\Inventarios\Models\LinesItems', 'tipoable_id')
+        ->where('tipoable_type', 'Flexio\Modulo\Ajustes\Models\Ajustes');
+    }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\Ajustes\Services\AjusteFilters;
+        return $queryFilter->apply($query, $campo);
+    }
+
+
 }

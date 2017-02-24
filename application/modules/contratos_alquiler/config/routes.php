@@ -1,8 +1,10 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 $route['contratos_alquiler/listar'] = 'contratos_alquiler/listar';
+$route['contratos_alquiler/crear'] = 'contratos_alquiler/crear';
+$route['contratos_alquiler/editar/(:any)'] = 'contratos_alquiler/editar/$1';
 $route['contratos_alquiler/bitacora/(:any)'] = 'contratos_alquiler/bitacora/$1';
- 
+
 //peticiones ajax
 $route['contratos_alquiler/ajax-listar'] = 'contratos_alquiler/ajax_listar';
 $route['contratos_alquiler/ajax-listar2'] = 'contratos_alquiler/ajax_listar2';

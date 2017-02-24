@@ -4,6 +4,8 @@ namespace Flexio\Modulo\InteresesAsegurados\Models;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_cat;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados;
 use Illuminate\Database\Eloquent\Model as Model;
+use Flexio\Modulo\Modulos\Models\Catalogos;
+use Flexio\Modulo\Proveedores\Models\Proveedores;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Carbon\Carbon as Carbon;
 
@@ -38,7 +40,9 @@ class CargaAsegurados extends Model
         'tipo_id',
         'estado',
         'tipo_obligacion',
-        'acreedor'
+        'acreedor',
+        'acreedor_opcional',
+        'tipo_obligacion_opcional'
     ];
     
     
@@ -91,6 +95,32 @@ class CargaAsegurados extends Model
     function documentos() {
     	return $this->morphMany(Documentos::class, 'documentable');
     }
+    public function datosTipoEmpaque() {
+        return $this->hasOne(Catalogos::class, 'id_cat', 'tipo_empaque');
+    }
+    public function datosCondicionEnvio() {
+        return $this->hasOne(Catalogos::class, 'id_cat', 'condicion_envio');
+    }    
+    public function datosMedioTransporte() {
+        return $this->hasOne(Catalogos::class, 'id_cat', 'medio_transporte');
+    }  
+    public function datosTipoObligacion() {
+        return $this->hasOne(Catalogos::class, 'id_cat', 'tipo_obligacion');
+    } 
+    public function datosAcreedor() {
+        return $this->hasOne(Proveedores::class, 'id', 'acreedor');
+    }
 
+    public static function listar_carga_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
+        $carga = self::join("int_intereses_asegurados", "int_intereses_asegurados.interesestable_id", "=", "int_carga.id")->join("int_intereses_asegurados_detalles", "int_intereses_asegurados_detalles.id_intereses", "=", "int_intereses_asegurados.id")->where("int_intereses_asegurados.interesestable_type", '2')->where(function($query) use($clause,$sidx,$sord,$limit,$start){
+            
+            if((isset($clause['empresa_id'])) && (!empty($clause['empresa_id']))) $query->where('int_intereses_asegurados.empresa_id','=' , $clause['empresa_id']);
+            if((isset($clause['detalle_unico'])) && (!empty($clause['detalle_unico']))) $query->where('int_intereses_asegurados_detalles.detalle_unico','=' , $clause['detalle_unico']);
+            if($limit!=NULL) $query->skip($start)->take($limit);            
+            });
+        
+        if($sidx!=NULL && $sord!=NULL){ $carga->orderBy($sidx, $sord); }
 
+        return $carga->get();
+    }
 }

@@ -27,6 +27,9 @@ class FacturaCompraRepository {
     function find($id) {
         return FacturaCompra::find($id);
     }
+    function findById($id) {
+        return FacturaCompra::where("id", "=",$id);
+    }
 
     function agregarComentario($facturaId, $comentarios) {
 
@@ -55,10 +58,13 @@ class FacturaCompraRepository {
         return collect([
             "id" => $factura_compra->id,
             "proveedor_id" => $factura_compra->proveedor_id,
+            "proveedor" => count($factura_compra->proveedor)?$this->formatProveedor($factura_compra->proveedor):[],
             "terminos_pago" => $factura_compra->termino_pago,
             "nro_factura_proveedor" => $factura_compra->factura_proveedor,
+            "porcentaje_retencion" => $factura_compra->porcentaje_retencion,
             "fecha" => $factura_compra->fecha_desde,
             "creado_por" => $factura_compra->created_by,
+            "referencia" => $factura_compra->referencia,
             "centro_contable_id" => $factura_compra->centro_contable_id,
             "recibir_en_id" => $factura_compra->bodega_id,
             "estado" => $factura_compra->estado_id,
@@ -68,8 +74,23 @@ class FacturaCompraRepository {
             "saldo_proveedor" => 0,
             "credito_proveedor" => 0,
             "articulos" => $articulo->get($factura_compra->facturas_items, $factura_compra),
-            "comentario" => $factura_compra->landing_comments
+            "comentario" => $factura_compra->landing_comments,
+            "operacion_type" => ($factura_compra->operacion_type == 'Flexio\\Modulo\\SubContratos\\Models\\SubContrato')?'subcontrato':'otro'
         ]);
+
+    }
+
+    public function formatProveedor($proveedor){
+
+        return [
+            'id' => $proveedor->uuid_proveedor,
+            'saldo_pendiente' => $proveedor->saldo_pendiente,
+            'credito' => $proveedor->credito,
+            'nombre' => $proveedor->nombre,
+            'proveedor_id' => $proveedor->id,
+            'retiene_impuesto' => $proveedor->retiene_impuesto,
+            'estado' => $proveedor->estado
+        ];
 
     }
 
@@ -123,13 +144,13 @@ class FacturaCompraRepository {
                 'proveedor_id' => $factura->proveedor_id,
                 'pagables' => [
                     ['pagable_id' => $factura->id,
-                    'pagable_type' => get_class($factura),
-                    'monto_pagado' => 0,
-                    'numero_documento' => $factura->codigo,
-                    'fecha_emision' => $factura->fecha_desde,
-                    'total' => $factura->total,
-                    'pagado' => $factura->pagos_aplicados_suma,
-                    'saldo' => $factura->saldo]
+                        'pagable_type' => get_class($factura),
+                        'monto_pagado' => 0,
+                        'numero_documento' => $factura->codigo,
+                        'fecha_emision' => $factura->fecha_desde,
+                        'total' => $factura->total,
+                        'pagado' => $factura->pagos_aplicados_suma,
+                        'saldo' => $factura->saldo]
                 ]
             ];
         });
@@ -182,8 +203,8 @@ class FacturaCompraRepository {
         $estado->setValor($factura->estado->valor);
 
         $item = $factura->facturas_items->filter(function($factura_item) use ($item_id) {
-                    return $factura_item->item_id == $item_id;
-                })->values(); //reset index
+            return $factura_item->item_id == $item_id;
+        })->values(); //reset index
 
         $precio_unidad = new Numero('moneda', $item[0]->precio_unidad);
         $total = new Numero('moneda', $item[0]->total);
@@ -204,12 +225,12 @@ class FacturaCompraRepository {
 
     function getAll($clause) {
         return FacturaCompra::where(function($query) use($clause) {
-                    $query->where('empresa_id', '=', $clause['empresa_id']);
-                    if (!empty($clause['formulario']))
-                        $query->whereIn('formulario', $clause['formulario']);
-                    if (!empty($clause['estado']))
-                        $query->whereIn('estado', $clause['estado']);
-                })->get();
+            $query->where('empresa_id', '=', $clause['empresa_id']);
+            if (!empty($clause['formulario']))
+                $query->whereIn('formulario', $clause['formulario']);
+            if (!empty($clause['estado']))
+                $query->whereIn('estado', $clause['estado']);
+        })->get();
     }
 
     function create($created) {
@@ -254,18 +275,18 @@ class FacturaCompraRepository {
     }
     function lista_totales($clause = array()) {
         return FacturaCompra::where(function($query) use($clause) {
-                    $query->where('empresa_id', '=', $clause['empresa_id']);
-                    if (isset($clause['cliente_id']))
-                        $query->where('cliente_id', '=', $clause['cliente_id']);
-                    if (isset($clause['etapa']))
-                        $query->where('estado', '=', $clause['etapa']);
-                    if (isset($clause['creado_por']))
-                        $query->where('created_by', '=', $clause['creado_por']);
-                    if (isset($clause['fecha_desde']))
-                        $query->where('fecha_desde', '<=', $clause['fecha_desde']);
-                    if (isset($clause['fecha_hasta']))
-                        $query->where('fecha_hasta', '>=', $clause['fecha_hasta']);
-                })->count();
+            $query->where('empresa_id', '=', $clause['empresa_id']);
+            if (isset($clause['cliente_id']))
+                $query->where('cliente_id', '=', $clause['cliente_id']);
+            if (isset($clause['etapa']))
+                $query->where('estado', '=', $clause['etapa']);
+            if (isset($clause['creado_por']))
+                $query->where('created_by', '=', $clause['creado_por']);
+            if (isset($clause['fecha_desde']))
+                $query->where('fecha_desde', '<=', $clause['fecha_desde']);
+            if (isset($clause['fecha_hasta']))
+                $query->where('fecha_hasta', '>=', $clause['fecha_hasta']);
+        })->count();
     }
 
     /**
@@ -273,18 +294,18 @@ class FacturaCompraRepository {
      */
     public function listar($clause = array(), $sidx = NULL, $sord = NULL, $limit = NULL, $start = NULL) {
         $facturas = FacturaCompra::where(function($query) use($clause) {
-                    $query->where('empresa_id', '=', $clause['empresa_id']);
-                    if (isset($clause['cliente_id']))
-                        $query->where('cliente_id', '=', $clause['cliente_id']);
-                    if (isset($clause['etapa']))
-                        $query->where('estado', '=', $clause['etapa']);
-                    if (isset($clause['creado_por']))
-                        $query->where('created_by', '=', $clause['creado_por']);
-                    if (isset($clause['fecha_desde']))
-                        $query->where('fecha_desde', '<=', $clause['fecha_desde']);
-                    if (isset($clause['fecha_hasta']))
-                        $query->where('fecha_hasta', '>=', $clause['fecha_hasta']);
-                });
+            $query->where('empresa_id', '=', $clause['empresa_id']);
+            if (isset($clause['cliente_id']))
+                $query->where('cliente_id', '=', $clause['cliente_id']);
+            if (isset($clause['etapa']))
+                $query->where('estado', '=', $clause['etapa']);
+            if (isset($clause['creado_por']))
+                $query->where('created_by', '=', $clause['creado_por']);
+            if (isset($clause['fecha_desde']))
+                $query->where('fecha_desde', '<=', $clause['fecha_desde']);
+            if (isset($clause['fecha_hasta']))
+                $query->where('fecha_hasta', '>=', $clause['fecha_hasta']);
+        });
         if ($sidx != NULL && $sord != NULL)
             $facturas->orderBy($sidx, $sord);
         if ($limit != NULL)
@@ -297,7 +318,7 @@ class FacturaCompraRepository {
         return $facturas->map(function($factura){
             return [
                 'id' => $factura->id,
-                'nombre' => "{$factura->proveedor->nombre} - {$factura->codigo}",
+                'nombre' => (!empty($factura->proveedor) ? $factura->proveedor->nombre : " -"). " {$factura->codigo}",
                 'proveedor_id' => $factura->proveedor_id,
                 'monto_factura' => $factura->total,
                 'fecha_factura' => $factura->fecha_desde,
@@ -307,7 +328,7 @@ class FacturaCompraRepository {
                         'cuenta_id' => $item->cuenta_id,
                         'monto' => $item->subtotal,
                         'precio_total' => $item->subtotal,
-                        'descripcion' => $item->item->nombre,
+                        'descripcion' => !empty($item->item) ? $item->item->nombre : "",
                         'impuesto_total' => $item->impuestos,
                         'impuesto_id' => $item->impuesto_id,
                         'item_id' => $item->item_id
@@ -319,14 +340,47 @@ class FacturaCompraRepository {
 
     function cobradoCompletoSinNotaDebito($clause) {
         return FacturaCompra::estadosValidos()->has('nota_debito', '<', 1)->where(function($query) use($clause) {
-                    $query->where('empresa_id', '=', $clause['empresa_id']);
-                })->get();
+            $query->where('empresa_id', '=', $clause['empresa_id']);
+        })->get();
+    }
+    function cobradoCompletoSinNotaDebitoSinEstados($clause) {
+        return FacturaCompra::has('nota_debito', '<', 1)->where(function($query) use($clause) {
+            $query->where('empresa_id', '=', $clause['empresa_id']);
+        })->get();
+    }
+
+
+    /**
+     * Funcion usada para obtener las facturas de un proveedor filtrando el proveedor por nombre
+     * @param $clause
+     * @param null $limit
+     * @return mixed
+     */
+    function cobradoCompletoSinNotaDebitoSinEstadosPorProveedor($clause, $limit = null)
+    {
+        $query = FacturaCompra::has('nota_debito', '<', 1);
+        $query->select("faccom_facturas.*");
+        if (isset($clause['q']) && !empty($clause['q'])) {
+            $query->join("pro_proveedores", "pro_proveedores.id", "=", "proveedor_id")
+                ->where(function ($query) use ($clause) {
+                    $query->where("pro_proveedores.nombre", "like", "%" . $clause['q'] . "%");
+                    $query->orWhere("faccom_facturas.factura_proveedor", "like", "%" . $clause['q'] . "%");
+                });
+        }
+        $query->where(function ($query) use ($clause) {
+            $query->where('empresa_id', '=', $clause['empresa_id']);
+            $query->where('estado_id', '!=', 12); // todas menos las facturas anuladas 12 segun catalogo:fac_factura_catalogo
+        });
+        if ($limit != null) {
+            $query->take($limit);
+        }
+        return $query->get();
     }
 
     public function _sync_items($factura, $items){
 
         $factura->items_factura()->whereNotIn('id',array_pluck($items,'id_pedido_item'))->delete();
-        
+
         foreach ($items as $row) {
 
             $factura_item_id = (isset($row['id_pedido_item']) and !empty($row['id_pedido_item'])) ? $row['id_pedido_item'] : '';

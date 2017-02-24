@@ -53,6 +53,7 @@ $route['clientes_potenciales/ajax-convertir-natural'] = 'clientes_potenciales/aj
 $route['clientes_potenciales/ajax-seleccionar-cliente-potencial'] = 'clientes_potenciales/ajax_seleccionar_cliente_potencial';
 $route['clientes_potenciales/ajax-eliminar'] = 'clientes_potenciales/ajax_eliminar';
 $route['clientes_potenciales/ajax-guardar-comentario'] = 'clientes_potenciales/ajax_guardar_comentario';
+$route['clientes_potenciales/ajax-cliente-potencial-info'] = 'clientes_potenciales/ajax_cliente_potencial_info';
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

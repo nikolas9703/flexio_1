@@ -22,6 +22,11 @@ use Flexio\Modulo\Contabilidad\Repository\CuentasRepository as cuentasRep;
 use Flexio\Modulo\Inventarios\Repository\ItemsRepository as itemsRep;
 use Flexio\Modulo\Salidas\Transacciones\SalidasTransacciones as transaccionSalida;
 use Flexio\Modulo\Cliente\Repository\ClienteRepository as clientesRep;
+use Flexio\Modulo\FacturasVentas\Repository\FacturaVentaRepository;
+
+//utils
+use Flexio\Library\Util\FlexioAssets;
+use Flexio\Library\Toast;
 
 
 class Salidas extends CRM_Controller
@@ -29,6 +34,9 @@ class Salidas extends CRM_Controller
     protected $id_empresa;
     protected $prefijo;
     protected $id_usuario;
+
+    protected $FlexioAssets;
+    protected $Toast;
 
     //repositorios
     private $salidasRep;
@@ -90,6 +98,10 @@ class Salidas extends CRM_Controller
         $this->itemsRep         = new itemsRep();
         $this->transaccionSalida= new transaccionSalida();
         $this->clienteRep = new clientesRep();
+
+        //utils
+        $this->FlexioAssets = new FlexioAssets;
+        $this->Toast = new Toast;
     }
 
 
@@ -114,8 +126,7 @@ class Salidas extends CRM_Controller
             'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
             'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
             'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
-            'public/assets/css/plugins/jquery/fileinput/fileinput.css',
-            'public/assets/css/plugins/jquery/toastr.min.css',
+            'public/assets/css/plugins/jquery/fileinput/fileinput.css'
         ));
 
         $this->assets->agregar_js(array(
@@ -144,7 +155,6 @@ class Salidas extends CRM_Controller
             'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
-            'public/assets/js/plugins/toastr.min.js',
             'public/assets/js/default/formulario.js',
 
             /* Archivos js del propio modulo*/
@@ -178,7 +188,7 @@ class Salidas extends CRM_Controller
         $data["estados"]        = Salidas_cat_orm::estados()
                                 ->orderBy("id_cat", "ASC")
                                 ->get();
-        
+
 
         $data["bodegas"]        = Bodegas_orm::deEmpresa($this->id_empresa)
                                 ->activas()
@@ -186,10 +196,10 @@ class Salidas extends CRM_Controller
                                 ->orderBy("nombre", "ASC")
                                 ->get();
 
-        
-        $data["clientes"] = $this->clienteRep->getAll(['empresa_id'=>$this->id_empresa],['uuid_cliente','nombre']);        
 
-        
+        $data["clientes"] = $this->clienteRep->getAll(['empresa_id'=>$this->id_empresa],['uuid_cliente','nombre']);
+
+
         $data["colaboradores"]  = Colaboradores_orm::deEmpresa($this->id_empresa)->get();
 
        // $data["clientes"] = [];
@@ -248,8 +258,7 @@ class Salidas extends CRM_Controller
 
         //Agregra variables PHP como variables JS
         $this->assets->agregar_var_js(array(
-            "mensaje_clase"     => isset($data["mensaje"]["clase"]) ? $data["mensaje"]["clase"] : "0",
-            "mensaje_contenido" => isset($data["mensaje"]["contenido"]) ? $data["mensaje"]["contenido"] : "0"
+            "flexio_mensaje" => Flexio\Library\Toast::getStoreFlashdata()
         ));
 
         unset($data["mensaje"]);
@@ -323,21 +332,28 @@ class Salidas extends CRM_Controller
 
     public function ajax_listar()
     {
+
     	//Just Allow ajax request
     	if($this->input->is_ajax_request())
     	{
-            
+
             $clause                     = $this->input->post();
             $clause["empresa_id"]       = $this->id_empresa;
             $clause["usuario_id"]       = $this->id_usuario;
             $clause["estados_validos"]  = true;
-             
+
             if ($this->input->post("cliente_id")<> ''){
                 $clause["destino"] = (new clientesRep)->findByUuid($this->input->post("cliente_id"))->id;
-                
-            }
-            
 
+            }
+
+            if ($this->input->post('factura_uuid')<>''){
+                $clause['factura_uuid'] = $this->input->post('factura_uuid');
+            }
+
+
+
+            $clause['campo'] = $this->input->post('campo', true);
             list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
             $count = $this->salidasRep->count($clause);
             //dd($count);
@@ -352,13 +368,13 @@ class Salidas extends CRM_Controller
             if($count > 0)
             {
                 $salidas = $this->salidasRep->get($clause, $sidx, $sord, $limit, $start);
-                
+
                 foreach ($salidas AS $i => $row)
                 {
                     $response->rows[$i]["id"]   = $row->uuid_salida;
                     $response->rows[$i]["cell"] = $this->salidasRep->getColletionCell($row, $this->auth);
                 }
-                
+
             }
 
             echo json_encode($response);
@@ -454,8 +470,16 @@ class Salidas extends CRM_Controller
      *
      * @return void
      */
-    public function ocultotabla()
+    public function ocultotabla($campo_array = [])
     {
+
+        if(is_array($campo_array))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($campo_array)
+            ]);
+
+        }
         //If ajax request
     	$this->assets->agregar_js(array(
     		'public/assets/js/modules/salidas/tabla.js'
@@ -581,29 +605,32 @@ class Salidas extends CRM_Controller
     	{
             $response   = false;
             $post       = $this->input->post();
-            Capsule::transaction(
-                function() use (&$response, $post)
-                {
 
-                    $registro   = $this->salidasRep->find($post["campo"]["salida_id"]);
+            try {
+                Capsule::transaction(
+                    function() use (&$response, $post)
+                    {
 
-                   if($registro->operacion_type == 'Flexio\Modulo\Ajustes\Models\Ajustes' || $registro->operacion_type== 'Flexio\Modulo\Consumos\Models\Consumos'){
-                    		$this->transaccionSalida->hacerTransaccion($registro);
-                   }
+                        $registro   = $this->salidasRep->find($post["campo"]["salida_id"]);
 
-                    $response   = $this->salidasRep->save($registro, $post);
-                }
-            );
+                       if($registro->operacion_type == 'Flexio\Modulo\Ajustes\Models\Ajustes' || $registro->operacion_type== 'Flexio\Modulo\Consumos\Models\Consumos'){
+                           $this->transaccionSalida->hacerTransaccion($registro);
+                       }
 
+                        $response   = $this->salidasRep->save($registro, $post);
+                    }
+                );
+            } catch (\Exception $e) {
+                log_message('error', " __METHOD__  ->  , Linea:  __LINE__  --> " . $e->getMessage() . "\r\n");
+                $this->Toast->setUrl('salidas/listar')->run("exception",[$e->getMessage()]);
+            }
 
             if($response){
-                $this->session->set_userdata('updatedSalida', $post["campo"]["salida_id"]);
-                redirect(base_url('salidas/listar'));
+                $this->Toast->run("success");
             }else{
-                //Establecer el mensaje a mostrar
-                $data["mensaje"]["clase"] = "alert-danger";
-                $data["mensaje"]["contenido"] = "Hubo un error al tratar de editar.";
+                $this->Toast->run("error");
             }
+            redirect(base_url('salidas/listar'));
     	}
     }
 

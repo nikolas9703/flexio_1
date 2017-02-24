@@ -35,7 +35,7 @@ class Acreedores extends CRM_Controller
     private $modulosRep;
     private $bancosRep;
     private $colaboradoresRep;
-
+    private $breadcrumb;
 
     public function __construct()
     {
@@ -63,6 +63,8 @@ class Acreedores extends CRM_Controller
         $this->modulosRep       = new modulosRep();
         $this->bancosRep        = new bancosRep();
         $this->colaboradoresRep = new colaboradoresRep();
+
+
     }
 
     public function index()
@@ -117,21 +119,24 @@ class Acreedores extends CRM_Controller
       document.write(capitalize);
   </script>";
   $breadcrumbUrl =base_url("/");
+  $completeBreadCrumb="<a href='$breadcrumbUrl'>$breadcrumbName</a>";
         //Verificar permisos para crear
         //if($this->auth->has_permission('acceso', 'colaboradores/crear')){
   $breadcrumb= array(
-   "titulo" => '<i class="fa fa-users"></i> Acreedores',
-   "ruta" => array(
-      0 => array("nombre" => "<a href='$breadcrumbUrl'>$breadcrumbName</a>",  "activo" => false),
-      1 => array("nombre" => '<b>Acreedores</b>', "activo" => true)
+     "titulo" => '<i class="fa fa-users"></i> Acreedores',
+     "ruta" => array(
+      0 => array("nombre" => "$completeBreadCrumb",  "activo" => false),
+      1 => array("nombre" => 'Acreedores', "url"=>"acreedores/listar", "activo" => true),
+      2=> array("nombre" => '<b>Listar</b>',"activo" => true)
+      
       ),
-   "filtro" => false,
-   "menu" => array(
+     "filtro" => false,
+     "menu" => array(
       "url"	=> 'acreedores/crear/',
       "clase" 	=> '',
       "nombre" => "Crear"
       )
-   );
+     );
 
   $menuOpciones["#exportarLnk"] = "Exportar";
   $breadcrumb["menu"]["opciones"] = $menuOpciones;
@@ -210,9 +215,9 @@ public function listar_reporte($uuid_proveedor=NULL)
     	//Verificar permisos para crear
             if($this->auth->has_permission('acceso', 'acreedores/reporte')){
               $breadcrumb["menu"] = array(
-                 "url"	 => '#',
-                 "nombre" => "Acci&oacute;n"
-                 );
+               "url"	 => '#',
+               "nombre" => "Acci&oacute;n"
+               );
               $menuOpciones["#exportarReporteLnk"] = "Exportar";
           }
 
@@ -227,7 +232,7 @@ public function listar_reporte($uuid_proveedor=NULL)
 
       public function exportar()
       {
-       if(empty($_POST)){
+         if(empty($_POST)){
           return false;
       }
 
@@ -275,7 +280,7 @@ public function listar_reporte($uuid_proveedor=NULL)
     		'Email',
     		'Tipo de Acreedor',
     		'Descuentos a colaboradores'
-           ]);
+         ]);
     	$csv->insertAll($csvdata);
     	$csv->output("acreedores-". date('ymd') .".csv");
     	die;
@@ -378,48 +383,48 @@ public function listar_reporte($uuid_proveedor=NULL)
 
   public function ajax_listar()
   {
-   if(!$this->input->is_ajax_request()){
-    return false;
-}
-
-$clause                 = $this->input->post();
-$clause["empresa_id"]   = $this->empresa_id;
-
-list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-
-$count = $this->acreedoresRep->count($clause);
-list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-
-$acreedores = $this->acreedoresRep->get($clause, $sidx, $sord, $limit, $start);
-
-$response           = new stdClass();
-$response->page     = $page;
-$response->total    = $total_pages;
-$response->records  = $count;
-
-
-if($count){
-
-    foreach($acreedores as $i => $row){
-
-        $hidden_options = "";
-        $link_option    = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_proveedor .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-        $hidden_options .= '<a href="'. base_url('acreedores/ver/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Ver Acreedor</a>';
-        $hidden_options .= '<a href="'. base_url('acreedores/reporte/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Reporte de pagos</a>';
-
-        $response->rows[$i]["id"]   = $row->uuid_proveedor;
-        $response->rows[$i]["cell"] = $this->_getResponseCell($row, $link_option, $hidden_options);
+     if(!$this->input->is_ajax_request()){
+        return false;
     }
-}
 
-$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-->set_output(json_encode($response))->_display();
-exit;
+    $clause                 = $this->input->post();
+    $clause["empresa_id"]   = $this->empresa_id;
+
+    list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+
+    $count = $this->acreedoresRep->count($clause);
+    list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+
+    $acreedores = $this->acreedoresRep->get($clause, $sidx, $sord, $limit, $start);
+
+    $response           = new stdClass();
+    $response->page     = $page;
+    $response->total    = $total_pages;
+    $response->records  = $count;
+
+
+    if($count){
+
+        foreach($acreedores as $i => $row){
+
+            $hidden_options = "";
+            $link_option    = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_proveedor .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+            $hidden_options .= '<a href="'. base_url('acreedores/ver/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Ver Acreedor</a>';
+            $hidden_options .= '<a href="'. base_url('acreedores/reporte/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Reporte de pagos</a>';
+
+            $response->rows[$i]["id"]   = $row->uuid_proveedor;
+            $response->rows[$i]["cell"] = $this->_getResponseCell($row, $link_option, $hidden_options);
+        }
+    }
+
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($response))->_display();
+    exit;
 }
 
 public function ajax_listar_colaboradores()
 {
-   if(!$this->input->is_ajax_request()){
+ if(!$this->input->is_ajax_request()){
     return false;
 }
 
@@ -477,18 +482,18 @@ public function ajax_listar_colaboradores()
     }
     
     public function pagados_from_des_descuentos($proveedor_id){
-     $pln_pagadas = Capsule::table('pro_proveedores')
-     ->select(Capsule::raw('sum(pln_pagadas_descuentos.monto_ciclo) as suma'))
-     ->join('desc_descuentos', 'desc_descuentos.acreedor_id', '=', 'pro_proveedores.id')
-     ->join('pln_pagadas_descuentos', 'pln_pagadas_descuentos.descuento_id', '=', 'desc_descuentos.id' )
-     ->where('pro_proveedores.id', '=', $proveedor_id)
-     ->get();
+       $pln_pagadas = Capsule::table('pro_proveedores')
+       ->select(Capsule::raw('sum(pln_pagadas_descuentos.monto_ciclo) as suma'))
+       ->join('desc_descuentos', 'desc_descuentos.acreedor_id', '=', 'pro_proveedores.id')
+       ->join('pln_pagadas_descuentos', 'pln_pagadas_descuentos.descuento_id', '=', 'desc_descuentos.id' )
+       ->where('pro_proveedores.id', '=', $proveedor_id)
+       ->get();
        //dd($pln_pagadas);
-     return $pln_pagadas;
- }
+       return $pln_pagadas;
+   }
 
- function ajax_anular()
- {
+   function ajax_anular()
+   {
     $response = array();
     $response["success"]    = false;
     $response["mensaje"]    = "Error de sistema. Comuniquelo con el administrador de sistema";
@@ -519,24 +524,24 @@ public function ajax_listar_colaboradores()
 function ajax_eliminar_pedido_item()
 {
     	//Just Allow ajax request
-   if(!$this->input->is_ajax_request()){
-      return false;
-  }
+ if(!$this->input->is_ajax_request()){
+  return false;
+}
 
-  $this->load->model("pedidos/Pedidos_items_orm");
+$this->load->model("pedidos/Pedidos_items_orm");
 
-  $id_registro    = $this->input->post("id_registro", true);
-  $registro       = Pedidos_items_orm::find($id_registro);
+$id_registro    = $this->input->post("id_registro", true);
+$registro       = Pedidos_items_orm::find($id_registro);
 
-  $response   = array(
+$response   = array(
     "respuesta" => $registro->delete(),
     "mensaje"   => "Se ha eliminado el registro satisfactoriamente"
     );
 
 
-  $json       = '{"results":['.json_encode($response).']}';
-  echo $json;
-  exit;
+$json       = '{"results":['.json_encode($response).']}';
+echo $json;
+exit;
 }
 
 function ajax_reabrir()
@@ -692,146 +697,158 @@ private function _getProveedor($acreedor){
     public function crear()
     {
         $data = array();
+        $breadcrumbName="<script>
+        var str =localStorage.getItem('ms-selected');
+        var capitalize = str[0].toUpperCase()+str.substring(1);
+        document.write(capitalize);
+    </script>";
+    $breadcrumbUrl =base_url("/");
+    $completeBreadCrumb="<a href='$breadcrumbUrl'>$breadcrumbName</a>";
+    if(!isset($data["mensaje"])){$data["mensaje"] = [];}
 
-        if(!isset($data["mensaje"])){$data["mensaje"] = [];}
-
-        $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
-        $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
+    $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
+    $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
 
     //	$breadcrumb = array();
 
-        $breadcrumb = array(
-            "titulo" => '<i class="fa fa-users"></i> Acreedores: Crear',
-            "filtro" => false,
+    $breadcrumb = array(
+        "titulo" => '<i class="fa fa-users"></i> Acreedores: Crear',
+        "filtro" => false,
 
-            "ruta" => array(
-              0 => array(
-                  "nombre" => "Resursos humanos",
-                  "activo" => false,
-                  ),
-              1 => array(
-                "nombre" => "Acreedores",
-                "activo" => false,
-                "url" => 'acreedores/listar'
-                ),
-              2=> array(
-                "nombre" => '<b>Crear</b>',
-                "activo" => true
-                )
+        "ruta" => array(
+          0 => array(
+              "nombre" => "$completeBreadCrumb",
+              "activo" => false,
               ),
-            );
+          1 => array(
+            "nombre" => "Acreedores",
+            "activo" => false,
+            "url" => 'acreedores/listar'
+            ),
+          2=> array(
+            "nombre" => '<b>Crear</b>',
+            "activo" => true
+            )
+          ),
+        );
 
-        $this->template->agregar_titulo_header('Acreedores');
-        $this->template->agregar_breadcrumb($breadcrumb);
-        $this->template->agregar_contenido($data);
-        $this->template->visualizar();
-    }
+    $this->template->agregar_titulo_header('Acreedores');
+    $this->template->agregar_breadcrumb($breadcrumb);
+    $this->template->agregar_contenido($data);
+    $this->template->visualizar();
+}
 
-    public function guardar()
+public function guardar()
+{
+    $post = $this->input->post();
+    if(!empty($post))
     {
-        $post = $this->input->post();
-        if(!empty($post))
-        {
 //            echo "<pre>";
 //            print_r($post);
 //            echo "<pre>";
 //            die();
-            $response = false;
-            Capsule::transaction(
-                function() use ($post, &$response){
-                    $response = $this->acreedoresRep->save($post, $this->usuario_id, $this->empresa_id);
-                    $this->session->set_userdata('idProveedor', "1");
-                }
-                );
-
-            if(!$response){
-                $data["mensaje"]["clase"]       = "alert-danger";
-                $data["mensaje"]["contenido"]   = "Hubo un error al tratar de crear el proveedor.";
+        $response = false;
+        Capsule::transaction(
+            function() use ($post, &$response){
+                $response = $this->acreedoresRep->save($post, $this->usuario_id, $this->empresa_id);
+                $this->session->set_userdata('idProveedor', "1");
             }
-        }
-        redirect(base_url('acreedores/listar'));
-    }
-
-
-    function editar($uuid=NULL)
-    {
-        if(!$uuid)
-        {
-            echo "El metodo editar requiere el identificador del elemento";
-            die();
-        }
-
-        $data       = array();
-        $acreedor   = $this->acreedoresRep->findByUuid($uuid);
-        $acreedor->load('comentario_timeline','acreedores_asignados');
-        $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
-        $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
-        $this->assets->agregar_var_js([
-            "acreedor_id"   => $acreedor->id,
-            "vista"         => "ver",
-            "coment" =>(isset($acreedor->comentario_timeline)) ? $acreedor->comentario_timeline : ""
-            ]);
-
-
-        $breadcrumb = array(
-            "titulo" => '<i class="fa fa-users"></i> Acreedor: '.$acreedor->nombre,
-            "filtro" => false,
-
-            "ruta" => array(
-              0 => array(
-                  "nombre" => "Resursos humanos",
-                  "activo" => false,
-                  ),
-              1 => array(
-                "nombre" => "Acreedores",
-                "activo" => false,
-                "url" => 'acreedores/listar'
-                ),
-              2=> array(
-                "nombre" => '<b>Detalle</b>',
-                "activo" => true
-                )
-              ),
             );
 
-        $data["campos"]["campos"]   = $this->acreedoresRep->getColletionCampos($acreedor);
-
-        $this->template->agregar_titulo_header('Acreedores');
-        $this->template->agregar_breadcrumb($breadcrumb);
-        $this->template->agregar_contenido($data);
-        $this->template->visualizar();
-    }
-
-    function ocultoformulariocomentarios() {
-
-        $data = array();
-
-        $this->assets->agregar_js(array(
-            'public/assets/js/plugins/ckeditor/ckeditor.js',
-            'public/assets/js/plugins/ckeditor/adapters/jquery.js',
-            'public/assets/js/modules/acreedores/vue.comentario.js',
-            'public/assets/js/modules/acreedores/formulario_comentario.js'
-            ));
-
-        $this->load->view('formulario_comentarios');
-        $this->load->view('comentarios');
-
-    }
-
-    function ajax_guardar_comentario() {
-
-        if(!$this->input->is_ajax_request()){
-            return false;
+        if(!$response){
+            $data["mensaje"]["clase"]       = "alert-danger";
+            $data["mensaje"]["contenido"]   = "Hubo un error al tratar de crear el proveedor.";
         }
-        $model_id   = $this->input->post('modelId');
-        $comentario = $this->input->post('comentario');
-        $comentario = ['comentario'=>$comentario,'usuario_id'=>$this->userID];
-        $acreedor = $this->acreedoresRep->agregarComentario($model_id, $comentario);
-        $acreedor->load('comentario_timeline');
-
-        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-        ->set_output(json_encode($acreedor->comentario_timeline->toArray()))->_display();
-        exit;
     }
+    redirect(base_url('acreedores/listar'));
+}
+
+
+function editar($uuid=NULL)
+{
+    if(!$uuid)
+    {
+        echo "El metodo editar requiere el identificador del elemento";
+        die();
+    }
+
+    $data       = array();
+    $acreedor   = $this->acreedoresRep->findByUuid($uuid);
+    $acreedor->load('comentario_timeline','acreedores_asignados');
+    $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
+    $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
+    $this->assets->agregar_var_js([
+        "acreedor_id"   => $acreedor->id,
+        "vista"         => "ver",
+        "coment" =>(isset($acreedor->comentario_timeline)) ? $acreedor->comentario_timeline : ""
+        ]);
+
+    $breadcrumbName="<script>
+    var str =localStorage.getItem('ms-selected');
+    var capitalize = str[0].toUpperCase()+str.substring(1);
+    document.write(capitalize);
+</script>";
+$breadcrumbUrl =base_url("/");
+$completeBreadCrumb="<a href='$breadcrumbUrl'>$breadcrumbName</a>";  
+$breadcrumb = array(
+    "titulo" => '<i class="fa fa-users"></i> Acreedor: '.$acreedor->nombre,
+    "filtro" => false,
+
+    "ruta" => array(
+      0 => array(
+          "nombre" => "$completeBreadCrumb",
+          "activo" => false,
+          ),
+      1 => array(
+        "nombre" => "Acreedores",
+        "activo" => false,
+        "url" => 'acreedores/listar'
+        ),
+      2=> array(
+        "nombre" => '<b>Detalle</b>',
+        "activo" => true
+        )
+      ),
+    );
+
+$data["campos"]["campos"]   = $this->acreedoresRep->getColletionCampos($acreedor);
+
+$this->template->agregar_titulo_header('Acreedores');
+$this->template->agregar_breadcrumb($breadcrumb);
+$this->template->agregar_contenido($data);
+$this->template->visualizar();
+}
+
+function ocultoformulariocomentarios() {
+
+    $data = array();
+
+    $this->assets->agregar_js(array(
+        'public/assets/js/plugins/ckeditor/ckeditor.js',
+        'public/assets/js/plugins/ckeditor/adapters/jquery.js',
+        'public/assets/js/modules/acreedores/vue.comentario.js',
+        'public/assets/js/modules/acreedores/formulario_comentario.js'
+        ));
+
+    $this->load->view('formulario_comentarios');
+    $this->load->view('comentarios');
+
+}
+
+function ajax_guardar_comentario() {
+
+    if(!$this->input->is_ajax_request()){
+        return false;
+    }
+    $model_id   = $this->input->post('modelId');
+    $comentario = $this->input->post('comentario');
+    $comentario = ['comentario'=>$comentario,'usuario_id'=>$this->userID];
+    $acreedor = $this->acreedoresRep->agregarComentario($model_id, $comentario);
+    $acreedor->load('comentario_timeline');
+
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($acreedor->comentario_timeline->toArray()))->_display();
+    exit;
+}
 
 }

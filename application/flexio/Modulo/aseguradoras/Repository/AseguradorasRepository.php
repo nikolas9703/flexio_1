@@ -68,4 +68,8 @@ class AseguradorasRepository {
        
 		return $aseguradoras->first();
 	}
+
+    public static function findByUuid($uuid) {
+        return Aseguradoras::where('uuid_aseguradora',hex2bin($uuid))->first();
+    }
 }

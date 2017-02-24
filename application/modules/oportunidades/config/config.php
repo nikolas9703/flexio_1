@@ -18,6 +18,7 @@ $config['modulo_config'] = array(
     ),
     'prefijo' => 'conalq',
     'permisos' => array(
-        'acceso' => 'Acceso'
+        'acceso' => 'Acceso',
+        'listar_todos' => 'Listar todos',
     )
 );

@@ -7,7 +7,7 @@ $info = !empty($info) ? $info : array();
 
     <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
         <label for="cliente_id">Cliente <span required="" aria-required="true">*</span></label>
-        <select data-placeholder="Seleccione" name="campo[cliente_id]" class="form-control chosen-select" required="" data-rule-required="true" v-model="contrato_alquiler.cliente_id" v-select2="contrato_alquiler.cliente_id"  :disabled="contrato_alquiler.empezar_desde_type == '' || config.disabledClienteId || disabledHeader || disabledEditar">
+        <select data-placeholder="Seleccione" name="campo[cliente_id]" class="form-control chosen-select" required="" data-rule-required="true" v-model="contrato_alquiler.cliente_id" v-select2="contrato_alquiler.cliente_id"  :disabled="config.disabledClienteId || disabledHeader || disabledEditar">
             <option value="">Seleccione</option>
             <option value="{{cliente.id}}" v-for="cliente in clientes | orderBy 'nombre'">{{cliente.nombre}}</option>
         </select>
@@ -62,7 +62,7 @@ $info = !empty($info) ? $info : array();
         </select>
     </div>
 
-    <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
+    <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3" v-bind:style="{display: showFacturacion}">
         <label for="corte_facturacion_id">Facturaci&oacute;n recurrente <span required="" aria-required="true">*</span></label>
         <select data-placeholder="Seleccione" required="" name="campo[corte_facturacion_id]" class="form-control" v-model="contrato_alquiler.corte_facturacion_id" :disabled="disabledEditar" v-on:change="cambioDeCorteFacturacion(contrato_alquiler.corte_facturacion_id)">
             <option value="">Seleccione</option>
@@ -70,9 +70,9 @@ $info = !empty($info) ? $info : array();
         </select>
     </div>
      <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
-        <label for="dia_corte">Corte de facturaci&oacute;n </label>
+        <label for="dia_corte">Corte de facturaci&oacute;n <span required="" v-bind:style="{display: dispStyle}" aria-required="true">*</span></label>
       <!-- <input type='text' data-placeholder="Seleccione" name="campo[dia_corte]" class="form-control" v-model="contrato_alquiler.dia_corte" :disabled="contrato_alquiler.corte_facturacion_id!='11' || disabledEditar">-->
-        <select data-placeholder="Seleccione" name="campo[dia_corte]" class="form-control" v-model="contrato_alquiler.dia_corte" :disabled="disabledCorteFacturacion  || disabledEditar">
+        <select data-placeholder="Seleccione" name="campo[dia_corte]" class="form-control" v-model="contrato_alquiler.dia_corte" :data-rule-required="corte_dia_req ? 'true' : 'false'" :aria-required="corte_dia_req ? 'true' : 'false'" :disabled="disabledCorteFacturacion  || disabledEditar">
             <option value=''>Seleccione</option>
             <option value="{{dia.id}}"  v-for="dia in dia_corte">{{dia.nombre}}</option>
         </select>
@@ -105,22 +105,22 @@ $info = !empty($info) ? $info : array();
 
     <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3" ><!-- style='clear: both;' -->
         <label for="vendedor_id">Vendedor <span required="" aria-required="true">*</span></label>
-        <select data-placeholder="Seleccione" name="campo[vendedor_id]" class="form-control chosen-select" data-rule-required="true" v-model="contrato_alquiler.vendedor_id" :disabled="disabledEditar">
+        <select data-placeholder="Seleccione" name="campo[vendedor_id]" class="form-control chosen-select" data-rule-required="true" v-model="contrato_alquiler.vendedor_id" :disabled="disabledEditar || disabledVendedor">
             <option value="">Seleccione</option>
             <option value="{{vendedor.id}}" v-for="vendedor in vendedores | orderBy 'nombre' 'apellido'" track-by="$index">{{{vendedor.nombre}}}{{{vendedor.apellido != undefined ? ' '+ vendedor.apellido : ''}}}</option>
         </select>
     </div>
 
      <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
-        <label for="referencia">Referencia <span required="" aria-required="true">*</span></label>
-        <input type="text" name="campo[referencia]" class="form-control" required="" data-rule-required="true" v-model="contrato_alquiler.referencia" :disabled="disabledEditar">
+        <label for="referencia">Referencia</label>
+        <input type="text" name="campo[referencia]" class="form-control" v-model="contrato_alquiler.referencia" :disabled="disabledEditar">
     </div>
 
     <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
         <label for="estado_id">Estado <span required="" aria-required="true">*</span></label>
         <select data-placeholder="Seleccione" name="campo[estado_id]" class="form-control chosen-select" required="" data-rule-required="true" v-model="contrato_alquiler.estado_id" :disabled="disabledEstado || disabledEditar">
             <option value="">Seleccione</option>
-            <option value="{{estado.id}}" v-for="estado in estados | orderBy 'id'">{{estado.nombre}}</option>
+            <option value="{{option.id}}" v-for="option in getEstados">{{option.nombre}}</option>
         </select>
     </div>
     <!-- <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 " style="display:none;">

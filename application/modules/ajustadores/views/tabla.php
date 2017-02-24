@@ -1,3 +1,3 @@
 <!-- jqgrid -->
-<?php echo Jqgrid::cargar("ajustadoresGrid")  ?>
+<?php echo Jqgrid::cargar("tablaAjustadoresGrid")  ?>
 <!-- /jqgrid -->

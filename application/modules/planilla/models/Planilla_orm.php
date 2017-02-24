@@ -3,12 +3,13 @@
 use \Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Planilla\Models\Pagadas\PagadasColaborador;
+use Flexio\Modulo\Planilla\Models\Abiertas\PlanillaCentros;
 
 
 class Planilla_orm extends Model
 {
 	protected $table = 'pln_planilla';
-	protected $fillable = ['identificador','semana','ano','secuencial','uuid_planilla','nombre', 'fecha_pago', 'rango_fecha1', 'rango_fecha2', 'monto', 'descuentos', 'colaboradores', 'estado_id','ciclo_colaboradores','activo','empresa_id','centro_contable_id','sub_centro_contable_id','area_negocio','pasivo_id','fecha_creacion','ciclo_id','tipo_id','codigo'];
+	protected $fillable = ['identificador','semana','ano','secuencial','uuid_planilla','nombre', 'fecha_pago', 'rango_fecha1', 'rango_fecha2', 'monto', 'descuentos', 'colaboradores', 'estado_id','ciclo_colaboradores','activo','empresa_id','centro_contable_id','sub_centro_contable_id','area_negocio','pasivo_id','fecha_creacion','ciclo_id','tipo_id','codigo','cuenta_debito_id','total_colaboradores'];
 	protected $guarded = ['id'];
 	public $timestamps = false;
     protected $appends      = ['salario_bruto','salario_neto'];
@@ -29,7 +30,11 @@ class Planilla_orm extends Model
 			$salario_neto = $this->colaboradores_pagadas()->sum('salario_neto');
 			return (float) $salario_neto;
 	}
+	public function centros_contables()
+  {
+    return $this->hasMany(PlanillaCentros::class, 'planilla_id');
 
+   }
 	//Informacion de lo lista de colabora que aparecen en la Planilla cerrda
 	  public function colaboradores_pagadas(){
 	       return $this->hasMany(PagadasColaborador::class, 'planilla_id', 'id');
@@ -147,7 +152,7 @@ class Planilla_orm extends Model
 	public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL)
 	{
 
- 		$query = self::with(array('estado','colaboradores',"tipo","liquidaciones","vacaciones","licencias"));
+ 		$query = self::with(array('estado','centros_contables.centro_info','colaboradores',"tipo","liquidaciones","vacaciones","licencias"));
 
   		if($sidx!=NULL && $sord!=NULL){
 			if(!preg_match("/cargo/i", $sidx)){

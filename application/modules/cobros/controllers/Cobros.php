@@ -114,9 +114,16 @@ class Cobros extends CRM_Controller
     $clause = [];
     $jqgrid = new Flexio\Modulo\Cobros\Services\CobroJqgrid;
     $clause['empresa'] = $this->empresa_id;
+
     if ($this->input->post("cliente_id") <> '') {
         $client_id = (new ClienteRepository)->findByUuid($this->input->post("cliente_id"))->id;
         $clause['cliente'] = $client_id;
+    }
+
+    if (!empty($this->input->post('factura_id'))) {
+        $factura = (new FacturaVentaRepository)->findByUuid($_POST['factura_id']);
+
+        $clause['factura'] = $factura->id;
     }
 
 
@@ -179,11 +186,11 @@ class Cobros extends CRM_Controller
       "titulo" => '<i class="fa fa-line-chart"></i> Cobro: Crear ',
       "ruta" => array(
           0 => array(
-              "nombre" => "ventas",
+              "nombre" => "Ventas",
               "activo" => true
           ),
           1 => array(
-              "nombre" => '<b>cobros</b>',
+              "nombre" => '<b>Cobros</b>',
               "activo" => true,
               "url" => "cobros/listar"
 
@@ -239,18 +246,18 @@ class Cobros extends CRM_Controller
       "titulo" => '<i class="fa fa-line-chart"></i> Cobro: '.$cobro->codigo,
       "ruta" => array(
           0 => array(
-              "nombre" => "ventas",
-              "activo" => true
+              "nombre" => "Ventas",
+              "activo" => false
           ),
           1 => array(
-              "nombre" => '<b>cobros</b>',
-              "activo" => true,
+              "nombre" => 'Cobros',
+              "activo" => false,
               "url" => "cobros/listar"
 
           ),
           2 => array(
-              "nombre" => 'Cobro '.$cobro->codigo,
-              "activo" => false
+              "nombre" => "<b>Detalle</b>",
+              "activo" => true
           )
       )
     );
@@ -310,13 +317,20 @@ class Cobros extends CRM_Controller
       if(!$this->input->is_ajax_request()){
         return false;
       }
-
+      $deposito = ["Flexio\Modulo\Contabilidad\Models\Cuentas"=>'banco','Flexio\Modulo\Cajas\Models\Cajas'=>'caja'];
+      $empezar = ['cliente'=>'Flexio\Modulo\Cliente\Models\Cliente','contrato_venta'=>'Flexio\Modulo\Contratos\Models\Contrato','factura'=>'Flexio\Modulo\FacturasVentas\Models\FacturaVenta','orden_trabajo' => 'Flexio\Modulo\OrdenesTrabajo\Models\OrdenTrabajo'];
+      $empz = array_flip($empezar);
       $uuid = $this->input->post('uuid');
       $cobro = $this->cobroRepository->findByUuid($uuid);
       $cobro->load('metodo_cobro','cliente','cobros_facturas','empezable','landing_comments');
       $cobro->load(['factura_cobros.cobros'=>function($cob){
           $cob->where('estado','aplicado');
       }]);
+
+
+      //$cobro->depositable_type = $deposito[$cobro->depositable_type];
+      //$cobro->empezable_type = $empz[$cobro->empezable_type];
+
       $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
           ->set_output($cobro)->_display();
       exit;
@@ -422,28 +436,32 @@ class Cobros extends CRM_Controller
         }else{
          $clientes = $clientesObj->getClientes($this->empresa_id)->conId($id)->fetch();
         }
-        $clientes->load('anticipos');
+       $clientes->load('anticipo_cliente','anticipos');
+
        $clientes = $clientes->map(function($cliente){
            return collect([
                'id'=> $cliente->id,
                'nombre' => $cliente->codigo . ' - '.$cliente->nombre,
                'saldo_pendiente' => $cliente->saldo_pendiente,
+               'anticipos' => $cliente->anticipos,
+               'anticipos_cliente' => $cliente->anticipo_cliente,
                'credito_favor' => $cliente->credito_favor,
                'facturas'=> $this->loadFacturaInfo($cliente)
              ]);
        });
+
        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
            ->set_output($clientes)->_display();
        exit;
    }
 
    protected function  loadFacturaInfo($cliente){
-     /*$cliente->facturas->load(['cobros' =>
+     $cliente->facturas->load(['cobros' =>
              function($cob){
                 $cob->where('estado','aplicado');
                 $cob->with('metodo_cobro');
             }]);
-     $cliente->facturas->load('ordenes_ventas.anticipos','contratos.anticipos');*/
+     $cliente->facturas->load('contratos.anticipos','ordenes_ventas.anticipos');
      return $cliente->facturas;
    }
 

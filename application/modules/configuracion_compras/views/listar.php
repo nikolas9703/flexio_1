@@ -37,6 +37,9 @@
                                 <li>
                                     <a data-toggle="tab" href="#chequeras">Chequeras</a>
                                 </li>
+                                <li>
+                                    <a data-toggle="tab" href="#documentos">Documentos</a>
+                                </li>
                             </ul>
                         </div>
                         <div role="tabpanel" class="tab-pane active" id="catalogos">
@@ -219,6 +222,44 @@
                                 </div>
                             </div>
 
+                        </div>
+                        <div role="tabpanel" class="tab-pane active" id="documentos">
+                            <div class="ibox border-bottom">
+                                <div class="ibox-title">
+                                    <h5>Crear tipo de documento</h5>
+                                    <div class="ibox-tools">
+                                        <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                                    </div>
+                                </div>
+                                <div class="ibox-content">
+                                    <div class="row">
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                            <label for="categoria">Tipo de documento<span style="color:red;"> *</span></label>
+                                            <input type="text" id="tipoDoc" class="form-control" value="" placeholder="">
+                                        </div>
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-9 col-lg-9">
+                                            <label for="descripcion">Descripci&oacute;n<span style="color:red;"> *</span></label>
+                                            <input type="text" id="descripcionDoc" class="form-control" value="" placeholder="">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <input type="button" id="cancelarTipoDocBtn" class="btn btn-default btn-block" value="Cancelar" />
+                                        </div>
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <input type="button" id="guardarTipoDocBtn" class="btn btn-success btn-block" value="Guardar" />
+                                        </div>
+                                        <input type="hidden" id="modoTipo" value="crear" data-uuid="">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <!-- JQGRID -->
+                                            <?php echo modules::run('configuracion_compras/ocultotablaTipoDoc'); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                     </div>

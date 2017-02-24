@@ -22,11 +22,12 @@ class FacturasComprasTransacciones {
 
     public function haceTransaccion($factura_compra)
     {
+
+
         //factura_compra->bdega->entrada_id = '1'; Es una entrada manual
-        //dd($factura_compra->toArray(), $factura_compra->bodega->toArray());
-        $clause      = [
+         $clause      = [
             "empresa_id"    => $factura_compra->empresa_id,
-            "nombre"        => 'TransaccionFacturaCompra'.'-'.$factura_compra->codigo.'-'.$factura_compra->empresa_id,
+            "nombre"        => 'TransaccionFacturaCompra'.'-'.$factura_compra->codigo.'-'.$factura_compra->empresa_id.'-'.$factura_compra->proveedor_id,
         ];
         $transaccion = $this->SysTransaccionRepository->findBy($clause);
 
@@ -104,11 +105,16 @@ class FacturasComprasTransacciones {
 
     private function _debito($factura_compra)
     {
+
+
+
         $asientos   = [];
 
         //sumatoria agrupada por tipos de impuestos
         foreach($factura_compra->items_groupByImpuestos()  as $item)
         {
+
+            $cuenta_proveedores     = $this->_getCuentaIdCredito($factura_compra);
             $cuenta = $this->_getCuentaDebito($item);
             $debito = $item->sum(function($item2){
                 return $item2->pivot->impuestos;
@@ -129,8 +135,11 @@ class FacturasComprasTransacciones {
             ]);
 
             ///retenido por items
-            if($factura_compra->empresa->retiene_impuesto =="si" && $factura_compra->proveedor->retiene_impuesto=='no' && $factura_compra->total > 500){
-                $cuenta_retenido = $this->_getImpuesto($item);
+            $impuesto = $this->ImpuestosRepositoy->find($item->first()->pivot->impuesto_id);
+
+            if($factura_compra->empresa->retiene_impuesto =="si" && $factura_compra->proveedor->retiene_impuesto=='no' && $factura_compra->total > 0 && $impuesto->retiene_impuesto == 'si'){
+                //$cuenta_retenido = $this->_getImpuesto($item);
+                $cuenta_retenido = $this->_getImpuesto($impuesto);
                 $asientos[] = new AsientoContable([
                     'codigo'        => $factura_compra->codigo,
                     'nombre'        => $factura_compra->codigo. ' - '.$factura_compra->proveedor->nombre,
@@ -142,6 +151,20 @@ class FacturasComprasTransacciones {
             }
         }
 
+        if( $factura_compra->retencion > 0 && count($factura_compra->contrato_relacionado->tipo_retenido->first())){
+
+
+          $asientos[] = new AsientoContable([
+              'codigo'        => $factura_compra->codigo,
+              'nombre'        => $factura_compra->codigo. ' - '.$factura_compra->proveedor->nombre,
+              'debito'        => $factura_compra->retencion,
+              'cuenta_id'     => $cuenta_proveedores->cuenta_id,
+              'centro_id'     => $factura_compra->centro_contable_id,
+              'empresa_id'    => $factura_compra->empresa_id,
+              'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
+          ]);
+
+        }
 
         return $asientos;
     }
@@ -160,7 +183,7 @@ class FacturasComprasTransacciones {
             'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
         ]);
         ///retenido de impuesto a proveedor
-        if($factura_compra->empresa->retiene_impuesto =='si' && $factura_compra->proveedor->retiene_impuesto == 'no' && $factura_compra->total > 500){
+        if($factura_compra->empresa->retiene_impuesto =='si' && $factura_compra->proveedor->retiene_impuesto == 'no' && $factura_compra->total > 0){
             $total_retenido = $factura_compra->facturas_compras_items->sum('retenido');
             $asientos[] = new AsientoContable([
                 'codigo'        => $factura_compra->codigo,
@@ -170,6 +193,19 @@ class FacturasComprasTransacciones {
                 'empresa_id'    => $factura_compra->empresa_id,
                 'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
             ]);
+        }
+        if($factura_compra->retencion>0 && count($factura_compra->contrato_relacionado->tipo_retenido->first())){
+
+          $subcontrato = $factura_compra->contrato_relacionado->tipo_retenido->first();
+
+          $asientos[] = new AsientoContable([
+              'codigo'        => $factura_compra->codigo,
+              'nombre'        => $factura_compra->codigo. " - " .$factura_compra->proveedor->nombre,
+              'credito'       => $factura_compra->retencion,
+              'cuenta_id'     => $subcontrato->cuenta_id,
+              'empresa_id'    => $factura_compra->empresa_id,
+              'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
+          ]);
         }
 
         return $asientos;
@@ -186,9 +222,10 @@ class FacturasComprasTransacciones {
         return $impuesto->cuenta;
     }
 
-    private function _getImpuesto($item)
+    //private function _getImpuesto($item)
+    private function _getImpuesto($impuesto)
     {
-        $impuesto = $this->ImpuestosRepositoy->find($item->first()->pivot->impuesto_id);
+        //$impuesto = $this->ImpuestosRepositoy->find($item->first()->pivot->impuesto_id);
         if(!(count($impuesto) && !empty($impuesto->cuenta_retenida_id)))
         {
             throw new \Exception('No se logr&oacute; determinar la cuenta para realizar el cr&eacute;dito por la retenci&oacute;n de impuestos.');

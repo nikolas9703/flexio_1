@@ -5,9 +5,9 @@
             <input type="text" name="campo[nombre]" value="<?php echo isset($campos->nombre)?$campos->nombre:'';?>" class="form-control" data-rule-required="true" id="campo[nombre]" aria-required="true">
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 TomadeContacto ">
-            <label>Toma de Contacto </label>
+            <label>Toma de Contacto <span required="" aria-required="true">*</span></label>
 
-            <select name="campo[id_toma_contacto]" class="form-control select2" id="id_toma_contacto">
+            <select name="campo[id_toma_contacto]" class="form-control select2" id="id_toma_contacto" data-rule-required="true">
                 <option value="">Seleccione</option>
                 <?php foreach($toma_contactos as $toma_contacto):?>
                 <option value="<?php echo $toma_contacto->id?>" <?php echo (isset($campos->id_toma_contacto) and $campos->id_toma_contacto == $toma_contacto->id)?' selected ':'';?>><?php echo $toma_contacto->nombre;?></option>
@@ -25,7 +25,7 @@
                   <table class="table table-noline">
                       <thead>
                       <tr>
-                          <th width="49%" style="font-weight:bold">Teléfono</th>
+                          <th width="49%" style="font-weight:bold">Teléfono <span required="" aria-required="true">*</span></th>
                           <th width="41%" ></th>
                           <th width="10%">&nbsp;</th>
                       </tr>
@@ -56,22 +56,6 @@
                   </table>
               </div>
           </div>
-
-
-
-
-
-
-
-
-
-
-
-            <!--<label>Teléfono </label>
-            <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                <input type="text" name="campo[telefono]" value="<?php echo isset($campos->telefono)?$campos->telefono:'';?>" class="form-control telefono" data-inputmask="'mask': '999-9999', 'greedy':true" id="campo[telefono]">
-            </div>-->
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6 ">
 
@@ -80,7 +64,7 @@
                   <table class="table table-noline">
                       <thead>
                       <tr>
-                          <th width="45%" style="font-weight:bold">Correo Electr&oacute;nico</th>
+                          <th width="45%" style="font-weight:bold">Correo Electr&oacute;nico <span required="" aria-required="true">*</span></th>
                           <th width="45%"></th>
                           <th width="10%">&nbsp;</th>
                       </tr>

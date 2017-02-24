@@ -176,9 +176,22 @@ class Plantillas extends CRM_Controller {
 
         //print_r($grupo_plantillas);
         //Breadcrum Array
+
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-users"></i> Plantillas'
-        );
+          "titulo" => '<i class="fa fa-users"></i> Plantillas',
+          "filtro" => true,
+          "ruta" => array(
+              0 => array(
+                  "nombre" => "Recursos humanos",
+                  "activo" => false,
+               ),
+              1=> array(
+                    "nombre" => '<b>Plantillas</b>',
+                    "activo" => true,
+              )
+          ),
+      );
+
         $breadcrumb["menu"] = array(
             "url" => 'javascript:',
             "clase" => 'ocionesCrearBtn',
@@ -323,9 +336,11 @@ class Plantillas extends CRM_Controller {
         $data = array();
         $mensaje = array();
         $titulo_formulario = '<i class="fa fa-users"></i> Plantillas: Crear';
-        $breadcrumb = array(
-            "titulo" => $titulo_formulario,
-        );
+
+
+
+
+
         $plantillaInfs = NULL;
         $plantilla_codigo = NULL;
         $plantillaInf_colaborador=NULL;
@@ -369,11 +384,31 @@ class Plantillas extends CRM_Controller {
                 ));
 
             $titulo_formulario = '<i class="fa fa-users"></i> Plantillas: ' . $plantillaInfss['codigo'];
-            $breadcrumb = array(
-                "titulo" => $titulo_formulario,
-            );
+            $formulario = '<b>Detalle</b>';
+        }else{
+            $formulario = '<b>Crear</b>';
         }
 
+
+        $breadcrumb = array(
+          "titulo" => $titulo_formulario,
+          "filtro" => true,
+          "ruta" => array(
+              0 => array(
+                  "nombre" => "Recursos humanos",
+                  "activo" => false,
+               ),
+              1=> array(
+                    "nombre" => 'Plantillas',
+                    "activo" => false,
+                    "url"=>'plantillas/listar'
+              ),
+              2=> array(
+                    "nombre" => $formulario,
+                    "activo" => true,
+              )
+          ),
+      );
         $colaboradores = Colaboradores_orm::lista($this->empresa_id);
         $colaboradores = (!empty($colaboradores) ? array_map(function($colaboradores) {
                             return array("id" => $colaboradores["id"], "nombre" => $colaboradores["nombre_completo"]);

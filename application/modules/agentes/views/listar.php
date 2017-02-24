@@ -11,11 +11,9 @@
 		<div class="col-lg-12">
 			<div class="wrapper-content">
 				<div class="row">
-					<div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
-						<button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
-						<?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
-					</div>
-				</div>
+                    <div class="alert alert-dismissable alert-danger" id="mensaje" style="display:none">
+                    </div>
+                </div>
 
 				<div role="tabpanel">
 					<!-- Tab panes -->
@@ -47,9 +45,13 @@
 											<input type="text" id="nombre" class="form-control" value="" placeholder="">
 										</div>
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+											<label for="">Cédula</label>
+											<input type="text" id="identificacion" class="form-control" value="" placeholder="">
+										</div>
+										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 											<label for="">Tel&eacute;fono</label>
 											<input type="text" id="telefono" class="form-control" value="" placeholder="">
-										</div>
+										</div>										
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 											<label for="">E-mail</label>
 											<input type="text" id="correo" class="form-control" value="" placeholder="">
@@ -108,10 +110,21 @@ echo form_open(base_url('agentes/exportar'), $formAttr);
 <input type="hidden" name="ids" id="ids" value="" />
 <?php echo form_close(); ?>
 <?php
+$formAttr = array('method' => 'POST', 'id' => 'cambiarEstados','autocomplete'  => 'off');
+echo form_open(base_url('agentes/cambiarEstados'), $formAttr);
+?>
+<input type="hidden" name="idsestados" id="idsestados" value="" />
+<?php echo form_close(); ?>
+<?php
 
 echo Modal::config(array(
 	"id" => "opcionesModal",
 	"size" => "sm"
+))->html();
+
+echo Modal::config(array(
+"id" => "opcionesModalEstado",  
+"size" => "sm"
 ))->html();
 
 ?>

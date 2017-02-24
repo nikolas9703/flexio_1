@@ -10,14 +10,7 @@
 
     	<div class="col-lg-12">
         	<div class="wrapper-content">
-	            <div class="row">
-                  <?php $mensaje = self::$ci->session->flashdata('mensaje'); ?>
-	                <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
-	                    <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
-	                    <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
-	                </div>
-	            </div>
-
+	            
 				<div role="tabpanel">
 				 	<!-- Tab panes -->
 				  	<div class="row tab-content">
@@ -52,17 +45,28 @@
 											<select name="campo[identificacion]" class="form-control" id="identificacion">
 												<option value="">Seleccione</option>
 												<?php foreach ($info['identificacion'] as $identificacion) { ?>
-													<option value="<?php echo $identificacion->etiqueta ?>"><?php echo $identificacion->valor ?></option>
+													<option value="<?php if($identificacion->etiqueta=='natural'){ echo 'cedula'; }else if($identificacion->etiqueta=='juridico'){ echo 'ruc'; }  ?>"><?php echo $identificacion->valor ?></option>
 												<?php } ?>
 											</select>
 										</div>
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-							            	<label for="">Telef&oacute;no</label>
-							            	<input type="text" id="telefono" class="form-control" value="" placeholder="">
+							            	<label for="">Tel&eacute;fono</label>
+							            	<!-- <input type="text" id="telefono" class="form-control" value="" placeholder="">-->
+                            <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                            <input type="hidden" value="">
+                            <input type="input-left-addon" class="form-control" id="telefono" >
+                            </div>
+
 										</div>
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 											<label for="">Correo Electr&oacute;nico</label>
-									        <input type="text" id="email" class="form-control" value="" placeholder="">
+									      <!--  <input type="text" id="email" class="form-control" value="" placeholder="">-->
+                          <div class="input-group">
+                          <span class="input-group-addon">@</span>
+                          <input type="hidden" value="">
+                          <input type="input-left-addon" class="form-control" id="email" >
+                          </div>
 										</div>
 									</div>
 									<div class="row">
@@ -146,7 +150,7 @@ echo Modal::config(array(
     "titulo" => "Agrupar",
     "contenido" => modules::run('clientes/ocultoformularioagrupador'),
     "size" => "sm",
-    "footer" => '<div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">    
+    "footer" => '<div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
     <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
       <input type="button" id="cancelarBtn" class="btn btn-default btn-block" value="Cancelar" />
     </div>

@@ -26,9 +26,6 @@ $config['modulo_config'] = array(
 		'orden'=> 5
 	),
 	'permisos' => array(
-		'acceso'                                    => 'Acceso',
-		'listar-documentos__eliminar_documentos'    => 'Eliminar Documentos',
-		'listar-documentos__actualizar_archivo'     => 'Actualizar Documentos',
-		'listar-documentos__menu'                   => 'Ver Link en el Menu',
+		'acceso'  => 'Acceso'
 	)
 );

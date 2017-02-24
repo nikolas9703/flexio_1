@@ -1,6 +1,9 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 $route['devoluciones_alquiler/listar'] = 'devoluciones_alquiler/listar';
+$route['devoluciones_alquiler/crear'] = 'devoluciones_alquiler/crear';
+$route['devoluciones_alquiler/editar/(:any)'] = 'devoluciones_alquiler/editar/$1';
+
 
 //peticiones ajax
 $route['devoluciones_alquiler/ajax-listar']                = 'devoluciones_alquiler/ajax_listar';
@@ -15,4 +18,3 @@ $route['devoluciones_alquiler/ajax-guardar-comentario'] = 'devoluciones_alquiler
 //Peticiones formularios
 //$route['devoluciones_alquiler/crear'] = 'devoluciones_alquiler/crear';
 $route['devoluciones_alquiler/editar/(:any)'] = 'devoluciones_alquiler/editar/$1';
- 

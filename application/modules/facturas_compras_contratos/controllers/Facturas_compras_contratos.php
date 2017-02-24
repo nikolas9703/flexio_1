@@ -24,6 +24,7 @@ use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository as proveedoresRep
 use Flexio\Modulo\SubContratos\Models\SubContrato as subcontratosVal;
 use Carbon\Carbon as Carbon;
 use Flexio\Modulo\FacturasCompras\Models\FacturaCompra as FacturaCompra;
+use Flexio\FormularioDocumentos AS FormularioDocumentos;
 
 class Facturas_compras_contratos extends CRM_Controller {
 
@@ -38,6 +39,8 @@ class Facturas_compras_contratos extends CRM_Controller {
     private $subcontratosVal;
     private $proveedoresRep;
     private $facturaCompra;
+    protected $DocumentosRepository;
+    protected $upload_folder = './public/uploads/';
 
     function __construct() {
         parent::__construct();
@@ -62,7 +65,7 @@ class Facturas_compras_contratos extends CRM_Controller {
         $this->load->model('pedidos/Pedidos_orm');
         $this->load->model('ordenes/Ordenes_orm');
         $this->load->model('facturas/Factura_catalogo_orm'); //uso el mismo catalogo de la seccion de facturas de ventas
-
+        $this->load->module(array('documentos'));
         $this->load->module("salidas/Salidas");
         Carbon::setLocale('es');
         setlocale(LC_TIME, 'Spanish');
@@ -98,10 +101,16 @@ class Facturas_compras_contratos extends CRM_Controller {
 
 
         $this->_Css();
+        $this->assets->agregar_css(array(
+            'public/assets/css/plugins/jquery/fileinput/fileinput.css',
+            'public/assets/css/plugins/jquery/jquery.fileupload.css',
+        ));
         $this->_js();
+
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas_compras_contratos/listar.js',
-            'public/assets/js/default/toast.controller.js'
+            'public/assets/js/default/toast.controller.js',
+            'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
         ));
 
 
@@ -184,6 +193,7 @@ class Facturas_compras_contratos extends CRM_Controller {
         $caja_id = $this->input->post('caja_id', true);
         $item_id = $this->input->post('item_id', true);
         $pedidos_id = $this->input->post('pedidos_id', true);
+        $numero_factura = $this->input->post('numero_factura', true);
         //$registros = Facturas_compras_orm::deEmpresa($empresa_id);
         $registros = Facturas_compras_orm::deTipo($tipo);
         $registros->deEmpresa($this->empresa_id);
@@ -243,6 +253,9 @@ class Facturas_compras_contratos extends CRM_Controller {
         if (!empty($pedidos_id)) {
             $registros = $registros->dePedidos($pedidos_id);
         }
+        if (!empty($numero_factura)) {
+            $registros = $registros->deFacturaProveedor($numero_factura);
+        }
 
 
         // die();
@@ -285,17 +298,24 @@ $retenido = $registros->get()->toArray();
                 if ($row->pagable and $this->auth->has_permission('acceso', 'pagos/crear/(:any)')) {
                     $hidden_options .= '<a href="' . base_url('pagos/crear/facturacompra' . $row->uuid_factura) . '" class="btn btn-block btn-outline btn-success">Pagar</a>';
                 }
-
+                 //$hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success subirArchivoBtn" data-id="'. $row->uuid_factura .'" data-uuid="'. $row->uuid_factura .'" >Subir archivo</a>';
+                // $hidden_options .= '<a href="javascript:" data-id="' . $row->uuid_factura . '" class="TablaCliente btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documento</a>';
+                 $hidden_options .= '<a href="'.base_url('documentos/subir_documento/'. $row->uuid_factura).'" class="btn btn-block btn-outline btn-success">Subir documento</a>';
+                 $hidden_options .= '<a  href="'.base_url('facturas_compras/historial/'. $row->uuid_factura).'"   data-id="'.$row->id.'" class="btn btn-block btn-outline btn-success">Ver bit&aacute;cora</a>';
+                 $numero_documento = '';
+                if(!empty($row->operacion_type) && $row->operacion_type != 'Flexio\\Modulo\\SubContratos\\Models\\SubContrato' ){
+                  $numero_documento = $row->operacion->numero_documento;
+                }
                 $response->rows[$i]["id"] = $row->uuid_factura;
                 $response->rows[$i]["cell"] = array(
                     '<a class="link" href="' . base_url('facturas_compras/ver/' . $row->uuid_factura) . '" style="color:blue;">' . $row->codigo . '</a>',
                     $row->created_at,
                     count($row->proveedor) ? '<a class="link" href="' . base_url("proveedores/ver/" . $row->proveedor->uuid_proveedor) . '" style="color:blue;">' . $row->proveedor->nombre . '</a>' : '',
-                    !empty($row->operacion_type)? $row->operacion->numero_documento:'',
+                    $numero_documento,//!empty($row->operacion_type) ? $row->operacion->numero_documento:'',
+                    '<label class="totales-success">$' . $row->total . '</label>', //total de la factura
+                    '<label class="totales-danger">$' . number_format($row->saldo, 4) . '</label>', //total de la factura
                     count($row->centro_contable) ? $row->centro_contable->nombre : '',
                     count($row->estado) ? $row->estado->valorSpan() : '',
-                    '<label class="totales-success">' . $row->total . '</label>', //total de la factura
-                    '<label class="totales-danger">' . number_format($row->saldo, 4) . '</label>', //total de la factura
                     $link_option,
                     $hidden_options
                 );
@@ -521,10 +541,10 @@ $retenido = $registros->get()->toArray();
         $data['mensaje'] = $mensaje;
 
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-shopping-cart"></i> Factura de compra: Editar ' . $label,
+            "titulo" => '<i class="fa fa-shopping-cart"></i> Factura de contrato: Editar ' . $label,
         );
-
-        $this->template->agregar_titulo_header('Editar Factura de Compra');
+        $breadcrumb["menu"]["opciones"]["facturas_compras_contratos/historial/" . $factura->uuid_factura] = "Ver bit&aacute;cora";
+        $this->template->agregar_titulo_header('Editar Factura de Contrato');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar();
@@ -630,7 +650,6 @@ $retenido = $registros->get()->toArray();
 
     function guardar() {
 
-
         if ($_POST) {
 //            echo "<pre>";
 //            print_r($_POST);
@@ -641,7 +660,6 @@ $retenido = $registros->get()->toArray();
             $post = $this->input->post();
             Capsule::transaction(function() use ($campo, $post, &$success) {
 
-
                 if (!$campo["factura_id"]) {
                    // $factura = new Facturas_compras_orm;
                     $factura = new FacturaCompra();
@@ -651,7 +669,6 @@ $retenido = $registros->get()->toArray();
                    // $factura = Facturas_compras_orm::find($campo["factura_id"]);
                     $factura = FacturaCompra::find($campo["factura_id"]);
                 }
-
                 $this->_setFacturaFromPost($factura, $post);
 
                 if ($factura->estado->etiqueta == 'por_pagar') {
@@ -948,6 +965,77 @@ $retenido = $registros->get()->toArray();
             'public/assets/js/plugins/bootstrap/daterangepicker.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
         ));
+    }
+    function ajax_guardar_documentos() {
+        if(empty($_POST)){
+            return false;
+        }
+
+        $factura_id = $this->input->post('factura_id', true);
+        $facturaObj = new Buscar(new Facturas_compras_orm, 'uuid_factura');
+        $modeloInstancia = $facturaObj->findByUuid($factura_id);
+        //$modeloInstancia = $this->facturaCompraRepository->findByUuid($factura_id);
+        $this->documentos->subir($modeloInstancia);
+    }
+    function documentos_campos() {
+
+        return array(
+            array(
+                "type"		=> "hidden",
+                "name" 		=> "factura_id",
+                "id" 		=> "factura_id",
+                "class"		=> "form-control",
+                "readonly"	=> "readonly",
+            ));
+    }
+    function historial($uuid = NULL){
+
+        $acceso = 1;
+        $mensaje =  array();
+        $data = array();
+
+        // $factura = Facturas_compras_orm::findByUuid($uuid);
+        $facturaObj = new Buscar(new Facturas_compras_orm, 'uuid_factura');
+        $factura = $facturaObj->findByUuid($uuid);
+
+        if(!$this->auth->has_permission('acceso','facturas_compras/historial') && is_null($factura)) {
+            // No, tiene permiso
+            $acceso = 0;
+            $mensaje = array('estado' => 500, 'mensaje' => ' <b>Usted no cuenta con permiso para esta solicitud</b>', 'clase' => 'alert-danger');
+        }
+        $this->_Css();
+        $this->_js();
+        $this->assets->agregar_js(array(
+            'public/resources/compile/modulos/facturas_compras/historial.js'
+        ));
+        $breadcrumb = array(
+            "titulo" => '<i class="fa fa-shopping-cart"></i> Bit&aacute;cora: Factura de contrato '.$factura->codigo,
+        );
+
+        $factura->load('historial');
+
+        $historial = $factura->historial->map(function($factHist) use ($factura){
+            return [
+                'titulo' => $factHist->titulo,
+                "codigo" =>$factura->codigo,
+                "descripcion" =>$factHist->descripcion,
+                "antes" => $factHist->antes,
+                "despues" => $factHist->despues,
+                "tipo" => $factHist->tipo,
+                "nombre_usuario" => $factHist->nombre_usuario,
+                "hace_tiempo" => $factHist->cuanto_tiempo,
+                "fecha_creacion" => $factHist->fecha_creacion,
+                "hora" => $factHist->hora
+            ];
+        });
+        $this->assets->agregar_var_js(array(
+            'historial' => $historial
+        ));
+        $this->template->agregar_titulo_header('Facturas de contrato');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar();
+
     }
 
 }

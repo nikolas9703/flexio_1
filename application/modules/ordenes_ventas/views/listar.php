@@ -112,7 +112,12 @@
     	</div><!-- cierra .col-lg-12 -->
 	</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
-
+<?php
+$formAttr = array('method' => 'POST', 'id' => 'exportarOrdenesVenta','autocomplete'  => 'off');
+echo form_open(base_url('ordenes_ventas/exportar'), $formAttr);
+?>
+<input type="hidden" name="ids" id="ids" value="" />
+<?php echo form_close(); ?>
 <?php echo Modal::config(array( "id" => "optionsModal", "size"  => "sm"))->html();?> <!-- modal opciones -->
 <?php echo Modal::config(array(
 	"id" => "documentosModal",

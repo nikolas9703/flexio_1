@@ -14,6 +14,7 @@ use Flexio\Modulo\Devoluciones\Repository\DevolucionCatalogoRepository as Devolu
 use Flexio\Modulo\Devoluciones\Repository\DevolucionRepository as DevolucionRepository;
 use Flexio\Modulo\FacturasVentas\Repository\FacturaVentaRepository as FacturaVentaRepository;
 use Flexio\Modulo\Cotizaciones\Repository\LineItemRepository as LineItemRepository;
+use Flexio\Modulo\Cliente\Models\Cliente;
 
 class Devoluciones extends CRM_Controller {
     private $empresa_id;
@@ -242,10 +243,25 @@ class Devoluciones extends CRM_Controller {
         ));
 
       $data['mensaje'] = $mensaje;
-      $breadcrumb = array(
-        "titulo" => '<i class="fa fa-line-chart"></i> Devoluciones: Crear',
-      );
 
+      $breadcrumb = array(
+          "titulo" => '<i class="fa fa-line-chart"></i> Devoluciones: Crear',
+          "ruta" => array(
+              0 => array(
+                  "nombre" =>  'Ventas',
+                  "activo" => false
+              ),
+              1 => array(
+                  "nombre" => 'Devoluciones',
+                  "activo" => false,
+                  "url" => "devoluciones/listar"
+              ),
+              2 => array(
+                  "nombre" =>'<b>Crear</b>',
+                  "activo" => true
+              )
+          )
+      );
       $this->template->agregar_titulo_header('Crear Devoluciones');
       $this->template->agregar_breadcrumb($breadcrumb);
       $this->template->agregar_contenido($data);
@@ -307,10 +323,25 @@ class Devoluciones extends CRM_Controller {
         ));
 
       $data['mensaje'] = $mensaje;
-      $breadcrumb = array(
-        "titulo" => '<i class="fa fa-line-chart"></i> Devoluciones: ver '.$devolucion->codigo,
-      );
 
+      $breadcrumb = array(
+          "titulo" => '<i class="fa fa-line-chart"></i> Devoluciones: ver '.$devolucion->codigo,
+          "ruta" => array(
+              0 => array(
+                  "nombre" =>  'Ventas',
+                  "activo" => false
+              ),
+              1 => array(
+                  "nombre" => 'Devoluciones',
+                  "activo" => false,
+                  "url" => "devoluciones/listar"
+              ),
+              2 => array(
+                  "nombre" =>'<b>Detalle</b>',
+                  "activo" => true
+              )
+          )
+      );
       $this->template->agregar_titulo_header('Ver Devoluciones');
       $this->template->agregar_breadcrumb($breadcrumb);
       $this->template->agregar_contenido($data);
@@ -356,7 +387,8 @@ class Devoluciones extends CRM_Controller {
        })->get(array('id','uuid_impuesto','nombre','impuesto'));
       $data['impuestos'] = $impuesto;
       $data['cuenta_activo'] = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->deTipoDeCuenta([4])->activas()->get();
-      $data['clientes'] = Cliente_orm::where($clause)->get(array('id','nombre','credito'));
+      //$data['clientes'] = Cliente_orm::where($clause)->get(array('id','nombre','credito'));
+      $data['clientes'] = Cliente::where($clause)->get(array('id','nombre','credito_limite'));
       $data['bodegas'] = Bodegas_orm::where(array('empresa_id'=>$this->empresa_id,'estado'=>1))->get(array('id','nombre'));
 
       $ids_centros = Centros_orm::where($clause_impuesto)->lists('padre_id');

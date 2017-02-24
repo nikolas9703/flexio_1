@@ -24,12 +24,16 @@ class Cliente extends Model {
     //Propiedades de Revisiones
     protected $revisionEnabled = true;
     protected $revisionCreationsEnabled = true;
-    protected $keepRevisionOf =['codigo', 'nombre', 'empresa_id', 'telefono', 'correo', 'web', 'direccion', 'comentario', 'credito_limite', 'tipo_identificacion', 'identificacion', 'toma_contacto_id', 'letra', 'exonerado_impuesto', 'tipo', 'categoria', 'estado','credito_favor'];
+    protected $keepRevisionOf =['codigo', 'nombre', 'empresa_id', 'telefono', 'correo', 'web', 'direccion', 'comentario', 'credito_limite', 'tipo_identificacion', 'identificacion', 'toma_contacto_id', 'letra', 'exonerado_impuesto', 'tipo', 'categoria', 'estado','credito_favor', 'creado_por','detalle_identificacion','retiene_impuesto','lista_precio_venta_id','lista_precio_alquiler_id','termino_pago'];
 
     protected $table = 'cli_clientes';
-    protected $fillable = ['codigo', 'nombre', 'empresa_id', 'telefono', 'correo', 'web', 'direccion', 'comentario', 'credito_limite', 'tipo_identificacion', 'identificacion', 'toma_contacto_id', 'letra', 'exonerado_impuesto', 'tipo', 'categoria', 'estado','credito_favor'];
+    protected $fillable = ['codigo', 'nombre', 'empresa_id', 'telefono', 'correo', 'web', 'direccion', 'comentario', 'credito_limite', 'tipo_identificacion', 'identificacion', 'toma_contacto_id', 'letra', 'exonerado_impuesto', 'tipo', 'categoria', 'estado','credito_favor', 'creado_por','detalle_identificacion','retiene_impuesto','lista_precio_venta_id','lista_precio_alquiler_id','termino_pago'];
     protected $guarded = ['id'];
     protected $appends = ['saldo_pendiente','icono','enlace'];
+    protected $casts = [
+        "detalle_identificacion" => "array",
+        "credito_favor" => "real"
+    ];
 
     public function __construct(array $attributes = array()) {
         $this->setRawAttributes(array_merge($this->attributes, array(
@@ -50,8 +54,20 @@ class Cliente extends Model {
     }
 
     //mutators
+
+    //se le puede cambiar el estado a inactivo return bolean
+    public function getInactivableAttribute()
+    {
+        return $this->credito_favor == 0 && $this->saldo_pendiente == 0 && count($this->estadoFacturaValidate) == 0;
+    }
+
     function setCodigoAttribute($value) {
       return $this->attributes['codigo'] = GenerarCodigo::setCodigo('CUS', $value);
+    }
+
+    public function setCreditoLimiteAttribute($value)
+    {
+        return $this->attributes['credito_limite'] = str_replace(",", "", $value);
     }
 
     public function getCreatedAtAttribute($date) {
@@ -78,15 +94,19 @@ class Cliente extends Model {
 
     }
 
-    public function getCreditoFavorAttribute() {
-
+  /*  public function getCreditoFavorAttribute() {
+      dd($this->attributes['codigo']);
         //$abonos = $this->total_credito_cliente()->sum('monto_abonado');
         //nota en las trasaciones de notas y devuliciones
         //debe se sumar al credito del cliente y quitar la sumatoria de aqui
-        $notas_credito = $this->nota_credito()->where('venta_nota_creditos.estado','aprobado')->sum('total');
+       $notas_credito = $this->nota_credito()->where('venta_nota_creditos.estado','aprobado')->sum('total');
+
         $devoluciones = $this->devoluciones()->where('dev_devoluciones.estado','aprobada')->sum('total');
-        return (float)  $notas_credito + $devoluciones + $this->attributes['credito_favor'];
-    }
+        dd($this);
+       return (float)  $notas_credito + $devoluciones + $this->attributes['credito_favor'];
+       //return 2;
+
+    }*/
 
     /*public function getCreditoAttribute() {
 
@@ -133,7 +153,7 @@ class Cliente extends Model {
      */
 
     public function centro_facturable() {
-        return $this->hasMany(CentroFacturable::class,'cliente_id');
+        return $this->hasMany(CentroFacturable::class,'cliente_id')->where('cli_centros_facturacion.eliminado','0');
     }
 
     public function clientes_asignados() {
@@ -156,6 +176,10 @@ class Cliente extends Model {
     public function anticipos()
     {
         return $this->morphMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'anticipable')->where('estado','aprobado');
+    }
+
+    public function anticipo_cliente(){
+        return $this->morphMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'anticipable')->where('estado','aprobado')->has('orden_venta','<',1)->has('contrato','<',1);
     }
 
     //cambiar a relacion morph

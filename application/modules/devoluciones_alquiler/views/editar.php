@@ -119,9 +119,9 @@
 								</div>
 								<div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
 									<label>Vendedor <span class="required">*</span></label>
-									<select :disabled="disabledEditar" data-rule-required="true" name="campo[vendedor_id]" v-chosen="vendedor_id"    id="vendedor_id"   v-model="devolucion_alquiler.vendedor_id" >
+									<select :disabled="true" data-rule-required="true" name="campo[vendedor_id]"    class="form-control"   id="vendedor_id"   v-model="devolucion_alquiler.vendedor_id" >
  										<template v-for="option in vendedoresOptions" track-by="$index" >
-		                                 	<option v-bind:value="option.id">{{{option.nombre}}}</option>
+		                                 	<option v-bind:value="option.id">{{{option.nombre}}} {{{option.apellido}}}</option>
 		                            	</template>
 									</select>
 								</div>
@@ -163,7 +163,7 @@
 								</div>
 								<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
 									<!-- <button class="btn btn-primary btn-block" id="guardarBtn" :disabled="guardarBtnDisabled" type="button" @click="guardar">{{{guardarBtn}}}</button> -->
-									 <input  type="submit" id="guardarBtn" class="btn btn-primary btn-block" value="Guardar"  />
+                  <button class="btn btn-primary btn-block" id="guardarBtn" type="button" @click="guardar">{{{guardarBtn}}}</button>
 
 
  								</div>

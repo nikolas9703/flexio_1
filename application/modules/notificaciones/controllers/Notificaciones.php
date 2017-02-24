@@ -94,6 +94,7 @@ class Notificaciones extends CRM_Controller
     {
         if($this->input->is_ajax_request())
         {
+            $empresa_id = $this->input->post('empresa_id');
             /**
              * Get the requested page.
              * @var int
@@ -125,7 +126,7 @@ class Notificaciones extends CRM_Controller
              * Total rows found in the query.
              * @var int
              */
-            $count          = $this->NotificacionesRepository->listar(null,null,null,null)->count();
+            $count = $this->NotificacionesRepository->listar($empresa_id,null,null,null,null)->count();
 
             /**
              * Calcule total pages if $coutn is higher than zero.
@@ -148,11 +149,11 @@ class Notificaciones extends CRM_Controller
             // typical case is that the user type 0 for the requested page
             if($start < 0) $start = 0;
 
-            $registros = $this->NotificacionesRepository->listar($sidx, $sord, $limit, $start);
-            /*$registros = $registros->orderBy($sidx, $sord)
+            $registros = $this->NotificacionesRepository->listar($empresa_id,$sidx, $sord, $limit, $start);
+            $registros = $registros->orderBy($sidx, $sord)
                 ->skip($start)
                 ->take($limit)
-                ->get();*/
+                ->get();
 
             //Constructing a JSON
             $response   = new stdClass();

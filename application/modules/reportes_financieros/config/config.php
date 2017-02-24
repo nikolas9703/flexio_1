@@ -8,10 +8,10 @@ $config['modulo_config'] = array(
     'version'       => '1.0',
     'tipo'          => 'addon', // core, addon
     'grupo'         => 'Reportes Financieros',
-     'agrupador'		=> array(
-        'Contabilidad' => array(
-            "grupo_orden" => 4
-        ),
+	'agrupador'		=> array(
+		'Contabilidad' => array(
+			"grupo_orden" => 4
+		),
     ),
     'prefijo'       => 'rep',
     'menu' => array(

@@ -198,7 +198,7 @@ class Roles_model extends CI_Model
     function guardar_permisos()
 	{
 		$this->role_id = $this->input->post('role_id', true);
-
+                
 		if(empty($this->role_id)){
 			log_message("error", "MODULO: Roles --> El rol_id se envio sin valor.");
 			return false;
@@ -212,6 +212,7 @@ class Roles_model extends CI_Model
 
 		if (! empty( $_POST['modulo'] ))
 		{
+                    
                     foreach( $_POST['modulo'] AS $modulo_id => $module )
                     {
                         foreach ($module['recurso'] AS $recurso_id => $permisos )

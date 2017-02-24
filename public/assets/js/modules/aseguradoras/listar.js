@@ -1,5 +1,5 @@
 var listarAseguradoras = (function() {
-
+$("#mensaje").hide();
 "use strict";
 //Init Bootstrap Calendar Plugin
 $('#fecha_creacion').daterangepicker({
@@ -9,13 +9,11 @@ $('#fecha_creacion').daterangepicker({
  singleDatePicker: true
 }).val('');
 var opcionesModal = $('#opcionesModal');
-var formularioSolicitudesModal = $('#AseguradorasForm');
+var formularioAseguradorasModal = $('#AseguradorasForm');
 var botones = {
     modalOpcionesCrear: ".modalOpcionesCrear",
     boton_accion : "#botonAccionar"
 };
-        
-//var botones_crear = $('body').text();
         
 var eventos = function(){
    //Boton de Opciones
@@ -37,7 +35,7 @@ var eventos = function(){
 		opcionesModal.modal('show');    
     });
     
-    //Formulario de Solicitudes
+    //Formulario de Aseguradoras
     $(opcionesModal).on("click", botones.boton_accion, function(e){       
         e.preventDefault();
         e.returnValue=false;
@@ -46,14 +44,14 @@ var eventos = function(){
         //Cerrar modal de opciones
         opcionesModal.modal('hide');
 
-        var solicitud_id = $(this).attr("data-formulario");     
+        var aseguradora_id = $(this).attr("data-formulario");     
         //Inicializar opciones del Modal
-        formularioSolicitudesModal.modal({
+        formularioAseguradorasModal.modal({
         backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
         show: false
         });
-        formularioSolicitudesModal.find('#solicitudes_id').val(solicitud_id);
-        formularioSolicitudesModal.submit();
+        formularioAseguradorasModal.find('#solicitudes_id').val(aseguradora_id);
+        formularioAseguradorasModal.submit();
     });
     
     }

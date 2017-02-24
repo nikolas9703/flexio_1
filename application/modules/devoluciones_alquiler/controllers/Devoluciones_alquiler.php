@@ -77,8 +77,12 @@ class Devoluciones_alquiler extends CRM_Controller
     }
 
     public function ocultotabla($key_valor = NULL) {
-        if($key_valor and count(explode("=", $key_valor)) > 1)
-        {
+
+        if(is_array($key_valor)){
+            $this->assets->agregar_var_js([
+                "campo" => collect($key_valor)
+            ]);
+        }elseif($key_valor and count(explode("=", $key_valor)) > 1){
             $aux = explode("=", $key_valor);
             $this->assets->agregar_var_js([$aux[0]=>$aux[1]]);
         }
@@ -140,7 +144,7 @@ function crear() {
      $acceso = 1;
     $mensaje = array();
 
-    if(!$this->auth->has_permission('acceso')){
+    if(!$this->auth->has_permission('acceso', 'devoluciones_alquiler/crear')){
       // No, tiene permiso, redireccionarlo.
       $acceso = 0;
       $mensaje = array('estado'=>500, 'mensaje'=>' <b>Usted no cuenta con permiso para esta solicitud</b>','clase'=>'alert-danger');
@@ -187,7 +191,7 @@ function crear() {
       $acceso = 1;
       $mensaje = $entregas = array();
 
-      if(!$this->auth->has_permission('acceso')){
+      if(!$this->auth->has_permission('acceso', 'devoluciones_alquiler/editar/(:any)')){
           // No, tiene permiso, redireccionarlo.
           $acceso = 0;
           $mensaje = array('estado'=>500, 'mensaje'=>' <b>Usted no cuenta con permiso para esta solicitud</b>','clase'=>'alert-danger');
@@ -247,14 +251,15 @@ function crear() {
       $this->template->visualizar();
   }
   function guardar() {
-      $request = Illuminate\Http\Request::createFromGlobals();
-      $post = $this->input->post();
 
+      //$request = Illuminate\Http\Request::createFromGlobals();
+      $post = $this->input->post();
+      //dd($post['campo']['id']);
        if (!empty($post)) {
             Capsule::beginTransaction();
           try {
-              $campo = $request->input('campo');
-              if(empty($campo['id'])) //Nuevo
+              //$campo = $request->input('campo');
+              if(empty($post['campo']['id'])) //Nuevo
               {
                   $post['campo']['codigo']        = $this->_generar_codigo();
                   $post['campo']['empresa_id']    = $this->empresa_id;
@@ -273,13 +278,14 @@ function crear() {
               redirect(base_url('devoluciones_alquiler/listar'));
               //echo $e->getMessage();
           }
+
           Capsule::commit();
 
-          if (!is_null($retorno)) {
+          //if (!is_null($retorno)) {
               $mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente ' . $retorno->codigo);
-          } else {
+          /*} else {
               $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error! Su solicitud no fue procesada</b> ');
-          }
+          }*/
           $this->session->set_flashdata('mensaje', $mensaje);
           redirect(base_url('devoluciones_alquiler/listar'));
       }
@@ -310,34 +316,7 @@ function crear() {
 
 
 
-          //---------------------
-          // Catalogo Vendedores
-          //---------------------
-          $roles_users = Rol_orm::where(function ($query) use ($clause) {
-                  $query->where('empresa_id', '=', $clause['empresa_id']);
-                  $query->where('nombre', 'like', '%vendedor%');
-          })->orWhere(function ($query) use ($clause) {
-                 $query->where('empresa_id', '=', $clause['empresa_id']);
-                 $query->where('nombre', 'like', '%venta%');
-          })->with(array('usuarios'))->get();
 
-
-
-              $recibidos = Usuario_orm::where("id","=",$this->id_usuario)->get(array("id","nombre","apellido"));
-
-              $usuarios = array();
-              $vendedores = array();
-              foreach ($roles_users as $roles) {
-                  $usuarios = $roles->usuarios;
-                  foreach ($usuarios as $user) {
-                      if ($user->pivot->empresa_id == $clause['empresa_id']) {
-                          array_push($vendedores, array(
-                              "id" => $user->id,
-                              "nombre" => Util::verificar_valor($user->nombre) ." ". Util::verificar_valor($user->apellido)
-                          ));
-                      }
-                  }
-              }
 
               $estados = DevolucionesAlquilerCatalogos::where("tipo","=","estado")->get(array("id","nombre"));
 
@@ -382,20 +361,20 @@ function crear() {
             		       });
             		   }
 
+                       $recibidos = Usuario_orm::where("id","=",$this->id_usuario)->get(array("id","nombre","apellido"));
 
-                             $this->assets->agregar_var_js(array(
-                              "clientesArray" => json_encode($clientes),
-                              "usuario_id" =>  $this->id_usuario,
-                              "recibidosArray" => json_encode($recibidos),
-                              "vendedoresArray" => collect($vendedores),
-                              //"vendedoresArray" => $this->UsuariosRepository->get(array('empresa_id' => $this->empresa_id)),
-                              "estadosArray" => json_encode($estados),
-                              "entregasArray" => json_encode($entregas),
-                              "categoriasArray" => collect($categorias),
-                              "bodegasArray" => json_encode($bodegas),
-                              "empezables" => json_encode($empezables),
-                              "acceso" => 1
-                          ));
+                       $this->assets->agregar_var_js(array(
+                           "clientesArray" => collect($clientes),
+                           "usuario_id" =>  $this->id_usuario,
+                           "recibidosArray" => $recibidos,
+                           "vendedoresArray" => $this->UsuariosRepository->get(array_merge($clause, ['vendedor' => true])),
+                            "estadosArray" => json_encode($estados),
+                            "entregasArray" => json_encode($entregas),
+                            "categoriasArray" => collect($categorias),
+                            "bodegasArray" => json_encode($bodegas),
+                            "empezables" => $empezables,
+                            "acceso" => 1
+                        ));
   }
 
     public function listar() {
@@ -461,21 +440,40 @@ function crear() {
     }
 
     public function ajax_seleccionar_items_entrega() {
-
-       $entregas_alquiler = EntregasAlquiler::where("empresa_id","=", $this->empresa_id)->where("estado_id","=", 4)->get();
+        $scope = $this;
+       $entregas_alquiler = EntregasAlquiler::where("empresa_id","=", $this->empresa_id)->where("estado_id","=", 4)->with(array('items_entregados2', 'devoluciones'))->get();
        $entregas_alquiler = $entregas_alquiler->each(function ($item, $key) {
            $item->load('cliente');
            $item->cliente_nombre = $item->cliente->nombre;
            return $item;
        });
+       $entregas_alquiler = $entregas_alquiler->each(function ($item, $key) use ($scope){
+         $entrega = $scope->EntregasAlquilerRepository->findBy(['uuid_entrega_alquiler'=> $item->uuid_entrega_alquiler]);
+         $item->devoluciones = collect($entrega->items->toArray());
+        return $item;
+       });
+
+         $entregas_alquiler = $entregas_alquiler->reject(function ($item, $key) {
+
+           $devuelto = collect($item->devoluciones)->last();
+           //dd( $devuelto );
+           return (int)$devuelto["devuelto"] == (int)$devuelto["entregado"];
+         });
+
+
         $items =$entregas_alquiler->toArray();
         $response = new stdClass();
         $response->items = $items;
+
+
+        //dd($response);
+
         echo json_encode($response);
         exit;
     }
 
     public function ajax_seleccionar_items_contrato() {
+        $scope = $this;
        $contrato_alquiler = ContratosAlquiler::where("empresa_id","=", $this->empresa_id)->where("estado_id","=", 2)->get();
        $contrato_alquiler->load('contratos_items','entregas','cliente');
 
@@ -484,6 +482,10 @@ function crear() {
                 $validas->cliente_nombre = $validas->cliente->nombre;
                 return $validas;
            }
+       });
+       $contrato_alquiler = $contrato_alquiler->reject(function ($item, $key) use ($scope){
+         $devuelto = collect($item->contratos_items)->last();
+         return (int)$devuelto["devuelto"] == (int)$devuelto["entregado"];
        });
 
        $items =$contrato_alquiler->toArray();

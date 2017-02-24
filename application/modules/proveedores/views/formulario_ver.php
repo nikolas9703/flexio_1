@@ -157,7 +157,7 @@ $formAttr = array(
                     </div>
                     <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                         <label>Estado <span required="" aria-required="true">*</span></label>
-                        <select name="campo[estado]" class="chosen" id="estado" data-rule-required="true" aria-required="true" :disabled="acceso == ''">
+                        <select name="campo[estado]" class="chosen" id="estado" data-rule-required="true" aria-required="true" :disabled="acceso == '' || cambio_estado == 0">
                             <option value="">Seleccione</option>
                             <?php foreach ($info['estados'] as $estados) { ?>
                                 <option <?php if(isset($info['estadoSelect'])){if ($info['estadoSelect'] == $estados->valor) echo "selected='selected'";}?>value="<?php echo $estados->valor?>"><?php echo $estados->etiqueta;?></option>
@@ -178,7 +178,7 @@ $formAttr = array(
                     <div class="row">
                         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
                             <label>Método preferido de pago </label>
-                            <select name="campo[forma_pago][]" class="chosen" id="forma_pago" data-placeholder="Seleccione" multiple="multiple" style="display: none;">
+                            <select name="campo[forma_pago][]" class="chosen" id="forma_pago" data-placeholder="Seleccione"   style="display: none;">
                                 <option value="">Seleccione</option>
                                 <?php foreach ($info['formaPago'] as $formaPago) { ?>
                                     <option value="<?php echo $formaPago->id?>" <?php echo ((isset($info['pagosSelect'])) && in_array($formaPago->id, $info['pagosSelect'])) ? ' selected ' : ''?>><?php echo $formaPago->valor;?></option>

@@ -38,7 +38,7 @@
                         </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                            <select class="form-control" name="campo[empezar_desde_type]" required="" data-rule-required="true" v-model="oportunidad.empezar_desde_type" @change="cambiarTipo(oportunidad.empezar_desde_type)" :disabled="disabledEditar">
+                            <select class="form-control" name="campo[empezar_desde_type]" required="" data-rule-required="true" v-select2="oportunidad.empezar_desde_type" :disabled="disabledEditar">
                                 <option value="">Seleccione</option>
                                 <option value="cliente">Cliente</option>
                                 <!--<option value="cliente_potencial">Cliente potencial</option>-->
@@ -46,7 +46,7 @@
                         </div>
 
                         <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                            <select  class="form-control" name="campo[empezar_desde_id]" v-model="oportunidad.empezar_desde_id" @change="cambiarTipoId(oportunidad.empezar_desde_id)" :disabled="oportunidad.empezar_desde_type == '' || disabledHeader || disabledEditar">
+                            <select  class="form-control" name="campo[empezar_desde_id]" v-select2="oportunidad.empezar_desde_id" :disabled="oportunidad.empezar_desde_type == '' || disabledHeader || disabledEditar">
                                 <option value="">Seleccione</option>
                                 <option value="{{cliente.id}}" v-for="cliente in clientes | orderBy 'nombre'" v-if="oportunidad.empezar_desde_type=='cliente'">{{cliente.nombre}}</option>
                                 <!--<option value="{{cliente_potencial.id_cliente_potencial}}" v-for="cliente_potencial in clientes_potenciales | orderBy 'nombre'" v-if="oportunidad.empezar_desde_type=='cliente_potencial'">{{cliente_potencial.nombre}}</option>-->

@@ -14,9 +14,10 @@ use Flexio\Modulo\Contabilidad\Repository\ListarCuentas;
 use Flexio\Modulo\Contabilidad\Models\Cuentas as Cuenta;
 use Flexio\Modulo\CentrosContables\Models\CentrosContables as CentrosContables;
 //use Carbon\Carbon;
-
+@include_once ('HistorialCuenta.php'); //similacion de trait porque CI no permite hacerlo de otra manera
 class Contabilidad extends CRM_Controller
 {
+    use HistorialCuenta;
     protected $empresa_id;
     protected $listar_cuentas;
     protected $impuestoFormRequest;
@@ -39,7 +40,6 @@ class Contabilidad extends CRM_Controller
 
         $uuid_empresa       = $this->session->userdata('uuid_empresa');
         $this->empresa_id   = Empresa_orm::findByUuid($uuid_empresa)->id;
-        //dd("ddd");
     }
 
 
@@ -111,7 +111,7 @@ class Contabilidad extends CRM_Controller
         //dd($count);
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
 
-        $clause= array('empresa_id' => $empresa->id);
+        $clause = array('empresa_id' => $empresa->id, 'padre_id' => $this->input->post('nodeid'));
         if(!empty($tipo)) $clause['tipo_cuenta_id'] = $tipo;
         if(!empty($nombre)){
       		$clause["nombre"] = array('LIKE', "%$nombre%");
@@ -153,7 +153,7 @@ class Contabilidad extends CRM_Controller
                     'parent' => $row["padre_id"]==0? "NULL": (string)$row["padre_id"], //parent
                     'isLeaf' =>(Cuentas_orm::is_parent($row['id']) == true)? false: true, //isLeaf
                     'expanded' =>  false, //expended
-                    'loaded' => true, //loaded
+                    'loaded' => false, //loaded
                 ));
                 $i++;
             }
@@ -627,10 +627,7 @@ class Contabilidad extends CRM_Controller
         $cuentas = Cuentas_orm::whereNotIn('id', $ids_pasivo->toArray())->where(function($query) use($condicion){
             $query->where($condicion);
         })->get(array('id','nombre','codigo'));
-        //$a = $cuentas->where($condicion);
-        //dd($cuentas->toArray());
-        //$a = Impuestos_orm::find(15);
-        //dd($a->cuenta);
+
         $data['pasivos'] = $cuentas->toArray();
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-calculator"></i> Contabilidad: Configuraci&oacute;n',
@@ -779,250 +776,90 @@ class Contabilidad extends CRM_Controller
     }
 
 
-    //Visualización del historial de cuenta
-    public function historial_transacciones($uuid_cuenta) {
-        $this->load->model('pagos/Pagos_orm');
-        $this->load->model('facturas_compras/Facturas_compras_orm');
-        $data=array();
-        $this->assets->agregar_css(array(
-            'public/assets/css/default/ui/base/jquery-ui.css',
-            'public/assets/css/default/ui/base/jquery-ui.theme.css',
-            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
-            'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
-            'public/assets/css/plugins/jquery/jstree/default/style.min.css',
-            'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
-            'public/assets/css/modules/stylesheets/contabilidad.css',
+    function exportar_historial() {
 
-        ));
-        $this->assets->agregar_js(array(
-            'public/assets/js/default/jquery-ui.min.js',
-            'public/assets/js/default/lodash.min.js',
-            'public/assets/js/moment-with-locales-290.js',
-            'public/assets/js/plugins/bootstrap/daterangepicker.js',
-            'public/assets/js/plugins/jquery/jquery.sticky.js',
-            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
-            'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
-            'public/assets/js/plugins/jquery/jquery.progresstimer.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
-            'public/assets/js/plugins/jquery/jstree.min.js',
-            'public/assets/js/modules/contabilidad/routes.js',
-            'public/assets/js/modules/contabilidad/listar.js',
-            'public/assets/js/modules/contabilidad/crear_cuenta.js',
-        ));
+        if(!empty($_POST)){
+            $uuid =  $this->input->post('historial_exportar');
 
-        $this->assets->agregar_var_js(array(
-            "uuid_cuenta"     => isset($uuid_cuenta) ? $uuid_cuenta : "0",
-        ));
+            $presupuestoObj = new Buscar(new Presupuesto_orm,'uuid_presupuesto');
+            $presupuestos = $presupuestoObj->findByUuid($uuid);
 
-        $cuenta = Cuentas_orm::findByUuid($uuid_cuenta);
+            $datos_presupuesto = $presupuestos->toArray();
 
-        //Breadcrum Array
+            $inicio = $datos_presupuesto['inicio']; //mes de inicio
+            $perido =  $datos_presupuesto['cantidad_meses']; //cantidad de meses
+            list($mes1, $year) = explode("-",$inicio);
 
-        $empresa = Empresa_orm::findByUuid($this->session->userdata('uuid_empresa'));
-        $breadcrumb = array(
-            "titulo" => '<i class="fa fa-calculator"></i> Plan contable: Historial de cuenta / '.$cuenta->codigo." ".$cuenta->nombre,
-            "filtro" => false,
-            "menu" => array(
-                "url"	 => 'javascript:',
-            )
-        );
+            $listados = $presupuestos->lista_presupuesto()->get();
+            $datos_excel= array();
+            $i=0;
+            foreach($listados as $lista){
+                $datos_excel[$i]['codigo'] = $lista->cuentas->codigo;
+                $datos_excel[$i]['cuenta'] = utf8_decode($lista->cuentas->nombre);
 
-        $breadcrumb["menu"]["opciones"]["#exportarTablaHistorial"] = "Exportar";
-
-
-        $this->template->agregar_titulo_header('Plan Contable');
-        $this->template->agregar_breadcrumb($breadcrumb);
-        $this->template->agregar_contenido($data);
-        $this->template->visualizar($breadcrumb);
-    }
-
-
-    //Vista parcial de tabla de historial
-    public function ocultotablahistorial() {
-        $this->assets->agregar_js(array(
-            'public/assets/js/modules/contabilidad/tabla_historial.js'
-        ));
-
-        $this->load->view('historial');
-    }
-
-    public function ajax_historial($uuid_cuenta) {
-        //Just Allow ajax request
-        $this->load->model('pagos/Pagos_orm');
-        $this->load->model('facturas_compras/Facturas_compras_orm');
-        $this->load->model('movimiento_monetario/Movimiento_retiros_orm');
-        if(!$this->input->is_ajax_request()){
-            return false;
-        }
-
-        $tipo   = $this->input->post('tipo');
-        $nombre = (string)$this->input->post('nombre');
-        $fecha1 = (string)$this->input->post('fecha1');
-        $fecha2 = (string)$this->input->post('fecha2');
-
-        $cuentas = Cuentas_orm::listar(["empresa_id"=>$this->empresa_id,"uuid_cuenta"=>$uuid_cuenta]);
-
-        $cuentas_ids = array_map(function($cuenta){
-            return $cuenta['id'];
-        }, $cuentas);
-
-        $clause= array(
-            'empresa_id'    => $this->empresa_id,
-            'cuentas_ids'   => $cuentas_ids
-        );
-
-        if($fecha1!=""||$fecha2!=""||$nombre!=""){
-
-            array_push($clause,array("fecha1"=>$fecha1,"fecha2"=>$fecha2,"nombre"=>$nombre));
-
-        }
-
-        if(!empty($tipo)) $clause['tipo_cuenta_id'] = $tipo;
-
-        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-
-        //fix count
-
-        $count  = count(Transaccion_orm::listar($clause));
-
-        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-
-        $transacciones = Transaccion_orm::listar($clause ,$sidx, $sord, $limit, $start);
-
-
-        //Constructing a JSON
-        $response = new stdClass();
-        $response->page     = $page;
-        $response->total    = $total_pages;
-        $response->records  = $count;
-
-
-        //dd($response);
-        if(!empty($transacciones)){
-            foreach ($transacciones as  $i => $row){
-                if(count($row)>0 ){
-
-                    $date=date_create($row['created_at']);
-
-                    $hidden_options = "";
-                    $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row['id'] .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-
-
-                    /* CODIGO PARA PRUEBAS
-                    *   $row['linkable_type']  == 'Flexio\Modulo\NotaDebito\Models\NotaDebito'
-                    || $row['linkable_type']  == 'Movimiento_retiros_orm'
-                    || $row['linkable_type']  == 'Flexio\Modulo\Cobros\Models\Cobro'
-                    || $row['linkable_type']  == 'Flexio\Modulo\Ajustes\Models\Ajustes'
-                    || $row['linkable_type']  == 'Flexio\Modulo\FacturasVentas\Models\FacturaVenta'
-                    || $row['linkable_type']  == 'Clientes_abonos_orm'
-                    || $row['linkable_type']  == 'Facturas_compras_orm'
-                    || $row['linkable_type']  == 'Pagos_orm'
-                    || $row['linkable_type']  == 'Flexio\Modulo\FacturasCompras\Models\FacturaCompra'
-                    || $row['linkable_type']  == 'Movimiento_monetario_orm'
-                    || $row['linkable_type']  == 'Flexio\Modulo\Cajas\Models\Transferencias'
-                    || $row['linkable_type']  == 'Flexio\Modulo\Salidas\Models\Salidas'*/
-                    /*if(
-
-                    $row['linkable_type']  == 'Abonos_orm'
-                    )
-                    {
-                    $url_no_transaccion =  "En estudio";
-                }else{
-                $url_no_transaccion = (!empty($row['linkable_type']))?( new $row['linkable_type'] )->find($row['linkable_id'])->numero_documento_enlace:'Transaccion mal hechao sin terminar:'.$row['linkable_type'];
-
-            }
-            fin CODIGO PARA PRUEBAS
-            */
-            if($row['transaccionable_type'] == "Flexio\\Modulo\\EntradaManuales\\Models\\EntradaManual"){
-                $aux = (!empty($row['transaccionable_id']) ) ? ( new $row['transaccionable_type'] )->find($row['transaccionable_id']) : [];
-            }else{
-                $aux = (!empty($row['linkable_type']) && !empty($row['linkable_id'])) ? ( new $row['linkable_type'] )->find($row['linkable_id']) : [];
+                $meses = json_decode($lista->info_presupuesto);
+                foreach($meses->meses as $k=> $mes){
+                    $datos_excel[$i] = array_merge($datos_excel[$i], array($k=>floatval($mes)));
+                }
+                $datos_excel[$i] = array_merge($datos_excel[$i],array('totales'=> $lista->montos));
+                $i++;
             }
 
-            $url_no_transaccion = count($aux) ? $aux->numero_documento_enlace : 'Transaccion mal hecha o sin terminar:'.$row['linkable_type'];
-            $url_no_transaccion = ($row['linkable_type'] == "Flexio\\Modulo\\Entradas\\Models\\Entradas")? $aux->numero_entrada_enlace : $url_no_transaccion;
-            $url_modal = str_replace('link','btn btn-block btn-outline btn-success',$url_no_transaccion);
-            $hidden_options .= $url_modal;
-//            echo "<pre>";
-//            echo $url_no_transaccion;
-//            echo "<pre>";
+            //columnas dinamicas de los meses del año
+            $colNames = array('Codigo','Cuentas');
+            for($j=0;$j<=($perido - 1);$j++){
+                $fecha_nueva =  Carbon::createFromDate($year, $mes1, 1, 'America/Panama');
 
-            $response->rows[$i] = array("id" => $row['id'], 'cell' => array(
-                'id'                => $row['id'],
-                'no_transaccion'    =>$url_no_transaccion, //$url_no_transaccion, //$url_no_transaccion,  //$no_transaccion."=>".$row['linkable_id']."=>".$row['linkable_type'],
-                'fecha'             => date_format($date,"d-m-Y"),
-                'nombre'            => $row['nombre'],  //number_format($number, $decimals, $no_transaccion, $link_option)
-                'debito'            => number_format(abs($row['debito']),2),
-                'credito'           => number_format(abs($row['credito']),2),
-                'opciones'          => $link_option,
-                'link'              => $hidden_options,
-            ));
-
-        }
-    }
-}
-
-echo json_encode($response);
-exit;
-}
-
-
-function exportar_historial() {
-
-    if(!empty($_POST)){
-        $uuid =  $this->input->post('historial_exportar');
-
-        $presupuestoObj = new Buscar(new Presupuesto_orm,'uuid_presupuesto');
-        $presupuestos = $presupuestoObj->findByUuid($uuid);
-
-        $datos_presupuesto = $presupuestos->toArray();
-
-        $inicio = $datos_presupuesto['inicio']; //mes de inicio
-        $perido =  $datos_presupuesto['cantidad_meses']; //cantidad de meses
-        list($mes1, $year) = explode("-",$inicio);
-
-        $listados = $presupuestos->lista_presupuesto()->get();
-        $datos_excel= array();
-        $i=0;
-        foreach($listados as $lista){
-            $datos_excel[$i]['codigo'] = $lista->cuentas->codigo;
-            $datos_excel[$i]['cuenta'] = utf8_decode($lista->cuentas->nombre);
-
-            $meses = json_decode($lista->info_presupuesto);
-            foreach($meses->meses as $k=> $mes){
-                $datos_excel[$i] = array_merge($datos_excel[$i], array($k=>floatval($mes)));
+                $fechaObj = $fecha_nueva->addMonths($j);
+                $nombre_columna = str_replace(".","",$fechaObj->formatLocalized('%b-%y'));
+                array_push($colNames, ucfirst($nombre_columna));
             }
-            $datos_excel[$i] = array_merge($datos_excel[$i],array('totales'=> $lista->montos));
-            $i++;
+
+            array_push($colNames,'Totales');
+            //header("Content-Type: binary/octet-stream");
+            //we create the CSV into memory
+            $csv = Writer::createFromFileObject(new SplTempFileObject());
+
+            $csv->insertOne($colNames);
+            $csv->insertAll($datos_excel);
+
+            $csv->output('centro_presupuesto.csv');
+            die;
+        }else{
+            die;
         }
-
-        //columnas dinamicas de los meses del año
-        $colNames = array('Codigo','Cuentas');
-        for($j=0;$j<=($perido - 1);$j++){
-            $fecha_nueva =  Carbon::createFromDate($year, $mes1, 1, 'America/Panama');
-
-            $fechaObj = $fecha_nueva->addMonths($j);
-            $nombre_columna = str_replace(".","",$fechaObj->formatLocalized('%b-%y'));
-            array_push($colNames, ucfirst($nombre_columna));
-        }
-
-        array_push($colNames,'Totales');
-        //header("Content-Type: binary/octet-stream");
-        //we create the CSV into memory
-        $csv = Writer::createFromFileObject(new SplTempFileObject());
-
-        $csv->insertOne($colNames);
-        $csv->insertAll($datos_excel);
-
-        $csv->output('centro_presupuesto.csv');
-        die;
-    }else{
-        die;
     }
+
+function _js(){
+    $this->assets->agregar_js(array(
+        'public/assets/js/moment-with-locales-290.js',
+        'public/assets/js/plugins/bootstrap/daterangepicker.js',
+        'public/assets/js/plugins/jquery/jquery.sticky.js',
+        'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+        'public/assets/js/plugins/jquery/jquery.progresstimer.min.js',
+        'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
+        'public/assets/js/plugins/jquery/jstree.min.js',
+        'public/assets/js/modules/contabilidad/routes.js',
+        'public/assets/js/modules/contabilidad/listar.js',
+        'public/assets/js/modules/contabilidad/crear_cuenta.js',
+        'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+        'public/assets/js/plugins/bootstrap/select2/es.js',
+        'public/assets/js/plugins/jquery/chosen.jquery.min.js'
+    ));
 }
-
-
+function _Css(){
+    $this->assets->agregar_css(array(
+        'public/assets/css/default/ui/base/jquery-ui.css',
+        'public/assets/css/default/ui/base/jquery-ui.theme.css',
+        'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
+        'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
+        'public/assets/css/plugins/jquery/jstree/default/style.min.css',
+        'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
+        'public/assets/css/modules/stylesheets/contabilidad.css',
+        'public/assets/css/plugins/bootstrap/select2.min.css',
+        'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+        'public/assets/css/plugins/jquery/chosen/chosen.min.css'
+    ));
+}
 
 }

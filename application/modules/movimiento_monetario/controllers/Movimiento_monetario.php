@@ -20,6 +20,7 @@ class Movimiento_monetario extends CRM_Controller
 
     protected $MovimientosMonetariosRecibo;
     protected $MovimientosMonetariosRetiro;
+    protected $pagoGuardar;
 
 	function __construct(){
     parent::__construct();
@@ -39,7 +40,10 @@ class Movimiento_monetario extends CRM_Controller
     $this->load->model('proveedores/Proveedores_orm');
     $this->load->model('facturas_compras/Facturas_compras_orm');
     $this->load->model('pagos/Pagos_orm');
-
+    $this->load->model('clientes/Catalogo_orm');
+      $this->load->model('pagos/Pago_metodos_pago_orm');
+    $this->load->library('Repository/Pagos/Guardar_pago');
+      $this->pagoGuardar = new Guardar_pago;
     //Obtener el id_empresa de session
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
@@ -105,7 +109,7 @@ public function listar_recibos()
     	);
 
         //Verificar permisos para crear
-    	if($this->auth->has_permission('acceso', 'movimiento_monetario/crear')){
+    	if($this->auth->has_permission('acceso', 'movimiento_monetario/crear_recibos')){
     		$breadcrumb["menu"] = array(
     			"url"	 => 'movimiento_monetario/crear_recibos',
     			"nombre" => "Crear"
@@ -169,9 +173,8 @@ public function listar_retiros()
     		"titulo" => '<i class="fa fa-calculator"></i> Retiros de dinero',
 
     	);
-
         //Verificar permisos para crear
-    	if($this->auth->has_permission('acceso', 'movimiento_monetario/crear')){
+    	if($this->auth->has_permission('acceso', 'movimiento_monetario/crear_retiros')){
     		$breadcrumb["menu"] = array(
     			"url"	 => 'movimiento_monetario/crear_retiros',
     			"nombre" => "Crear"
@@ -453,7 +456,7 @@ public function ajax_listar_retiros($grid=NULL)
 
                                 $link_option = '<center><button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row['id'] .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button></center>';
     				$hidden_options = "";
-    				$hidden_options .= '<a href="'. base_url('movimiento_monetario/ver_retiros/'. $uuid_retiros) .'" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success">Ver recibo de dinero</a>';
+    				$hidden_options .= '<a href="'. base_url('movimiento_monetario/ver_retiros/'. $uuid_retiros) .'" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success">Ver retiro de dinero</a>';
                                 $hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success anular">Anular</a>';
 
 
@@ -510,7 +513,6 @@ public function get_clientes($cliente)
 {
     $clause = array('empresa_id' => $this->empresa_id);
     $clientes = Cliente_orm::listar($clause)->toArray();
-
     return $clientes;
 }
 
@@ -908,21 +910,27 @@ function crear_retiros($retiros_uuid = NULL){
      		$j=0;
      		foreach ($_POST["transacciones"] AS $item){
      		//$fieldset = array();
-     		$fieldset["created_at"] = date('Y-m-d H:i:s');
-                $fieldset["id_retiro"]  = $retiros->id;
-     		$fieldset["nombre"]     = $item['nombre'];
-                $fieldset["cuenta_id"]  = $item['cuenta_id'];
-                $fieldset["centro_id"]  = $item['centro_id'];
-                $fieldset["debito"]  = $item['debito'];
+     		          $fieldset["created_at"] = date('Y-m-d H:i:s');
+                  $fieldset["id_retiro"]  = $retiros->id;
+     		          $fieldset["nombre"]     = $item['nombre'];
+                  $fieldset["cuenta_id"]  = $item['cuenta_id'];
+                  $fieldset["centro_id"]  = $item['centro_id'];
+                  $fieldset["debito"]  = $item['debito'];
 
-     		$items[] = new Items_retiros_orm($fieldset);
-     		$j++;
+               		$items[] = new Items_retiros_orm($fieldset);
+               		$j++;
      		}
 
      		$retiros->items()->saveMany($items);
 
                 //Transacciones
-                $this->MovimientosMonetariosRetiro->haceTransaccion($retiros);
+              //$this->MovimientosMonetariosRetiro->haceTransaccion($retiros); //Las Transacciones deben de contabilizarse en pagos
+            //  $this->_createPago( $retiros );
+            //$pago = new Pagos_contratos_orm;
+            $pago = $this->_createPago($retiros);
+
+            $this->_setPagables($pago, $retiros); //model sync();
+            $this->_setMetodosPagos($pago, $retiros);
 
     	} catch(ValidationException $e){
 
@@ -955,7 +963,7 @@ function crear_retiros($retiros_uuid = NULL){
 
         $data=array();
     $data['cliente_proveedor'] = Movimiento_cat_orm::lista();
-    $breadcrumb = array(
+     $breadcrumb = array(
       "titulo" => '<i class="fa fa-calculator"></i> Retiros de dinero: Crear',
 
     );
@@ -1074,6 +1082,8 @@ function crear_retiros($retiros_uuid = NULL){
       'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
       'public/assets/css/plugins/jquery/chosen/chosen.min.css',
       'public/assets/css/modules/stylesheets/entrada_manual_crear.css',
+      'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+      'public/assets/css/plugins/bootstrap/select2.min.css'
     ));
     $this->assets->agregar_js(array(
       'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
@@ -1088,6 +1098,8 @@ function crear_retiros($retiros_uuid = NULL){
       'public/assets/js/plugins/bootstrap/daterangepicker.js',
       'public/assets/js/modules/movimiento_monetario/tabla-dinamica.jquery.js',
       'public/assets/js/default/formulario.js',
+      'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+      'public/assets/js/plugins/bootstrap/select2/es.js',
       //'public/assets/js/modules/entrada_manual/routes.js'
     ));
 
@@ -1319,6 +1331,137 @@ public function ajax_eliminar_retiros()
 
     	die;
     }
+    private function _setPagables($pago, $retiro) {
 
+              $pago->retiros()->sync($this->_getPagosPagablesFromPost($retiro, "Flexio\\Modulo\\MovimientosMonetarios\\Models\\MovimientosRetiros"));
+
+      }
+
+
+      private function _getPagosPagablesFromPost($movimiento, $pagable_type) {
+          $aux = [];
+
+          foreach ($movimiento->items as $documento) {//factura o planilla
+              $aux[$movimiento->id] = [
+                  "pagable_type" => $pagable_type,
+                  "monto_pagado" => $documento["debito"],
+                  "empresa_id" => $this->empresa_id
+              ];
+          }
+
+          return $aux;
+      }
+
+    private function _setMetodosPagos($pago, $retiro) {
+      //echo "Proveedor: ";
+      $forma_pago = $retiro->proveedor->metodo_pagos->first()->catalogo_id;
+      $tipo_pago="";
+      $forma_pago = 3;
+      //Corregir este codigo esta quemado por apuro
+        if( $forma_pago == 3 ){
+          $tipo_pago = 'cheque';
+             $referencia = $this->pagoGuardar->tipo_pago(
+                'cheque', array(
+                      'nombre_banco_ach'=>$retiro->proveedor->id_banco,
+                      'cuenta_proveedor'=>$retiro->proveedor->numero_cuenta
+              ));
+       }else   if( $forma_pago == 5 ){
+           $tipo_pago = 'ach';
+              $referencia = $this->pagoGuardar->tipo_pago(
+                 'ach', array(
+                       'nombre_banco_ach'=>$retiro->proveedor->id_banco,
+                       'cuenta_proveedor'=>$retiro->proveedor->numero_cuenta
+               ));
+        }
+
+              $item_pago = new Pago_metodos_pago_orm;
+
+              $item_pago->tipo_pago = $tipo_pago; //Por apuro quemado
+              $item_pago->total_pagado =$retiro->items->sum('debito');
+              $item_pago->referencia = $referencia;
+
+              $pago->metodo_pago()->save($item_pago);
+        //  }
+      }
+
+    private function _createPago($movimiento_monetario_info) {
+
+        //$total = Pagos_contratos_orm::deEmpresa($this->empresa_id)->count();
+        $total = Pagos_orm::deEmpresa($movimiento_monetario_info->empresa_id)->count();
+        $year = Carbon::now()->format('y');
+        $codigo = Util::generar_codigo('PGO' . $year, $total + 1);
+
+        $pago = new Pagos_orm;
+        $pago->codigo = $codigo;
+        $pago->empresa_id = $this->empresa_id;
+        $pago->fecha_pago = date("Y-m-d"); //date("Y-m-d", strtotime($post["campo"]["fecha_pago"]));
+        $pago->proveedor_id = $movimiento_monetario_info->proveedor_id;
+        $pago->depositable_id = $movimiento_monetario_info->cuenta_id;
+        $pago->depositable_type = 'Flexio\Modulo\Contabilidad\Models\Cuentas';
+        $pago->empezable_id = $movimiento_monetario_info->id;
+        $pago->empezable_type = 'Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros';
+        $pago->monto_pagado = $movimiento_monetario_info->items->sum('debito');
+        $pago->cuenta_id = $movimiento_monetario_info->cuenta_id;
+        $pago->formulario = 'movimiento_monetario';
+        $pago->estado = 'por_aprobar';
+        $pago->save();
+
+        return $pago;
+    }
+
+
+  /*  private function _createPago( $movimiento_monetario_info ) {
+
+        $total = Pagos_orm::deEmpresa($movimiento_monetario_info->empresa_id)->count();
+        $year = Carbon::now()->format('y');
+        //$comisionInfo->load('colaboradores.colaborador','cuenta_info');
+
+        $post['campo']['cuenta_id'] = $movimiento_monetario_info->cuenta_id;
+
+        $contador = 1;
+         //if(count($comisionInfo->colaboradores)>0){
+         //foreach ($comisionInfo->colaboradores as $key => $value) {
+           //if($value->monto_neto > 0){
+             $aux = [];
+             $pago = new Pagos_orm;
+             $codigo = Util::generar_codigo('PGO' . $year, $total + $contador);
+             $total_pagado_nuevo = (float)str_replace(",","",$value->monto_neto);
+             $pago->codigo = $codigo;
+
+             $pago->empresa_id = $comisionInfo->empresa_id;
+             $pago->fecha_pago = date("Y-m-d");
+             $pago->proveedor_id = $value->colaborador_id;
+             $pago->monto_pagado = $total_pagado_nuevo;
+             $pago->cuenta_id = $comisionInfo->cuenta_info->id;
+             $pago->depositable_id = $comisionInfo->id;
+             $pago->depositable_type = 'Movimiento_retiros_orm';
+             $pago->formulario = 'movimiento_monetario';
+             $pago->estado = 'por_aplicar';
+
+             $pago->save();
+
+             $aux[$comisionInfo->id] = array(
+                 "pagable_type" =>'Flexio\\Modulo\\Comisiones\\Models\\Comisiones',
+                 "monto_pagado" =>  $total_pagado_nuevo,
+                 "empresa_id" => $comisionInfo->empresa_id
+             );
+              $pago->pagos_extraordinarios()->sync($aux);
+
+             $item_pago = new Pago_metodos_pago_orm;
+
+             $referencia = $this->pagoGuardar->tipo_pago('ach', array(
+               'nombre_banco_ach'=>$value->colaborador->banco_id,
+               'cuenta_proveedor'=>$value->colaborador->numero_cuenta
+             ));
+
+             $item_pago->tipo_pago = 'ach';
+             $item_pago->total_pagado = $value->monto_total;
+             $item_pago->referencia = $referencia;
+             $pago->metodo_pago()->save($item_pago);
+             ++$contador;
+           //}
+        //  }
+      //  }
+    }*/
 
 }

@@ -70,7 +70,7 @@
 					</div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="proveedor">Proveedor</label><br>
-                                            <select id="proveedor" class="form-control" data-placeholder=" ">
+                                            <select id="proveedor3" class="form-control" data-placeholder=" ">
                                                 <option value=""> </option>
                                                 <?php foreach($proveedores as $proveedor):?>
                                                 <option value="<?php echo $proveedor->uuid_proveedor?>"><?php echo $proveedor->nombre?></option>
@@ -91,7 +91,7 @@
                                             <select id="centro" class="form-control" data-placeholder=" ">
                                                 <option value=""> </option>
                                                 <?php foreach($centros as $centro):?>
-                                                <option value="<?php echo $centro->uuid_centro?>"><?php echo $centro->nombre?></option>
+                                                <option value="<?php echo $centro['id']?>"><?php echo $centro['nombre']?></option>
                                                 <?php endforeach;?>
                                             </select>
                                         </div>

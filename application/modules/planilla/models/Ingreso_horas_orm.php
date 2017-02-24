@@ -48,18 +48,15 @@ class Ingreso_horas_orm extends Model
 	public function horas_dias(){
  		return $this->hasMany('Ingreso_horas_dias_orm', 'ingreso_horas_id');
  	}
-  	//$salario_por_recargo = $suma_horas_x_recargo*($ingreso['recargo']['porcentaje_hora']*$rata_hora);
-//$rata = $ingreso['recargo']['porcentaje_hora']*$rata_hora;
+
   public function getCantidadHorasAttribute() {
       $total_horas = 0;
-      $total_horas = $this->horas_dias()->sum('horas');
-       return $total_horas;
-  }
-  /* public function getPorcentajeRecargoAttribute() {
 
-        $porcentajeRecargo= $this->recargo()->porcentaje_hora;
-         return $porcentajeRecargo;
-    }*/
+      if(count( $this->horas_dias)>0)
+        $total_horas = $this->horas_dias()->sum('horas');
+
+      return $total_horas;
+  }
 
 	public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL, $fechas=array())
 	{

@@ -298,7 +298,26 @@ class Cheques extends CRM_Controller
 
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-shopping-cart"></i> Cheque: Crear',
+            "menu" => array(
+              "opciones" => []
+          ),
+          "ruta" => array(
+              0 => array(
+                "nombre" => "Ventas",
+                "activo" => false
+              ),
+              1 => array(
+                "nombre" => 'Cheques',
+                'url'=>'cheques/listar',
+                "activo" => false
+              ),
+              2 => array(
+                "nombre" => '<b>Crear</b>',
+                "activo" => true
+              )
+            )
         );
+
 
         $this->template->agregar_titulo_header('Crear Cheque');
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -328,13 +347,17 @@ class Cheques extends CRM_Controller
         ));
 
         $cheque = $this->chequesRepository->findByUuid($uuid_cheque);
-        $cheque->load('pago', 'pago.proveedor', 'chequera','comentario_timeline','cheques_asignados');
+        if($cheque->pago->formulario != 'transferencia'){
+          $cheque->load('pago', 'pago.proveedor', 'chequera','comentario_timeline','cheques_asignados');
+        }
+        else{
+          $cheque->load('pago',  'pago.proveedor','pago.transferencias.caja.responsable', 'chequera','comentario_timeline','cheques_asignados');
+         }
         if($cheque->chequera == null){
             $habilitar_formulario = 'si';
         }else{
             $habilitar_formulario =  'no';
         }
-
          $this->assets->agregar_var_js(array(
             "habilitar_formulario"  => $habilitar_formulario,
             "vista"     => 'ver',
@@ -345,12 +368,34 @@ class Cheques extends CRM_Controller
             "cheque_id"=>$cheque->id
         ));
         $data['mensaje'] = $mensaje;
+
+
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-shopping-cart"></i> Cheque: Ver',
+          "titulo" => '<i class="fa fa-shopping-cart"></i> Cheque: Ver',
+          "menu" => array(
+              "opciones" => []
+          ),
+            "ruta" => array(
+              0 => array(
+                "nombre" => "Ventas",
+                "activo" => false
+              ),
+              1 => array(
+                "nombre" => 'Cheques',
+                'url'=>'cheques/listar',
+                "activo" => false
+              ),
+              2 => array(
+                "nombre" => '<b>Detalle</b>',
+                "activo" => true
+              )
+            ),
             "menu" => array(
-                "opciones" => []
+              "nombre" => "Crear",
+              "url"	 => "cheques/crear",
+              "opciones" => array()
             )
-        );
+       );
 
         if($cheque->imprimible)
         {
@@ -400,14 +445,14 @@ class Cheques extends CRM_Controller
     $data['unidades'] = array();
     $data["categorias"] = Categorias_orm::categoriasConItems($this->empresa_id);
     $data['precios'] = Precios_orm::where($clause_precios)->get(array('id','uuid_precio','nombre'));
-    $data['items'] = Items_orm::where($clause_precios)->get(array('id','uuid_item','uuid_activo','nombre','codigo'));
+    //$data['items'] = Items_orm::where($clause_precios)->get(array('id','uuid_item','uuid_activo','nombre','codigo'));
     $impuesto = Impuestos_orm::where($clause_impuesto)->whereHas('cuenta',function($query) use($clause_impuesto){
          $query->activas();
          $query->where('empresa_id','=',$clause_impuesto['empresa_id']);
      })->get(array('id','uuid_impuesto','nombre','impuesto'));
     $data['impuestos'] = $impuesto;
     $data['cuenta_activo'] = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->deTipoDeCuenta([4])->activas()->get();
-    $data['clientes'] = Cliente_orm::where($clause)->get(array('id','nombre','credito'));
+    $data['clientes'] = Cliente_orm::where($clause)->get(array('id','nombre','credito_favor'));
     $data['bodegas'] = Bodegas_orm::where(array('empresa_id'=>$this->empresa_id,'estado'=>1))->get(array('id','nombre'));
       $data['tipo_pagos']     = Pago_catalogos_orm::where(array('tipo'=>'pago','valor'=>'cheque'))->get(array('id','etiqueta','valor'));
       $data['proveedores']    = Proveedores_orm::deEmpresa($this->empresa_id)->get(array('id','nombre', 'limite_credito'));
@@ -441,10 +486,9 @@ class Cheques extends CRM_Controller
 
             try{
                 $chequera   = $this->chequeraRepository->findByUuid($array_cheque['chequera_id']);
-                $pago       = $this->pagosRep->findBy(["uuid_pago" => $request->input("crear_desde"), "empresa_id" => $this->empresa_id]);
-                $pago->metodo_pago[0]->referencia = ['numero_cheque' => $array_cheque['numero'], 'nombre_banco_cheque' => $chequera->cuenta->nombre];
-                $pago->metodo_pago[0]->save();
-                if(isset($array_cheque['id'])){ //edicion
+
+                if(!empty($array_cheque['id'])){ //edicion
+
                   $array_update['id']    = $array_cheque['id'];
                   $array_update['numero']    = $array_cheque['numero'];
                   $array_update['chequera_id']    = $chequera->id;
@@ -452,7 +496,13 @@ class Cheques extends CRM_Controller
 
                   $cheque = $this->chequesRepository->editar($array_update);
                   $this->chequeraRepository->incrementa_secuencial($chequera->id);
+
                 }else{ //Creando
+
+                  $pago       = $this->pagosRep->findBy(["uuid_pago" => $request->input("crear_desde"), "empresa_id" => $this->empresa_id]);
+                  $pago->metodo_pago[0]->referencia = ['numero_cheque' => $array_cheque['numero'], 'nombre_banco_cheque' => $chequera->cuenta->nombre];
+                  $pago->metodo_pago[0]->save();
+
                   $array_cheque['empresa_id']     = $this->empresa_id;
                   $array_cheque['chequera_id']    = $chequera->id;
                   $array_cheque['pago_id']        = $pago->id;
@@ -706,13 +756,19 @@ class Cheques extends CRM_Controller
         }
 
         $cheque =$this->chequesRepository->findByUuid($uuid);
-        $cheque->pago->estado = 'aplicado';
+
+       $cheque->estado_id = 2;
+       $cheque->save();
+
+        $cheque->pago->estado = 'cheque_en_transito'; //Se cambia el flujo
         $cheque->pago->save();
+
         $dompdf = new Dompdf();
 
         $data   = array(
             "cheque"=>$cheque
         );
+
 
       //  Capsule::beginTransaction();
       //  $this->chequesRepository->update($uuid,array("estado_id"=>2));
@@ -720,6 +776,8 @@ class Cheques extends CRM_Controller
     //    Capsule::commit();
 
         $html = $this->load->view('cheque', $data, true);
+
+
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

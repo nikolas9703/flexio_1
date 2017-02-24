@@ -25,6 +25,7 @@ use Flexio\Modulo\OrdenesTrabajo\Repository\OrdenesTrabajoRepository;
 use Flexio\Modulo\ContratosAlquiler\Repository\ContratosAlquilerRepository;
 use League\Csv\Writer as Writer;
 use \Flexio\Modulo\Contabilidad\Models\Impuesto;
+use Flexio\Modulo\Cotizaciones\Repository\CotizacionRepository;
 //eventos
 use Flexio\Modulo\FacturasVentas\Events\OrdenVentaFacturableEvent as OrdenVentaFacturableEvent;
 use Flexio\Modulo\FacturasVentas\Listeners\CrearOrdenFacturableListener as CrearOrdenFacturableListener;
@@ -43,8 +44,13 @@ use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategorias
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
+use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
+use Flexio\Modulo\FacturasVentas\Catalogo\FacturaVentaEmpezable;
+
+@include_once ('Refactory.php'); //similacion de trait porque CI no permite hacerlo de otra manera
 class Facturas extends CRM_Controller
 {
+    use Refactory, FacturaVentaEmpezable;
     private $empresa_id;
     private $id_usuario;
     private $empresaObj;
@@ -60,6 +66,7 @@ class Facturas extends CRM_Controller
     protected $FacturaCompraRepository;
     protected $ImpuestosRepository;
     protected $CuentasRepository;
+    protected $UsuariosRepository;
 
     function __construct() {
         parent::__construct();
@@ -101,6 +108,7 @@ class Facturas extends CRM_Controller
         $this->FacturaCompraRepository = new FacturaCompraRepository();
         $this->ImpuestosRepository = new ImpuestosRepository();
         $this->CuentasRepository = new CuentasRepository();
+        $this->UsuariosRepository = new UsuariosRepository;
     }
 
     function listar() {
@@ -162,7 +170,7 @@ class Facturas extends CRM_Controller
         $data['etapas'] = $this->facturaVentaCatalogoRepository->getEtapas();
         $data['vendedores'] = $vendedores;
         $breadcrumb["menu"]["opciones"]["#exportarListaFacturas"] = "Exportar";
-        $this->template->agregar_titulo_header('Listado de Ordenes de Ventas');
+        $this->template->agregar_titulo_header('Listado de Facturas de Ventas');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar($breadcrumb);
@@ -190,8 +198,9 @@ class Facturas extends CRM_Controller
         $clause = array('empresa_id' => $this->empresaObj->id);
         $clause['contrato_alquiler_id'] = $this->input->post('contrato_alquiler_id', TRUE);
         $clause['contrato_id'] = $this->input->post('contrato_id', TRUE);
-
-
+        if(isset($_POST['campo'])){
+            $clause['campo'] = $this->input->post('campo');
+        }
         if (!empty($uuid_cliente)) {
             $clienteObj = new Buscar(new Cliente_orm, 'uuid_cliente');
             $cliente = $clienteObj->findByUuid($uuid_cliente);
@@ -250,13 +259,13 @@ class Facturas extends CRM_Controller
                 $hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success subirArchivoBtn" data-id="' . $row->id . '" data-codigo="' . $row->codigo. '" >Subir documento</a>';
 
                 if ($row->estado == 'por_cobrar' || $row->estado == 'cobrado_parcial') $hidden_options .= '<a href="' . base_url('cobros/crear?factura=' . $row->uuid_factura) . '" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Registrar Pago</a>';
-                
-                //dd( $row->cliente->uuid_cliente, $row->cliente_nombre);
+
+
                 $response->rows[$i]["id"] = $row->uuid_factura;
                 $response->rows[$i]["cell"] = array(
                     $row->uuid_factura,
                     '<a class="link" href="' . $url . '" >' . $row->codigo . '</a>',
-                    '<a class="link" href="'.base_url('clientes/ver/' . $row->cliente->uuid_cliente).'">' . $row->cliente_nombre . '</a>',
+                    isset($row->cliente)?'<a class="link" href="'.base_url('clientes/ver/' . $row->cliente->uuid_cliente).'">' . $row->cliente_nombre . '</a>':'',
                     $row->fecha_desde,
                     $row->fecha_hasta,
                     $row->present()->estado_label,
@@ -362,6 +371,8 @@ class Facturas extends CRM_Controller
     }
 
     function ocultotabla($modulo_id = null) {
+
+
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas/tabla.js'
         ));
@@ -374,20 +385,36 @@ class Facturas extends CRM_Controller
                     "caja_id" => $modulo_id
                 ));
             }
+
         }
-        if (preg_match("/contratos/i", $this->router->fetch_class())) {
+        //if(preg_match('/contratos/i', $this->router->fetch_class()))
+        if ($this->router->fetch_class()=='contratos') {
             if (!empty($modulo_id)) {
                 $this->assets->agregar_var_js(array(
                     "sp_contrato_id" => $modulo_id
                 ));
             }
+
         }
         elseif(preg_match("/contratos_alquiler/i", $this->router->fetch_class()))
         {
-            if(!empty($modulo_id) and is_array(explode("=", $modulo_id))){
-                $key_value = explode("=", $modulo_id);
-                $this->assets->agregar_var_js([$key_value[0]=>$key_value[1]]);
+
+            if(is_array($modulo_id))
+            {
+                $this->assets->agregar_var_js([
+                    "campo" => collect($modulo_id)
+                ]);
             }
+            elseif($modulo_id and count(explode("=", $modulo_id)) > 1)
+            {
+                $aux = explode("=", $modulo_id);
+                $this->assets->agregar_var_js([$aux[0]=>$aux[1]]);
+            }
+
+            //if(!empty($modulo_id) and is_array(explode("=", $modulo_id))){
+            //    $key_value = explode("=", $modulo_id);
+            //    $this->assets->agregar_var_js([$key_value[0]=>$key_value[1]]);
+            //}
         }
         elseif(preg_match("/ordenes_alquiler/i", $this->router->fetch_class()))
         {
@@ -453,7 +480,9 @@ class Facturas extends CRM_Controller
         $usuario = Usuario_orm::findByUuid($this->id_usuario);
         $usuario->load('roles');
 
-        if(!$this->auth->has_permission('crear__editarPrecio') && $usuario->roles->sum('superuser') == 0){
+        //if(!$this->auth->has_permission('crear__editarPrecio') && $usuario->roles->sum('superuser') == 0){
+        //has_permissions check for super user
+        if(!$this->auth->has_permission('crear__editarPrecio', 'facturas/crear')){
             $editar_precio= 0;
         }
 
@@ -499,7 +528,6 @@ class Facturas extends CRM_Controller
 
     		$titulo = '<i class="fa fa-line-chart"></i> Factura: ' . $factura->codigo;
     		$titulo_header = 'Editar Factura: ' . $factura->codigo;
-
 
              		$breadcrumb = array(
 
@@ -535,11 +563,32 @@ class Facturas extends CRM_Controller
     			"vista" => "editar"
     		));
     	}
+
+      $breadcrumb = array(
+
+
+          "ruta" => array(
+            0 => array(
+                "nombre" => "Ventas",
+                "activo" => false,
+            ),
+              1 => array(
+                  "nombre" => "Facturas",
+                  "activo" => false,
+                  "url" => 'facturas/listar'
+              ),
+              2=> array(
+                  "nombre" => '<b>Crear</b>',
+                  "activo" => true
+              )
+          ),
+      );
+
       if(!empty($_POST['contrato_alquiler_uuid'])){
         $contrato_alquiler_uuid = $_POST['contrato_alquiler_uuid'];
         $contrato = $this->ContratosAlquilerRepository->findByUuid($contrato_alquiler_uuid);
         $contrato->load("ordenes_alquiler")->first();
-        //dd($contrato->ordenes_alquiler[0]);
+
         $this->assets->agregar_var_js(array(
     			"tipo_chosen" => "contrato_alquiler",
           "contrato_alquiler_uuid" => $contrato_alquiler_uuid,
@@ -555,7 +604,7 @@ class Facturas extends CRM_Controller
             "usuario_id" => $vendedor_user->id,
             "editar_precio" => $editar_precio
     	));
-
+        $data['mensaje'] = $mensaje;
     	$breadcrumb["titulo"] = $titulo;
     	$this->template->agregar_titulo_header($titulo_header);
     	$this->template->agregar_breadcrumb($breadcrumb);
@@ -572,10 +621,12 @@ class Facturas extends CRM_Controller
     	$titulo_header 	= 'Crear Factura';
 
     	if (!$this->auth->has_permission('acceso')) {
+
     		$acceso = 0;
     		$mensaje = array('estado' => 500, 'mensaje' => '<b>Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
     		$this->session->set_flashdata('mensaje', $mensaje);
     	}
+
     	if ($uuid == NULL && !$this->empresaObj->tieneCuentaCobro()) {
     		$mensaje = array('estado' => 500, 'mensaje' => 'No hay cuenta de cobro asociada', 'clase' => 'alert-danger');
     		$this->session->set_flashdata('mensaje', $mensaje);
@@ -586,7 +637,10 @@ class Facturas extends CRM_Controller
         $usuario = Usuario_orm::findByUuid($this->id_usuario);
         $usuario->load('roles');
 
-        if(!$this->auth->has_permission('crear__editarPrecio') && $usuario->roles->sum('superuser') == 0){
+        //if(!$this->auth->has_permission('crear__editarPrecio') && $usuario->roles->sum('superuser') == 0){
+        //la funcion has_permission toma en consideracion si es superuser
+
+        if(!$this->auth->has_permission('ver__editarPrecio', 'facturas/ver/(:any)')){
             $editar_precio= 0;
         }
 
@@ -620,6 +674,7 @@ class Facturas extends CRM_Controller
 
     	// Si existe variable $uuid
     	//
+
     	if(!empty($uuid)){
 
     		$factura = $this->facturaVentaRepository->findByUuid($uuid);
@@ -663,7 +718,13 @@ class Facturas extends CRM_Controller
     		$data["uuid"] = $uuid;
     		$data['cliente_id'] = $factura->cliente->uuid_cliente;
     		$data['uuid_factura'] = $factura->uuid_factura;
-
+                if(!empty($factura->orden_venta_id)){
+                    $orden_venta = (new OrdenVentaRepository)->find($factura->orden_venta_id);
+                    $data['uuid_venta'] = $orden_venta->uuid_venta;
+                    if (!empty($orden_venta->cotizacion)){
+                        $data['uuid_cotizacion'] = (new CotizacionRepository)->find($orden_venta->cotizacion_id)->uuid_cotizacion;
+                    }
+                }
     		$this->assets->agregar_var_js(array(
     			"vista" => "editar"
     		));
@@ -727,6 +788,7 @@ class Facturas extends CRM_Controller
         $campo = $post['campo'];
 
         $factura->termino_pago = $campo["termino_pago"];
+        $factura->formulario = $post['formulario'];
         $factura->fecha_desde = $campo['fecha_desde'];
         $factura->fecha_hasta = $campo['fecha_hasta'];
         $factura->created_by = $campo["creado_por"];
@@ -737,8 +799,8 @@ class Facturas extends CRM_Controller
         $factura->descuento = $campo["descuento"];
         $factura->impuestos = $campo["impuestos"];
         $factura->total = $campo["total"];
-        
-        
+
+
     }
 
     private function _sync_items($factura, $items){
@@ -825,6 +887,7 @@ class Facturas extends CRM_Controller
     			//"factura" => json_encode($salida),
     			"factura_venta_id"=>  $factura->id,
     			"cobros" => $factura->cobros,
+                "nota_credito_aprobada" => count($factura->nota_credito_aprobada) ? $factura->nota_credito_aprobada : Collect(['total' => 0]),
     			"infofactura" => $factura
     		));
     	}
@@ -860,27 +923,7 @@ class Facturas extends CRM_Controller
     	//---------------------
     	// Catalogo Vendedores
     	//---------------------
-    	$roles_users = Rol_orm::where(function ($query) use ($clause) {
-    		$query->where('empresa_id', '=', $clause['empresa_id']);
-    		$query->where('nombre', 'like', '%vendedor%');
-    	})->orWhere(function ($query) use ($clause) {
-    		$query->where('empresa_id', '=', $clause['empresa_id']);
-    		$query->where('nombre', 'like', '%venta%');
-    	})->get();
-
-    	$usuarios = array();
-    	$vendedores = array();
-    	foreach ($roles_users as $roles) {
-    		$usuarios = $roles->usuarios;
-    		foreach ($usuarios as $user) {
-    			if ($user->pivot->empresa_id == $clause['empresa_id']) {
-    				array_push($vendedores, array(
-    					"id" => $user->id,
-    					"nombre" => Util::verificar_valor($user->nombre) ." ". Util::verificar_valor($user->apellido)
-    				));
-    			}
-    		}
-    	}
+        $vendedores = $this->UsuariosRepository->get(array_merge($clause, ['vendedor' => true]));
 
     	//-------------------------
     	// Catalogo Lista Precios
@@ -1014,7 +1057,7 @@ class Facturas extends CRM_Controller
         $this->assets->agregar_var_js(array(
     		"clientesArray" => $clientes,
     		"terminosPagoArray" => json_encode($terminos_pagos),
-    		"vendedoresArray" => json_encode($vendedores),
+    		"vendedoresArray" => $vendedores,
     		"preciosArray" => json_encode($precios),
     		"centrosContablesArray" => json_encode($centros_contables),
     		"bodegasArray" => json_encode($bodegas),
@@ -1022,7 +1065,7 @@ class Facturas extends CRM_Controller
     		"estadosArray" => json_encode($estados),
     		"estadosArray" => json_encode($estados),
     		"impuestos" =>  json_encode($impuesto),
-    		"cuenta_transaccionales" => json_encode($cuenta_transaccionales),
+    		"cuenta_transaccionales" => collect($cuenta_transaccionales),
             "categorias" => $categotiasItems, //$categorias,
     		"acceso" => 1
     	));
@@ -1163,7 +1206,7 @@ class Facturas extends CRM_Controller
         $history = $this->facturaVentaRepository->getLastEstadoHistory($facturaVenta->id);
         $dompdf = new Dompdf();
         $data = ['factura' => $facturaVenta, 'history' => $history];
-        
+
         $html = $this->load->view('factura', $data, true);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
@@ -1229,11 +1272,25 @@ class Facturas extends CRM_Controller
         $this->load->view('formulario', $data);
     }
 
-    function guardar() {
+    function guardar()
+    {
 
     	if ($_POST) {
 
-    		$request = Illuminate\Http\Request::createFromGlobals();
+            $accion = new \Flexio\Modulo\FacturasVentas\FormRequest\GuardarFacturaVenta();
+            try {
+                $factura = $accion->guardar();
+                $mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente ' . $factura->codigo);
+            }catch(\Exception $e) {
+                log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+                $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error! Su solicitud no fue procesada</b> ');
+            }
+            $this->session->set_flashdata('mensaje', $mensaje);
+            redirect(base_url('facturas/listar'));
+        }
+    		/*$request = Illuminate\Http\Request::createFromGlobals();
+
+            dd($request->all());
     		$venta_uuid= $request->input('venta_uuid');
     		$array_factura = $request->input('campo');
     		$lineitems = $request->input('items');
@@ -1337,11 +1394,10 @@ class Facturas extends CRM_Controller
     		}
     		$this->session->set_flashdata('mensaje', $mensaje);
     		redirect(base_url('facturas/listar'));
-    	}
+    	}*/
     }
 
     function guardar2() {
-
         if ($_POST) {
 
             /* echo "<pre>";
@@ -1363,6 +1419,7 @@ class Facturas extends CRM_Controller
                 // Agregar identificador de cargo adicional
                 // Para diferenciar items normales de items
                 // de cargo adicional.
+
                 $itemsadicionales = array();
                 foreach ($items_adicionales AS $item) {
                     if (empty($item["categoria_id"]) || empty($item["item_id"])) {
@@ -1418,13 +1475,14 @@ class Facturas extends CRM_Controller
                         'atributo_id' => isset($item['atributo_id']) && !empty($item['atributo_id']) ? $item['atributo_id'] : "",
                         'atributo_text' => isset($item['atributo_text']) && !empty($item['atributo_text']) ? $item['atributo_text'] : "",
                         'descuento' => $descuento,
-                        'cuenta_id' => !empty($item['cuenta_id']) ? $item['cuenta_id'] : "",
+                        'cuenta_id' => !empty($cuenta_uuid) ? $cuenta_uuid : "",
                         'precio_total' => !empty($item['precio_total']) ? $item['precio_total'] : "",
                         'empresa_id' => !empty($item['empresa_id']) ? $item['empresa_id'] : "",
                         'comentario' => !empty($item['comentario']) ? $item['comentario'] : "",
                         'impuesto_total' => $total_impuesto,
                         'descuento_total' => $total_descuento
                     ));
+
 
                     if (!empty($item['factura_item_id']) && !preg_match("/contrato_alquiler/i", $formulario)) {
                         $itemFactura[$j]['lineitem_id'] = $item['factura_item_id'];
@@ -1442,8 +1500,16 @@ class Facturas extends CRM_Controller
 
                 if (empty($array_factura['factura_id'])) {
 
-                    $codigo = 'INV' . date('y') . $this->facturaVentaRepository->getLastCodigo(array('empresa_id' => $this->empresa_id));
+                    $codigo = $this->facturaVentaRepository->getLastCodigo(array('empresa_id' => $this->empresa_id));
                     $array_factura['codigo'] = $codigo;
+                    if(!empty($request->input('fac_facturable_id'))){
+                        $array_factura['orden_venta_id'] = $request->input('fac_facturable_id');
+                        //verificar si la orden tiene cotizacion al crear factura desde orden de venta
+                        $orden_venta = (new OrdenVentaRepository)->find($array_factura['orden_venta_id']);
+                        if($orden_venta->cotizacion_id <> '' ) {
+                            $array_factura['cotizacion_id'] = $orden_venta->cotizacion_id;
+                        }
+                    }
 
                     $data = ['facturaventa' => $array_factura, 'lineitem' => $itemFactura, 'venta_uuid' => $venta_uuid];
                     $factura = $this->facturaVentaRepository->create($data, $formulario);
@@ -1622,22 +1688,23 @@ class Facturas extends CRM_Controller
         $this->template->visualizar();
 
     }
-    
+
     function imprimir_refactura($uuid) {
         $refactura = $this->facturaVentaRepository->findByUuid($uuid);
         $refactura->load('refactura', 'cliente');
         $history = $this->facturaVentaRepository->getLastEstadoHistory($refactura->id);
         $dompdf = new Dompdf();
+        $dompdf->set_option('DOMPDF_ENABLE_CSS_FLOAT', true);
         $data = ['factura' => $refactura, 'history' => $history];
-        $html = $this->load->view('refactura', $data, true); 
+        $html = $this->load->view('refactura', $data, true);
         //echo "<pre>".$html."</pre>"; die;
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
         $dompdf->stream($refactura->codigo . ' - ' . $refactura->cliente->nombre);
-        
-        
-       
+
+
+
     }
 
     function ocultorefacturar() {
@@ -1756,11 +1823,14 @@ class Facturas extends CRM_Controller
     function ajax_factura_info() {
         $uuid = $this->input->post('uuid');
         $factura = $this->facturaVentaRepository->findByUuid($uuid);
-        $factura->load('cliente.centro_facturable', 'items', 'items.impuesto', 'items.cuenta','cobros');
-        if ($factura->formulario == 'orden_venta') $factura->ordenes_ventas;
-        if ($factura->formulario == 'contrato_venta') $factura->contratos;
+        //$factura->load('items','cobros');
+        $api = new \Flexio\Modulo\FacturasVentas\Api\FacturaVentaDetalle;
+        $detalle_factura = $api->transform($factura);
+
+        //if ($factura->formulario == 'orden_venta') $factura->ordenes_ventas;
+        //if ($factura->formulario == 'contrato_venta') $factura->contratos;
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode($factura->toArray()))->_display();
+            ->set_output(json_encode($detalle_factura))->_display();
         exit;
     }
 
@@ -1795,6 +1865,7 @@ class Facturas extends CRM_Controller
         if (!$this->input->is_ajax_request()) {
             return false;
         }
+        //$clause = ['empresa_id' => $this->empresa_id, 'formulario' => ['factura_venta', 'orden_venta', 'contrato_venta'], 'estado' => ['cobrado_completo','cobrado_parcial', 'por_cobrar']];
         $clause = ['empresa_id' => $this->empresa_id, 'formulario' => ['factura_venta', 'orden_venta', 'contrato_venta'], 'estado' => ['cobrado_completo']];
         $facturas = $this->facturaVentaRepository->sinDevolucion($clause);
         $facturas->load('cliente', 'items', 'items.inventario_item', 'items.inventario_item.unidades', 'items.impuesto');
@@ -1802,7 +1873,19 @@ class Facturas extends CRM_Controller
             ->set_output(json_encode($facturas->toArray()))->_display();
         exit;
     }
-
+    function ajax_getFacturasDevoluciones() {
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $clause = ['empresa_id' => $this->empresa_id, 'formulario' => ['factura_venta', 'orden_venta', 'contrato_venta'], 'estado' => ['cobrado_completo','cobrado_parcial', 'por_cobrar']];
+        //$clause = ['empresa_id' => $this->empresa_id, 'formulario' => ['factura_venta', 'orden_venta', 'contrato_venta'], 'estado' => ['cobrado_completo']];
+        $facturas = $this->facturaVentaRepository->sinDevolucion($clause);
+        $facturas->load('cliente', 'items', 'items.inventario_item', 'items.inventario_item.unidades', 'items.impuesto');
+        //dd($facturas->toArray());
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($facturas->toArray()))->_display();
+        exit;
+    }
     function ajax_getFacturadoCompleto() {
         $clause = ['empresa_id' => $this->empresa_id];
         $factura = $this->facturaVentaRepository->cobradoCompletoSinNotaCredito($clause);
@@ -1840,23 +1923,24 @@ class Facturas extends CRM_Controller
 
     private function _js() {
         $this->assets->agregar_js(array(
-            'public/assets/js/default/jquery-ui.min.js',
-            'public/assets/js/plugins/jquery/jquery.sticky.js',
-            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
-            'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
-            'public/assets/js/plugins/jquery/jqgrid/plugins/jQuery.jqGrid.columnToggle.js',
-            'public/assets/js/plugins/jquery/switchery.min.js',
+            //'public/assets/js/default/jquery-ui.min.js',
+            //'public/assets/js/plugins/jquery/jquery.sticky.js',
+            //'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+            //'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
+            //'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+            //'public/assets/js/plugins/jquery/jqgrid/plugins/jQuery.jqGrid.columnToggle.js',
+            //'public/assets/js/plugins/jquery/switchery.min.js',
+            //'
             'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
-            'public/assets/js/plugins/jquery/combodate/combodate.js',
-            'public/assets/js/plugins/jquery/combodate/momentjs.js',
-            'public/assets/js/default/accounting.min.js',
+            //'public/assets/js/plugins/jquery/combodate/combodate.js',
+            //'public/assets/js/plugins/jquery/combodate/momentjs.js',
+            //'public/assets/js/default/accounting.min.js',
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
-            'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
+            //'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
             'public/assets/js/moment-with-locales-290.js',
             'public/assets/js/plugins/bootstrap/daterangepicker.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',

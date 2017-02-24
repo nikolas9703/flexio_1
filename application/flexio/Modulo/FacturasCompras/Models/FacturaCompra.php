@@ -11,6 +11,8 @@ use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Library\Venturecraft\Revisionable\RevisionableTrait;
 use Flexio\Politicas\PoliticableTrait;
+use Flexio\Modulo\Historial\Models\Historial;
+use Flexio\Modulo\FacturasCompras\Observer\FacturaComprasObserver;
 
 class FacturaCompra extends Model
 {
@@ -26,7 +28,7 @@ class FacturaCompra extends Model
 
     protected $table = 'faccom_facturas';
 
-    protected $fillable = ['codigo','proveedor_id','empresa_id','fecha_hasta','fecha_desde','factura_proveedor','estado_id','created_by','comentario','termino_pago','fecha_termino_pago','subtotal','impuestos','total','bodega_id','centro_contable_id','referencia'];
+    protected $fillable = ['codigo','proveedor_id','empresa_id','fecha_hasta','fecha_desde','factura_proveedor','estado_id','created_by','comentario','termino_pago','fecha_termino_pago','subtotal','impuestos','retencion','total','bodega_id','centro_contable_id','referencia','porcentaje_retencion'];
 
     protected $guarded = ['id','uuid_factura'];
 
@@ -43,6 +45,7 @@ class FacturaCompra extends Model
      */
     public static function boot() {
         parent::boot();
+        FacturaCompra::observe(FacturaComprasObserver::class);
     }
     //Mutators
     public function getUuidFacturaAttribute($value)
@@ -72,6 +75,12 @@ class FacturaCompra extends Model
     public function getNumeroDocumentoEnlaceAttribute()
     {
         return '<a href="'.base_url("facturas_compras/ver/".$this->uuid_factura).'" class="link">'.$this->numero_documento.'</a>';
+    }
+
+    //se usa en documentos main columna relacionado
+    public function getRelacionadoAAttribute()
+    {
+        return $this->numero_documento_enlace." - ".$this->proveedor->nombre;
     }
 
     public function getFechaDesdeAttribute($date){
@@ -130,33 +139,49 @@ class FacturaCompra extends Model
     public function getSaldoAttribute()
     {
       $nota_debito_total = $this->nota_debito()->where('compra_nota_debitos.estado','aprobado')->sum('compra_nota_debitos.total');
-      if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto=='no' && $this->total > 500){
-         $aux = $this->total - ($this->facturas_items->sum('retenido') + $this->pagos_aplicados_suma) - $nota_debito_total;
-         return $aux < 0 ? 0 : $aux;
+      if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto=='no' && $this->total > 0){
+
+        // $aux = $this->total - number_format(($this->facturas_items->sum('retenido') + $this->pagos_aplicados_suma),2) - $nota_debito_total - $this->retencion; ORIGINAL
+        /*$retenido_itbm = round($this->facturas_items->sum('retenido'),2,PHP_ROUND_HALF_UP) + round($this->pagos_aplicados_suma,2) - round($nota_debito_total);
+
+         $aux = round($this->total,2,PHP_ROUND_HALF_UP) - round($retenido_itbm,2,PHP_ROUND_HALF_UP) - round($this->retencion,2,PHP_ROUND_HALF_UP);*/
+
+         $aux = round($this->total,2,PHP_ROUND_HALF_UP) - (round($this->facturas_items->sum('retenido') ,2,PHP_ROUND_HALF_UP) + $this->pagos_aplicados_suma) - $nota_debito_total - $this->retencion;
+
+         return $aux < 0 ? 0 : round($aux,2,PHP_ROUND_HALF_UP);
       }
-      $aux = $this->total - $this->pagos_aplicados_suma - $nota_debito_total;
+      // round(float,2,PHP_ROUND_HALF_UP) redondea a 2 digitos y 0.5 hacia arriba devuleve float
+      $total = round($this->total,2,PHP_ROUND_HALF_UP);
+      $pagos_aplicados = round($this->pagos_aplicados_suma,2,PHP_ROUND_HALF_UP);
+      $aux = $total - $pagos_aplicados - $nota_debito_total- $this->retencion;
       return $aux < 0 ? 0 : $aux;
-    }
+     }
 
     //muestra siempre el saldo real de la factura
     public function getMontoAttribute(){
-      if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto=='no' && $this->total > 500){
+      if(!empty($this->empresa) && $this->empresa->retiene_impuesto =="si" && !empty($this->proveedor) && $this->proveedor->retiene_impuesto=='no' && $this->total > 0){
          return $this->total - $this->facturas_items->sum('retenido');
       }
-        return $this->total;
+      return $this->total;
     }
 
     public function getRetenidoAttribute(){
-      if($this->empresa->retiene_impuesto =="si" && $this->proveedor->retiene_impuesto=='no' && $this->total > 500){
+      if(!empty($this->empresa) && $this->empresa->retiene_impuesto =="si" && !empty($this->proveedor) &&  $this->proveedor->retiene_impuesto=='no' && $this->total > 0){
          return $this->facturas_items->sum('retenido');
       }
-        return 0;
+      return 0;
     }
 
 
     public function getPagosAplicadosSumaAttribute()
     {
         return $this->pagos_aplicados()->sum("pag_pagos_pagables.monto_pagado");
+    }
+
+    public function getPagosTodosSumaAttribute()
+    {
+        //anulados is not include
+        return $this->pagos_todos()->sum("pag_pagos_pagables.monto_pagado");
     }
 
     //Relationships
@@ -187,6 +212,12 @@ class FacturaCompra extends Model
     {
         return $this->pagos()
             ->where("pag_pagos.estado", "aplicado");
+    }
+
+    public function pagos_todos()
+    {
+        return $this->pagos()
+            ->where("pag_pagos.estado", "!=" ,"anulado");
     }
 
     public function bodega()
@@ -246,9 +277,16 @@ class FacturaCompra extends Model
         return $this->where('estado_id','=','16');
      }
      //Esta funcion se creó por un card del soporte, que dice que debe aparecer las facturas no solo completo, si no del tipo 14 15 16 al crear debito y credito
-     public function scopeEstadosValidos($query){
-        return $this->whereIn('faccom_facturas.estado_id',array(14,15,16));
-     }
+
+    public function scopeEstadosValidos($query){
+      return $this->whereIn('faccom_facturas.estado_id',array(14,15,16));
+    }
+    public function scopeEstadosReporte($query) {
+      return $query->whereHas('estado', function ($query) {
+          $query->whereIn('etiqueta', ['por_pagar','pagada_parcial','pagada_completa','suspendida']);
+      });
+    }
+
     function empresa(){
        return $this->belongsTo('Empresa_orm','empresa_id');
     }
@@ -287,6 +325,11 @@ class FacturaCompra extends Model
        //return $this->where("operacion_type", "Flexio\\Modulo\\SubContratos\\Models\\SubContrato");
     }
 
+    public function contrato_relacionado(){
+       // return $this->where("operacion_type", "Flexio\\Modulo\\SubContratos\\Models\\SubContrato");
+        return $this->belongsTo("Flexio\\Modulo\\SubContratos\\Models\\SubContrato", "operacion_id", "id");
+    }
+
     function documentos(){
     	return $this->morphMany(Documentos::class, 'documentable');
     }
@@ -297,9 +340,25 @@ class FacturaCompra extends Model
     public function landing_comments(){
        return $this->morphMany(Comentario::class,'comentable');
      }
+    public function historial(){
+        return $this->morphMany(Historial::class,'historiable');
+    }
 
      function present(){
          return new \Flexio\Modulo\FacturasCompras\Presenter\FacturaCompraPresenter($this);
      }
+    public function getModuloAttribute()
+    {
+        return 'Factura compra';
+    }
+    public function getModuloNotificacionesAttribute() {
+        return '\Flexio\Modulo\FacturasCompras\Notifications\FacturasUpdated';
+    }
+
+    public function scopeDeFiltro($query, $campo)
+    {
+        $queryFilter = new \Flexio\Modulo\FacturasCompras\Services\FacturaCompraQueryFilters;
+        return $queryFilter->apply($query, $campo);
+    }
 
 }

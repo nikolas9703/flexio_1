@@ -12,7 +12,7 @@
             <div class="row">
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                     <label>Cliente <span class="required">*</span></label>
-                    <select class="form-control" name="campo[cliente_id]" id="cliente_id" v-model="factura.cliente_id" :disabled="factura.cliente_id !=''">
+                    <select class="form-control" data-rule-required="true"  name="campo[cliente_id]" id="cliente_id" v-model="factura.cliente_id" :disabled="factura.cliente_id !=''">
                         <option value="">Seleccione</option>
                         <option value="{{option.id}}" v-for="option in factura.clienteOptions | orderBy 'nombre'">{{option.nombre}}</option>
                     </select>
@@ -20,9 +20,9 @@
 
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                     <label>T&eacute;rminos de pago <span class="required">*</span></label>
-                    <select class="form-control" id="termino_pago" name="campo[termino_pago]" v-model="factura.termino_pago_id" :disabled="factura.uuid_venta !=='' && factura.factura_id == ''">
+                    <select data-rule-required="true"  class="form-control" id="termino_pago" name="campo[termino_pago]" v-model="factura.termino_pago_id" :disabled="factura.uuid_venta !=='' && factura.factura_id == ''">
                         <option value="">Seleccione</option>
-                        <option value="{{option.id}}" v-for="option in factura.terminosPagoOptions" selected="{{option.id == 'al_contado'}}">{{option.nombre}}</option>
+                        <option value="{{option.id}}" v-for="option in factura.terminosPagoOptions">{{option.nombre}}</option>
                     </select>
                 </div>
 
@@ -64,7 +64,7 @@
 
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                     <label>Vendedor <span class="required">*</span></label>
-                    <select class="form-control" id="vendedor" name="campo[creado_por]" v-model="factura.vendedor_id" :disabled="factura.uuid_venta !=='' && factura.factura_id == ''">
+                    <select class="form-control" data-rule-required="true"  id="vendedor" name="campo[creado_por]" v-model="factura.vendedor_id" :disabled="factura.uuid_venta !=='' && factura.factura_id == ''">
                         <option value="">Seleccione</option>
                         <option value="{{option.id}}" v-for="option in factura.vendedoresOptions | orderBy 'nombre'" selected="{{option.id == factura.vendedorId}}">{{{option.nombre}}}</option>
                     </select>
@@ -82,14 +82,14 @@
             <div class="row">
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                     <label>Centro Contable <span class="required">*</span></label>
-                    <select class="form-control" id="centro_contable_id" name="campo[centro_contable_id]" v-model="factura.centro_contable_id" :disabled="factura.uuid_venta !=='' && factura.factura_id == ''">
+                    <select class="form-control" data-rule-required="true"  id="centro_contable_id" name="campo[centro_contable_id]" v-model="factura.centro_contable_id" :disabled="factura.uuid_venta !=='' && factura.factura_id == ''">
                         <option value="">Seleccione</option>
                         <option value="{{option.id}}" v-for="option in factura.centrosContablesOptions | orderBy 'nombre'">{{{option.nombre}}}</option>
                     </select>
                 </div>
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
                     <label>Centro de facturaci&oacute;n <span class="required">*</span></label>
-                    <select class="form-control" id="centro_facturacion_id" name="campo[centro_facturacion_id]" v-model="factura.centro_facturacion_id" :disabled="factura.centrosFacturacionOptions.length<0 || factura.id !==''">
+                    <select  data-rule-required="true"  class="form-control" id="centro_facturacion_id" name="campo[centro_facturacion_id]" v-model="factura.centro_facturacion_id" :disabled="factura.centrosFacturacionOptions.length<0 || factura.id !==''">
                             <option value="">Seleccione</option>
                         <option v-for="option in factura.centrosFacturacionOptions | orderBy 'nombre'" :value="option.id" v-text="option.nombre"></option>
                     </select>
@@ -111,6 +111,10 @@
             </div>
 
             <div class="row">
+              <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                  <label>Referencia <span required="" aria-required="true">*</span></label>
+                  <input type="text" name="campo[referencia]" class="form-control" id="referencia" data-rule-required="true" v-model="factura.referencia">
+              </div>
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                     <label>Observaciones </label>
                     <textarea id="comentario" name="campo[comentario]" v-model="factura.comentario" class="form-control"></textarea>

@@ -116,7 +116,12 @@
         </div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
-
+<?php
+$formAttr = array('method' => 'POST', 'id' => 'exportarCotizaciones','autocomplete'  => 'off');
+echo form_open(base_url('cotizaciones/exportar'), $formAttr);
+?>
+<input type="hidden" name="ids" id="ids" value="" />
+<?php echo form_close(); ?>
 <?php echo Modal::config(array("id" => "optionsModal", "size" => "sm"))->html(); ?> <!-- modal opciones -->
 <?php echo Modal::config(array(
 	"id" => "documentosModal",

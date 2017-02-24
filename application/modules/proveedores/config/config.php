@@ -27,5 +27,6 @@ $config['modulo_config'] = array(
         'acceso'                        => 'Acceso',
     	'listar__exportarProveedores'   => 'Exportar',
     	'ver__editarProveedor'          => 'Editar',
+        'ver__cambioestadoProveedores'     => 'Cambio de Estado',
     )
 );

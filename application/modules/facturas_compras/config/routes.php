@@ -15,6 +15,7 @@ $route['facturas_compras/ajax-get-factura-all']         = 'facturas_compras/ajax
 $route['facturas_compras/ajax-factura-info']        = 'facturas_compras/ajax_factura_info';
 $route['facturas_compras/ajax-guardar-comentario']        = 'facturas_compras/ajax_guardar_comentario';
 $route['facturas_compras/ajax-guardar-documentos'] = 'facturas_compras/ajax_guardar_documentos';
+$route['facturas_compras/ajax-get-empezable'] = 'facturas_compras/ajax_get_empezable';
 
 
 //No se coloca la ruta "Guardar" porque esta no tiene vista

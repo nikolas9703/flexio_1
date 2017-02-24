@@ -23,7 +23,11 @@ use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Library\Util\FormRequest;
 use Flexio\Modulo\CotizacionesAlquiler\Repository\CotizacionesAlquilerRepository as CotizacionesAlquilerRepository;
-
+use Flexio\Modulo\Inventarios\Repository\ItemsRepository as itemsRep;
+use Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler;
+use Flexio\Library\Util\AuthUser;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 class Contratos_alquiler extends CRM_Controller
 {
     /**
@@ -32,6 +36,7 @@ class Contratos_alquiler extends CRM_Controller
     private $empresa_id;
     private $empresaObj;
     private $usuario_id;
+    private $itemsRep;
 
     protected $ContratosAlquilerRepository;
     protected $ContratosAlquilerCatalogosRepository;
@@ -72,6 +77,7 @@ class Contratos_alquiler extends CRM_Controller
         $this->CentrosContablesRepository            = new CentrosContablesRepository();
         $this->CotizacionesAlquilerRepository = new CotizacionesAlquilerRepository;
         $this->PreciosRepository = new PreciosRepository;
+        $this->itemsRep = new itemsRep();
         Carbon::setLocale('es');
         setlocale(LC_TIME, 'es_ES.utf8');
     }
@@ -101,7 +107,7 @@ class Contratos_alquiler extends CRM_Controller
         $breadcrumb = array( "titulo" => '<i class="fa fa-car"></i> Contratos de alquiler',
             "ruta" => array(
                 0 => ["nombre" => "Alquileres", "activo" => false],
-                1 => ["nombre" => '<b>Alquileres</b>', "activo" => true]
+                1 => ["nombre" => '<b>Contratos de alquiler</b>', "activo" => true]
             ),
             "menu" => ["nombre" => "Crear", "url" => "contratos_alquiler/crear","opciones" => array()]
         );
@@ -301,19 +307,19 @@ class Contratos_alquiler extends CRM_Controller
 
     private function _js() {
         $this->assets->agregar_js(array(
-            'public/assets/js/default/jquery-ui.min.js',
-            'public/assets/js/plugins/jquery/jquery.sticky.js',
-            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+            //'public/assets/js/default/jquery-ui.min.js',
+            //'public/assets/js/plugins/jquery/jquery.sticky.js',
+            //'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
             'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
-            'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
+            //'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+            //'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
-            'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
-            'public/assets/js/default/accounting.min.js',
+            //'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
+            //'public/assets/js/default/accounting.min.js',
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
-            'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
+            //'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
             'public/assets/js/moment-with-locales-290.js',
             'public/assets/js/plugins/bootstrap/select2/select2.min.js',
             'public/assets/js/plugins/bootstrap/select2/es.js',
@@ -345,14 +351,25 @@ class Contratos_alquiler extends CRM_Controller
     }
 
 
-    public function crear($foreing_key = '') {
+    public function crear($modulo=NULL, $modulo_uuid=NULL) {
 
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'contratos_alquiler/crear')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
+        
+        //#case 1682.1 si el usuario tiene role de vendedor, se deshabilita el campo vendedor y se pone como default el usuario logeado
+        $vendedor=1;
+        $user_id=0;
+        foreach(AuthUser::roles_empresa() as $role){
+            if($role->nombre=='Vendedor'){
+                $vendedor = 0;
+                $user_id = AuthUser::getId();
+            }
+        }
+        
         $disableEmpezarDesde = 0;
         $empezable = collect([
             'id' =>'',
@@ -360,22 +377,22 @@ class Contratos_alquiler extends CRM_Controller
             'clientes' => [],
             'cotizacions' => [],
             'types' => [
-                    0 => ['id' => 'cliente', 'nombre' => 'Clientes'],
+                    
                     1 => ['id' => 'cotizacion', 'nombre' => 'Cotizaciones']]
         ]);
 
-        if (preg_match('/cotizacion/', $foreing_key)) {
+        if (preg_match('/cotizacion/', $modulo)) {
 
-            $uuid_contrato_alquiler = str_replace('cotizacion', '', $foreing_key);
+            //$uuid_contrato_alquiler = str_replace('cotizacion', '', $foreing_key);
 
-            $cotizaciones = $this->CotizacionesAlquilerRepository->findBy(['uuid_cotizacion' => $uuid_contrato_alquiler]);
+            $cotizaciones = $this->CotizacionesAlquilerRepository->findBy(['uuid_cotizacion' => $modulo_uuid]);
+            //dd(collect($cotizaciones->load('articulos'))->toArray());
             $empezable['cotizacions'] = $cotizaciones;
             $empezable['type'] = 'cotizacion';
             $empezable['id'] = $cotizaciones->id;
-            $empezable['types'] = [ 0 => ['id' => 'cotizacion', 'nombre' => 'Cotizaciones']];
+            //$empezable['types'] = [ 0 => ['id' => 'cotizacion', 'nombre' => 'Cotizaciones']];
             $disableEmpezarDesde = 1;
-        }
-
+        } 
         $clause = array(
             "empresa_id" => $this->empresa_id
         );
@@ -383,17 +400,18 @@ class Contratos_alquiler extends CRM_Controller
        	$this->_css();
         $this->_js();
         $this->assets->agregar_js(array(
-             'public/assets/js/modules/contratos_alquiler/components/contrato_items.js',
+            'public/assets/js/modules/contratos_alquiler/components/contrato_items.js',
             'public/assets/js/modules/contratos_alquiler/components/item_extrainfo.js',
 
-    	));
-        //dd($empezable);
+    	  ));
 
         $this->assets->agregar_var_js(array(
-            "vista"         => 'crear',
+            "vista" => 'crear',
             "disableEmpezarDesde" => $disableEmpezarDesde,
-            "acceso"        => $acceso == 0 ? $acceso : $acceso,
-            "empezable"    => $empezable
+            "acceso" => $acceso,
+            "vendedor" => $vendedor,
+            "userId" => $user_id,
+            "empezable" => $empezable
         ));
 
         $data['mensaje'] = $mensaje;
@@ -401,7 +419,7 @@ class Contratos_alquiler extends CRM_Controller
             "titulo" => '<i class="fa fa-car"></i> Contratos de alquiler: Crear ',
             "ruta" => [
                 ["nombre" => "Alquileres", "activo" => false],
-                ["nombre" => "Contrato de alquiler", "activo" => false],
+                ["nombre" => "Contratos de alquiler", "activo" => false, 'url'=>'contratos_alquiler/listar'],
                 ["nombre" => "<b>Crear</b>","activo" => true]
             ]
         );
@@ -418,7 +436,7 @@ class Contratos_alquiler extends CRM_Controller
 
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'contratos_alquiler/editar/(:any)')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
@@ -426,14 +444,12 @@ class Contratos_alquiler extends CRM_Controller
         $this->_css();
         $this->_js();
 
-
-
-
-
-
         $contrato_alquiler = $this->ContratosAlquilerRepository->findBy(['uuid_contrato_alquiler'=>$uuid]);
         $contrato_alquiler->load('comentario_timeline','contratos_items');
-
+        $anular = 1;
+        if(count($contrato_alquiler->entregas_activas)>0){
+            $anular = 0;
+        }
         if($contrato_alquiler->tipo == 'cliente') //edicion de alquiler tipo cliente
         {
             $clientes = $this->ClienteRepository->get( array('empresa_id' => $this->empresa_id) );
@@ -459,8 +475,18 @@ class Contratos_alquiler extends CRM_Controller
             'id' => $id_empezable
         ]);
 
-        //dd($empezable);
-
+         $this->assets->agregar_js(array(
+               'public/assets/js/modules/contratos_alquiler/ver_historial.js'
+        ));
+         //#case 1682.1 si el usuario tiene role de vendedor, se deshabilita el campo vendedor y se pone como default el usuario logeado
+        $vendedor=1;
+        $user_id=0;
+        foreach(AuthUser::roles_empresa() as $role){
+            if($role->nombre=='Vendedor'){
+                $vendedor = 0;
+                $user_id = AuthUser::getId();
+            }
+        }
           $this->assets->agregar_var_js(array(
             "vista"                     => 'editar',
             "acceso"                    => $acceso == 0 ? $acceso : $acceso,
@@ -468,7 +494,10 @@ class Contratos_alquiler extends CRM_Controller
             "contrato_alquiler_items"   => $contrato_alquiler->items,
             "objectModel"               => $contrato_alquiler,
             "contrato_id"               => $contrato_alquiler->id,
-            "empezable"               => $empezable
+            "empezable"               => $empezable,
+              "vendedor" => $vendedor,
+              "userId" => $user_id,
+            "disableAnular"           => $anular
         ));
 
         $data['mensaje']            = $mensaje;
@@ -478,16 +507,79 @@ class Contratos_alquiler extends CRM_Controller
              "historial" => true,
              "ruta" => [
                  ["nombre" => "Alquileres", "activo" => false],
-                 ["nombre" => "Contrato de alquiler", "activo" => false],
+                 ["nombre" => "Contratos de alquiler", "activo" => false,'url'=>'contratos_alquiler/listar'],
                  ["nombre" => "<b>{$contrato_alquiler->codigo}</b>","activo" => true]
-             ]
-        );
+             ],
+                 "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array("contratos_alquiler/imprimir/{$uuid}" => "Imprimir")]
 
+        );
+        $cotizacion_id = 'x';
+        
+        if($contrato_alquiler->tipoid!=''){
+            $cotizacion_id = $contrato_alquiler->tipoid;
+        }
+        $data['subpanels'] = [
+            
+            'cotizaciones_alquiler' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'entregas' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'devoluciones' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'ordenes_alquiler' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'facturas2' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'items' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'series' => ['contrato_alquiler' => $contrato_alquiler->id],
+            'documentos' => ['contrato_alquiler' => $contrato_alquiler->id]
+            
+        ];
+        
+       
+        
         $this->template->agregar_titulo_header('Contratos de alquiler: '.$contrato_alquiler->codigo);
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar();
 
+    }
+
+    public function imprimir($uuid=null)
+    {
+        if($uuid==null){
+            return false;
+        }
+
+        $contrato = $this->ContratosAlquilerRepository->findByUuid($uuid);
+        $variable = collect($this->ContratosAlquilerRepository->getCollectionCampo($contrato));
+        $contrato->load('centro_facturacion', 'corte_facturacion', 'items', 'contratos_items');
+        $centro = $this->CentrosContablesRepository->find($contrato->centro_contable_id);
+        $empresa = $this->empresaObj->find($contrato->empresa_id);
+        $cliente = $this->ClienteRepository->find($contrato->cliente_id);
+        $cliente->load('telefonos_asignados');
+        $usuario = $this->UsuariosRepository->find($contrato->created_by);
+        $creador = $this->UsuariosRepository->find($this->usuario_id);
+        $items = $contrato->load('contratos_items', 'entregas', 'contratos_items.item', 'contratos_items.ciclo', 'contratos_items.contratos_items_detalles');
+
+        if(!empty($contrato->entregas)){
+        $i=0;
+        foreach($contrato->entregas as $row){
+          //$ResultEntregas[$i] = EntregasAlquiler::with(array("contrato_alquiler.contratos_items.item"))->where('uuid_entrega_alquiler', hex2bin($row->uuid_entrega_alquiler))->get();
+          $ResultEntregas[$i] = EntregasAlquiler::with(array("contrato_alquiler.corte_facturacion","contrato_alquiler.facturar_contra_entrega","contrato_alquiler.calculo_costo_retorno","contrato_alquiler.contratos_items", "contrato_alquiler.contratos_items.ciclo", "contrato_alquiler.contratos_items.item", "contrato_alquiler.contratos_items.item.precios_alquiler"))->where('uuid_entrega_alquiler', hex2bin($row->uuid_entrega_alquiler))->get();
+          $i++;
+        }
+        }else{
+            $ResultEntregas = '';
+        }
+        $options = new Options();
+        $options->set('isRemoteEnabled', TRUE);
+        $dompdf = new Dompdf($options);
+        $data   = ['contrato_info'=>$contrato, 'empresa' => $empresa, 'usuario' => $usuario, 'centro_contable' => $centro->nombre, 'cliente' => $cliente, 'items' => $items, 'items_entregados' => !empty($ResultEntregas)?$ResultEntregas:'', 'creador' => $creador, 'atributos' => $variable['articulos']];
+        $html = $this->load->view('pdf/contrato_alquiler', $data, true);
+
+        //render
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $dompdf->stream($contrato->codigo);
+
+        exit();
     }
 
     public function ocultoformulario($contrato_alquiler = array()) {
@@ -543,36 +635,11 @@ class Contratos_alquiler extends CRM_Controller
             return $value["valor"]=="no";
         })->first();
 
-        //---------------------
-        // Catalogo Vendedores
-        //---------------------
-        $roles_users = Rol_orm::where(function ($query) use ($clause) {
-                $query->where('empresa_id', '=', $clause['empresa_id']);
-                $query->where('nombre', 'like', '%vendedor%');
-        })->orWhere(function ($query) use ($clause) {
-               $query->where('empresa_id', '=', $clause['empresa_id']);
-               $query->where('nombre', 'like', '%venta%');
-        })->with(array('usuarios'))->get();
-
-        $vendedores = array();
-        foreach ($roles_users as $roles) {
-            $usuarios = $roles->usuarios;
-            foreach ($usuarios as $user) {
-                if ($user->pivot->empresa_id == $clause['empresa_id']) {
-                    array_push($vendedores, array(
-                        "id" => $user->id,
-                        "nombre" => Util::verificar_valor($user->nombre) ." ". Util::verificar_valor($user->apellido)
-                    ));
-                }
-            }
-        }
-
         $this->assets->agregar_var_js(array(
             "fecha_hoy"             =>date("d/m/Y"),
             "clientes"              => $clientes,
             "cotizacions"          => $cotizaciones,
-            //"vendedores"            => $this->UsuariosRepository->get($clause),
-            "vendedores"            => collect($vendedores),
+            "vendedores"            => $this->UsuariosRepository->get(array_merge($clause, ['vendedor' => true])),
             "estados"               => $this->ContratosAlquilerCatalogosRepository->get(['tipo'=>'estado']),
             "cortes_facturacion"    => $this->ContratosAlquilerCatalogosRepository->get(['tipo'=>'corte_facturacion']),
             "costos_retorno"        => $this->ContratosAlquilerCatalogosRepository->get(['tipo'=>'calculo_costo_retorno']),
@@ -616,13 +683,15 @@ class Contratos_alquiler extends CRM_Controller
         $post = $this->input->post();
         if (!empty($post)) {
 
-          //dd($_POST);
+            
+            $contrato_alquiler=null;
 
             Capsule::beginTransaction();
             try {
                 $campo = $post['campo'];
                 if(empty($campo['id']))
                 {
+                    
                     $post['campo']['codigo']        = $this->_generar_codigo();
                     $post['campo']['empresa_id']    = $this->empresa_id;
                     $contrato_alquiler = $this->ContratosAlquilerRepository->create($post);
@@ -717,7 +786,7 @@ class Contratos_alquiler extends CRM_Controller
                 0 => array(
                     "nombre" => "Alquileres",
                     "activo" => false,
-                    "url" => 'contratos_alquiler/listar'
+
                 ),
                 1 => array(
                     "nombre" => "Contratos de alquiler",

@@ -10,7 +10,7 @@ $config['modulo_config'] = array(
     'grupo'			=> 'Producción',
     'agrupador'		=> array(
         'Seguros' => array(
-            "grupo_orden" => 2
+            "grupo_orden" => 1
         ),
     ),
     
@@ -19,12 +19,12 @@ $config['modulo_config'] = array(
                         
         'nombre' =>'Intereses Asegurados' ,
         'url' => 'intereses_asegurados/listar',
-        'orden'=> 3
+        'orden'=> 4
                            
     ),
     'permisos'	=> array(
         'acceso'                                    => 'Acceso',
         'listar-usuarios__desactivarActivarUsuario' => 'Desactivar/Activar cuenta de Usuarios',
-        'editar-carga__cambiarEstado' => 'Cambiar Estado',
+        'editar__cambiarEstado' => 'Cambiar Estado'
     )
 );

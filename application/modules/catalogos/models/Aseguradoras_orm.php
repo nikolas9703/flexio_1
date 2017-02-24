@@ -65,4 +65,8 @@ class Aseguradoras_orm extends Model
     public function coberturas(){
 	return $this->hasMany('Coberturas_orm', 'id');
     }
+
+    public static function findByIdAseguradora($id_aseguradora){
+        return self::where('id','=',$id_aseguradora)->first();
+    }
 }

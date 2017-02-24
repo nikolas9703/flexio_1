@@ -191,7 +191,8 @@ class Pagos extends CRM_Controller {
         ));
 
 
-        $data['proveedores'] = Proveedores_orm::deEmpresa($this->empresa_id)->get(array('id', 'nombre'));
+        //$data['proveedores'] = Proveedores_orm::deEmpresa($this->empresa_id)->get(array('id', 'nombre'));
+        $data['proveedores'] = collect([]);
         $data['etapas'] = Pago_catalogos_orm::where('tipo', 'etapa3')->get(array('etiqueta', 'valor'));
         $data['formas_pago'] = Pago_catalogos_orm::where('tipo', 'pago')->get(array('id', 'etiqueta', 'valor'));
         $data['bancos'] = Bancos_orm::get(array('id', 'nombre'));
@@ -223,6 +224,8 @@ class Pagos extends CRM_Controller {
         $numeroDocumento      = $this->input->post('numeroDocumento',TRUE);
         $pedido_id = $this->input->post('pedido_id', true);
         $caja_id = $this->input->post('caja_id', true);
+        $campo = $this->input->post('campo',TRUE);
+       // $subcontrato_id = $this->input->post('subcontrato_id',TRUE);
 
         //subpanels
         $orden_compra_id    = $this->input->post("orden_compra_id", true);
@@ -242,6 +245,8 @@ class Pagos extends CRM_Controller {
 				if(!empty($caja_id))$pagos->deCaja($caja_id);
         if (!empty($pedido_id))$pagos->dePedido($pedido_id);
         if(!empty($numeroDocumento))$pagos->deDocumentoPago($numeroDocumento);
+        if(!empty($campo))$pagos->deFiltro($campo);
+        //if(!empty($subcontrato_id))$pagos->deSubContrato($subcontrato_id);
     }
 
     public function ajax_exportar()
@@ -291,40 +296,68 @@ class Pagos extends CRM_Controller {
 
             foreach ($pagos->get() as $i => $row) {
 
-                 $link_planilla="";
+              $link_planilla="";
               if($row->formulario == 'planilla'){
 
                   $planilla = $row->planillas->first();
                   $codido_planilla = $planilla->codigo;
+                  $uuid_colaborador = !empty($row->colaborador) && !empty($row->colaborador->uuid_colaborador) ? $row->colaborador->uuid_colaborador : "";
+                  $nombre = !empty($row->colaborador) && !empty($row->colaborador->nombre) ? $row->colaborador->nombre : "";
+                  $apellido = !empty($row->colaborador) && !empty($row->colaborador->apellido) ? $row->colaborador->apellido : "";
+
                   $link_planilla = '<a href="'.base_url('planilla/ver/' . $planilla->uuid_planilla).'" class="link">'.$codido_planilla.'</a>';
-                  $link_colaborador = '<a href="'.base_url('colaboradores/ver/' . $row->colaborador->uuid_colaborador).'" class="link">'.$row->colaborador->nombre.' '.$row->colaborador->apellido.'</a>';
+                  $link_colaborador = '<a href="'.base_url('colaboradores/ver/' . $uuid_colaborador).'" class="link">'.$nombre.' '.$apellido.'</a>';
                }
               else if( $row->formulario == 'pago_extraordinario' ){
-                  $extraordinario = $row->pagos_extraordinarios->first();
 
+                  $extraordinario = $row->pagos_extraordinarios->first();
+                  $uuid_colaborador = !empty($row->colaborador) && !empty($row->colaborador->uuid_colaborador) ? $row->colaborador->uuid_colaborador : "";
+                  $nombre = !empty($row->colaborador) && !empty($row->colaborador->nombre) ? $row->colaborador->nombre : "";
+                  $apellido = !empty($row->colaborador) && !empty($row->colaborador->apellido) ? $row->colaborador->apellido : "";
                   $codido_pago_extraordinario = $extraordinario->numero;
+
                   $link_planilla = '<a href="'.base_url('comisiones/ver/' . $extraordinario->uuid_comision).'" class="link">'.$codido_pago_extraordinario.'</a>';
-                  $link_colaborador = '<a href="'.base_url('colaboradores/ver/' . $row->colaborador->uuid_colaborador).'" class="link">'.$row->colaborador->nombre.' '.$row->colaborador->apellido.'</a>';
+                  $link_colaborador = '<a href="'.base_url('colaboradores/ver/' . $uuid_colaborador).'" class="link">'.$nombre.' '.$apellido.'</a>';
+              }
+
+              else if($row->formulario == 'transferencia'){
+                  $transferencia = $row->transferencias->first();
+                  $codigo = $transferencia->numero;
+                  $link_planilla = '<a href="'.base_url('cajas/transferir_detalle/' . $transferencia->caja->uuid_caja.'/'.$transferencia->id).'" class="link">'.$codigo.'</a>';
+                  $link_colaborador = $transferencia->caja->responsable->nombre.' '.$transferencia->caja->responsable->apellido;
                }
 
+              else if( $row->empezable_type == 'Flexio\Modulo\Anticipos\Models\Anticipo'){
+                  $link_planilla = '<a href="'.$row->empezable->enlace.'" class="link">'.$row->empezable->codigo.'</a>';
+              }
+              else if( $row->formulario == 'movimiento_monetario' ){
+                $retiro = $row->retiros->first();
+                $link_planilla = '<a href="'.base_url('movimiento_monetario/ver_retiros/' . bin2hex($retiro->uuid_retiro_dinero)).'" class="link">'.$retiro->codigo.'</a>';
+              }
                 $hidden_options = "";
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->uuid_pago . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-              if($row->formulario != 'planilla' && $row->formulario != 'pago_extraordinario'){
-                    $hidden_options .= '<a href="' . base_url('pagos/ver/' . $row->uuid_pago) . '" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
+              if($row->formulario != 'planilla' && $row->formulario != 'pago_extraordinario' /*&& $row->formulario != 'movimiento_monetario'*/){
+                   if($row->formulario != 'transferencia' && $row->formulario != 'movimiento_monetario'){
+                     $hidden_options .= '<a href="' . base_url('pagos/ver/' . $row->uuid_pago) . '" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
+                    }
 
                     if ($row->estado == 'por_aprobar'){
-                        $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success aprobarPago" >Aprobar pago</a>';
+                        $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '"  class="btn btn-block btn-outline btn-success aprobarPago" >Aprobar pago</a>';
 
                     }
-                    else if ($row->estado == 'por_aplicar'){
-                           $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
-
+                    else if ($row->estado == 'por_aplicar' && trim($this->listaPago->metodo_pago($row->metodo_pago)) != 'Cheque'){
+                           $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
                     }
                     else if ($row->estado == 'por_aplicar' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque'){
                         $hidden_options .= '<a href="' . base_url('cheques/crear/pago' . $row->uuid_pago) . '" class="btn btn-block btn-outline btn-success">Imprimir Cheque</a>';
                     }
-                      $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success anularPago" id="#anularPago">Anular pago</a>';
+                    else if ($row->estado == 'cheque_en_transito' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque'){
+                      $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
+                    }
 
+                    if($row->estado != 'anulado'){
+                      $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '" class="btn btn-block btn-outline btn-success anularPago" id="#anularPago">Anular pago</a>';
+                    }
               }else{
 
                 if ($row->estado == 'por_aplicar'){
@@ -334,7 +367,9 @@ class Pagos extends CRM_Controller {
                   $hidden_options .= "Este pago ya esta concluido.";
                 }
               }
-
+                if($row->formulario != 'transferencia' && $row->formulario != 'movimiento_monetario'){
+                  $hidden_options .= '<a  href="'.base_url('pagos/historial/'. $row->uuid_pago).'"   data-id="'.$row->id.'" class="btn btn-block btn-outline btn-success">Ver bit&aacute;cora</a>';
+                }
 
                 $proveedor = $row->proveedor;
                 $etapa = $row->catalogo_estado;
@@ -351,13 +386,15 @@ class Pagos extends CRM_Controller {
                 $response->rows[$i]["id"] = $row->uuid_pago;
                 $response->rows[$i]["cell"] = array(
                     $row->uuid_pago,
-                    ($row->formulario!='planilla' && $row->formulario!='pago_extraordinario')?('<a class="link" href="' . base_url('pagos/ver/' . $row->uuid_pago) .'" style="color:blue;">'. $row->codigo . '</a>'):$row->codigo,
+
+                    ($row->formulario!='movimiento_monetario' && $row->formulario!='transferencia' && $row->formulario!='planilla' && $row->formulario!='pago_extraordinario')?('<a class="link" href="' . base_url('pagos/ver/' . $row->uuid_pago) .'" style="color:blue;">'. $row->codigo . '</a>'):$row->codigo,
+                    ($row->formulario!='transferencia' && $row->formulario!='planilla' && $row->formulario!='pago_extraordinario')?('<a class="link">'.$proveedor->nombre.'</a>'):$link_colaborador,
+
                     $row->fecha_pago,
-                    ($row->formulario!='planilla' && $row->formulario!='pago_extraordinario')?('<a class="link">'.$proveedor->nombre.'</a>'):$link_colaborador,
+                    '<label class="' . $this->listaPago->color_monto($row->estado) . '">$' . number_format($row->monto_pagado, 2) . '</label>',
                     $no_documento,
                     $this->listaPago->metodo_pago($row->metodo_pago),
                     //$this->listaPago->banco($row->metodo_pago),
-                    '<label class="' . $this->listaPago->color_monto($row->estado) . '">' . number_format($row->monto_pagado, 2) . '</label>',
                     $this->listaPago->color_estado($etapa->etiqueta, $etapa->valor),
                     $etapa->etiqueta,
                     $link_option,
@@ -375,11 +412,14 @@ class Pagos extends CRM_Controller {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/pagos/tabla.js'
         ));
-
         if (!empty($uuid_orden_venta)) {
             if (preg_match("/pedidos/i", $this->router->fetch_class())) {
                 $this->assets->agregar_var_js(array(
                     "pedidos_id" => $uuid_orden_venta
+                ));
+            }else if(is_array($uuid_orden_venta)){
+                $this->assets->agregar_var_js(array(
+                    "campo" => collect($uuid_orden_venta)
                 ));
             } else {
                 $this->assets->agregar_var_js(array(
@@ -461,7 +501,8 @@ class Pagos extends CRM_Controller {
         }
         elseif(preg_match('/facturacompra/', $foreing_key))
         {
-            $empezable_id = str_replace('facturacompra', '', $foreing_key);
+            $factura = $this->FacturaCompraRepository->findByUuid(str_replace('facturacompra', '', $foreing_key));
+            $empezable_id = $factura->id;
             $empezable_type = 'factura';
         }
 
@@ -503,7 +544,7 @@ class Pagos extends CRM_Controller {
         $data = [];
 
         //permisos
-        $acceso = $this->auth->has_permission('acceso');
+        $acceso = $this->auth->has_permission('acceso','pagos/ver/(:any)');
         $this->Toast->runVerifyPermission($acceso);
 
         //Cargo el registro
@@ -515,8 +556,7 @@ class Pagos extends CRM_Controller {
             "{$registro->empezable_type}s" => ($registro->empezable_type !== false) ? [0=>['id'=>$registro->empezable_id,'nombre'=>(new $registro->empezable_type_model)->find($registro->empezable_id)->codigo]] : [],
             "id" => $registro->empezable_id
         ]);
-
-        //assets
+         //assets
         $this->FlexioAssets->run();//css y js generales
         $this->FlexioAssets->add('vars', [
             "vista" => 'editar',
@@ -530,10 +570,19 @@ class Pagos extends CRM_Controller {
         $breadcrumb = [
             "titulo" => '<i class="fa fa-shopping-cart"></i> Pago: ' . $registro->codigo,
             "menu" => [
-                "opciones" => ["pagos/imprimir/{$registro->uuid_pago}" => "Imprimir"]
+                "nombre" => 'Acción',
+                "url" => '#',
+                "opciones" => array()
             ]
+
         ];
 
+        if($registro->estado=='aplicado'){
+
+            $breadcrumb["menu"]["opciones"]["pagos/imprimir/" . $registro->uuid_pago] = "Imprimir";
+        }
+
+        $breadcrumb["menu"]["opciones"]["pagos/historial/" . $registro->uuid_pago] = "Ver bit&aacute;cora";
         //render
         $this->template->agregar_titulo_header('Pagos');
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -550,11 +599,12 @@ class Pagos extends CRM_Controller {
 
         $pago = $this->pagosRep->findByUuid($uuid);
         $pago->load("empresa");
-
+        $history = $this->pagosRep->getLastEstadoHistory($pago->id);
         $dompdf = new Dompdf();
-        $data   = ['pago'=>$pago];
-        $html = $this->load->view('pdf/pago', $data, true);
+        $data   = ['pago'=>$pago, 'history'=>$history];
 
+        $html = $this->load->view('pdf/pago', $data, true);
+        //echo '<pre>'. $html . '</pre>'; die;
         //render
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
@@ -564,7 +614,7 @@ class Pagos extends CRM_Controller {
         exit();
     }
 
-    public function aplicar_pagos() {
+    public function ajax_aplicar_pagos() {
        // Just Allow ajax request
       if (! $this->input->is_ajax_request ()) {
         return false;
@@ -600,10 +650,15 @@ class Pagos extends CRM_Controller {
                           }
                     }
                     else{
-                          //Aqui debe estar las trancasacciones de tipo planilla
-                          $pago->estado = 'aplicado';
-                          $pago->save();
-                          $success_true[] = 1;
+
+                      $pago->estado = 'aplicado';
+                      $pago->save();
+                      $success_true[] = 1;
+
+                      $planilla = $this->planillaRepository->find($pago->depositable_id);  //30: Parcial, 31: Completo
+                      $planilla->estado_id = ($planilla->pagadas_colaboradores + 1 < $planilla->total_colaboradores)?30:31;
+                      $planilla->pagadas_colaboradores = $planilla->pagadas_colaboradores+1;
+                      $planilla->save();
                    }
               }
 
@@ -696,15 +751,21 @@ class Pagos extends CRM_Controller {
 
     public function ocultoformulario()
     {
+        $limit=10; // Usado para limitar el numero de proveedores
         $clause = ["empresa_id" => $this->empresa_id, "transaccionales" => true, 'conItems' => true, 'modulo' => 'pagos', 'por_pagar' => true];
         $catalogos = $this->CatalogoRepository->get($clause);
-        $proveedores = $this->proveedoresRep->get($clause);
+        $proveedores = $this->proveedoresRep->get($clause,null,null,$limit);
+        $collectionsAnticipos = new Flexio\Modulo\Anticipos\Collections\PagoCollection;
+        $anticiposObj = new Flexio\Modulo\Anticipos\Repository\AnticipoRepository;
+        $anticipos = $anticiposObj->getAnticipos($this->empresa_id)->con_pago_anulado()->fetch();
 
         $this->FlexioAssets->add('js', ['public/resources/compile/modulos/pagos/formulario.js']);
 
         $this->FlexioAssets->add('vars',[
             'proveedoresList' => $proveedores->map(function($proveedor){return ['proveedor_id' => $proveedor->id, 'nombre' => $proveedor->nombre];}),
-            'proveedores' => $this->proveedoresRep->getCollectionProveedoresPago($proveedores),
+            //'proveedoresList' =>collect([]),
+            'proveedores' => $this->proveedoresRep->getCollectionProveedoresPago($this->proveedoresRep->get($clause)),
+            //'proveedores' => collect([]),
             'cuentas' => $this->cuenta_banco->getCollectionCuentasBanco($this->cuenta_banco->getAll(['empresa_id' => $this->empresa_id])),
             'cajas' => $this->cajaRepository->getCollectionCajas($this->cajaRepository->get($clause)),
             'metodos_pago' => $catalogos->filter(function($metodo_pago){return $metodo_pago->tipo == 'metodo_pago';}),
@@ -712,7 +773,8 @@ class Pagos extends CRM_Controller {
             'estados' => $catalogos->filter(function($estado){return $estado->tipo == 'etapa';}),
             'tipos_pago' => $catalogos->filter(function($tipo_pago){return $tipo_pago->tipo == 'tipo_pago';}),
             'facturas' => $this->FacturaCompraRepository->getCollectionFacturasPago($this->FacturaCompraRepository->get($clause)),
-            'subcontratos' => $this->subcontratosRep->getCollectionSubcontratosPago($this->subcontratosRep->getSubContratos($clause))
+            'subcontratos' => $this->subcontratosRep->getCollectionSubcontratosPago($this->subcontratosRep->getSubContratos($clause)),
+            'anticipos' => $collectionsAnticipos->anticipos_para_pagos($anticipos)
         ]);
 
         $this->load->view('formulario');
@@ -733,37 +795,53 @@ class Pagos extends CRM_Controller {
 
         if(!empty($_POST))
         {
-            Capsule::beginTransaction();
+            $formGuardar = new  Flexio\Modulo\Pagos\FormRequest\GuardarPagos;
             try {
                 $post = $this->input->post();
                 $post["campo"]["empresa_id"] = $this->empresa_id;
                 $post["campo"]["empezable_type"] = $post['empezable_type'];
                 $post["campo"]["empezable_id"] = $post['empezable_id'];
-
-                if(!empty($post["campo"]["id"]))
-                {
-                    $registro = $this->pagosRep->save($post);
-                }
-                else
-                {
-                    $registro = $this->pagosRep->create($post);
-                }
-
+                $pago = $formGuardar->save($post);
             } catch (\Exception $e) {
                 log_message('error', " __METHOD__  ->  , Linea:  __LINE__  --> " . $e->getMessage() . "\r\n");
-                Capsule::rollback();
                 $this->Toast->setUrl('pagos/listar')->run("exception",[$e->getMessage()]);
             }
 
-            if(count($registro)){
-                Capsule::commit();
-                $this->Toast->run("success",[$registro->codigo]);
+            if(!is_null($pago)){
+                $this->Toast->run("success",[$pago->codigo]);
             }else{
                 $this->Toast->run("error");
             }
 
             redirect(base_url('pagos/listar'));
         }
+
+    }
+
+    function ajax_cambiar_estado(){
+        if (! $this->input->is_ajax_request ()) {
+          return false;
+        }
+
+        $formGuardar = new  Flexio\Modulo\Pagos\FormRequest\GuardarPagos;
+        try {
+            $post = $this->input->post();
+            $pago = $formGuardar->save($post);
+        } catch (\Exception $e) {
+            log_message('error', " __METHOD__  ->  , Linea:  __LINE__  --> " . $e->getMessage() . "\r\n");
+            echo json_encode(array(
+              "response" => false,
+              "mensaje" => "Hubo un error tratando de cambiar el estado al pago."
+            ));
+          exit;
+        }
+
+        echo json_encode(array(
+            "response" => true,
+            "mensaje" => "Se ha actualizado el estado satisfactoriamente."
+        ));
+
+        exit;
 
     }
 
@@ -1239,7 +1317,9 @@ function ajax_pagar_colaborador() {
           $l = $pago->facturas->filter(function ($value, $key) {
               return $value->pivot->monto_pagado > 0;
           })->toArray();
-        }else{
+      }else if($pago->empezable_type =="Flexio\Modulo\Anticipos\Models\Anticipo"){
+        dd($pago->empezable);
+      }else{
           $l = $pago->planillas;
         }
 
@@ -1267,7 +1347,7 @@ function ajax_pagar_colaborador() {
     private function getTxtAchModulo($pago, $PagadaColaborador)
     {
 
-        $cadena = '';
+        $cadena = $identificador = '';
 
         if($pago->formulario == 'planilla'){
           $identificador = $pago->colaborador->cedula;
@@ -1277,7 +1357,7 @@ function ajax_pagar_colaborador() {
           $tipo_cuenta_id = '04'; //$pago->colaborador->tipo_cuenta_id;
           $neto = $pago->monto_pagado;
           $credito = 'C';
-          $cierre_planilla =  "REF*TXT**PAGO ". date("d/m/Y", strtotime($PagadaColaborador->fecha_cierre_planilla))."\\";
+          $cierre_planilla =  "REF TXT PAGO ". date("d/m/Y", strtotime($PagadaColaborador->fecha_cierre_planilla))."\\";
          }
         else if($pago->formulario == 'pago_extraordinario'){
 
@@ -1288,14 +1368,17 @@ function ajax_pagar_colaborador() {
            $tipo_cuenta_id = '04'; //$pago->colaborador->tipo_cuenta_id;
            $neto = $pago->monto_pagado;
            $credito = 'C';
-           $cierre_planilla = "REF*TXT**PAGO ". date("d/m/Y", strtotime($PagadaColaborador->pago_extraordinario->fecha_pago))."\\";
+           $cierre_planilla = "REF TXT PAGO ". date("d/m/Y", strtotime($PagadaColaborador->pago_extraordinario->fecha_programada_pago))."\\";
           }
         else{  //if($pago->depositable_type == 'Flexio\Modulo\Cajas\Models\Cajas')
             if($pago->proveedor->identificacion == 'juridico'){
                 $identificador =  $pago->proveedor->tomo_rollo.$pago->proveedor->folio_imagen_doc.$pago->proveedor->asiento_ficha.$pago->proveedor->digito_verificador;
             }
-            if($pago->proveedor->identificacion == 'pasaporte'){
+            else if($pago->proveedor->identificacion == 'pasaporte'){
                 $identificador =  $pago->proveedor->pasaporte;
+            }
+            else if($pago->proveedor->identificacion == 'natural'){
+                $identificador =  $pago->proveedor->provincia.'-'.$pago->proveedor->letra.'-'.$pago->proveedor->tomo_rollo.'-'.$pago->proveedor->asiento_ficha;
             }
             $nombre_completo = $pago->proveedor->nombre;
             $ruta_banco = isset($pago->proveedor->banco->ruta_transito)?$pago->proveedor->banco->ruta_transito:'';
@@ -1303,23 +1386,76 @@ function ajax_pagar_colaborador() {
             $tipo_cuenta_id = '04';
             $neto = $pago->monto_pagado;
             $credito = 'C';
-            $cierre_planilla = "REF*TXT**PAGO ". date("d/m/Y", strtotime($pago->fecha_pago))."\\";
+            $cierre_planilla = "REF TXT PAGO ". date("d/m/Y", strtotime($pago->fecha_pago))."\\";
       }
 
-
-
-          $cadena = substr(str_pad($identificador, 15),0,15).
+         $cadena = substr( Util::sanear_string_ach($identificador),0,15).';'.
+                  substr( Util::sanear_string_ach($nombre_completo),0,22).';'.
+                  substr($ruta_banco,0,9).';'.
+                  substr($numero_cuenta,0,17).';'.
+                  $tipo_cuenta_id.';'.
+                  number_format($neto, 2, ".", "").';'.
+                  $credito.';'.
+                  substr( Util::sanear_string_ach($cierre_planilla),0,80)."\r\n";
+         /*  $cadena = substr(str_pad($identificador, 15),0,15).
             substr(str_pad($nombre_completo, 22),0,22).
             substr(str_pad($ruta_banco, 9),0,9).
             substr(str_pad($numero_cuenta, 17),0,17).
             $tipo_cuenta_id.
             substr(str_pad($neto, 11),0,11).
             $credito.
-            substr(str_pad($cierre_planilla, 80),0,80)."\r\n";
+            substr(str_pad($cierre_planilla, 80),0,80)."\r\n";*/
 
           return $cadena;
     }
 
+    function historial($uuid = NULL){
+
+        $acceso = 1;
+        $mensaje =  array();
+        $data = array();
+
+        $registro = $this->pagosRep->findByUuid($uuid);
+        if(!$this->auth->has_permission('acceso','pagos/historial') && is_null($registro)) {
+            // No, tiene permiso
+            $acceso = 0;
+            $mensaje = array('estado' => 500, 'mensaje' => ' <b>Usted no cuenta con permiso para esta solicitud</b>', 'clase' => 'alert-danger');
+        }
+        $this->_Css();
+        $this->_js();
+        $this->assets->agregar_js(array(
+            'public/resources/compile/modulos/pagos/historial.js'
+        ));
+        $breadcrumb = array(
+            "titulo" => '<i class="fa fa-shopping-cart"></i> Bit&aacute;cora: Pagos '.$registro->codigo,
+        );
+
+        $registro->load('historial');
+
+        $historial = $registro->historial->map(function($pagotHist) use ($registro){
+            return [
+                'id' => $pagotHist->id,
+                'titulo' => $pagotHist->titulo,
+                "codigo" =>$registro->codigo,
+                "descripcion" =>$pagotHist->descripcion,
+                "antes" => $pagotHist->antes,
+                "despues" => $pagotHist->despues,
+                "tipo" => $pagotHist->tipo,
+                "nombre_usuario" => $pagotHist->nombre_usuario,
+                "hace_tiempo" => $pagotHist->cuanto_tiempo,
+                "fecha_creacion" => $pagotHist->fecha_creacion,
+                "hora" => $pagotHist->hora
+            ];
+        });
+        $this->assets->agregar_var_js(array(
+            'historial' => $historial
+        ));
+        $this->template->agregar_titulo_header('Pagos');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido($data);
+        $this->template->visualizar();
+
+    }
 
     private function _Css() {
         $this->assets->agregar_css(array(
@@ -1332,6 +1468,8 @@ function ajax_pagar_colaborador() {
             'public/assets/css/plugins/jquery/chosen/chosen.min.css',
             'public/assets/js/plugins/jquery/sweetalert/sweetalert.css',
             'public/assets/css/modules/stylesheets/pagos.css',
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css'
         ));
     }
 
@@ -1359,6 +1497,8 @@ function ajax_pagar_colaborador() {
             'public/assets/js/default/jquery.inputmask.bundle.min.js',
              'public/assets/js/default/formulario.js',
             'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
         ));
     }
 

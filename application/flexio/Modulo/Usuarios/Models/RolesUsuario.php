@@ -3,6 +3,7 @@ namespace Flexio\Modulo\Usuarios\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Modulo\Ramos\Models\RamosRoles;
 
 class RolesUsuario extends Model
 {
@@ -30,6 +31,10 @@ class RolesUsuario extends Model
   public function usuarios()
   {
       return $this->belongsTo(Usuarios::class, 'usuario_id', 'id');
+  }
+
+  public function ramos(){
+      return $this->hasMany(RamosRoles::class, 'id_rol', 'role_id');
   }
 
 }

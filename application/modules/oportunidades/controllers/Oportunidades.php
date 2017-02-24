@@ -18,7 +18,7 @@ use Flexio\Modulo\Cliente\Repository\ClienteRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 use Flexio\Modulo\ClientesPotenciales\Repository\ClientesPotencialesRepository;
 use Flexio\Modulo\Cotizaciones\Repository\CotizacionRepository;
-
+use Flexio\Library\Util\AuthUser;
 
 class Oportunidades extends CRM_Controller
 {
@@ -69,7 +69,7 @@ class Oportunidades extends CRM_Controller
     {
         $data = array();
         $mensaje ='';
-        if(!$this->auth->has_permission('acceso'))
+        if(!$this->auth->has_permission('acceso', 'oportunidades/listar'))
         {
             redirect ( '/' );
         }
@@ -88,6 +88,7 @@ class Oportunidades extends CRM_Controller
             "menu" => ["nombre" => "Crear", "url" => "oportunidades/crear","opciones" => array()]
         );
         $breadcrumb["menu"]["opciones"]["#exportarOportunidades"] = "Exportar";
+        $breadcrumb["menu"]["opciones"]["#cambiarEstadoGrupal"] = ' Cambiar Estado';
 
         $cotizaciones = $this->CotizacionRepository->getCotizacionAbierta(['empresa_id'=>$this->empresa_id]);
         $cotizaciones->load('cliente');
@@ -95,9 +96,17 @@ class Oportunidades extends CRM_Controller
             "toast_mensaje" => $mensaje,
             "cotizaciones" => $cotizaciones
         ));
-
         $clause = ['empresa_id' => $this->empresa_id];
-        $data['usuarios'] = $this->UsuariosRepository->get($clause);
+        $usuarios = $this->UsuariosRepository->get($clause);
+
+        if(!AuthUser::is_owner() ){
+        $usuarios = $usuarios->filter(function($v) {
+            return $v->id == $this->usuario_id;
+        });
+        }
+
+
+        $data['usuarios'] = $usuarios;
         $data['estados'] = $this->OportunidadesCatalogosRepository->get(['tipo'=>'estado']);
 
         $this->template->agregar_titulo_header('Listado de Oportunidades');
@@ -107,13 +116,21 @@ class Oportunidades extends CRM_Controller
     }
 
 
-    public function ocultotabla()
+    public function ocultotabla($campo_array = [])
     {
-        $this->assets->agregar_js(array(
+        if(is_array($campo_array))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($campo_array)
+            ]);
+        }
+
+        $this->assets->agregar_js([
             'public/assets/js/modules/oportunidades/tabla.js'
-        ));
+        ]);
 
         $this->load->view('tabla');
+
     }
 
 
@@ -127,6 +144,12 @@ class Oportunidades extends CRM_Controller
         $cliente_id             = $this->input->post('cliente_id');
         $clause                 = $this->input->post();
         $clause['empresa_id']   = $this->empresa_id;
+        /**
+         * Si el usuario no es de tipo dueño o si el rol del usuario actual no tiene el permiso listar todos la lista
+         * mostrara solo las oportunidades asignadas a el usuario actual.
+         */
+        if( !AuthUser::is_owner() && !$this->auth->has_permission('listar_todos', 'oportunidades/listar') )$clause['asignado_a_id'] = $this->usuario_id;
+
         if ($cliente_id <> ''){
             $clause['cliente_id'] = $this->ClienteRepository->findByUuid($cliente_id)->id;
         }
@@ -212,6 +235,7 @@ class Oportunidades extends CRM_Controller
             'public/assets/js/default/toast.controller.js',
             'public/assets/js/default/vue/directives/datepicker2.js',
             'public/assets/js/default/vue/directives/inputmask.js',
+            'public/assets/js/default/vue/directives/select2.js',
             'public/assets/js/modules/oportunidades/plugins.js',
         ));
     }
@@ -221,7 +245,7 @@ class Oportunidades extends CRM_Controller
         $post = $this->input->post();
     	if(empty($post)){exit();}
 
-    	$oportunidades = $this->OportunidadesRepository->get(['ids', $post['ids']]);
+    	$oportunidades = $this->OportunidadesRepository->get(['campo' => ['uuid_oportunidad' => $post['ids']]]);
 
         $csv = Writer::createFromFileObject(new SplTempFileObject());
         $csv->insertOne(['No. Oportunidad','Nombre de la oportunidad','Monto',utf8_decode('Fecha de creación'),'Asignado a','Etapa']);
@@ -230,12 +254,37 @@ class Oportunidades extends CRM_Controller
         exit();
     }
 
+    public function ajax_change_status()
+    {
+        $post = $this->input->post();
+        if (empty($post) || !isset($post['ids'])) {
+            echo json_encode(['status' => "fail", 'message' => "No ha seleccionado nunguna oportunidad"]);
+            return;
+        }
+        Capsule::beginTransaction();
+        try {
+            $oportunidades = $this->OportunidadesRepository->get(['campo' => ['uuid_oportunidad' => $post['ids']]]);
+            foreach ($oportunidades as $oportunidad) {
+                $oportunidad->update(['etapa_id' => $this->input->post('status', TRUE)]);
+            }
+            Capsule::commit();
+            echo json_encode(['status' => 200, 'message' => "Cambios realizados"]);
+        } catch (Illuminate\Database\QueryException $e) {
+            log_message('error', __METHOD__ . " ->" . ", Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+            Capsule::rollback();
+            echo json_encode(['status' => $e->getCode(), 'message' => "No ha seleccionado nunguna oportunidad", 'cause' => $e->getMessage()]);
+
+        }
+
+
+    }
+
 
     public function crear(){
 
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'oportunidades/lista')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
@@ -246,7 +295,7 @@ class Oportunidades extends CRM_Controller
 
        	$this->_css();
         $this->_js();
-        
+
 
         $this->assets->agregar_var_js(array(
             "vista"                 => 'crear',
@@ -254,8 +303,27 @@ class Oportunidades extends CRM_Controller
         ));
 
         $data['mensaje'] = $mensaje;
-        $breadcrumb = array(
+      /*  $breadcrumb = array(
             "titulo" => '<i class="fa fa-line-chart"></i> Oportunidades: Crear ',
+        );*/
+
+        $breadcrumb = array(
+          "titulo" => '<i class="fa fa-line-chart"></i> Oportunidades: Crear ',
+        "ruta" => array(
+          0 => array(
+            "nombre" => "Ventas",
+            "activo" => false,
+          ),
+          1 => array(
+            "nombre" => "Oportunidades",
+            "activo" => false,
+            "url" => 'oportunidades/listar'
+          ),
+          2=> array(
+            "nombre" => '<b>Crear</b>',
+            "activo" => true
+          )
+        ),
         );
 
         $this->template->agregar_titulo_header('Oportunidades: Crear ');
@@ -269,7 +337,7 @@ class Oportunidades extends CRM_Controller
 
         $acceso = 1;
         $mensaje = array();
-        if (!$this->auth->has_permission('acceso')) {
+        if (!$this->auth->has_permission('acceso', 'oportunidades/editar/(:any)')) {
             $acceso = 0;
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud', 'clase' => 'alert-danger');
         }
@@ -282,14 +350,30 @@ class Oportunidades extends CRM_Controller
         $this->assets->agregar_var_js(array(
             "vista" => 'editar',
             "acceso" => $acceso == 0 ? $acceso : $acceso,
-            "oportunidad" => json_encode($this->OportunidadesRepository->getCollectionCampo($oportunidad),JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE)
+            "oportunidad" => $this->OportunidadesRepository->getCollectionCampo($oportunidad)
         ));
 
         $data['mensaje'] = $mensaje;
         $data['oportunidad'] = $oportunidad;
+
         $breadcrumb = array(
-            "titulo" => '<i class="fa fa-line-chart"></i> Oportunidades: '.$oportunidad->codigo,
-            "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array()]
+        "titulo" => '<i class="fa fa-line-chart"></i> Oportunidades: '.$oportunidad->codigo,
+        "menu" => ["nombre" => "Acci&oacute;n", "url" => "#","opciones" => array()],
+        "ruta" => array(
+          0 => array(
+            "nombre" => "Ventas",
+            "activo" => false,
+          ),
+          1 => array(
+            "nombre" => "Oportunidades",
+            "activo" => false,
+            "url" => 'oportunidades/listar'
+          ),
+          2=> array(
+            "nombre" => '<b>Detalle</b>',
+            "activo" => true
+          )
+        ),
         );
         $breadcrumb["menu"]["opciones"]["cotizaciones/crear/oportunidad".$oportunidad->id] = "Nueva cotizaci&oacute;n";
 
@@ -312,9 +396,9 @@ class Oportunidades extends CRM_Controller
 
         if (isset($oportunidad['info'])){$data['info'] = $oportunidad['info'];}
         $clientes = $this->ClienteRepository->getClientesEstadoActivo($clause)->get();
- 
+
         $aa = $this->UsuariosRepository->get($clause);
-        
+
         $this->assets->agregar_var_js(array(
             "clientes" => $clientes,
             'clientes_potenciales' => $this->ClientesPotencialesRepositoy->get($clause),

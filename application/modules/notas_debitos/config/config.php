@@ -7,7 +7,7 @@ $config['modulo_config'] = array(
 	'icono'			=> 'fa-shopping-cart',
 	'version'		=> '1.0',
 	'tipo'			=> 'addon', // core, addon
-	'grupo'			=> 'Notas de Débito',
+	'grupo'			=> 'Notas de crédito de proveedor',
 	//'agrupador'		=> 'Compras',
     'agrupador'		=> array(
         'Compras' => array(
@@ -16,7 +16,7 @@ $config['modulo_config'] = array(
     ),
 	'prefijo'		=> 'Compras',
 	'menu' => array(
-		'nombre' =>'Notas de Débito' ,
+		'nombre' =>'Notas de crédito de proveedor' ,
 		'url' => 'notas_debitos/listar',
 		'orden'=> 7
 	),

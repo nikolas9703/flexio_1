@@ -244,7 +244,9 @@ class Cargos extends CRM_Controller {
         'empresa_id'  => $this->empresa_id
       );
       $response = $this->CargosRepository->getCargosDeContratoPorfacturar($clause, false, $filtrar_todo_estado);
-  		echo json_encode($response);
+
+
+  		echo json_encode(collect($response)->toArray());
   		exit;
     }
 

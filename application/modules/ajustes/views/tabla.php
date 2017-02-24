@@ -9,6 +9,6 @@
     <table class="table table-striped" id="ajustesGrid"></table>
 
     <!-- pager definition -->
-    <div id="pager"></div>
+    <div id="pagerAjustes"></div>
 </div>
 <!-- /Listado de Items -->

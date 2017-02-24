@@ -24,6 +24,8 @@ use Flexio\Modulo\Contabilidad\Repository\CuentasRepository as CuentasRepository
 use Flexio\Modulo\Cajas\Transacciones\CajasTransacciones as TransaccionCaja;
 use Flexio\Modulo\EntradaManuales\Models\AsientoContable as AsientoContable;
 use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaBancoRepository as CuentaBancoRepository;
+use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
+use Flexio\Modulo\Catalogos\Repository\CatalogoRepository;
 
 //utils
 use Flexio\Library\Util\FlexioSession;
@@ -42,7 +44,9 @@ class Cajas extends CRM_Controller {
     protected $disparador;
     protected $TransaccionCaja;
     protected $CuentaBancoRepository;
-
+    protected $CentrosContablesRepository;
+    protected $modulo_padre;
+    protected $CatalogoRepository;
     //utils
     protected $FlexioSession;
 
@@ -54,13 +58,17 @@ class Cajas extends CRM_Controller {
         $this->load->model('usuarios/empresa_orm');
         $this->load->model('pagos/Pago_catalogos_orm');
         $this->load->module(array("documentos"));
+        $this->load->model('pagos/Pagos_orm');
+        $this->load->model('pagos/Pago_metodos_pago_orm');
+        $this->load->library('Repository/Pagos/Guardar_pago');
+        $this->pagoGuardar = new Guardar_pago;
         //Obtener el id de usuario de session
         $uuid_usuario = $this->session->userdata('huuid_usuario');
         $usuario = Usuario_orm::findByUuid($uuid_usuario);
 
         $this->usuario_id = $usuario->id;
 
-         $this->transaccionCaja    = new TransaccionCaja();
+        $this->transaccionCaja    = new TransaccionCaja();
         //Obtener el empresa_id de session
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
@@ -77,6 +85,9 @@ class Cajas extends CRM_Controller {
         $this->TransferirCajaRepository = new TransferirCajaRepository();
 
         $this->CajasCatalogoRepository = new CajasCatalogoRepository();
+        $this->CatalogoRepository = new CatalogoRepository();
+
+        $this->CentrosContablesRepository = new CentrosContablesRepository;
 
         //utils
         $this->FlexioSession = new FlexioSession;
@@ -91,23 +102,35 @@ class Cajas extends CRM_Controller {
             'empresa_id' => $this->empresa_id
         ];
         $this->configuracionCajaMenuda = $this->caja_menuda->getAll($empresa)->toArray();
+        $this->setPadreModulo();
     }
+    function setPadreModulo(){
+       $request = Illuminate\Http\Request::capture();
+    //   echo '<pre>'; print_r($request); echo '</pre>';
+        if($request->has('ventas')){
 
+       return  $this->modulo_padre = 'ventas';
+       }
+       /*if($request->has('contabilidad')){
+
+      return  $this->modulo_padre = 'contabilidad';
+    }*/
+
+       if($request->has('subcontrato')){
+         return  $this->modulo_padre = 'compras';
+       }
+
+
+       return $this->modulo_padre = $this->session->userdata('modulo_padre');
+    }
     public function listar() {
         $data = array();
 
-        //----------------------------------------
-        // Seleccionar Listado de Usuarios
         $usuarios = Usuario_orm::where("estado", "Activo")->get();
 
-        //----------------------------------------
-        // Seleccionar Listado de Centros
-        $cat_centros = Capsule::select(Capsule::raw("SELECT * FROM cen_centros WHERE empresa_id = :empresa_id1 AND estado='Activo' AND id NOT IN (SELECT padre_id FROM cen_centros WHERE empresa_id = :empresa_id2 AND estado='Activo') ORDER BY nombre ASC"), array(
-                    'empresa_id1' => $this->empresa_id,
-                    'empresa_id2' => $this->empresa_id
-        ));
-        //$cat_centros = (!empty($cat_centros) ? array_map(function($cat_centros){ return array("id" => $cat_centros->id, "nombre" => $cat_centros->nombre); }, $cat_centros) : "");
-        $data["centros"] = $cat_centros;
+        $clause = ['empresa_id' => $this->empresa_id, 'transaccionales' => true];
+        $data["centros"] = $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause));
+
         $data["usuarios"] = $usuarios;
 
         $this->assets->agregar_css(array(
@@ -150,7 +173,7 @@ class Cajas extends CRM_Controller {
             "titulo" => '<i class="fa fa-shopping-cart"></i> Cajas',
             "ruta" => array(
                 0 => array(
-                    "nombre" => "Compras",
+                    "nombre" => ucfirst($this->modulo_padre),
                     "activo" => false
                 ),
                 1 => array(
@@ -328,19 +351,17 @@ class Cajas extends CRM_Controller {
     }
 
     function crear($caja_uuid = NULL) {
-        //Si existe post de formulario
-        if (!empty($_POST)) {
-
-            //Guardar Formulario Caja
+         if (!empty($_POST)) {
             $this->gardar_caja();
         }
 
         $data = array();
-
+        $mensaje = !empty($this->session->flashdata('mensaje')) ? json_encode(array('estado' => 200, 'mensaje' => $this->session->flashdata('mensaje'))) : '';
         //----------------------------------------
         // Seleccionar Listado de Usuarios
         $clause = array(
         	"empresa_id" => $this->empresa_id,
+            'transaccionales' => true,
         	"estado" => "Activo"
         );
         $usuarios = collect(Capsule::table('usuarios')->join('usuarios_has_empresas',function($join) use($clause){
@@ -364,16 +385,22 @@ class Cajas extends CRM_Controller {
          //----------------------------------------
         // Agregra variables PHP como variables JS
         $this->assets->agregar_var_js(array(
-            "centroContableList" => json_encode($cat_centros),
+            "centroContableList" =>json_encode($this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause))),
+            //"centroContableList" => json_encode($cat_centros),
             "usuariosList" => json_encode($usuarios),
             "configurado" => json_encode($this->configuracionCajaMenuda),
-            "estadosList" => json_encode($estados)
+            "estadosList" => json_encode($estados),
+            "toast_mensaje" => $mensaje
         ));
 
 
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-shopping-cart"></i> Cajas: Crear'
         );
+        //------------------------------------------
+        // Para mensaje de creacion satisfactoria
+        //------------------------------------------
+
 
         //----------------------------------------
         // Si existe uuid de caja
@@ -383,9 +410,7 @@ class Cajas extends CRM_Controller {
             $caja_info = $this->caja->findByUuid($caja_uuid);
             $data["caja_uuid"] = $caja_uuid;
             $data["caja_id"] = $caja_info->id;
-            /* echo "<pre>";
-              print_r($caja_info->saldo);
-              echo "</pre>"; */
+
 
             $this->assets->agregar_css(array(
                 'public/assets/css/default/ui/base/jquery-ui.css',
@@ -393,7 +418,8 @@ class Cajas extends CRM_Controller {
                 'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
                 'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
                 'public/assets/css/modules/stylesheets/cobros.css',
-                'public/assets/css/modules/stylesheets/animacion.css'
+                'public/assets/css/modules/stylesheets/animacion.css',
+                'public/assets/css/plugins/jquery/toastr.min.css',
             ));
             $this->assets->agregar_js(array(
                 'public/assets/js/default/jquery-ui.min.js',
@@ -401,7 +427,7 @@ class Cajas extends CRM_Controller {
                 'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
                 'public/assets/js/plugins/jquery/jquery.sticky.js',
                 'public/assets/js/default/jquery.inputmask.bundle.min.js',
-
+                'public/assets/js/default/toast.controller.js'
             ));
 
             $this->assets->agregar_var_js(array(
@@ -416,7 +442,8 @@ class Cajas extends CRM_Controller {
                 "coment" =>(isset($caja->comentario_timeline)) ? $caja->comentario_timeline : "",
                 "caja_id"    => $caja->id,
                 'vista' => 'ver',
-                "cuenta_id" => $caja_info->cuenta_id
+                "cuenta_id" => $caja_info->cuenta_id,
+                "toast_mensaje" => $mensaje
             ));
 
             $breadcrumb = array(
@@ -424,7 +451,7 @@ class Cajas extends CRM_Controller {
          				"filtro" => false,
                 "ruta" => array(
                   0 => array(
-                      "nombre" => "Contabilidad",
+                      "nombre" =>  ucfirst($this->modulo_padre),
                       "activo" => false,
                   ),
                     1 => array(
@@ -438,27 +465,30 @@ class Cajas extends CRM_Controller {
                     )
                 ),
          		);
+        } //Termina detalle
+        else{
+          $breadcrumb = array(
+              "titulo" => '<i class="fa fa-shopping-cart"></i> Cajas: Crear',
+              "filtro" => false,
+              "ruta" => array(
+                0 => array(
+                      "nombre" =>  ucfirst($this->modulo_padre),
+                    "activo" => false,
+                ),
+                  1 => array(
+                      "nombre" => "Cajas",
+                      "activo" => false,
+                      "url" => 'cajas/listar'
+                  ),
+                  2=> array(
+                      "nombre" => '<b>Crear</b>',
+                      "activo" => true
+                  )
+              ),
+          );
         }
 
-        $breadcrumb = array(
-            "titulo" => '<i class="fa fa-shopping-cart"></i> Cajas: Crear',
-            "filtro" => false,
-            "ruta" => array(
-              0 => array(
-                  "nombre" => "Contabilidad",
-                  "activo" => false,
-              ),
-                1 => array(
-                    "nombre" => "Cajas",
-                    "activo" => false,
-                    "url" => 'cajas/listar'
-                ),
-                2=> array(
-                    "nombre" => '<b>Crear</b>',
-                    "activo" => true
-                )
-            ),
-        );
+
 
         $this->assets->agregar_css(array(
             'public/assets/css/plugins/jquery/chosen/chosen.min.css',
@@ -579,21 +609,12 @@ class Cajas extends CRM_Controller {
         $response->records = $count;
         $response->result = array();
         $i = 0;
+          if (count($filas)>0) {
+               foreach($filas as $i => $row){
 
-         if (!empty($filas->toArray())) {
-
-             foreach ($filas->toArray() AS $i => $row) {
                 $pagos_cadena = '';
 
-                $tipos_pagos = !empty($row["pagos"]) ? $row["pagos"] : array();
-                if(count($tipos_pagos)){
-                  foreach ($tipos_pagos as $key => $value) {
-                    foreach ($value['pago_info'] as $value_info) {
-                           $pagos_cadena .= $value_info['tipo_pago'].',';
-                     }
-                   }
-                   $pagos_cadena = rtrim($pagos_cadena, ",");
-                }
+                $tipos_pagos = !empty($row->pagos) ? $row->pagos->first() : array(); //Ahora la relacion es de uno a uno
 
                 $link_option = '<button class="viewOptionsss btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $hidden_options = '<a href="' . base_url("cajas/transferir_detalle/" . bin2hex($row['caja']['uuid_caja'])) . "/" . $row['id'] . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
@@ -603,8 +624,9 @@ class Cajas extends CRM_Controller {
                     '<a href="' . base_url("cajas/transferir_detalle/" . bin2hex($row['caja']['uuid_caja'])) . "/" . $row['id'] . '" style="color:blue;">' . Util::verificar_valor($row['numero']) . '</a>',
                     !empty($row['fecha']) ? date("d/m/Y", strtotime($row['fecha'])) : "",
                     Util::verificar_valor($row["cuenta"]["nombre"]),
-                    Util::verificar_valor($row["monto"]),
-                    $pagos_cadena,
+                    $row->present()->monto,//Util::verificar_valor($row["monto"]),
+                    $tipos_pagos->pago_info->valor,
+                    $row->present()->estado_label,
                     $link_option,
                     $hidden_options,
                 );
@@ -620,24 +642,19 @@ class Cajas extends CRM_Controller {
 
         $transferir = $this->TransferirCajaRepository->find($tranferir_id);
         $transferir->fecha = date("d/m/Y", strtotime($transferir->fecha));
+        //$tipo_pago = Pago_catalogos_orm::where('tipo', 'pago')->whereIn("etiqueta", array("al_contado", "cheque", "ach"))->get(array('id', 'etiqueta', 'valor'));
+        $tipo_pago =    $this->CatalogoRepository->get(["modulo" => 'pagos','tipo'=>'metodo_pago']);
+        $data = [];
+        //$transferir->load('pagos', 'caja'); //Esta x gusto
 
-        $tipo_pago = Pago_catalogos_orm::where('tipo', 'pago')->whereIn("etiqueta", array("al_contado", "cheque", "ach"))->get(array('id', 'etiqueta', 'valor'));
-        $cuentas_bancos = $this->CuentasRepository->getAll(array(
-            "empresa_id" => $this->empresa_id,
-            //"padre_id" => 6
-        ));
+        $cuentas_bancos = $this->CuentaBancoRepository->getAll(["empresa_id" => $this->empresa_id]);
+        $cuentas_bancos->load("cuenta");
 
-        $cuentas_bancos = $cuentas_bancos->map(function($item) {
-            return ['id' => $item->id, "nombre" => $item->nombre];
-        });
-         $data = [];
-        $transferir->load('pagos', 'caja');
+        //$caja = $transferir->caja->first(); //Esta x gusto
 
-        //dd($transferir_inf->toArray());
-
-        $caja = $transferir->caja->first();
-        $data['caja_id'] = $caja->id;
-        $data['caja_nombre'] = $caja->nombre;
+        $data['caja_id'] = $transferir->caja->id;
+        $data['caja_nombre'] = $transferir->caja->nombre;
+        $data['estados'] =    $this->CatalogoRepository->get(["modulo" => 'transferencias','tipo'=>'estado','activo'=>'1']);
 
         $this->assets->agregar_css(array(
             'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
@@ -656,16 +673,36 @@ class Cajas extends CRM_Controller {
             'public/assets/js/modules/cajas/transferir.controller.js',
         ));
 
-        $breadcrumb = array(
-            "titulo" => '<i class="fa fa-shopping-cart"></i> Transferir a caja: ' . $caja->numero . ':  ' . $caja->nombre
+         $breadcrumb = array(
+          "titulo" => '<i class="fa fa-shopping-cart"></i> Transferir a caja: ' . $transferir->caja->numero . ':  ' . $transferir->caja->nombre,
+            "filtro" => false,
+            "ruta" => [
+              0 => [
+                    "nombre" =>  ucfirst($this->modulo_padre),
+                    "activo" => false,
+              ],
+              1 => [
+                    "nombre" => "Cajas",
+                    "activo" => false,
+                    "url" => 'cajas/listar'
+              ],
+              2=> [
+                    "nombre" => '<b>Detalle Transferir</b>',
+                    "activo" => true
+              ]
+            ],
         );
-
         $this->assets->agregar_var_js(array(
             "cuentas_bancosList" => json_encode($cuentas_bancos),
-            "cuenta_id" => $transferir->cuenta_id
+            "cuenta_id" => $transferir->cuenta_id,
+            "estado" => $transferir->estado,
+            "estados" =>   json_encode($data['estados']),
+            "caja_id" => $transferir->caja->id,
         ));
 
-        $data = ['transferir' => $transferir, 'tipo_pagos' => $tipo_pago];
+        $data = ['transferir' => $transferir, 'tipo_pagos' => $tipo_pago,'caja_id'=>$transferir->caja->id];
+
+
         $this->template->agregar_titulo_header('Transferir a caja');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
@@ -708,37 +745,39 @@ class Cajas extends CRM_Controller {
     		'public/assets/js/modules/cajas/transferir.controller.js',
     	));
 
-    	$breadcrumb = array(
-    		"titulo" => '<i class="fa fa-shopping-cart"></i> Caja: '. $caja_info->numero . ' - '. $caja_info->nombre
-    	);
 
-    	//Listado: tipos de pagos
-    	$data['tipo_pagos'] = Pago_catalogos_orm::where('tipo','pago')->whereIn("etiqueta", array("al_contado", "aplicar_credito", "cheque", "tarjeta_de_credito", "ach", "caja_chica"))->get(array('id','etiqueta','valor'));
-        //dd($data);
-    	//Listado: cuentas de bancos CuentaBanco
-    	/*$cuentas_bancos = $this->CuentasRepository->getAll(array(
-                                                                    "empresa_id" => $this->empresa_id,
-                                                                    "padre_id" => 6
-                                                                )
-                                                            )->toArray();*/
+      $breadcrumb = array(
+          "titulo" => '<i class="fa fa-shopping-cart"></i> Caja: '. $caja_info->numero . ' - '. $caja_info->nombre,
+          "filtro" => false,
+          "ruta" => array(
+            0 => array(
+                "nombre" =>  ucfirst($this->modulo_padre),
+                "activo" => false,
+            ),
+              1 => array(
+                  "nombre" => "Cajas",
+                  "activo" => false,
+                  "url" => 'cajas/listar'
+              ),
+              2=> array(
+                  "nombre" => '<b>Crear Transferir</b>',
+                  "activo" => true
+              )
+          ),
+      );
 
-        $cuentas_bancos = $this->CuentaBancoRepository->getAll(array(
-                                                                    "empresa_id" => $this->empresa_id
-                                                                )
-                                                            );
-        //dd($caja_info);
-        $cuentas_bancos->load("cuenta");
-        //dd($cuentas_bancos[0]->cuenta->nombre);
-        //dd(count($cuentas_bancos));
-        //$cuentas_bancos = (!empty($cuentas_bancos)) ?$this->CuentasRepository->getAll(array("empresa_id" => $this->empresa_id, "id" =>$cuentas_bancos->cuenta_id)) :"";
-    	//$cuentas_bancos = (!empty($cuentas_bancos) ? array_map(function($cuentas_bancos){ return array("id" => $cuentas_bancos["id"], "cuenta_id" => $cuentas_bancos["cuenta_id"]); }, $cuentas_bancos) : "");
+    	//$data['tipo_pagos'] = Pago_catalogos_orm::where('tipo','pago')->whereIn("etiqueta", array("al_contado", "aplicar_credito", "cheque", "tarjeta_de_credito", "ach", "caja_chica"))->get(array('id','etiqueta','valor'));
+      $data['tipo_pagos'] =    $this->CatalogoRepository->get(["modulo" => 'pagos','tipo'=>'metodo_pago']);
 
-    	//----------------------------------------
-    	// Agregra variables PHP como variables JS
+      $cuentas_bancos = $this->CuentaBancoRepository->getAll(["empresa_id" => $this->empresa_id]);
+      $cuentas_bancos->load("cuenta");
+      $estados = $this->CatalogoRepository->get(["modulo" => 'transferencias']);
+
     	$this->assets->agregar_var_js(array(
-    		"cuentas_bancosList" => json_encode($cuentas_bancos),
+    		"estados" => json_encode($estados),
+    	  "cuentas_bancosList" => json_encode($cuentas_bancos),
     		"caja_id" => $caja_info->id,
-    		"maximo_transferir" => $maximo_transferir
+    		"maximo_transferir" => $maximo_transferir,
     	));
 
      	$this->template->agregar_titulo_header('Transferir a caja');
@@ -746,17 +785,16 @@ class Cajas extends CRM_Controller {
     	$this->template->agregar_contenido($data);
     	$this->template->visualizar();
     }
- public function transferir_desde_caja($caja_uuid=NULL)
+
+    public function transferir_desde_caja($caja_uuid=NULL)
     {
 
-     	//si no existe caja retornar
     	if($caja_uuid==NULL){
     		return false;
     	}
-        $clause = array();
+      $clause = array();
     	$data = array();
 
-    	//Caja Info
     	$caja_info = $this->caja->findByUuid($caja_uuid);
 
      	$data['caja_id'] = $caja_info->id;
@@ -764,7 +802,6 @@ class Cajas extends CRM_Controller {
     	$data['numero'] = $caja_info->numero;
     	$data['caja_uuid'] = $caja_uuid;
     	$maximo_transferir = $caja_info->limite-$caja_info->saldo;
-
 
      	$this->assets->agregar_css(array(
              'public/assets/css/default/ui/base/jquery-ui.css',
@@ -805,8 +842,6 @@ class Cajas extends CRM_Controller {
             'public/assets/js/default/vue/directives/inputmask.js',
             'public/assets/js/default/vue/directives/select2.js',
             'public/assets/js/modules/cajas/transferir_desde.js',
-          //  'public/assets/js/modules/cajas/components/tipo_pagos.js',
-            //'public/assets/js/default/formulario.js'
     	));
 
          $empezable = collect([
@@ -815,7 +850,6 @@ class Cajas extends CRM_Controller {
             'bancos' => [],
             'cajas' => []
         ]);
-
 
         $this->assets->agregar_var_js(array(
             "vista" => 'crear',
@@ -828,8 +862,6 @@ class Cajas extends CRM_Controller {
     		"titulo" => '<i class="fa fa-shopping-cart"></i> Transferencia desde: '. $caja_info->numero . ' - '. $caja_info->nombre
     	);
 
-
-
      	$this->template->agregar_titulo_header('Transferir desde caja');
     	$this->template->agregar_breadcrumb($breadcrumb);
     	$this->template->agregar_contenido($data);
@@ -837,16 +869,15 @@ class Cajas extends CRM_Controller {
     }
      public function guardar_transferir_desde()
     {
-
+         
     	if(empty($_POST)){
     		return false;
     	}
 
-        $request = Illuminate\Http\Request::createFromGlobals();
-        $post = $this->input->post();
-
-        $campo = $request->input('campo');
-        $tipospago = $request->input('tipospago');
+      $request = Illuminate\Http\Request::createFromGlobals();
+      $post = $this->input->post();
+      $campo = $request->input('campo');
+      $tipospago = $request->input('tipospago');
 
      	$fecha		= !empty($campo['fecha']) ? str_replace('/', '-', $campo['fecha']) : "";
      	$fecha		= !empty($campo['fecha']) ? date("Y-m-d", strtotime($fecha)) : "";
@@ -858,12 +889,12 @@ class Cajas extends CRM_Controller {
     		"numero" 		=> Capsule::raw("NO_TRANSFERENCIA('TFR', ". $this->empresa_id .")"),
     		"monto" 		=> $campo['monto'],
 	    	"fecha" 		=> $fecha,
+            "estado"                => 'por_aprobar',
 	    	"creado_por"            => $this->usuario_id,
-                "transferencia_desde" => 1,
-                "tipo_transferencia_hasta" =>  $this->input->post('empezable_type', TRUE),
+            "transferencia_desde" => 1,
+            "tipo_transferencia_hasta" =>  $this->input->post('empezable_type', TRUE),
     		"tipospago"		=> $tipospago
 	    );
-
 
     	$desde_caja = $this->caja->find($campo['desde_caja_id']);
     	$hasta_caja = $this->caja->find($_POST['empezable_id']);
@@ -876,8 +907,6 @@ class Cajas extends CRM_Controller {
     		}
     	});
 
-
-     	//mensaje success
     	if(!is_null($transferencia)){
 
     		$transferencia_creado = $this->TransferirCajaRepository->find($transferencia->id);
@@ -886,10 +915,9 @@ class Cajas extends CRM_Controller {
                  if( $_POST['empezable_type'] == 'caja' ){
                      $this->caja->cambiandoSaldo($hasta_caja ,$this->TransferirCajaRepository->subiendoCaja($transferencia_creado, $hasta_caja) );
                  }
-                if( $_POST['empezable_type'] == 'banco' ){
-
-                     $this->transaccionCaja->hacerTransaccion($transferencia, $transferencia_creado->numero);
-                }
+                
+                 $this->transaccionCaja->hacerTransaccion($transferencia, $transferencia_creado->numero);
+                
 
 
     		$this->session->set_flashdata('mensaje', "La transferencia a caja fue guarda con exito.");
@@ -920,10 +948,7 @@ class Cajas extends CRM_Controller {
 
     public function ajax_guardar_transferencia()
     {
-     /*echo '<pre>';
-    	print_r($_POST);
-    	echo '</pre>';
-    	die(); */
+        
     	if(empty($_POST)){
     		return false;
     	}
@@ -936,6 +961,7 @@ class Cajas extends CRM_Controller {
     	$fecha		= !empty($fecha) ? str_replace('/', '-', $fecha) : "";
     	$fecha		= !empty($fecha) ? date("Y-m-d", strtotime($fecha)) : "";
     	$tiposPago	= $this->input->post('tipospago', TRUE);
+    	$estado	= $this->input->post('estado', TRUE);
 
     	$fieldset = array(
 	    	"empresa_id" 	=> $this->empresa_id,
@@ -945,14 +971,20 @@ class Cajas extends CRM_Controller {
     		"monto" 		=> $monto,
 	    	"fecha" 		=> $fecha,
 	    	"creado_por" 	=> $this->usuario_id,
+	    	"estado" 	=> $estado,
+                "transferencia_desde" => 0,
 	    	"tipo_transferencia_hasta" 	=> 'caja',
     		"tipospago"		=> $tiposPago
 	    );
-
+      if(isset($id) && $id>0){ //Edicion
+        $fieldset = array(
+          "id" 	=> $id,
+          "estado" 	=> $estado,
+        );
+      }
 
     	$caja = $this->caja->find($caja_id);
-
-    	$transferencia = Capsule::transaction(function() use($fieldset) {
+     	$transferencia = Capsule::transaction(function() use($fieldset) {
 
     		try {
     			return $this->TransferirCajaRepository->create($fieldset);
@@ -963,19 +995,24 @@ class Cajas extends CRM_Controller {
 
     	//mensaje success
     	if(!is_null($transferencia)){
+             if(is_null($id)){
+          		$transferencia_creado = $this->TransferirCajaRepository->find($transferencia->id);
+           		$this->transaccionCaja->hacerTransaccion($transferencia, $transferencia_creado->numero);
+            }else if(!is_null($id) && $estado == 'aprobado'){
+              $this->_createPago($transferencia);
+            }
 
-    		$transferencia_creado = $this->TransferirCajaRepository->find($transferencia->id);
-
-     		$this->transaccionCaja->hacerTransaccion($transferencia, $transferencia_creado->numero);
-
-    		$this->session->set_flashdata('mensaje', "La transferencia a caja fue guarda con exito.");
+        $this->session->set_flashdata('mensaje', "La transferencia a caja fue guarda con exito.");
 
     		$response = [
+          'uuid_caja'=>$caja->uuid_caja,
 	    		'tipo' => 'success',
 	    		'mensaje' => 'La transferencia a caja fue guarda con exito.'
     		];
      		//Disparar evento
-    		$this->disparador->fire(new ActualizarCajaSaldoEvent($transferencia, $caja));
+        if(is_null($id))
+    		    $this->disparador->fire(new ActualizarCajaSaldoEvent($transferencia, $caja));
+
     	}else{
     		$response = [
 	    		'tipo' => 'error',
@@ -1113,6 +1150,63 @@ class Cajas extends CRM_Controller {
     	$caja_id = $this->input->post('caja_id', true);
         $modeloInstancia = $this->caja->find($caja_id);
     	$this->documentos->subir($modeloInstancia);
+    }
+
+    private function _createPago( $transferencia = []) {
+
+         $total = Pagos_orm::deEmpresa($transferencia->empresa_id)->count();
+        $year = Carbon::now()->format('y');
+
+       $contador = 1;
+
+       if(count($transferencia->pagos)>0){
+          foreach ($transferencia->pagos as $key => $value) {
+
+            if($value->pago_info->etiqueta == 'cheque'){
+             $aux = [];
+             $pago = new Pagos_orm;
+             $codigo = Util::generar_codigo('PGO' . $year, $total + $contador);
+             //$total_pagado_nuevo = (float)str_replace(",","",$value->monto);
+             $pago->codigo = $codigo;
+
+             $pago->empresa_id = $transferencia->empresa_id;
+             $pago->fecha_pago = date("Y-m-d");
+             $pago->proveedor_id = $transferencia->caja->id;
+             $pago->monto_pagado = $value->monto;
+             $pago->cuenta_id = $transferencia->cuenta_id;
+             $pago->depositable_id = $transferencia->id;
+             $pago->depositable_type = 'Flexio\\Modulo\\Cajas\\Models\\Transferencias';
+
+             $pago->formulario = 'transferencia'; // Poner Caja
+             $pago->estado = 'por_aprobar';
+             $pago->save();
+
+             $aux[$transferencia->id] = array(
+                 "pagable_type" =>'Flexio\\Modulo\\Cajas\\Models\\Transferencias',
+                 "monto_pagado" => $value->monto,
+                 "empresa_id" => $transferencia->empresa_id
+             );
+
+
+             $pago->transferencias()->sync($aux);
+
+             $item_pago = new Pago_metodos_pago_orm;
+
+             $referencia = $this->pagoGuardar->tipo_pago('cheque', array(
+               'numero_cheque'=>'',
+               'nombre_banco_cheque'=>''
+             ));
+
+             $item_pago->tipo_pago = 'cheque';
+             $item_pago->total_pagado = $value->monto;
+             $item_pago->referencia = 'cheque transferencia';
+             $pago->metodo_pago()->save($item_pago);
+             ++$contador;
+
+
+           }
+          }
+       }
     }
 
 }

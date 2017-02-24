@@ -73,7 +73,7 @@ $route['colaboradores/ajax-seleccionar-entrega-inventario'] = 'colaboradores/aja
 $route['colaboradores/ajax-colaborador-info'] = 'colaboradores/ajax_colaborador_info';
 $route['colaboradores/ajax-guardar-documentos'] = 'colaboradores/ajax_guardar_documentos';
 $route['colaboradores/ajax-guardar-comentario'] = 'colaboradores/ajax_guardar_comentario';
-
+$route['colaboradores/ajax-listar-salario'] = 'colaboradores/ajax_listar_salario';
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

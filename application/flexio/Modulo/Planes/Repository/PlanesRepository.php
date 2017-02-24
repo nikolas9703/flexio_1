@@ -55,4 +55,10 @@ class PlanesRepository {
         //return $query->get(array('id', Capsule::raw("CONCAT_WS(' ', IF(nombre != '', nombre, ''), IF(apellido != '', apellido, '')) AS nombre"), 'cedula', 'created_at', Capsule::raw("HEX(uuid_colaborador) AS uuid")));
         return $query->get();
     }
+     function getPlanes($clause) {
+        $query = Planes::with(array('comisiones' => function($query){     
+                }));
+        $query->where('id_ramo', '=', $clause['id_ramo']);       
+        return $query;                
+    }
 }

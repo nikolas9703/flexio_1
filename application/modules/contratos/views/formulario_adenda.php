@@ -20,7 +20,7 @@
       </div>
 
       <div class="form-group col-xs-12 col-sm-12 col-md-4 col-lg-4 ">
-        <label for="referencia">Referencia <span required="" aria-required="true">*</span></label>
+        <label for="referencia">Nombre de referencia <span required="" aria-required="true">*</span></label>
             <input type="text" name="campo[referencia]" class="form-control"  id="referencia" data-rule-required="true" value="<?php echo empty($info)?'': $info['referencia']?>">
       <label id="referencia-error" class="error" for="referencia"></label>
       </div>
@@ -32,7 +32,7 @@
 </div>
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
   <div class="form-group col-md-3 col-lg-3  col-md-offset-6 col-lg-offset-6">
-    <label for="centro_contable_id">Monto de adenda</label>
+    <label for="centro_contable_id">Monto de adenda (sin ITBMS)</label>
     <div class="input-group">
          <span class="input-group-addon">$</span>
          <input type="text" disabled id="monto_adenda" v-model="monto_adendas" name="campo[monto_adenda]"  class="form-control">
@@ -51,9 +51,9 @@
             <input type="submit" id="guardar_adendaBtn"  class="btn btn-primary btn-block" value="Guardar" v-on:click="guardar()"/>
         </div>
     </div>
-    
+
     <div class="row">
-        <component :is="vista_comments" :historial.sync="comentarios"></componente>            
+        <component :is="vista_comments" :historial.sync="comentarios"></componente>
     </div>
 
 </div>

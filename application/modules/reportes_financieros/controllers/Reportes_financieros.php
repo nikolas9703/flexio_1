@@ -35,6 +35,9 @@ use Flexio\Library\Util\FormatoMoneda;
 use Flexio\Modulo\Cliente\Repository\ClienteRepository;
 use Flexio\Modulo\ReporteFinanciero\Reportes\CuentaPorCobrarAntiguedad;
 use Flexio\Modulo\ReporteFinanciero\Reportes\CuentaPorPagarAntiguedad;
+use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
+use Flexio\Modulo\Inventarios\Repository\CategoriasRepository;
+use Flexio\Modulo\Cajas\Repository\CajasRepository;
 
 class Reportes_financieros extends CRM_Controller
 {
@@ -43,6 +46,9 @@ class Reportes_financieros extends CRM_Controller
   protected $centrosContablesRepository;
   protected $proveedores;
   protected $cliente;
+  protected $CuentasRepository;
+  protected $CategoriasRepository;
+  protected $CajasRepo;
 
   function __construct(){
     parent::__construct();
@@ -65,6 +71,9 @@ class Reportes_financieros extends CRM_Controller
     $this->centrosContablesRepository = new CentrosContablesRepository();
     $this->proveedores = new ProveedoresRepository();
     $this->cliente = new ClienteRepository();
+    $this->CuentasRepository = new CuentasRepository();
+    $this->CategoriasRepository = new CategoriasRepository();
+    $this->CajasRepo = new CajasRepository();
 
   }
 
@@ -117,8 +126,11 @@ class Reportes_financieros extends CRM_Controller
     //selecionar del catalogo
     //$reporte_validos = ['balance_situacion','ganancias_perdidas'];
     $agregar_proveedor = !empty($_POST['proveedor_id']) ? $_POST['proveedor_id'] : '';
-
-
+    $modulo= "";
+    $request = Illuminate\Http\Request::createFromGlobals();
+    // 1. obtener el modulo de donde viene
+    // si esta hacer el filtro // desabilitar
+    // no dejarlo como estaba
 
     $catalogo_reporte = $this->catalogo->tipoReporte();
     $reporte_validos = in_array($tipo,$catalogo_reporte->pluck('etiqueta')->toArray());
@@ -135,9 +147,11 @@ class Reportes_financieros extends CRM_Controller
     $this->assets->agregar_js(array(
         'public/assets/js/default/vue-validator.min.js',
         'public/assets/js/default/vue/filters/numeros.js',
+        'public/assets/js/default/vue/directives/monedadollar.js',
         'public/assets/js/modules/reporte_financiero/vue.tablelizer.js',
         'public/assets/js/modules/reporte_financiero/vue.tablelizer.ganancias-perdidas.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.estado_cuenta_proveedor.js',
+        'public/assets/js/modules/reporte_financiero/vue.reporte.costo_por_centro_compras.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.estado_cuenta_cliente.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.cuenta_por_pagar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.cuenta_por_cobrar_antiguedad.js',
@@ -145,19 +159,30 @@ class Reportes_financieros extends CRM_Controller
         'public/assets/js/modules/reporte_financiero/vue.balance_situacion.js',
         'public/assets/js/modules/reporte_financiero/vue.ganancias_perdidas.js',
         'public/assets/js/modules/reporte_financiero/vue.estado_cuenta_proveedor.js',
+        'public/assets/js/modules/reporte_financiero/vue.costo_por_centro_compras.js',
         'public/assets/js/modules/reporte_financiero/vue.estado_cuenta_cliente.js',
         'public/assets/js/modules/reporte_financiero/vue.form_cuenta_por_pagar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.form_cuenta_por_cobrar_antiguedad.js',
         'public/assets/js/modules/reporte_financiero/vue.form_impuesto_sobre_ventas.js',
         'public/assets/js/modules/reporte_financiero/vue.form.flujo_efectivo.js',
+        'public/assets/js/modules/reporte_financiero/vue.reporte_de_caja.js',
+        'public/assets/js/modules/reporte_financiero/reporte_de_caja_tabla.js',
         'public/assets/js/modules/reporte_financiero/vue.formulario43.js',
         'public/assets/js/modules/reporte_financiero/reporte_formulario43.js',
         'public/assets/js/modules/reporte_financiero/vue.formulario433.js',
         'public/assets/js/modules/reporte_financiero/reporte_formulario433.js',
+        'public/assets/js/default/vue/directives/select2.js',
         'public/assets/js/modules/reporte_financiero/vue.reporte.js',
         'public/assets/js/modules/reporte_financiero/exportar.js'
     ));
+      $validos = ['reporte_caja', 'cuenta_por_cobrar_por_antiguedad','estado_de_cuenta_de_cliente','cuenta_por_pagar_por_antiguedad','estado_cuenta_proveedor','costo_por_centro_compras'];
+      if ($request->has('modulo') && in_array($tipo,$validos)) {
+        $modulo = $request->input("modulo");
 
+        $catalogo_reporte = $catalogo_reporte->filter(function($query) use($tipo){
+          return $query->etiqueta == $tipo;
+        })->values();
+      }
       $data=array();
       $reporte_varjs =$catalogo_reporte;
       $reporte_varjs->toArray();
@@ -170,6 +195,8 @@ class Reportes_financieros extends CRM_Controller
         "reporte_actual" => $tipo,
         "catalogo" => $reporte_varjs,
         "proveedor_id" => $agregar_proveedor,
+        "retiene_impuesto" => $this->empresaObj->retiene_impuesto,
+        "modulo"=> in_array($modulo,["ventas","compras"]) == true?1:0,
         "empresa_logo" => !empty($logo_empresa->logo) ? $logo_empresa->logo : $logo_url . "/" . 'vista.jpg'
       ));
     $breadcrumb = array(
@@ -195,6 +222,7 @@ class Reportes_financieros extends CRM_Controller
     $this->load->view('ganancias_perdidas');
     $this->load->view('formulario_impuesto_sobre_venta');
     $this->load->view('estado_cuenta_proveedor');
+    $this->load->view('costo_por_centro_compras');
     $this->load->view('estado_cuenta_cliente');
     $this->load->view('formulario_cuenta_por_pagar_antiguedad');
     $this->load->view('formulario_cuenta_por_cobrar_antiguedad');
@@ -202,6 +230,7 @@ class Reportes_financieros extends CRM_Controller
     $this->load->view('componente_balance_situacion');
     $this->load->view('componente_ganancias_perdidas');
     $this->load->view('componente_estado_cuenta_proveedor');
+    $this->load->view('componente_costo_por_centro_compras');
     $this->load->view('componente_estado_cuenta_cliente');
     $this->load->view('reporte_cuenta_por_pagar_antiguedad');
     $this->load->view('reporte_impuesto_sobre_ventas');
@@ -210,6 +239,8 @@ class Reportes_financieros extends CRM_Controller
     $this->load->view('reporte_formulario43');
     $this->load->view('formulario_433');
     $this->load->view('reporte_formulario433');
+    $this->load->view('reporte_de_caja');
+    $this->load->view('reporte_de_caja_tabla');
   }
 
 
@@ -222,7 +253,9 @@ class Reportes_financieros extends CRM_Controller
     $formulario = $this->input->post('formulario');
 
     try{
+        
       $response = $this->reporte_catalogo->datoFormulario($formulario);
+      
       if($formulario =="ganancias_perdidas"){
         $clause = ['empresa_id'=>$this->empresa_id,'transaccionales'=>true];
         $centros_contables = ['centros_contable' =>$this->centrosContablesRepository->get($clause)];
@@ -242,6 +275,34 @@ class Reportes_financieros extends CRM_Controller
         //dd($clientes->toArray());
         $response = ['clientes'=>$clientes->toArray()];
       }
+
+      if(trim($formulario) =="costo_por_centro_compras"){
+
+        $clause = ['empresa_id'=>$this->empresa_id,'transaccionales'=>true];
+        $clause2 = array_merge($clause, ['ordenables'=>true,'conItems'=>true, 'estado != por_aprobar']);
+
+        $centros_contables = ['centros_contable' =>$this->centrosContablesRepository->get($clause)];
+        $cuentas =  $this->CuentasRepository->get($clause);
+        $response = [
+          'centros' =>$this->centrosContablesRepository->get($clause),
+          'cuentas' =>$this->CuentasRepository->get($clause),
+          'categorias' => $this->CategoriasRepository->getCollectionCategorias($this->CategoriasRepository->get($clause2)),
+        ];
+      }
+      
+      if(trim($formulario)=='reporte_de_caja') {
+          $clause = ['empresa_id' => $this->empresa_id];
+          $cajas = $this->CajasRepo->get($clause);
+          $cajas->load('responsable2');
+          
+          
+          $response = [
+              'cajas' => $cajas,
+              'centros' => $this->centrosContablesRepository->get($clause)
+              ];
+          
+      }
+
     }catch(Exception $e){
       $response = ['error' =>$e->getMessage()];
     }
@@ -256,12 +317,13 @@ class Reportes_financieros extends CRM_Controller
     if(!$this->input->is_ajax_request()){
       return false;
     }
+    
     $request = Illuminate\Http\Request::createFromGlobals();
     $datos = FormRequest::data_formulario($request->all());
     $datos['empresa_id'] = $this->empresa_id;
-
+    
     $reporte = (new GenerarReporte)->generar($datos);
-
+    
     $datos_reporte = $this->_generar_reporte($datos,$reporte);
 
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
@@ -281,7 +343,7 @@ class Reportes_financieros extends CRM_Controller
     die;
   }
 
-  private function _generar_reporte($request,$datos){
+  private function _generar_reporte($request, $datos){
 
     if($request['tipo'] == 'balance_situacion')
     {
@@ -294,6 +356,11 @@ class Reportes_financieros extends CRM_Controller
 
     if($request['tipo'] == 'estado_cuenta_proveedor'){
       return $this->estado_cuenta_proveedorFormato($datos,$request);
+    }
+
+    if($request['tipo'] == 'costo_por_centro_compras'){
+      //dd($datos);
+      return $this->costoPorCentroComprasFormato($datos,$request);
     }
 
     if($request['tipo'] == 'cuenta_por_pagar_por_antiguedad'){
@@ -314,6 +381,10 @@ class Reportes_financieros extends CRM_Controller
 
     if($request['tipo'] == 'formulario43' || $request['tipo'] == 'formulario433'){
       return $datos;
+    }
+   
+    if($request['tipo'] == 'reporte_de_caja'){
+        return $datos;
     }
 
   }
@@ -413,6 +484,14 @@ class Reportes_financieros extends CRM_Controller
             'fecha_inicial'=>$fecha_inicio->formatLocalized('%d de %B, %Y'),
             'fecha_final'=>$fecha_final->formatLocalized('%d de %B, %Y'),
             'datos_antiguedad' => $datos_antiguedad];
+  }
+
+  private function costoPorCentroComprasFormato($reporte,$request) {
+    return [
+      'detalle' => collect($reporte['detalle']),
+      'totales' => collect($reporte['totales']),
+      'parametros' => collect($reporte['parametros'])
+    ];
   }
 
   private function cuenta_porPagarAntiguedadFormato($reporte,$request){
@@ -534,6 +613,19 @@ class Reportes_financieros extends CRM_Controller
       $csv->insertOne($csv->getNewline());
       (new EstadoCuentaProveedorCsv)->csv($datos_reporte,$csv);
       $csv->output('estado_cuenta_proveedor_'.$datos_reporte['proveedor']['nombre'].'.csv');
+    }
+
+    if($request['tipo'] == 'costo_por_centro_compras'){
+      header('Content-Type: application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet');
+      header('Content-Disposition: attachment;filename="reporte-compras.xlsx"');
+      header('Cache-Control: max-age=0');
+      try{
+        $formulario = $this->formatoCostoPorCentroCompras($datos_reporte);
+        $objWriter = \PHPExcel_IOFactory::createWriter($formulario, 'Excel2007');
+        $objWriter->save('php://output');
+      }catch(\Exception $e) {
+        log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+      }
     }
 
     if($request['tipo'] == 'cuenta_por_pagar_por_antiguedad'){
@@ -686,6 +778,11 @@ class Reportes_financieros extends CRM_Controller
   function formatoFormulario43($datos){
     $reporte43 = new Flexio\Modulo\ReporteFinanciero\Reportes\Formulario43\Reporte43Excell();
     return $reporte43->generarExcell($datos);
+  }
+
+  function formatoCostoPorCentroCompras($datos){
+    $reportecompras = new Flexio\Modulo\ReporteFinanciero\Reportes\CostoPorCentroCompras\ReporteExcell();
+    return $reportecompras->generarExcell($datos);
   }
 
   function formatoFormulario433($datos){

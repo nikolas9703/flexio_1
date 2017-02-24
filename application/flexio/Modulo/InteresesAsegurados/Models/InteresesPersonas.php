@@ -24,7 +24,7 @@ class InteresesPersonas extends Model
     protected $fillable = [        
         'empresa_id',
         'numero',
-        'nombre',
+        'nombrePersona',
         'identificacion',
         'fecha_nacimiento',
         'estado_civil',
@@ -37,6 +37,9 @@ class InteresesPersonas extends Model
         'direccion_residencial',
         'direccion_laboral',
         'observaciones',
+        'telefono_principal',
+        'direccion_principal',
+        'correo'
         
         
     ];
@@ -100,5 +103,21 @@ class InteresesPersonas extends Model
     function documentos() {
     	return $this->morphMany(Documentos::class, 'documentable');
     }
+
+    public static function listar_personas_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
+        $personas = self::join("int_intereses_asegurados", "int_intereses_asegurados.interesestable_id", "=", "int_personas.id")->join("int_intereses_asegurados_detalles", "int_intereses_asegurados_detalles.id_intereses", "=", "int_intereses_asegurados.id")->where("int_intereses_asegurados.interesestable_type", '5')->where(function($query) use($clause,$sidx,$sord,$limit,$start){
+            
+            if((isset($clause['empresa_id'])) && (!empty($clause['empresa_id']))) $query->where('int_intereses_asegurados.empresa_id','=' , $clause['empresa_id']);
+            if((isset($clause['detalle_unico'])) && (!empty($clause['detalle_unico']))) $query->where('int_intereses_asegurados_detalles.detalle_unico','=' , $clause['detalle_unico']);
+            if((isset($clause['detalle_relacion'])) && (!empty($clause['detalle_relacion']))) $query->where('int_intereses_asegurados_detalles.detalle_relacion','=' , $clause['detalle_relacion']);
+            if((isset($clause['id'])) && (!empty($clause['id']))) $query->where('int_intereses_asegurados_detalles.detalle_int_asociado','=' , $clause['id']);
+            if($limit!=NULL) $query->skip($start)->take($limit);            
+            });
+        
+        if($sidx!=NULL && $sord!=NULL){ $personas->orderBy($sidx, $sord); }
+        
+        return $personas->get();
+    }
+    
 
 }

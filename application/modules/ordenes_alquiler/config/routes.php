@@ -1,7 +1,7 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 $route['ordenes_alquiler/listar'] = 'ordenes_alquiler/listar';
-$route['ordenes_alquiler/crear'] = 'ordenes_alquiler/crear';
+/*$route['ordenes_alquiler/crear'] = 'ordenes_alquiler/crear';*/
 $route['ordenes_alquiler/crear/(:any)/(:num)'] = 'ordenes_alquiler/crear/$1/$2';
 $route['ordenes_alquiler/ver/(:any)'] = 'ordenes_alquiler/ver/$1';
 $route['ordenes_alquiler/ajax-listar'] = 'ordenes_alquiler/ajax_listar';

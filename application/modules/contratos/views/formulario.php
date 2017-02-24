@@ -42,7 +42,7 @@
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
 
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
-    <label for="referencia">Referencia <span required="" aria-required="true">*</span></label>
+    <label for="referencia">Nombre de referencia <span required="" aria-required="true">*</span></label>
       <input type="text"  name="campo[referencia]"  class="form-control"  id="referencia" data-rule-required="true" v-model="campo.referencia" :disabled="desabilitado(vista)">
       <label id="referencia-error" class="error" for="referencia"></label>
   </div>
@@ -110,7 +110,7 @@
 </div>
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
   <div class="form-group col-md-3 col-lg-3  col-md-offset-6 col-lg-offset-6">
-    <label for="centro_contable_id">{{(vista==='ver' ||vista==='agregar_adenda')?'Monto del contrato actual:':'Monto del contrato'}}</label>
+    <label for="centro_contable_id">{{(vista==='ver' ||vista==='agregar_adenda')?'Monto del contrato actual (sin ITBMS):':'Monto del contrato (sin ITBMS)'}}</label>
     <div class="input-group">
          <span class="input-group-addon">$</span>
          <input type="text" :disabled="disabledMonto" id="monto_contrato" v-model="monto_contrato" name="campo[monto_contrato]"  class="form-control">
@@ -122,7 +122,7 @@
 
 
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
-  <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3"><span>{{(vista==='ver' ||vista==='agregar_adenda')?'Abono del monto Original:':'Abono:'}}</span></div>
+  <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3"><span>{{(vista==='ver' ||vista==='agregar_adenda')?'Abono del monto Original:':'Anticipo:'}}</span></div>
   <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
     <div class="input-group">
          <span class="input-group-addon">$</span>

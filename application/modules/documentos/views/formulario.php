@@ -9,7 +9,7 @@ $formAttr = array(
 	'autocomplete'  => 'off',
 	'ng-controller' => 'subirDocumentosController'
 );
-echo form_open(base_url("$currentClass/ajax-guardar-documentos"), $formAttr);
+echo form_open(base_url("$currentClass/ajax_guardar_documentos"), $formAttr);
 
 //Verificar que la clase actual sea distinta a la clase de documentos
 if($documentoClass != $currentClass){

@@ -54,7 +54,7 @@
         <!--seccion de cabecera-->
         <tr> 
             <td rowspan="3"> 
-             	 <img id="logo" src="<?php $logo = !empty($cotizacion->empresa->logo)?$cotizacion->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').'/'.$logo;?>" alt="Logo" border="0" height="85px" width="85px" />
+             	 <img id="logo" src="<?php $logo = !empty($cotizacion->empresa->logo)?$cotizacion->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').'/'.$logo;?>" alt="Logo" border="0" height="59.69px" />
              	 <!-- <img id="logo" src="https://3.bp.blogspot.com/-W__wiaHUjwI/Vt3Grd8df0I/AAAAAAAAA78/7xqUNj8ujtY/s1600/image02.png" alt="Logo" border="0" height="85px" width="85px" />-->
              <td class="titulo1">COTIZACION</td>
         </tr>

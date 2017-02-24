@@ -96,6 +96,7 @@ class Colaboradores extends CRM_Controller
         $this->load->model("bodegas/Bodegas_orm");
         $this->load->model("modulos/Modulos_orm");
         $this->load->library('orm/catalogo_orm');
+				$this->load->model('descuentos/descuentos_orm');
 
         //Cargar Clase Util de Base de Datos
         $this->load->dbutil();
@@ -159,6 +160,7 @@ class Colaboradores extends CRM_Controller
     		'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
     		'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
     		'public/assets/js/plugins/jquery/chosen.jquery.min.js',
+				'public/assets/js/default/toast.controller.js',
     		'public/assets/js/moment-with-locales-290.js',
     		'public/assets/js/plugins/bootstrap/jquery.bootstrap-touchspin.js',
     		'public/assets/js/plugins/bootstrap/daterangepicker.js',
@@ -167,9 +169,18 @@ class Colaboradores extends CRM_Controller
     		'public/assets/js/modules/colaboradores/listar.js',
     	));
 
+			if(!is_null($this->session->flashdata('mensaje'))){
+					$mensaje = json_encode($this->session->flashdata('mensaje'));
+			}else{
+					$mensaje = '';
+			}
+
+
+
     	//Agregra variables PHP como variables JS
     	$this->assets->agregar_var_js(array(
-    		"grid_url" => 'colaboradores/ajax-listar/grid'
+    		"grid_url" => 'colaboradores/ajax-listar/grid',
+				"toast_mensaje" => $mensaje
     	));
 
     	//Opcion Default
@@ -180,12 +191,26 @@ class Colaboradores extends CRM_Controller
     		//"#exportarLnk" => "Exportar",
     	);
 
-    	//Breadcrum Array
-    	$breadcrumb = array(
-    		"titulo" => '<i class="fa fa-users"></i> Colaboradores',
-    		"filtro" => true
-    	);
 
+			$breadcrumb = array(
+				"titulo" => '<i class="fa fa-users"></i> Colaboradores',
+				"filtro" => true,
+				"menu" => array(
+					"nombre" => $this->auth->has_permission('acceso', 'planilla/crear')?"Crear":'',
+				"url"	 => $this->auth->has_permission('acceso', 'planilla/crear')?"planilla/crear":'',
+					"opciones" => array()
+				),
+				"ruta" => array(
+					0 => array(
+							"nombre" => "Recursos humanos",
+							"activo" => false,
+					 ),
+						 1=> array(
+								"nombre" => '<b>Colaboradores</b>',
+								"activo" => true
+						 )
+				),
+		);
     	//Verificar permisos para crear
     	if($this->auth->has_permission('acceso', 'colaboradores/crear')){
     		$breadcrumb["menu"] = array(
@@ -257,7 +282,7 @@ class Colaboradores extends CRM_Controller
     		$clause["equipoid"] = $equipoid;
     	}
     	if( !empty($codigo)){
-    		//["codigo"] = array('LIKE', "%$codigo%");
+    		$clause["codigo"] = array('LIKE', "%$codigo%");
     	}
 
     	list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
@@ -554,26 +579,22 @@ class Colaboradores extends CRM_Controller
     	$breadcrumb = array();
     	$menuOpciones = array();
     	$titulo_formulario = '<i class="fa fa-users"></i>  Formulario de Contrataci&oacute;n';
-			//dd($_POST["campo"]);
-    	if(!empty($_POST["campo"]["guardarDatosEspecificosFormBtn"]))
-			{
-     		if(!empty($_POST["campo"]["guardarDatosEspecificosFormBtn"]))
-				{
+
+    	if(!empty($_POST["campo"])){
+
+    		if(!empty($_POST["campo"]["guardarDatosEspecificosFormBtn"])){
     			$this->guardar_datos_especificos_colaborador($colaborador_uuid);
     		}
-    		else if(!empty($_POST["campo"]["guardarFormulario82Btn"]))
-				{
+    		else if(!empty($_POST["campo"]["guardarFormulario82Btn"])){
 
     			$this->guardar_deducciones($colaborador_uuid);
     		}
-    	else
-		  {
+    		else {
 
     			$this->guardar_colaborador($colaborador_uuid);
     		}
     	}
-
-    	//Verificar si existe variable
+     	//Verificar si existe variable
     	//para buscar informacion del colaborador
     	$colaborador_info = array();
     	$colaborador_id = NULL;
@@ -597,7 +618,8 @@ class Colaboradores extends CRM_Controller
 
     	//Agregar variable js de requisitos y colaborador_id
     	$this->assets->agregar_var_js(array(
-    		"requisitos" => json_encode($requisitos_lista)
+    		"requisitos" => json_encode($requisitos_lista),
+    		"vista" => 'crear'
     	));
 
     	//Agregar controlador angular de requisitos
@@ -605,10 +627,15 @@ class Colaboradores extends CRM_Controller
     		'public/assets/js/modules/colaboradores/requisitos.controller.js',
     		'public/assets/js/plugins/bootstrap/ladda/spin.min.js',
     		'public/assets/js/plugins/bootstrap/ladda/ladda.min.js',
-    		'public/assets/js/plugins/jquery/jquery.slimscroll.js'
+    		'public/assets/js/plugins/jquery/jquery.slimscroll.js',
+				'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+				'public/assets/js/plugins/bootstrap/select2/es.js',
+				'public/assets/js/default/vue/directives/select2.js'
     	));
     	$this->assets->agregar_css(array(
     		'public/assets/css/plugins/bootstrap/ladda/ladda-themeless.min.css',
+				'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+				'public/assets/css/plugins/bootstrap/select2.min.css',
     	));
 
     	$colaborador_info = array();
@@ -755,13 +782,64 @@ class Colaboradores extends CRM_Controller
             	//"#k" => "Subir Documento"
             );
 
+						$breadcrumb = array(
+							"titulo" => '<i class="fa fa-users"></i> Colaboradores',
+							"filtro" => true,
+							"menu" => array(
+								"nombre" => $this->auth->has_permission('acceso', 'planilla/crear')?"Crear":'',
+							"url"	 => $this->auth->has_permission('acceso', 'planilla/crear')?"planilla/crear":'',
+								"opciones" => array()
+							),
+							"ruta" => array(
+								0 => array(
+										"nombre" => "Recursos humanos",
+										"activo" => false,
+								 ),
+									 1=> array(
+											"nombre" => 'Colaboradores',
+											"activo" => false,
+											"url"=>"colaboradores/listar"
+									 ),
+									 2=> array(
+											"nombre" => '<b>Detalle</b>',
+											"activo" => true
+									 )
+							),
+					);
+
+
             $breadcrumb["menu"] =array(
             	"nombre" => "Acci&oacute;n",
             	"url"	 => "#",
             	"clase" 	=> 'opcionesToggleTabs',
             	"opciones" => $menuOpciones
             );
-    	}
+    	}else{
+				$breadcrumb = array(
+					"titulo" => '<i class="fa fa-users"></i> Colaboradores',
+					"filtro" => true,
+					"menu" => array(
+						"nombre" => $this->auth->has_permission('acceso', 'planilla/crear')?"Crear":'',
+					"url"	 => $this->auth->has_permission('acceso', 'planilla/crear')?"planilla/crear":'',
+						"opciones" => array()
+					),
+					"ruta" => array(
+						0 => array(
+								"nombre" => "Recursos humanos",
+								"activo" => false,
+						 ),
+							 1=> array(
+									"nombre" => 'Colaboradores',
+									"activo" => false,
+									"url"=>"colaboradores/listar"
+							 ),
+							 2=> array(
+									"nombre" => '<b>Crear</b>',
+									"activo" => true
+							 )
+					),
+			);
+			}
 
         // Para recontratar
             $urlArray = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -1013,6 +1091,22 @@ class Colaboradores extends CRM_Controller
                             $contratos_guardar[] = new Colaboradores_contratos_orm($contratos);
 
                             $colaborador->colaboradores_contratos()->saveMany($contratos_guardar);
+
+														// Actualizar los descuentos directos del colaborador requerimiento #1658
+														$colaborador_id = $colaborador_info[0]["id"];
+														$descuentos_colaborador = Descuentos_orm::where('colaborador_id', '=', $colaborador_id)->get()->toArray();
+														if(!empty($descuentos_colaborador)){
+														$i = 0;
+														foreach($descuentos_colaborador AS $row){
+															$descuento_id[$i] = $row['id'];
+															$i++;
+														};
+														$values = array(
+															'estado_id' => 6
+														);
+
+														$descuento = Descuentos_orm::whereIn('id', $descuento_id)->update($values);
+														}
                         }
                         else if($currentSegment2 == "crear"){
                             $contratos = array();
@@ -1174,6 +1268,9 @@ class Colaboradores extends CRM_Controller
     	// data is valid and working.
     	// Commit the queries!
     	Capsule::commit();
+
+			$mensaje = array('estado'=>200, 'mensaje'=>'&Eacute;xito! Se ha creado correctamente el colaborador.');
+			$this->session->set_flashdata('mensaje', $mensaje);
 
     	//Redireccionar
     	redirect(base_url('colaboradores/listar'));
@@ -2809,4 +2906,19 @@ class Colaboradores extends CRM_Controller
             ->set_output(json_encode($colaboradores->comentario_timeline->toArray()))->_display();
         exit;
     }
+
+		function ajax_listar_salario() {
+
+			//Verificando el departamento y cargo ID
+			$clause = array(
+				'empresa_id' => $this->empresa_id,
+				'id' => $_POST['cargo_id']
+			);
+
+			$cargos = Cargos_orm::where($clause)->get(array('tipo_rata', 'rata'));
+			$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+					->set_output(json_encode($cargos->toArray()))->_display();
+			exit;
+
+		}
 }

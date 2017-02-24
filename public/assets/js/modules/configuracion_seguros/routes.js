@@ -14,10 +14,11 @@ var moduloAseguradora = (function() {
       var parametros = $(element).serialize();
       return $.post(phost() + 'configuracion_seguros/ajax_guardar_ramos', parametros);
     },
+    
     getRamo:function(parametros){
       return $.post(phost() + 'configuracion_seguros/ajax-buscar-ramo', $.extend({
         erptkn: tkn
       }, parametros));
-    }
+    },
   };
 })();

@@ -9,15 +9,16 @@ $config['modulo_config'] = array(
     'icono' => 'fa-line-chart',
     'version' => '1.0',
     'tipo' => 'addon', // core, addon
-    'grupo' => 'Ventas',//menu izquierdo
+    'grupo' => 'Alquileres',//menu izquierdo
     'agrupador' => 'Alquileres',//menu superior
     'menu' => array(
-        'nombre' => 'Cotizaciones',
+        'nombre' => 'Cotizaciones de alquileres',
         'url' => 'cotizaciones_alquiler/listar',
-        'orden' => 5
+        'orden' => 0
     ),
     'prefijo' => 'cotalq',
     'permisos' => array(
-        'acceso' => 'Acceso'
+        'acceso' => 'Acceso',
+        'editarPrecioUnidad_adicional' => 'Editar Precio Unidad'
     )
 );

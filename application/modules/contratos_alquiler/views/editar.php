@@ -86,10 +86,11 @@
             </div>
             
             <div class="wrapper-content">
-                 <div class="row" id="subpanel">
-                    <?php SubpanelTabs::visualizar('contrato_alquiler_id='.$contrato_alquiler->id); ?>
-                </div>  
-                
+                <div class="row" id="subpanel">
+                            <?php 
+                            SubpanelTabs::visualizar($subpanels); ?>
+                  </div> 
+               
                 
                   <br/><br/>
 	   			<?php echo modules::run('contratos_alquiler/ocultoformulariocomentarios'); ?>

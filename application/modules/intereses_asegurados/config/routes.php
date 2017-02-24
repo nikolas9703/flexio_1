@@ -19,5 +19,6 @@ $route['intereses_asegurados/ajax-guardar-documentos']  = 'intereses_asegurados/
 //Formulario crear/editar
 $route['intereses_asegurados/crear']         = 'intereses_asegurados/crear';
 $route['intereses_asegurados/ver/(:any)']    = 'intereses_asegurados/editar/$1';
-$route['intereses_asegurados/crear-carga']         = 'intereses_asegurados/crear-carga';
-$route['intereses_asegurados/editar-carga']         = 'intereses_asegurados/editar-carga';
+$route['intereses_asegurados/editar/(:any)']    = 'intereses_asegurados/editar/$1';
+$route['intereses_asegurados/eliminar/(:any)']    = 'intereses_asegurados/eliminar';
+

@@ -1,5 +1,7 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+$route['entregas_alquiler/crear'] = 'entregas_alquiler/crear';
+$route['entregas_alquiler/editar/(:any)'] = 'entregas_alquiler/editar/$1';
 $route['entregas_alquiler/listar'] = 'entregas_alquiler/listar';
 
 //peticiones ajax

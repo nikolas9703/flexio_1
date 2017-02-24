@@ -100,7 +100,7 @@
                             <!-- /BUSCADOR -->
 
                             <!-- JQGRID -->
-                            <?php echo modules::run('cotizaciones/ocultotabla'); ?>
+                            <?php echo modules::run('cotizaciones_alquiler/ocultotabla'); ?>
 
                             <!-- /JQGRID -->
                         </div>

@@ -3,6 +3,7 @@
 use Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Comentario\Models\Comentario;
+use Flexio\Modulo\Pedidos\Observer\PedidoObserver;
 
 class Pedidos_orm extends Model
 {
@@ -65,7 +66,11 @@ class Pedidos_orm extends Model
         $this->Ci->load->model("facturas_compras/Facturas_compras_orm");
     }
 
-
+    public static function boot()
+    {
+        parent::boot();
+        Pedidos_orm::observe(PedidoObserver::class);
+    }
     /**
      * Obtiene uuid_pedido
      *
@@ -219,6 +224,13 @@ class Pedidos_orm extends Model
             $orden_compra->whereHas("facturas", function($facturas) use($factura_compra_id){
                 $facturas->where("id", $factura_compra_id);
             });
+        });
+    }
+
+    public function scopeDeItem($query, $item_id)
+    {
+        return $query->whereHas("items", function($q) use ($item_id){
+            $q->where("id_item", $item_id);
         });
     }
 

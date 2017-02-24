@@ -6,7 +6,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class Coberturas_orm extends Model
 {
     protected $table = 'seg_coberturas';
-    protected $fillable = ['uuid_coberturas','nombre','id_planes', 'updated_at', 'created_at'];
+    protected $fillable = ['uuid_coberturas','nombre','id_planes', 'updated_at', 'created_at', 'cobertura_monetario'];
     protected $guarded = ['id'];
     public $timestamps = false;
 
@@ -24,4 +24,7 @@ class Coberturas_orm extends Model
     public function getUuidCoberturasAttribute($value) {
         return strtoupper(bin2hex($value));
     }   
+    public static function findByIdP($id_planes){
+        return self::where('id_planes',$id_planes)->get();
+    }
 }

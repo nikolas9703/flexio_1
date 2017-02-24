@@ -78,5 +78,18 @@ class AereoAsegurados extends Model
     	return $this->morphMany(Documentos::class, 'documentable');
     }
 
+    public static function listar_aereo_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL) {
+        $aereo = self::join("int_intereses_asegurados", "int_intereses_asegurados.interesestable_id", "=", "int_casco_aereo.id")->join("int_intereses_asegurados_detalles", "int_intereses_asegurados_detalles.id_intereses", "=", "int_intereses_asegurados.id")->where("int_intereses_asegurados.interesestable_type", '3')->where(function($query) use($clause,$sidx,$sord,$limit,$start){
+            
+            if((isset($clause['empresa_id'])) && (!empty($clause['empresa_id']))) $query->where('int_intereses_asegurados.empresa_id','=' , $clause['empresa_id']);
+            if((isset($clause['detalle_unico'])) && (!empty($clause['detalle_unico']))) $query->where('int_intereses_asegurados_detalles.detalle_unico','=' , $clause['detalle_unico']);
+            if($limit!=NULL) $query->skip($start)->take($limit);            
+            });
+        
+        if($sidx!=NULL && $sord!=NULL){ $aereo->orderBy($sidx, $sord); }
+
+        return $aereo->get();
+    }
+
 
 }

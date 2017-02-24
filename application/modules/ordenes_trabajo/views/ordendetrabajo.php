@@ -89,7 +89,10 @@
         </tr>
         <tr>
             <td><?php echo $info->cliente->nombre;?></td>
-            <td> <?php echo $info->equipoTrabajo[0]->nombre; ?></td>
+            <td> <?php
+            
+            if(isset($info->equipoTrabajo[0]))
+            echo $info->equipoTrabajo[0]->nombre; ?></td>
         </tr>
         <tr>
           <td><?php echo $info->centro_fact[0]->nombre; ?>       </td>
@@ -99,11 +102,11 @@
             <td><?php echo $info->centro_fact[0]->direccion;?></td>
             <td></td>
         </tr>
-        
+
         <!--tabla de items-->
         <tr>
             <td colspan="2">
-                
+
                 <table style="width: 100%;" class="tabla_items">
                     <thead>
                         <tr>
@@ -115,47 +118,47 @@
                             <th>Comentarios</th>
                         </tr>
                     </thead>
-                    <tbody> 
+                    <tbody>
                         <?php foreach($info->items as $item):?>
                         <tr>
                             <td style="text-align: center;"><?php echo $item->categoria->nombre;?></td>
                             <td style="text-align: center;"><?php echo $item->item->nombre; ?></td>
                             <td style="text-align: center;"><?php
                                 $attributeoutput = '';
-                            
+                                
                             try {
                                 if ($item->atributo_id <> 0){
-                                    $attributeoutput = $item->getAttributes[0]->nombre;
+                                    $attributeoutput = isset($item->getAttributes) ? $item->getAttributes[0]->nombre : '';
                                 } else {
                                     $attributeoutput = $item->atributo_text;
                                 }
                             } catch (Exception $ex) {
-                                $attributeoutput = $item->atributo_text;    
+                                $attributeoutput = $item->atributo_text;
                             }
-                            
+
                                 echo $attributeoutput;
                             ?></td>
-                            
+
                             <td style="text-align: center;"><?php echo $item->cantidad;?></td>
                             <td style="text-align: center;"><?php echo $item->unidad->nombre;?></td>
                             <td style="text-align: right;"><?php echo $item->comentario;
                             ?></td>
                         </tr>
-                        
+
                         <?php endforeach;?>
                     </tbody>
-                    
+
                 </table>
             </td>
         </tr>
-        
-        
+
+
         <tr>
             <td><br></td>
-           
+
         </tr>
 
-        
+
         <tr>
             <td colspan="2" style="border-bottom: 1px solid black;"></td>
         </tr>
@@ -171,9 +174,9 @@
         </tr>
         <tr>
             <td style="border: 1px solid black" ><?php echo $info->comentario;?></td>
-            <td style="border: 1px solid black"><?php 
-            //if estado is por_cobrar then usuario + fecha y hora de actualizacion 
-            
+            <td style="border: 1px solid black"><?php
+            //if estado is por_cobrar then usuario + fecha y hora de actualizacion
+
             $estado = $info->estado_id;
             if ($estado == '12') {
                 $autorizadopor = $history->usuario;
@@ -183,9 +186,8 @@
             }
             ?><br><br><br></td>
         </tr>
-        
-        
-    </table>
-    
-</div>
 
+
+    </table>
+
+</div>

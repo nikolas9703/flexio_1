@@ -34,7 +34,7 @@ $config['modulo_config'] = array(
 	'prefijo'		=> 'cli',
     'permisos'		=> array(
 		'acceso' => 'Acceso',
-    	//'listar' => 'Clientes', 
+    	//'listar' => 'Clientes',
     	//'crear' => 'Crear'
 	)
 );

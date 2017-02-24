@@ -166,4 +166,3 @@ $info = !empty($info) ? $info : array();
     </div>
 </div>
 <!-- Termina campos de Busqueda -->
-

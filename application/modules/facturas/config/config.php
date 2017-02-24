@@ -10,17 +10,17 @@ $config['modulo_config'] = array(
 	'grupo'			=> 'Facturas de ventas',
   'agrupador'		=> array(
 	  'Ventas' => array(
-	      "grupo_orden" => 4
+	      "grupo_orden" => 0
 	  ),
 		'Alquileres' => array(
-	      "grupo_orden" => 1
+	      "grupo_orden" => 5
 	  ),
   ),
 	'prefijo'		=> 'fac',
 	'menu' => array(
 		'nombre' =>'Facturas de ventas' ,
 		'url' => 'facturas/listar',
-		'orden'=> 3
+		'orden'=> 5
 	),
         'permisos'		=> array(
 		'acceso' => 'Acceso',

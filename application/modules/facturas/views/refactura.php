@@ -42,30 +42,32 @@
 
 
 </style>
-<?php $sum_total = 0; ?>
+<?php $sum_total = 0.0; ?>
 
 <div id="container">
     <table style="width: 100%;">
         <!--seccion de cabecera-->
         <tr>
-            <td rowspan="3"><img id="logo" src="<?php $logo = !empty($factura->empresa->logo)?$factura->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').'/'.$logo;?>" alt="Logo" border="0" height="85px" width="85px" /></td>
+            <td rowspan="1"><img id="logo" src="<?php $logo = !empty($factura->empresa->logo)?$factura->empresa->logo:'default.jpg'; echo $this->config->item('logo_path').'/'.$logo;?>" alt="Logo" border="0" height="96px" style="position:absolute" /></td>
             <td class="titulo1">FACTURA</td>
         </tr>
         <tr>
+            <td rowspan="1"></td>
             <td class="titulo1">*** DOCUMENTO NO FISCAL ***</td>
         </tr>
         <tr>
+            <td></td>
             <td class="titulo1">No. de Factura: <span class="rojo"><?php echo $factura->codigo?></span></td>
         </tr>
 
         <!--datos de la empresa-->
         <tr>
-            <td><br><br><?php echo strtoupper($factura->empresa->nombre);?></td>
-            <td><br><br>Fecha: <?php echo date('d-m-Y', time())?></td>
+            <td style="width: 400px;"><br><br><?php echo strtoupper($factura->empresa->nombre);?></td>
+            <td  style="text-align: left"><br><br>Fecha: <?php echo date('d-m-Y', time())?></td>
         </tr>
         <tr>
             <td><?php echo strtoupper($factura->empresa->ruc);?></td>
-            <td>Pagar antes de: <?php  
+            <td style="text-align: left">Pagar antes de: <?php  
             $date = DateTime::createFromFormat('d/m/Y H:i', $factura->fecha_hasta.' 00:00');
             echo $date->format('d-m-Y');
 
@@ -92,6 +94,7 @@
             <td class="titulo2">ENTREGAR EN:</td>
         </tr>
         <tr>
+            
             <td><?php echo $factura->cliente->nombre;?></td>
             <td> <?php echo $factura->centros_fac->direccion; ?></td>
         </tr>
@@ -128,9 +131,9 @@
                             <td style="text-align: center;"><?php echo $item->proveedor->nombre;?></td>
                             
                             <td style="text-align: center;"><?php echo $item->referencia;?></td>
-                            <td style="text-align: right;">$<?php echo $item->total;
+                            <td><span style="width:5px;text-align:left">$</span><span style="position: absolute;float: right"><?php echo number_format($item->total, 2, '.', ',');
                                 $sum_total += $item->total;
-                            ?></td>
+                            ?></span></td>
                         </tr>
                         
                         <?php endforeach;?>
@@ -141,20 +144,24 @@
         </tr>
         
         <tr>
-            <td style="width: 430px;    padding-top: 33px">Modo de pago: <?php echo $factura->termino_pago2->valor;?></td>
-            <td rowspan="3">
-                <table>
-                    <tr>
-                        <td>Total:</td>
-                        <td style='padding-right:100px'></td>
-                        <td class="number">$<?php echo $sum_total?></td>
-                    </tr>
+            <td colspan="2">
+                <table style="width: 100%">
+                    <tbody>
+                        <tr>
+                            <td>Modo de pago: <?php echo $factura->termino_pago2->valor;?></td>
+                            <td></td>
+                            <td></td>
+                            <td style="text-align: right">Total:</td>
+                            <td style="text-align: right" class="number">$<?php echo number_format($sum_total, 2, '.', ','); ?></td>
+                        </tr>
+                    </tbody>
                 </table>
             </td>
             
         </tr>
+      
         <tr>
-            <td><br></td>
+            <td><br /></td>
            
         </tr>
 
@@ -170,11 +177,11 @@
             <td class="titulo3">Autorizaciones:</td>
         </tr>
         <tr>
-            <td><br></td>
+            <td><br /></td>
         </tr>
         <tr>
-            <td ><?php echo $factura->comentario;?></td>
-            <td ><?php 
+            <td style="vertical-align:top"><?php echo $factura->comentario;?></td>
+            <td style="vertical-align:top"><?php 
             //if estado is por_cobrar then usuario + fecha y hora de actualizacion 
             $estado = $factura->estado;
             if ($estado == 'por_cobrar' OR $estado == 'cobrado_parcial' OR $estado == 'cobrado_completo') {
@@ -192,4 +199,3 @@
     </table>
     
 </div>
-

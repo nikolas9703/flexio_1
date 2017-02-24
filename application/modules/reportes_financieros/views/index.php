@@ -117,6 +117,26 @@
                             </div>
                         </div>
                          </div>
+                         <div class="col-lg-4 col-md-4 col-sm-3 col-xs-3">
+                           <div class="ibox float-e-margins">
+                            <div class="ibox-title">
+                                <h5><a id="reporte_caja" href="<?php echo base_url('reportes_financieros/reporte/reporte_caja');?>">Reporte de cajas</a></h5>
+                            </div>
+                            <div class="ibox-content">
+                              <p class="parrafo">Informe de caja menuda.</p>
+                            </div>
+                           </div>
+                         </div>
+                         <div class="col-lg-4 col-md-4 col-sm-3 col-xs-3">
+                           <div class="ibox float-e-margins">
+                            <div class="ibox-title">
+                                <h5><a id="cuenta_por_pagar_antiguedad" href="<?php echo base_url('reportes_financieros/reporte/costo_por_centro_compras');?>">Reporte de compras</a></h5>
+                            </div>
+                            <div class="ibox-content">
+                              <p class="parrafo">Informe de costos por centro contable y categor&iacute;a de items.</p>
+                            </div>
+                        </div>
+                         </div>
                       </div>
                       <!-- nuevo-->
                       <div class="row">

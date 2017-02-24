@@ -1,25 +1,24 @@
 <div id="wrapper">
     <?php 
-	Template::cargar_vista('sidebar');   
+    Template::cargar_vista('sidebar');   
     ?>
     
     <div id="page-wrapper" class="gray-bg row">
-    
-        <?php Template::cargar_vista('navbar'); ?>
-        <div class="row border-bottom"></div>
-        <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
+            <?php Template::cargar_vista('navbar'); ?>
+            <div class="row border-bottom"></div>
+            <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
 
-    	<div class="col-lg-12">
-            <div class="wrapper-content">
-				<div class="row">
-					<div id="mensaje">
-					</div>
-				</div>
-                <div role="tabpanel">
+            <div class="col-lg-12">
+                <div class="wrapper-content">
+                    <div class="row">
+                     <div id="mensaje">
+                     </div>
+                 </div>
+                 <div role="tabpanel">
                     <!-- Tab panes -->
                     <div class="row tab-content">
                         <div role="tabpanel" class="tab-pane active" id="tabla">
-				    	
+
                             <!-- BUSCADOR -->
                             <div class="ibox border-bottom">
                                 <div class="ibox-title">
@@ -38,54 +37,54 @@
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="tipo">Tipo de interés asegurado</label><br>
                                             <select name="tipo" id="tipo" class="form-control">
-											<option value=''>Seleccione</option>
-											<?php foreach($campos['campos']['tipos_intereses_asegurados'] as $row): ?>
-                                             <option value="<?php echo $row->id_cat?>"><?php echo $row->etiqueta?></option>
+                                               <option value=''>Seleccione</option>
+                                               <?php foreach($campos['campos']['tipos_intereses_asegurados'] as $row): ?>
+                                                 <option value="<?php echo $row->id_cat?>"><?php echo $row->etiqueta?></option>
                                              <?php endforeach;?>
-											</select>
-                                        </div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                            <label id="identificacion_label" for="asegurado">Identificacion</label>
-                                            <input type="text" id="identificacion" class="form-control" value="" placeholder="">
-                                        </div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" >
-											<label>Estado</label>
-											<select name="estado" id="estado" class="form-control">
-											<option value=''>Seleccione</option>
-											<option value='Activo'>Activo</option>
-											<option value='Inactivo'>Inactivo</option>
-											</select>
-										</div>
+                                         </select>
+                                     </div>
+                                     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                        <label id="identificacion_label" for="asegurado">Identificacion</label>
+                                        <input type="text" id="identificacion" class="form-control" value="" placeholder="">
                                     </div>
-                                    <div class="row">
-                                        <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                            <input type="button" id="searchBtn" class="btn btn-default btn-block" value="Filtrar" />
-                                        </div>
-                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                            <input type="button" id="clearBtn" class="btn btn-default btn-block" value="Limpiar" />
-                                        </div>
-                                    </div>
-                                    <!-- Termina campos de Busqueda -->
+                                    <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" >
+                                       <label>Estado</label>
+                                       <select name="estado" id="estado" class="form-control">
+                                           <option value=''>Seleccione</option>
+                                           <option value='Activo'>Activo</option>
+                                           <option value='Inactivo'>Inactivo</option>
+                                       </select>
+                                   </div>
+                               </div>
+                               <div class="row">
+                                <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
+                                <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                    <input type="button" id="searchBtn" class="btn btn-default btn-block" value="Filtrar" />
+                                </div>
+                                <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                    <input type="button" id="clearBtn" class="btn btn-default btn-block" value="Limpiar" />
                                 </div>
                             </div>
-                            <!-- /BUSCADOR -->
-				    	
-                            <!-- JQGRID -->
-                            <?php echo modules::run('intereses_asegurados/ocultotabla',$campos); ?>
-                            <!-- /JQGRID -->
+                            <!-- Termina campos de Busqueda -->
                         </div>
-                        
-                        <div role="tabpanel" class="tab-pane" id="grid">
-                            <?php //Grid::visualizar_grid($vars); ?>
-                        </div>
-
                     </div>
+                    <!-- /BUSCADOR -->
+
+                    <!-- JQGRID -->
+                    <?php echo modules::run('intereses_asegurados/ocultotabla',$campos); ?>
+                    <!-- /JQGRID -->
                 </div>
+
+                <div role="tabpanel" class="tab-pane" id="grid">
+                    <?php //Grid::visualizar_grid($vars); ?>
+                </div>
+
             </div>
-        	
-    	</div><!-- cierra .col-lg-12 -->
-    </div><!-- cierra #page-wrapper -->
+        </div>
+    </div>
+
+</div><!-- cierra .col-lg-12 -->
+</div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
 
 <!-- inicia #crearModal -->
@@ -100,8 +99,8 @@
 
             <div class="modal-body">
                 <?php 
-				foreach ($campos['campos']['tipos_intereses_asegurados'] as $tipo){?>
-                    <a href="<?php echo base_url("intereses_asegurados/crear/".$tipo->valor); ?>" id="" class="btn btn-block btn-outline btn-success"><?php echo $tipo->etiqueta; ?></a>
+                foreach ($campos['campos']['tipos_intereses_asegurados'] as $tipo){?>
+                <a href="<?php echo base_url("intereses_asegurados/crear/".$tipo->valor); ?>" id="" class="btn btn-block btn-outline btn-success"><?php echo $tipo->etiqueta; ?></a>
                 <?php }?>
             </div>
             <div class="modal-footer"></div>
@@ -126,14 +125,14 @@ echo form_close();
 echo    Modal::config(array(
     "id"    => "optionsModal",
     "size"  => "sm"
-))->html();
+    ))->html();
 
 echo Modal::config(array(
     "id" => "documentosModal",
     "size" => "lg",
     "titulo" => "Subir Documentos",
     "contenido" => modules::run("documentos/formulario", array())
-))->html();
+    ))->html();
 
 
 

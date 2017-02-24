@@ -24,5 +24,13 @@
             </div>
 
         </div><!-- cierra .col-lg-12 -->
+
+        <?php echo Modal::config(array(
+        	"id" => "documentosModal",
+        	"size" => "lg",
+        	"titulo" => "Subir Documentos",
+        	"contenido" => modules::run("documentos/formulario", array())
+        ))->html(); ?>  <!-- modal subir documentos -->
+
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->

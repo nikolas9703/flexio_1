@@ -19,6 +19,8 @@ $route['pagos/ajax-guardar-comentario']        = 'pagos/ajax_guardar_comentario'
 $route['pagos/ajax-guardar-documentos'] = 'pagos/ajax_guardar_documentos';
 $route['pagos/ajax-anularpago-colaborador'] = 'pagos/ajax_anularpago_colaborador';
 
+
+$route['pagos/ajax-cambiar-estado'] = 'pagos/ajax_cambiar_estado';
 ///proveedores con facturas
 $route['pagos/ajax-proveedores-pagos']          = 'pagos/ajax_proveedores_pagos';
 ///subcontratos con facturas por pagar o pagadas parciales

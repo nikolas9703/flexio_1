@@ -13,7 +13,7 @@
 
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
             <label>Categor&iacute;as <span aria-required="true" required="">*</span></label>
-            <select aria-required="true" name="campo[categorias][]" class="chosen categorias" id="categorias" data-rule-required="true" data-placeholder="Seleccione" multiple="">
+            <select aria-required="true" name="campo[categorias][]" class="chosen categorias" id="categorias" data-rule-required="true" data-placeholder="Seleccione" multiple="multiple">
                 <?php foreach ($categorias as $categoria):?>
                 <option value="<?php echo $categoria->id?>" <?php echo (isset($campos["categorias"]) && in_array($categoria->id, $campos["categorias"])) ? 'selected=""':''?>><?php echo $categoria->nombre;?></option>
                 <?php endforeach;?>

@@ -18,5 +18,8 @@ $config['modulo_config'] = array(
         'nombre'    => 'Equipos de trabajo' ,
         'url'       => 'talleres/listar',
         'orden'     => 0
-    )
+    ),
+    'permisos'		=> array(
+		'acceso' => 'Acceso'
+	)
 );

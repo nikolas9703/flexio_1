@@ -52,7 +52,7 @@
                                             <select id="centro" class="form-control" data-placeholder=" ">
                                                 <option value=""> </option>
                                                 <?php foreach($centros as $centro):?>
-                                                <option value="<?php echo $centro->uuid_centro?>"><?php echo $centro->nombre?></option>
+                                                <option value="<?php echo $centro['id']?>"><?php echo $centro['nombre']?></option>
                                                 <?php endforeach;?>
                                             </select>
                                         </div>

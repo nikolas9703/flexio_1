@@ -11,8 +11,8 @@ use Flexio\Modulo\FacturasVentas\Models\FacturaVenta;
 class CentroFacturable extends Model{
 
   protected $table = 'cli_centros_facturacion';
-  protected $fillable = ['nombre', 'empresa_id','direccion'];
-  protected $guarded = ['id','cliente_id'];
+  protected $fillable = ['nombre', 'empresa_id','direccion','direccion_principal','pertenece','cliente_id'];
+  protected $guarded = ['id'];
 
 
   function cliente(){

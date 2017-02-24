@@ -415,7 +415,8 @@ class Clientes_abonos extends CRM_Controller
         $clause = array();
 
         $clause['empresa_id'] = $this->empresa_id;
-        $clause['cliente_id'] = $cliente->id;
+        if(count($cliente))$clause['cliente_id'] = $cliente->id;
+        $clause['campo'] = $this->input->post('campo', true);
 
 
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
@@ -485,8 +486,14 @@ class Clientes_abonos extends CRM_Controller
     }*/
 
 
-    public function ocultotabla()
+    public function ocultotabla($campo_array = [])
     {
+        if(is_array($campo_array))
+        {
+            $this->assets->agregar_var_js([
+                "campo" => collect($campo_array)
+            ]);
+        }
 
         // If ajax request
         $this->assets->agregar_js(array(

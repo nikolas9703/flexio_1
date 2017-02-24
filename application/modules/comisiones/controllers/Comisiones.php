@@ -413,6 +413,12 @@ class Comisiones extends CRM_Controller
               $estado = '<span style="color:white; background-color:'.$pago->estado->color_estado.'" class="btn btn-xs btn-block">'.$pago->estado->etiqueta.'</span>';
               $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $pago->id .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
+              $fecha_programada_pago_myd = date('Y-m-d', strtotime(str_replace('/', '-', $pago->fecha_programada_pago)));
+              if($fecha_programada_pago_myd < date("Y-m-d")){
+                $color_fecha ='style="color: #ff0000;"';
+              }
+              $fecha_programada_pago = ($pago->fecha_programada_pago == '30/11/-0001')?'Pendiente':$pago->fecha_programada_pago;
+
            			if ($this->auth->has_permission('acceso', 'comisiones/ver/(:any)')){
            				$hidden_options .= '<a href="'. $pago->enlace .'" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
            			}
@@ -426,17 +432,12 @@ class Comisiones extends CRM_Controller
           				}
           			}
                  if($pago->estado->etiqueta  == 'Pendiente'){
-                    $hidden_options .= '<a id="pagarPagoExtraordinario" href="#" data-salario="$'. number_format($pago->monto_neto,2).'"  data-id="'. $pago->id .'" class="btn btn-block btn-outline btn-success">Pagar</a>';
+                    $hidden_options .= '<a id="pagarPagoExtraordinario" href="#" data-salario="$'. number_format($pago->monto_neto,2).'" data-fecha="'. $fecha_programada_pago .'"  data-id="'. $pago->id .'" class="btn btn-block btn-outline btn-success">Pagar</a>';
                 }
 
          $color_fecha ='';
 
-         $fecha_programada_pago_myd = date('Y-m-d', strtotime(str_replace('/', '-', $pago->fecha_programada_pago)));
-         //&& && $pago->estado->etiqueta!='Pendiente'
-        if($fecha_programada_pago_myd < date("Y-m-d")){
-          $color_fecha ='style="color: #ff0000;"';
-        }
-         $fecha_programada_pago = ($pago->fecha_programada_pago == '30/11/-0001')?'Pendiente':$pago->fecha_programada_pago;
+
          $fecha_pago = ($pago->fecha_pago == '0000-00-00 00:00:00')?'Pendiente':date("d/m/Y", strtotime($pago->fecha_pago));
     			$response->rows[$i]["id"] = $pago['id'];
           $response->rows[$i]["cell"] = array(
@@ -495,7 +496,7 @@ class Comisiones extends CRM_Controller
 	    				  $colaborador->colaborador->cedula,
 	    					isset($columna_centro)?$columna_centro:'',
 	    					$colaborador->descripcion,
-   	    				$colaborador->monto_total
+   	    				"$".$colaborador->monto_total
    	    				//$colaborador->monto_total."=>".$colaborador->monto_deducido."=>".$colaborador->monto_neto
 	    		 );
 	    		 $i++;
