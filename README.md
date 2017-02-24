@@ -7,7 +7,7 @@ http://162.209.57.159/clientes/bluleaf/
 "clientes_bluleaf"
 
 #ESTRUCTURA BÁSICA DE FLEXIO - DESARROLLO
-1.- Todos los modulos se encuentran dentro de la carpeta "application/modules"
+1.- Todos los modulos se encuentran dentro de la carpeta "application/modules"<br>
 2.- El nombre del directorio del modulo debe empezar en minuscula ej: "cheques"
 3.- Estructura de un modulo (ej):
     -cheques
@@ -40,4 +40,3 @@ http://162.209.57.159/clientes/bluleaf/
 4.2.- Usando la forma tradicional quemando el html
 5.- Esta mista estrutura tambien se sigue en "public/assets/js/modules" donde se encuentran ubicados
 los archivos JavaScript.
- 
