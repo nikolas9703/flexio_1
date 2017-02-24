@@ -2,6 +2,7 @@
 
 $route['pagos/listar'] = 'pagos/listar';
 $route['pagos/crear'] = 'pagos/crear';
+//$route['pagos/listar/(:any)'] = 'pagos/listar/$1';
 //no se para que se usa crear2
 $route['pagos/crear2']                          = 'pagos/crear2';
 $route['pagos/guardar']                         = 'pagos/guardar';
@@ -10,6 +11,8 @@ $route['pagos/registrar-pago/(:any)']           = 'pagos/registrar_pago/$1';
 $route['pagos/registrar-pago-pago/(:any)']     = 'pagos/registrar_pago_pago/$1';
 $route['pagos/ver/(:any)']                      = 'pagos/ver/$1';
 $route['pagos/ajax-listar']                     = 'pagos/ajax_listar';
+$route['pagos/ajax-listar-aseguradora']                     = 'pagos/ajax_listar_aseguradora';
+$route['pagos/ajax-listar-agentes']                     = 'pagos/ajax_listar_agentes';
 $route['pagos/ajax-exportar']                   = 'pagos/ajax_exportar';
 $route['pagos/ajax-pagos-info']                 = 'pagos/ajax_pagos_info';
 $route['pagos/ajax-formas-pago']                 = 'pagos/ajax_catalogo_pagos';
@@ -53,3 +56,6 @@ $route['pagos/ajax-anular-pago'] = 'pagos/ajax_anular_pago';
 //others
 $route['pagos/ajax-get-empezables'] = 'pagos/ajax_get_empezables';
 $route['pagos/ajax-get-empezable'] = 'pagos/ajax_get_empezable';
+
+//Obtinene los agentes y los provedores 
+$route['pagos/ajax_agentes_proovedores'] = 'pagos/ajax_agentes_proovedores';

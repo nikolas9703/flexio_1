@@ -163,6 +163,19 @@ $(function(){
         }
       });
       $(".breadcrumb").html($(".breadcrumb").html().replace("Compras","Seguros"));
+      $("label").each(function(index, el) {
+        if($(this).html() == "Proveedor"){
+          $(this).html("Pago a");
+        }
+        else if($(this).html() == "Categoría(s) de Proveedor"){
+          $(this).parent().remove();//obtenemos nodo padre eliminamos todo el nodo donde esta categoria
+        }
+      });
+      $('#tipo').html('<option value="">Seleccione</option>'+
+        ' <option value="compras">Compras</option> '+
+        ' <option value="planilla">Planilla</option> '+
+        ' <option value="participacion">Participación</option> '+
+        ' <option value="remesa">Remesa</option>').trigger('chosen:updated');
      }
 
 
