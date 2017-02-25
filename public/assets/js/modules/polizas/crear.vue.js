@@ -1,6 +1,5 @@
 Vue.http.options.emulateJSON = true;
 var opcionesModal = $('#verCoberturas');
-var counterCoverage= 1;
 var formularioCrear = new Vue({
 	el: ".wrapper-content",
 	data:{
@@ -50,6 +49,8 @@ var formularioCrear = new Vue({
             opcionesModal.find('.modal-tile').empty();
             opcionesModal.find('.modal-body').empty().append(pantalla);
             opcionesModal.find('.modal-footer').empty().append(botones_coberturas);
+            populateStoredCovergeData('indCoveragefields','coverage','removecoverage',coberturas,"cobertura","valor_cobertura");
+            
             opcionesModal.modal('show');
         },
         renovationModal: function (idPolicy) {
@@ -954,15 +955,13 @@ $(window).scroll(function() {
 });
 
 
-function DrawCoverageInModal(id,btnAdd,stringId,del_row){
+function drawInputsInCoverageInModal(id,btnAdd,stringId,del_row){
 
  var wrapper = $("#"+id); 
+ var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
  $("#"+btnAdd).unbind().click(function(e){
     e.preventDefault();
-    parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
-    var text = '<div class="resetModal" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="'+stringId+'Name[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="'+stringId+'Value[]" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 '+del_row+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-    $(wrapper).append(text);
-    counterCoverage++;  
+    appendHtmlTag(wrapper,parameters,stringId,del_row,undefined);
 });
 }
 
@@ -970,9 +969,32 @@ function deleteFieldsInCoverageModal(id,del_row,idToRemove){
     var wrapper = $("#"+id);
     var removeStringClass = '.'+del_row+'';
     $(wrapper).unbind().on("click",removeStringClass, function(e){ //user click on remove text
-        e.preventDefault();  
-        counterCoverage--; 
-        var stringId = "#"+ idToRemove+'_'+ counterCoverage;    
+        e.preventDefault();
+        var unicNumber=$(this).data("id"); 
+        var stringId = "#"+ idToRemove+'_'+ unicNumber;    
         $(stringId).remove();
     }); 
+}
+
+function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
+  var counterCoverage= new Date().valueOf(),value={};
+
+  value.nombre = inputValue === undefined ? "" : inputValue.nombre;
+  value.monetario = inputValue === undefined ? "" : inputValue.monetario;
+  var text = '<div class="resetModal" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="'+stringId+'Name[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="'+stringId+'Value[]" value="'+value.monetario+'" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 '+del_row+'" data-id="'+counterCoverage+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+  $(wrapper).append(text);   
+}
+
+function  populateStoredCovergeData(id,stringId,del_row,coverage,nombre,monetario){
+     wrapper = $("#"+id); 
+     parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+    for (var i = coverage.length - 1; i >= 0; i--) {
+        var value = coverage[i];
+        var attribute={
+            nombre: value[nombre],
+            monetario:value[monetario]
+        };
+        appendHtmlTag(wrapper,parameters,stringId,del_row,attribute);
+    }
+
 }

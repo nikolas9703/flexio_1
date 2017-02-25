@@ -134,7 +134,21 @@ if (!isset($campo)) {
 ?>
 
 <?php echo modules::run('polizas/formulariointereses', $campos); ?>  
+<?php
 
+if (empty($campos))
+    $campos = "";
+$formAttr = array(
+    'method' => 'POST',
+    'id' => 'formPolizasCrear',
+    'autocomplete' => 'off'
+    );
+if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
+    echo form_open(base_url('polizas/editar/' . $campos['uuid_polizas']), $formAttr);
+} else {
+    echo form_open(base_url('polizas/guardar'), $formAttr);
+}
+?>
 
 <h5>Vigencia y detalle de solicitud</h5>
 <div class="ibox-content" style="display: block;">
@@ -162,7 +176,7 @@ if (!isset($campo)) {
             <input type="input-left-addon" name="poliza_tipo_pagador" class="form-control" id="poliza_pagador" value="{{polizaVigencia.tipo_pagador}}" disabled/>
         </div>
 
-<<<<<<< HEAD
+<!-- <<<<<<< HEAD
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2">
             <label>Nombre  <span required="" aria-required="true">*</span></label>
             <input type="input-left-addon" name="poliza_pagadornombre" id="poliza_campopagador" class="form-control" value="{{polizaVigencia.pagador}}" disabled/>  
@@ -173,22 +187,8 @@ if (!isset($campo)) {
         </div>
     </div>   
 </div>
-<?php
-            //print_r($campos);
-if (empty($campos))
-    $campos = "";
-$formAttr = array(
-    'method' => 'POST',
-    'id' => 'formPolizasCrear',
-    'autocomplete' => 'off'
-    );
-if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
-    echo form_open(base_url('polizas/editar/' . $campos['uuid_polizas']), $formAttr);
-} else {
-    echo form_open(base_url('polizas/guardar'), $formAttr);
-}
-?>
-=======
+
+======= -->
             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2">
                 <label>Nombre  <span required="" aria-required="true">*</span></label>
                 <input type="input-left-addon" name="poliza_pagadornombre" id="poliza_campopagador" class="form-control" value="{{polizaVigencia.pagador}}" disabled/>  
@@ -201,7 +201,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     </div>
 
 
-    <h5>Prima e informaci&oacute;n de cobros</h5>
+   <!--  <h5>Prima e informaci&oacute;n de cobros</h5>
     <div class="ibox-content" style="display: block;" >
         <div class="row">
             <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 ">
@@ -251,9 +251,8 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
                     <input type="input-left-addon" name="poliza_total" class="form-control"  id="poliza_total" value="{{polizaPrima.total}}" disabled />
                 </div>                                
             </div>
-        </div> 
+        </div>  -->
          <?php
-            //print_r($campos);
     if (empty($campos))
         $campos = "";
     $formAttr = array(
@@ -267,7 +266,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
         echo form_open(base_url('polizas/guardar'), $formAttr);
     }
     ?>
-        <div class="row">
+      <!--   <div class="row">
             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
                 <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
                 <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago">
@@ -298,7 +297,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
                     <option v-for="canpag in catalogoCantidadPagos" v-bind:value="canpag.valor" :selected="canpag.etiqueta == polizaPrima.cantidad_pagos">{{canpag.etiqueta}}</option>
                 </select>
             </div>
->>>>>>> 6ec6003ad09ae6f71885992d2213bd6f122ebc9a
+>>>>>>> 6ec6003ad09ae6f71885992d2213bd6f122ebc9a -->
 
 <h5>Prima e informaci&oacute;n de cobros</h5>
 <div class="ibox-content" style="display: block;" >
@@ -559,7 +558,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
     </div>
     <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddCoverage">
-        <button class="btn btn-default btn-block addCobertura" onclick="DrawCoverageInModal('indCoveragefields','btnAddCoverage','coverage','removecoverage')"><i class="fa fa-plus"></i></button>
+        <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indCoveragefields','btnAddCoverage','coverage','removecoverage')"><i class="fa fa-plus"></i></button>
     </div>
 </div>
 <div class="row">
@@ -574,7 +573,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
     </div>
     <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddDeductible">
-        <button class="btn btn-default btn-block addCobertura" onclick="DrawCoverageInModal('indDeductiblefields','btnAddDeductible','deductible','removeDeductible')"><i class="fa fa-plus"></i></button>
+        <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indDeductiblefields','btnAddDeductible','deductible','removeDeductible')"><i class="fa fa-plus"></i></button>
     </div>
 
 </div>
