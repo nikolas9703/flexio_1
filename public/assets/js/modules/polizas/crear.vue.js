@@ -49,8 +49,6 @@ var formularioCrear = new Vue({
             opcionesModal.find('.modal-tile').empty();
             opcionesModal.find('.modal-body').empty().append(pantalla);
             opcionesModal.find('.modal-footer').empty().append(botones_coberturas);
-            populateStoredCovergeData('indCoveragefields','coverage','removecoverage',coberturas,"cobertura","valor_cobertura");
-            
             opcionesModal.modal('show');
         },
         renovationModal: function (idPolicy) {
@@ -230,9 +228,9 @@ var formularioCrear = new Vue({
             var total=0;
             $("input[name='participacion[]']").map(function (index,dato) {
                 if(isNaN(dato.value) || dato.value==='' || dato.value===null)
-                   total=parseFloat(0);
-               else
-                   total=parseFloat(dato.value);
+                 total=parseFloat(0);
+             else
+                 total=parseFloat(dato.value);
 				//console.log(dato.value);
 				valor_final+=parseFloat(total);
 			}).get();
@@ -241,17 +239,17 @@ var formularioCrear = new Vue({
 			
             if(agtPrincipal!="")
             {
-               $('#participacionTotal').val(parseFloat(100));
-           }
-           else
-           {
-               this.$set("polizaTotalParticipacion",valor_final);
+             $('#participacionTotal').val(parseFloat(100));
+         }
+         else
+         {
+             this.$set("polizaTotalParticipacion",valor_final);
 				//$('#participacionTotal').val(parseFloat(valor_final));
             }
 
             if(isNaN(valor_final))
-               $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
-           else
+             $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
+         else
             $('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(valor_final)).toFixed(2));	
 
     },
@@ -565,8 +563,8 @@ var formularioCrear = new Vue({
                             $('#correoPersona').attr('disabled',true);
                             
                             if(response.data.inter.telefono_principal == 'Residencial'){
-                             $('#telefono_residencial_check').prop('checked',true);     
-                         }else if(response.data.inter.telefono_principal == 'Laboral'){
+                               $('#telefono_residencial_check').prop('checked',true);     
+                           }else if(response.data.inter.telefono_principal == 'Laboral'){
                             $('#telefono_oficina_check').prop('checked',true);
                         }
 
@@ -795,8 +793,9 @@ function isColective(data){
 isColective(ramo);
 
 $(document).ready(function () {
-	
-	if(agtPrincipal!="")
+	populateStoredCovergeData('indCoveragefields','coverage','removecoverage',coberturas,"cobertura","valor_cobertura");
+	populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',deducciones,"deduccion","valor_deduccion");
+    if(agtPrincipal!="")
 	{
 		$('.agentePrincipal').show();
 		$('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
@@ -812,12 +811,14 @@ $(document).ready(function () {
     
     
     if(urlLastSegment==="renovar"){
-     var uuidPolicy = URL.pop();  
-     $('#formPolizasCrear').submit(function(e){
+       var uuidPolicy = URL.pop();
+       $(".coverage").removeAttr(false);
+       $(".deductible").removeAttr(false);  
+       $('#formPolizasCrear').submit(function(e){
         return false;
     });
-     formularioCrear.renovationModal(uuidPolicy);
- }else{
+       formularioCrear.renovationModal(uuidPolicy);
+   }else{
     $(".renewal").remove();
     $('.detail_endoso').remove();
 }
@@ -956,12 +957,16 @@ $(window).scroll(function() {
 
 
 function drawInputsInCoverageInModal(id,btnAdd,stringId,del_row){
-
- var wrapper = $("#"+id); 
- var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
- $("#"+btnAdd).unbind().click(function(e){
+   var wrapper = $("#"+id); 
+   var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+   $("#"+btnAdd).unbind().click(function(e){
     e.preventDefault();
     appendHtmlTag(wrapper,parameters,stringId,del_row,undefined);
+    $(".moneda").inputmask('currency',{
+      prefix: "",
+      autoUnmask : true,
+      removeMaskOnSubmit: true
+  }); 
 });
 }
 
@@ -977,24 +982,26 @@ function deleteFieldsInCoverageModal(id,del_row,idToRemove){
 }
 
 function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
-  var counterCoverage= new Date().valueOf(),value={};
-
+  var counterCoverage= new Date().valueOf(),value={},enabled;
+  var URL =window.location.href.split("/");
+  var urlLastSegment= URL.pop();
   value.nombre = inputValue === undefined ? "" : inputValue.nombre;
   value.monetario = inputValue === undefined ? "" : inputValue.monetario;
-  var text = '<div class="resetModal" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="'+stringId+'Name[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="'+stringId+'Value[]" value="'+value.monetario+'" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 '+del_row+'" data-id="'+counterCoverage+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+  enabled = urlLastSegment == "renovar" ? "" : "disabled";
+  var text = '<div class="'+stringId+'" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" '+enabled+' name="'+stringId+'Name[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input '+enabled+' type="text" name="'+stringId+'Value[]" value="'+value.monetario+'" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 renewal '+del_row+'" data-id="'+counterCoverage+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
   $(wrapper).append(text);   
 }
 
 function  populateStoredCovergeData(id,stringId,del_row,coverage,nombre,monetario){
-     wrapper = $("#"+id); 
-     parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
-    for (var i = coverage.length - 1; i >= 0; i--) {
-        var value = coverage[i];
-        var attribute={
-            nombre: value[nombre],
-            monetario:value[monetario]
-        };
-        appendHtmlTag(wrapper,parameters,stringId,del_row,attribute);
-    }
+   wrapper = $("#"+id); 
+   parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+   for (var i = coverage.length - 1; i >= 0; i--) {
+    var value = coverage[i];
+    var attribute={
+        nombre: value[nombre],
+        monetario:value[monetario]
+    };
+    appendHtmlTag(wrapper,parameters,stringId,del_row,attribute);
+}
 
 }

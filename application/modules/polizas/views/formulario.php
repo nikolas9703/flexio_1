@@ -557,7 +557,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
 
     </div>
-    <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddCoverage">
+    <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1 renewal" id="btnAddCoverage">
         <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indCoveragefields','btnAddCoverage','coverage','removecoverage')"><i class="fa fa-plus"></i></button>
     </div>
 </div>
@@ -572,17 +572,17 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     <div  id="indDeductiblefields">
 
     </div>
-    <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddDeductible">
+    <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1 renewal" id="btnAddDeductible">
         <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indDeductiblefields','btnAddDeductible','deductible','removeDeductible')"><i class="fa fa-plus"></i></button>
     </div>
 
 </div>
 <div class="row botones_coberturas" style="display:none;">
     <div class="form-group col-xs-12 col-sm-6 col-md-6">
-        <button id="closeModal" class="btn btn-w-m btn-default btn-block" @click="clearFields()" type="button" >Cancelar</button>
+        <button id="closeModal" class="btn btn-w-m btn-default btn-block renewal" @click="clearFields()" type="button" >Cancelar</button>
     </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-6" @click="setPlanValues()">
-        <button id="guardarCoberturas" class="btn btn-w-m btn-primary btn-block" type="button">Guardar</button>
+        <button id="guardarCoberturas" class="btn btn-w-m btn-primary btn-block renewal" type="button">Guardar</button>
 
     </div>
 </div>
