@@ -1,4 +1,9 @@
 Vue.http.options.emulateJSON = true;
+var validateFields = [
+{field: {input: "input[name='coverageName[]']", valiation: "alfanúmerico"}},
+{field: {input: "input[name='coverageValue[]']", valiation: "numeric"}},
+{field: {input: "input[name='deductibleName[]']", valiation: "alfanúmerico"}},
+{field: {input: "input[name='deductibleValue[]']", valiation: "numeric", }}];
 var opcionesModal = $('#verCoberturas');
 var formularioCrear = new Vue({
 	el: ".wrapper-content",
@@ -228,9 +233,9 @@ var formularioCrear = new Vue({
             var total=0;
             $("input[name='participacion[]']").map(function (index,dato) {
                 if(isNaN(dato.value) || dato.value==='' || dato.value===null)
-                 total=parseFloat(0);
-             else
-                 total=parseFloat(dato.value);
+                   total=parseFloat(0);
+               else
+                   total=parseFloat(dato.value);
 				//console.log(dato.value);
 				valor_final+=parseFloat(total);
 			}).get();
@@ -239,17 +244,17 @@ var formularioCrear = new Vue({
 			
             if(agtPrincipal!="")
             {
-             $('#participacionTotal').val(parseFloat(100));
-         }
-         else
-         {
-             this.$set("polizaTotalParticipacion",valor_final);
+               $('#participacionTotal').val(parseFloat(100));
+           }
+           else
+           {
+               this.$set("polizaTotalParticipacion",valor_final);
 				//$('#participacionTotal').val(parseFloat(valor_final));
             }
 
             if(isNaN(valor_final))
-             $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
-         else
+               $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
+           else
             $('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(valor_final)).toFixed(2));	
 
     },
@@ -563,8 +568,8 @@ var formularioCrear = new Vue({
                             $('#correoPersona').attr('disabled',true);
                             
                             if(response.data.inter.telefono_principal == 'Residencial'){
-                               $('#telefono_residencial_check').prop('checked',true);     
-                           }else if(response.data.inter.telefono_principal == 'Laboral'){
+                             $('#telefono_residencial_check').prop('checked',true);     
+                         }else if(response.data.inter.telefono_principal == 'Laboral'){
                             $('#telefono_oficina_check').prop('checked',true);
                         }
 
@@ -796,29 +801,29 @@ $(document).ready(function () {
 	populateStoredCovergeData('indCoveragefields','coverage','removecoverage',coberturas,"cobertura","valor_cobertura");
 	populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',deducciones,"deduccion","valor_deduccion");
     if(agtPrincipal!="")
-	{
-		$('.agentePrincipal').show();
-		$('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
-		$('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
-	}
-	else
-	{
-		$('.agentePrincipal').hide();
-	}
+    {
+      $('.agentePrincipal').show();
+      $('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
+      $('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
+  }
+  else
+  {
+      $('.agentePrincipal').hide();
+  }
 
-    var URL =window.location.href.split("/");
-    var urlLastSegment= URL.pop();
-    
-    
-    if(urlLastSegment==="renovar"){
-       var uuidPolicy = URL.pop();
-       $(".coverage").removeAttr(false);
-       $(".deductible").removeAttr(false);  
-       $('#formPolizasCrear').submit(function(e){
+  var URL =window.location.href.split("/");
+  var urlLastSegment= URL.pop();
+
+
+  if(urlLastSegment==="renovar"){
+     var uuidPolicy = URL.pop();
+     $(".coverage").removeAttr(false);
+     $(".deductible").removeAttr(false);  
+     $('#formPolizasCrear').submit(function(e){
         return false;
     });
-       formularioCrear.renovationModal(uuidPolicy);
-   }else{
+     formularioCrear.renovationModal(uuidPolicy);
+ }else{
     $(".renewal").remove();
     $('.detail_endoso').remove();
 }
@@ -957,9 +962,9 @@ $(window).scroll(function() {
 
 
 function drawInputsInCoverageInModal(id,btnAdd,stringId,del_row){
-   var wrapper = $("#"+id); 
-   var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
-   $("#"+btnAdd).unbind().click(function(e){
+ var wrapper = $("#"+id); 
+ var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+ $("#"+btnAdd).unbind().click(function(e){
     e.preventDefault();
     appendHtmlTag(wrapper,parameters,stringId,del_row,undefined);
     $(".moneda").inputmask('currency',{
@@ -993,9 +998,9 @@ function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
 }
 
 function  populateStoredCovergeData(id,stringId,del_row,coverage,nombre,monetario){
-   wrapper = $("#"+id); 
-   parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
-   for (var i = coverage.length - 1; i >= 0; i--) {
+ wrapper = $("#"+id); 
+ parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+ for (var i = coverage.length - 1; i >= 0; i--) {
     var value = coverage[i];
     var attribute={
         nombre: value[nombre],
@@ -1003,5 +1008,139 @@ function  populateStoredCovergeData(id,stringId,del_row,coverage,nombre,monetari
     };
     appendHtmlTag(wrapper,parameters,stringId,del_row,attribute);
 }
+
+}
+
+function customModalValidation(type) {
+
+
+    var mensaje = "",
+    msgErrors = [],
+    errType = 0,
+    isValid = true,
+    error = "";
+
+    for (var i = 0; i < type.length; i++) {
+
+        $(type[i].field.input).each(function () {
+            var element = $(this).val(),
+            error = "";
+            elementType = type[i].field.type,
+            id = elementType + "-" + errType++;
+
+            $(this).attr('id', "");
+            if ($.trim(element).length <= 0) {
+                mensaje = "Campo obligatorio";
+                error = "<label class='error'>" + mensaje + "</label>";
+
+            }
+            if (type[i].field.valiation == "numeric" && ($.trim(element).length !== 0)) {
+                if (!validateNumbers(element)) {
+
+                    mensaje = "Campo númerico";
+                    error = "<label class='error'>" + mensaje + "</label>";
+
+                }
+            }
+
+            if (type[i].field.valiation == "alfanúmerico") {
+
+                if (!validateAlphaNumeric(element) && ($.trim(element).length !== 0)) {
+
+                    mensaje = "Campo alfanúmerico";
+                    error = "<label class='error'>" + mensaje + "</label>";
+
+                }
+            }
+            $(".error").remove();
+
+            $(this).attr('id', id);
+            msgErrors.push({pair: {id: id, error: error}});
+            isValid = addMessages(msgErrors);
+
+
+        }).get();
+
+
+    }
+    return isValid;
+}
+
+function validateAlphaNumeric(text) {
+
+    var exp = new RegExp(/^[A-Za-z\d\s]+$/);
+
+    return  exp.test(text);
+
+}
+
+function validateNumbers(text) {
+
+    //var exp = new RegExp(/^[0-9]$/);
+    var exp = new RegExp(/^[0-9]+([.][0-9]+)?$/);
+    return  exp.test(text);
+
+}
+
+function addMessages(msg) {
+
+    var counter = 0;
+    for (var i = 0; i < msg.length; i++) {
+
+        if (msg[i].pair.error !== "") {
+
+            $("#" + msg[i].pair.id).parent().append(msg[i].pair.error);
+            counter++;
+        }
+
+    }
+    return counter;
+}
+
+function clearFields(fieldName) {
+    for (var i = 0; i < fieldName.length; i++) {
+
+        $(fieldName[i].field.input).each(function () {
+            $(this).val("");
+
+        });
+
+    }
+
+}
+function setPlanValues(){
+    planesCoberturasDeducibles =[];
+    
+    if (customModalValidation(validateFields) === 0) {
+        planesCoberturasDeducibles.push({
+            'coberturas': {nombre: $("input[name='coverageName[]']").map(function () {
+                return $(this).val();
+            }).get(),
+            valor: $("input[name='coverageValue[]']").map(function () {
+                return $(this).val();
+            }).get()
+        },
+        'deducibles': {nombre: $("input[name='deductibleName[]']").map(function () {
+            return $(this).val();
+        }).get(),
+        valor: $("input[name='deductibleValue[]']").map(function () {
+            return $(this).val();
+        }).get()
+    }
+
+});
+        $("#planesCoberturasDeducibles").val(JSON.stringify(planesCoberturasDeducibles[0]));
+        $("#verCoberturas").modal("hide");
+
+    } 
+
+}
+
+function resetModalInputs(){
+
+    clearFields(validateFields);
+    $(".error").remove();
+    $("#planesCoberturasDeducibles").val("");
+    $("#verCoberturas").modal("hide");
 
 }
