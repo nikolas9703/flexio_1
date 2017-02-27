@@ -32,7 +32,8 @@ var formularioCrear = new Vue({
         catalogoSitioPago  : sitioPago,
         catalogoMetodoPago :metodoPago,
         catalogoFrecuenciaPagos :frecuenciaPagos,
-        catalogoCentroFacturacion:centrosFacturacion
+        catalogoCentroFacturacion:centrosFacturacion,
+        pagador:pagador
 
     },
     methods: {
@@ -75,6 +76,7 @@ var formularioCrear = new Vue({
                 this.$set('fechaExpiracion',response.data.fechaExpiracion);
                 this.$set('disabledfechaInicio',response.data.isEditable);
                 this.$set('disabledfechaExpiracion',response.data.isEditable);
+                this.$set('cambiarOpcionesPago',false);
                 this.$set('idPolicy',$('#idPoliza').val());
                 
                 //  this.$set('isEditable',response.data.isEditable);
@@ -262,6 +264,35 @@ var formularioCrear = new Vue({
 
         this.$set("cambiarOpcionesPago",false);
     },
+    getOpcionPagador: function () {
+    var self = this;
+    var pagador_tipo = $('#pagador').val();
+    if (pagador_tipo == "cliente" || pagador_tipo == "otro") {
+        $("#divpagadornombre").show();
+        $("#divpgnombre").show();
+        $("#campopagador").attr("data-rule-required", true);
+        $("#divselpagador").hide();
+        $("#selpagadornombre").removeAttr("data-rule-required");
+        var paga = $(".ncli").val();
+        if (pagador_tipo == "cliente") {
+            $("#campopagador").val(vigencia.pagador);
+            $("#campopagador").attr("readonly", "readonly");
+        } else {
+            $("#campopagador").val("");
+            $("#campopagador").removeAttr("readonly");
+        }
+    } else if (pagador_tipo == "asegurado") {
+        $("#divpagadornombre").show();
+        $("#divpgnombre").hide();
+        $("#campopagador").removeAttr("data-rule-required");
+        $("#divselpagador").show();
+        $("#selpagadornombre").attr("data-rule-required", true);
+    } else {
+        $("#divpagadornombre").hide();
+        $("#campopagador").removeAttr("data-rule-required");
+        $("#selpagadornombre").removeAttr("data-rule-required");
+    }
+},
     getClienteDireccion: function () {
             //polula el segundo select del header
             var self = this;
@@ -771,6 +802,7 @@ var formularioCrear = new Vue({
                 });
 }
 },
+
 }
 });
 
@@ -813,7 +845,7 @@ $(document).ready(function () {
 
   var URL =window.location.href.split("/");
   var urlLastSegment= URL.pop();
-
+  $(".select2").select2();
 
   if(urlLastSegment==="renovar"){
      var uuidPolicy = URL.pop();
@@ -823,6 +855,7 @@ $(document).ready(function () {
         return false;
     });
      formularioCrear.renovationModal(uuidPolicy);
+
  }else{
     $(".renewal").remove();
     $('.detail_endoso').remove();

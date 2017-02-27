@@ -5,7 +5,7 @@
                 <label>Empezar interés asegurado desde</label>
             </div>
             <div class="col-xs-12 col-sm-3 col-md-2 col-lg-2">
-                <select id="formulario" class="white-bg form-control" role="tablist" disabled>
+                <select id="formulario" class="white-bg form-control " role="tablist" >
                     <option value="">Seleccione</option>
                     <?php
                     if(!empty($campos['campos']['tipos_intereses_asegurados'])){
@@ -16,8 +16,8 @@
                     ?>
                 </select>
             </div>
-            <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5">
-                <select id="selInteres" class="white-bg form-control" role="tablist"><!-- onchange="getIntereses()"-->
+            <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5 ">
+                <select id="selInteres" class="white-bg form-control select2" role="tablist" :disabled="disabledfechaInicio" onchange="formularioCrear.getInteres()">
                     <option value="">Seleccione</option>
                     <option v-for="inter in sIntereses" v-bind:value="inter.id">{{inter.numero}}</option>
                 </select>

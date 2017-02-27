@@ -92,7 +92,7 @@ echo $campos['creado_por'];
         <br/>
         <div class="input-group">
             <span class="input-group-addon"><input type="checkbox"  name="impuesto_checkbox" id="impuesto_checkbox" :checked="polizaCliente.exonerado_impuesto != '' " :disabled="disabledfechaInicio" / v-model="checkExonerado"></span>
-            <input type="text" value="{{polizaCliente.exonerado_impuesto}}" placeholder="Exonerado de impuesto" class="form-control" :disabled="!checkExonerado || disabledfechaInicio"
+            <input type="text" placeholder="Exonerado de impuesto" class="form-control" v-model="polizaCliente.exonerado_impuesto" v-bind:value="checkExonerado==false ? '' : valorExonerado " :disabled="!checkExonerado || disabledfechaInicio"
             /><div id="divplan"></div>
         </div>
     </div>
@@ -172,20 +172,28 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             </div>                                
         </div>
 
-        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 plan">
             <label>Pagador  <span required="" aria-required="true">*</span></label>
-            <input type="input-left-addon" name="poliza_tipo_pagador" class="form-control" id="poliza_pagador" value="{{polizaVigencia.tipo_pagador}}" disabled/>
+            <select  name="campovigencia[tipo_pagador]" class="form-control" id="pagador" data-rule-required="true" @change="getOpcionPagador();" disabled="disabledfechaInicio">
+                <option value="">Seleccione</option>
+                <option v-for="pag in pagador" v-bind:value="pag.valor" :selected="pag.valor == polizaVigencia.tipo_pagador">{{pag.etiqueta}}</option>
+            </select>
         </div>
-
-        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2">
+        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 plan" id="divpagadornombre" >
             <label>Nombre  <span required="" aria-required="true">*</span></label>
-            <input type="input-left-addon" name="poliza_pagadornombre" id="poliza_campopagador" class="form-control" value="{{polizaVigencia.pagador}}" disabled/>  
-        </div>
-        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 poliza_declarativa">
-            <label>Póliza declarativa</label>
-            <div id="divprima"></div><input type="checkbox" class="js-switch" name='poliza_declarativa' id='polizaDeclarativa' <?php if($campos['poliza_declarativa'] == "si"){echo "checked";} ?> disabled />
-        </div>
-    </div>   
+            <div id="divpgnombre"><input type="text" name="campovigencia[pagadornombre]" id="campopagador"  v-model="polizaVigencia.pagador" class="form-control" :disabled="disabledfechaInicio">
+            </div>
+            <div id="divselpagador" style="display:none"><select  name="campovigencia[selpagadornombre]" id="selpagadornombre" class="form-control" :disabled="disabledfechaInicio">
+                <option value="">Seleccione</option>
+                <option v-for="interaso in InteresesAsociados" v-bind:value="interaso.nombrePersona" :selected="interaso.numero == vigencia.pagador">{{interaso.nombrePersona}}</option>
+            </select>
+        </div>    
+    </div>
+    <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 poliza_declarativa">
+        <label>Póliza declarativa</label>
+        <div id="divprima"></div><input type="checkbox" class="js-switch" name='poliza_declarativa' id='polizaDeclarativa' <?php if($campos['poliza_declarativa'] == "si"){echo "checked";} ?> disabled />
+    </div>
+</div>   
 </div>
 
 <?php

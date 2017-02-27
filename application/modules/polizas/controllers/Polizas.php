@@ -28,6 +28,7 @@ use Flexio\Modulo\Documentos\Repository\DocumentosRepository as DocumentosReposi
 use Flexio\Modulo\Solicitudes\Models\Solicitudes as solicitudesModel;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable as centroModel;
 use Flexio\Modulo\Planes\Models\Planes;
+use Flexio\Modulo\Planes\Models\PlanesComisiones;
 use Dompdf\Dompdf;
 use Flexio\Modulo\Polizas\Models\PolizasPrima;
 use Flexio\Modulo\Polizas\Models\PolizasVigencia;
@@ -55,6 +56,7 @@ use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
 use Flexio\Modulo\Ramos\Repository\RamoRepository as RamoRepository;
 use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
+
 
 class Polizas extends CRM_Controller {
 
@@ -930,6 +932,10 @@ $cantidad_pagos =    $this->SegInteresesAseguradosRepository->listar_catalogo('c
 $frecuencia_pagos = $this->SegInteresesAseguradosRepository->listar_catalogo('frecuencia_pagos', 'orden');
 $metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_pago', 'orden');
 $sitio_pago =$this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
+$pagador = $this->SegInteresesAseguradosRepository->listar_catalogo('pagador_seguros', 'orden');
+if($poliza->id_tipo_int_asegurado !=5){
+   unset($pagador[1]);
+}
 $centrosFacturacion = centroModel:: where("cliente_id",$poliza->cliente)
 ->where("empresa_id",$this->empresa_id)
 ->get();
@@ -996,7 +1002,8 @@ $this->assets->agregar_var_js(array(
  "metodoPago" => $metodo_pago,
  "centrosFacturacion" =>$centrosFacturacion,
  "poliza_declarativa" => $poliza->poliza_declarativa,
- "grupo" => $group
+ "grupo" => $group,
+ "pagador" => $pagador
  ));
 
 $isRenewal  = array('Expirada','Facturada');
@@ -1043,7 +1050,6 @@ $data["data"] = array(
     "validar_politicas" => $this->politicasgenerales
     )
  );
-
 $this->template->agregar_titulo_header('Polizas');
 $this->template->agregar_breadcrumb($breadcrumb);
 $this->template->agregar_contenido($data);
