@@ -1524,16 +1524,21 @@ class Pagos extends CRM_Controller
 
             $proveedor = new Proveedores_orm;//id_empresa
             $agentes = new Agentes_orm;
-            $aseguradoras = new Aseguradoras_orm;//id_empresa
+            $aseguradoras = new Aseguradoras_orm;//empresa_id
+
+            $proveedor = 
+            $proveedor->where("id_empresa","=",$this->empresa_id);
+            $aseguradoras = 
+            $aseguradoras->where("empresa_id","=",$this->empresa_id);
 
             if (!empty($this->input->get("q",true))) {
                 $nombreBuscar = $this->input->get("q",true);
                 $proveedor = 
-                $proveedor->where("nombre","like","%".$nombreBuscar."%")->where("id_empresa","=",$this->empresa_id);
+                $proveedor->where("nombre","like","%".$nombreBuscar."%");
                 $agentes = 
                 $agentes->where("nombre","like","%".$nombreBuscar."%");
                 $aseguradoras = 
-                $aseguradoras->where("nombre","like","%".$nombreBuscar."%")->where("id_empresa","=",$this->empresa_id);
+                $aseguradoras->where("nombre","like","%".$nombreBuscar."%");
 
             }
 
