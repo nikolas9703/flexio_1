@@ -14,20 +14,21 @@ var formularioCrearOportunidades = new Vue({
     {
         var context = this;
 
-        if(context.vista == 'editar')
-        {
-            var oportunidad_json = JSON.parse(oportunidad.toString().replace(/\\/g, " ").replace(/\n/g, " ").replace(/\f/g, " "));
-
-            context.oportunidad = oportunidad_json;
-            context.comentario.comentarios = JSON.parse(JSON.stringify(oportunidad_json.comentario_timeline));
-            context.comentario.comentable_id = JSON.parse(JSON.stringify(oportunidad_json.id));
+        if (context.vista == 'editar'){
+            context.oportunidad = window.oportunidad;
+            context.comentario.comentarios = context.oportunidad.comentario_timeline ;
+            context.comentario.comentable_id = context.oportunidad.id;
             context.disabledEstado = false;
 
-            if(oportunidad_json.estado_id > '2')//anulado o terminado
+            if (context.oportunidad.estado_id > '2')//anulado o terminado
             {
                 context.disabledEditar = true;
             }
         }
+
+        Vue.nextTick(function(){
+            context.config.enableWatch = true;
+        });
     },
 
     data: {
@@ -40,7 +41,10 @@ var formularioCrearOportunidades = new Vue({
 
           },
 
-          config: {vista: window.vista},
+          config: {
+              vista: window.vista,
+              enableWatch: false
+          },
 
         vista: vista,
         disabledHeader: false,
@@ -67,22 +71,21 @@ var formularioCrearOportunidades = new Vue({
 
     },
 
-    methods: {
+    watch:{
 
-        cambiarTipo: function (tipo)
-        {
-            if (_.isEmpty(tipo))
-            {
-                this.oportunidad.empezar_desde_id = '';
-            }
-        },
-
-        cambiarTipoId: function (tipo_id)
-        {
+        'oportunidad.empezar_desde_type': function(val, oldVal){
 
             var context = this;
+            if(context.config.enableWatch && val.length == '0')
+            {
+                context.oportunidad.empezar_desde_id = '';
+            }
 
-        },
+        }
+
+    },
+
+    methods: {
 
         crearCotizacion: function(form){
 

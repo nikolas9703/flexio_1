@@ -4,6 +4,7 @@ Vue.transition('listado',{
 });
 var bloqueandoGuardar = 0; //El boton Guardar x default, debe ir activado, independiente de las politicas, solo al mover el estado, activa o desactiva
 var items = require('./../../config/lines_items.js');
+Vue.directive('select2ajax', require('./../../vue/directives/select2ajax.vue'));
 var form_orden_compra = new Vue({
 
     el: "#appOrdenventa",
@@ -30,7 +31,7 @@ var form_orden_compra = new Vue({
                 cantidad: {'mask':'9{1,4}','greedy':false},
                 descuento: {'mask':'9{1,2}[.9{0,2}]','greedy':false},
                 currency: {'mask':'9{1,8}[.9{0,2}]','greedy':false},
-                currency2: {'mask':'9{1,8}[.9{0,4}]','greedy':false}
+                currency2: {'mask':'9{1,8}[.9{0,5}]','greedy':false}
 
             },
             disableEmpezarDesde:false,
@@ -40,7 +41,8 @@ var form_orden_compra = new Vue({
             disableFecha:true,
             disableProveedor:false,
             envieFormulario:false,
-            modulo:'ordenes'
+            modulo:'ordenes',
+            disableAddRow:false,
         },
         catalogos:{
 
@@ -124,14 +126,15 @@ var form_orden_compra = new Vue({
     ready:function(){
 
         var context = this;
-
         if(context.config.vista == 'editar'){
            context.config.disableProveedor=true,
             context.config.disableEmpezarDesde=true;
             context.detalle = JSON.parse(JSON.stringify(window.orden));
             context.catalogos.aux = JSON.parse(JSON.stringify(window.orden));
             context.empezable = $.extend(JSON.parse(JSON.stringify(window.empezable)), {label:context.empezable.label,types:context.empezable.types});
-
+            if(context.empezable.type =='pedido'){
+                context.config.disableAddRow = true;
+            }
             if(context.detalle.estado == 2){
                 context.catalogos.estados.splice(0,1);
                 context.catalogos.estados.splice(1,1);
@@ -142,6 +145,7 @@ var form_orden_compra = new Vue({
                 //context.catalogos.estados.splice(2,1);
                 context.catalogos.estados.splice(2,1);
                 context.catalogos.estados.splice(2,1);
+                context.config.disableProveedor = false;
             }
 
             if(context.detalle.estado > 3){
@@ -155,9 +159,9 @@ var form_orden_compra = new Vue({
               context.detalle_modal.correo = context.detalle.proveedor_info.email;
               context.detalle_modal.proveedor = context.detalle.proveedor_info.codigo;
 
-
+              context.catalogos.proveedores = [context.detalle.proveedor_info];
             Vue.nextTick(function(){
-
+                context.detalle.proveedor_id = context.detalle.proveedor_info.uuid_proveedor;
                 context.comentario.comentarios = JSON.parse(JSON.stringify(window.orden.comentario));
                 context.comentario.comentable_id = JSON.parse(JSON.stringify(window.orden.id));
                 context.empezable.id = JSON.parse(JSON.stringify(window.empezable.id));
@@ -191,9 +195,34 @@ var form_orden_compra = new Vue({
           }
 
         });
-
+        //if(context.config.vista == 'crear'){
+         this.selectProveedores();
+        //}
     },
-    watch: {                       //5,2
+    watch: {
+
+        'detalle.centro_contable_id':function(val, oldVal){
+            var context = this;
+            if(context.config.vista == 'crear'){
+                _.forEach(context.detalle.articulos, function(articulo){
+                    articulo.cuenta_id = '';
+                });
+            }
+        },
+
+        'empezable.id': function(val, oldVal){
+
+            var context = this;
+            if(context.config.vista == 'crear')
+            {
+                context.getEmpezableAjax(context.empezable);
+                if(context.empezable.type =='pedido'){
+                    context.config.disableAddRow = true;
+                }
+            }
+
+        },
+                               //5,2
         'detalle.estado': function (val, oldVal) {
               var context = this;
              var categorias_permitidas = [];
@@ -212,6 +241,63 @@ var form_orden_compra = new Vue({
            },
     },
     methods:{
+        selectProveedores(){
+            var context = this;
+            $("#proveedor_id").select2({
+            width:'100%',
+            ajax: {
+                url: phost() + 'proveedores/ajax_catalogo_proveedores',
+                dataType: 'json',
+                delay: 100,
+                cache: true,
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page,
+                        erptkn: tkn
+                    };
+                },
+                processResults: function (data, params) {
+
+                   let resultados = data.map(resp=> [{'id': resp.id,'text': resp.nombre}]).reduce((a, b) => a.concat(b),[]);
+                     return {
+                          results:resultados
+                     }
+                },
+                escapeMarkup: function (markup) { return markup; },
+            }
+        });
+        },
+
+        getEmpezableAjax: function(empezable){
+
+            var context = this;
+            var datos = $.extend({erptkn: tkn},{'id':empezable.id,'type':empezable.type});
+
+            context.config.enableWatch = false;
+            context.$http.post({
+                url: window.phost() + "ordenes/ajax-get-empezable",
+                method:'POST',
+                data:datos
+            }).then(function(response){
+
+                if(_.has(response.data, 'session')){
+                    window.location.assign(window.phost());
+                    return;
+                }
+                if(!_.isEmpty(response.data)){
+
+                    context.detalle = $.extend(context.detalle,JSON.parse(JSON.stringify(response.data)));
+                    context.detalle.id = '';
+                    Vue.nextTick(function(){
+                        context.config.enableWatch = true;
+                    });
+
+                }
+            });
+
+
+        },
 
         enviarFormulario:function(enviar_orden_compra_correo){
 
@@ -237,6 +323,11 @@ var form_orden_compra = new Vue({
                 wrapper: '',
                 errorPlacement: function (error, element) {
                     var self = $(element);
+
+                    if(self.hasClass("cuenta")){
+                        toastr.error("Verifique en los items el campo 'Cuenta', es obligatorio", "Mensaje");
+                    }
+
                     if (self.closest('div').hasClass('input-group') && !self.closest('table').hasClass('itemsTable')) {
                         element.parent().parent().append(error);
                     }else if(self.closest('div').hasClass('form-group') && !self.closest('table').hasClass('itemsTable')){
@@ -302,7 +393,6 @@ var form_orden_compra = new Vue({
            var categoriaArticuloPolitica = _.map(_.filter(colecion_articulos,function(articulo){
                return  _.some(politica_categoria, { 'categoria_id': parseInt(articulo.categoria_id) });
            }),function(a){ return {categoria_id:parseInt(a.categoria_id),precio_total: a.precio_total};});
-           console.log(categoriaArticuloPolitica);
             if(categoriaArticuloPolitica.length === 0){
               self.config.disableBotonForEstado = false;
               self.config.disableDetalle = true,
@@ -318,7 +408,7 @@ var form_orden_compra = new Vue({
                };
                 return false;
             }
-            ///console.log(politica_categoria,categoriaArticuloPolitica);
+
             ///creo un array para comparar
             var objfiltradoCat = _.uniqWith(categoriaArticuloPolitica,function(a, b){
 

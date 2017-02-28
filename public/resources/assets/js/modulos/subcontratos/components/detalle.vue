@@ -2,11 +2,20 @@
 
       <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
           <label for="proveedor_id">Proveedor <span required="" aria-required="true">*</span></label>
-          <select name="campo[proveedor_id]" class="form-control" data-rule-required="true" v-select2="detalle.proveedor_id" :config="config.select2" :disabled="config.disableDetalle">
+          <select name="campo[proveedor_id]" id="proveedor_id" class="form-control" data-rule-required="true" v-select2="detalle.proveedor_id" :config="config.select2" :disabled="config.disableDetalle">
               <option value="">Seleccione</option>
               <option :value="proveedor.proveedor_id" v-for="proveedor in catalogos.proveedores" v-html="proveedor.nombre"></option>
           </select>
           <label id="proveedor_id-error" class="error" for="proveedor_id"></label>
+      </div>
+
+      <div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
+          <label for="proveedor_id">Tipo de subcontrato <span required="" aria-required="true">*</span></label>
+          <select name="campo[tipo_subcontrato_id]" id="tipo_subcontrato_id" class="form-control" data-rule-required="true" v-select2="detalle.tipo_subcontrato_id" :config="config.select2" :disabled="config.disableDetalle">
+              <option value="">Seleccione</option>
+              <option :value="tipo.id" v-for="tipo in catalogos.tipos_subcontratos" v-html="tipo.valor"></option>
+          </select>
+          <label id="tipo_subcontrato_id-error" class="error" for="tipo_subcontrato_id"></label>
       </div>
 
       <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 "><label></label>

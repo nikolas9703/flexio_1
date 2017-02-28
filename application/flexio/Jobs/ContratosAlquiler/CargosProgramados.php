@@ -28,8 +28,6 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 	 */
 	public function registrar($entrega=array()) {
 
-		//dd($entrega);
-
 		//Entrega Info
 		$this->fecha_entrega 	= !empty($entrega["fecha_entrega"]) ? $entrega["fecha_entrega"] : "";
 		$this->empresa_id 		= !empty($entrega["empresa_id"]) ? $entrega["empresa_id"] : "";
@@ -38,12 +36,17 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 		$this->calculo_costo_retorno = !empty($entrega["calculo_costo_retorno"]) ? $entrega["calculo_costo_retorno"] : "";
 		$this->lista_precio_alquiler_id = !empty($entrega["lista_precio_alquiler_id"]) ? $entrega["lista_precio_alquiler_id"] : "";
 
+		/*if($this->entrega_id != 1){
+			echo $this->entrega_id ;
+			dd($entrega);
+		}*/
+
 		//Recorrer los items
 		$count=0;
 		$total_items=count($this->items);
 		foreach($this->items AS $item) {
 
-			$ciclo = !empty($item["ciclo"]) ? $item["ciclo"] : "";
+			$ciclo = !empty($item["ciclo"]) ? str_replace("tarifa_","",$item["ciclo"]) : "";
 
 			//------------------------------------------
 			// Si no existe periodo, continuar
@@ -64,6 +67,7 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 
 			$item["cargoable_id"] = $this->entrega_id;
 			$item["cargoable_type"] = "Flexio\Modulo\EntregasAlquiler\Models\EntregasAlquiler";
+			$item["fecha_entrega"] = $this->fecha_entrega;
 
 			//------------------------------------------
 			// Seleccionar el ultimo cargo realizado a el
@@ -79,6 +83,15 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 			$this->ultimo_cargo = $this->ultimoCargo($clause);
 			$this->fecha_ejecutar_cargo = !empty($this->ultimo_cargo) ? Carbon::parse($this->ultimo_cargo->fecha_cargo)->copy() : Carbon::parse($entrega["fecha_entrega"])->copy();
 
+			//------------------------------------------------------
+			// Si ciclo es distinto de hora
+			// y no existe ultimo cargo
+			// formatear la fecha para el 1er cargos a las 0:00
+			//------------------------------------------------------
+			if(!preg_match("/horas/i", $ciclo) && empty($this->ultimo_cargo) && empty(collect($this->ultimo_cargo)->toArray())){
+				$this->fecha_ejecutar_cargo 	= Carbon::parse(Carbon::parse(Carbon::parse($this->fecha_ejecutar_cargo)->copy())->format('Y-m-d 00:00'));
+			}
+
 			//Fecha actual
 			$this->fecha_actual = Carbon::now('America/Panama');
 
@@ -92,11 +105,26 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 			$tiempo_transcurrido = Carbon::parse(Carbon::parse($this->fecha_ejecutar_cargo)->copy())->{$this->periodo[$ciclo]["func_difference"]}($this->fecha_actual);
 
 			$itemsdevueltos = array();
+			//echo "F. CARGO: ". $this->fecha_ejecutar_cargo ."<br>";
+			//echo "F. ACTUAL: ". $this->fecha_actual ."<br>";
+			//echo "T. TRANSC: ". $tiempo_transcurrido ."<br>";
+
 			//------------------------------------------
 			// Verificar si Tiempo Transucrrido
 			// es IGUAL a Lapso de Tiempo
 			//------------------------------------------
-			if($tiempo_transcurrido >= $lapso_tiempo) {
+			if($tiempo_transcurrido >= $lapso_tiempo
+			&& Carbon::parse(Carbon::parse(Carbon::parse($this->fecha_ejecutar_cargo)->copy())->format('Y-m-d'))->timestamp <= Carbon::parse(Carbon::parse(Carbon::parse($this->fecha_actual)->copy())->format('Y-m-d'))->timestamp
+			) {
+				//echo "AQUI?";
+				/*echo "FECHA ACTUAL: ". $this->fecha_actual ." <br>";
+				echo "FECHA CARGO: ". $this->fecha_ejecutar_cargo ." <br>";
+				echo "CICLO: ". $ciclo ." <br>";
+				echo "LAPSO: ". $lapso_tiempo ." <br>";
+				echo "FUNCION: ". $this->periodo[$ciclo]["func_difference"] ." <br>";
+				echo "$tiempo_transcurrido >= $lapso_tiempo<br>";
+				echo Carbon::parse(Carbon::parse(Carbon::parse($this->fecha_ejecutar_cargo)->copy())->format('Y-m-d'))->timestamp." <= ".Carbon::parse(Carbon::parse(Carbon::parse($this->fecha_actual)->copy())->format('Y-m-d'))->timestamp ."<br>";
+				*/
 
 				//------------------------------------------
 				// Sumarle lapso a $fecha_ejecutar_cargo
@@ -111,7 +139,7 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 				//------------------------------------------
 				$item = $this->preparar($item, $cantidad, $series, $devoluciones, $this->empresa_id, $fecha_cargo, false, $this->calculo_costo_retorno, $this->fecha_ejecutar_cargo, $this->lista_precio_alquiler_id);
 
-				if(empty($item)){
+				if(empty(array_filter($item)) || !empty($item[0]["fecha_cargo"]) && $item[0]["fecha_cargo"]=="0000-00-00 00:00:00"){
 					continue;
 				}
 
@@ -123,10 +151,15 @@ class CargosProgramados extends Cargos implements CargosProgramadosInterface {
 			}else {
 
 				$fecha_cargo = Carbon::parse(Carbon::parse($this->fecha_ejecutar_cargo)->copy())->{$this->periodo[$ciclo]["func_addition"]}($lapso_tiempo);
+				$item["esdevolucion"] = true; //para verificar que se trata de una devolucion
 				$items = $this->preparar($item, $cantidad, $series, $devoluciones, $this->empresa_id, $fecha_cargo, true, $this->calculo_costo_retorno, $this->fecha_ejecutar_cargo, $this->lista_precio_alquiler_id);
 
+				//verificar si el cargo para este item tiene tarifa $0.00
+				$hasTarifaZero = collect($items)->filter(function ($item) {
+						return !empty($item["tarifa"]) && (int)$item["tarifa"] === 0;
+				})->toArray();
 
-				if(empty($items) || empty(Utiles::multiarray_buscar_key($items, "devuelto"))){
+				if(empty($items) || !empty($hasTarifaZero) || empty(Utiles::multiarray_buscar_key($items, "devuelto")) || !empty($items[0]["fecha_cargo"]) && $items[0]["fecha_cargo"]=="0000-00-00 00:00:00"){
 					continue;
 				}
 

@@ -1,0 +1,63 @@
+h2{
+  font-size: 24px;
+}
+table.entradas{
+   display: table;
+  thead{
+      tr{
+          background-color: #0070BA;
+          display: table-row;
+          th{
+             padding-left: 6px;
+             background-color: #0070BA;
+             display: table-cell;
+              color:#ffffff;
+              font-size: 18px;
+          }
+      }
+  }
+  tbody {
+      tr{
+        padding: 12px 2px;
+        &:nth-of-type(odd) {
+          border: 1px solid #000;
+        }
+          td{
+              color:#111111;
+              font-size: 12px;
+              font-weight: bolder;
+
+          }
+      }
+  }
+}
+
+table.transacciones{
+  display: table;
+  thead{
+      tr{
+          background-color: #565758;
+          display: table-row;
+          th{
+             padding-left: 6px;
+             background-color: #565758;
+             display: table-cell;
+             color:#ffffff;
+             font-size: 14px;
+          }
+      }
+  }
+  tbody {
+      tr{
+        padding: 12px 2px;
+        &:nth-of-type(even) {
+          background-color: #eee;
+        }
+          td{
+              color:#111111;
+              font-size: 12px;
+              font-weight: normal;
+          }
+      }
+  }
+}

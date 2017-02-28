@@ -21,6 +21,8 @@ use Flexio\Modulo\Polizas\Models\PolizasCliente;
 use Flexio\Modulo\Empresa\Models\Empresa;
 use Flexio\Modulo\CentrosContables\Models\CentrosContables;
 use Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro;
+use Flexio\Library\Util\FormatoMoneda;
+use Flexio\Modulo\Cobros\Models\Cobro;
 
 
 class Polizas extends Model
@@ -257,6 +259,11 @@ class Polizas extends Model
     	return $this->hasMany(FacturaSeguro::class, 'id_poliza', 'id');
     }
 
-    
+    public static function saldo_pendiente($pol) {
+    	$total = FacturaSeguro::where("id_poliza", $pol)->sum("total");
+    	$cobrado = Cobro::where("empezable_id", $pol)->where('empezable_type',"Flexio\Modulo\Polizas\Models\Polizas")->sum('monto_pagado');
+    	$saldo = $total - $cobrado ;
+    	return '<label class="label-outline outline-danger">$' . FormatoMoneda::numero($saldo) . '</label>';
+    }
 
 }

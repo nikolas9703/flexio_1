@@ -17,6 +17,7 @@ var form_crear_facturas = new Vue({
         config: {
 
             vista: window.vista
+            
 
         }
 

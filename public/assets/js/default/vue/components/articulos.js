@@ -66,7 +66,7 @@ Vue.component('articulos',{
             var proveedor = _.find(context.catalogos.proveedores, function(proveedor){
                 return proveedor.proveedor_id == context.detalle.proveedor_id;
             });
-            if(context.config.modulo == 'facturas_compras' && this.getTotal > 500 && this.retieneImpuesto()){
+            if(context.config.modulo == 'facturas_compras' && this.getTotal > 0 && this.retieneImpuesto()){
                 return true;
             }
             return false;

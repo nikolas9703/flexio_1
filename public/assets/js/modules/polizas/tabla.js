@@ -21,6 +21,15 @@ $(document).ready(function(){
 				}
 	        }
 		});
+
+
+		$('#agendarCobroLnk').on('click',function(){
+			e.preventDefault();
+			e.returnValue=false;
+			e.stopPropagation();
+			
+		});
+
 		
 	});
 

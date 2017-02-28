@@ -1,0 +1,26 @@
+/* line 4, ../sass/clientes.scss */
+
+table#remesasentrantesGrid label.totales-success {
+    border: #5cb85c solid 2px;
+    color: #5cb85c;
+    width:100% !important;
+	text-align: center;
+} 
+/* line 28, ../sass/clientes.scss */
+table#remesasentrantesGrid label.totales-success {
+  border: #5BB85C solid 2px;
+  color: #5BB85C;
+}
+/* line 34, ../sass/clientes.scss */
+table#remesasentrantesGrid label.totales-warning {
+  border: #F8AC59 solid 2px;
+  color: #F8AC59;
+}
+/* line 39, ../sass/clientes.scss */
+table#remesasentrantesGrid label.totales-danger {
+  border: #ED5565 solid 2px;
+  color: #ED5565;
+  width:100% !important;
+  text-align: center;
+}
+

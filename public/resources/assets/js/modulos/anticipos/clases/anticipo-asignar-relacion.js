@@ -5,6 +5,10 @@ const anticipoRelacion = class AnticipoRelacion {
 		this.padrevue = padreVue;
 	}
 
+	formatPoveedores(proveedor){
+		return [{id:proveedor.id,proveedor_id:proveedor.id, nombre:proveedor.nombre,saldo_pendiente:proveedor.saldo_pendiente, credito:proveedor.credito}];
+	}
+
 	orden_compra(response) {
 		if(response.orden_compra.length > 0 && _.has(response,'orden_compra')){
 			var self = this.padrevue;
@@ -12,6 +16,8 @@ const anticipoRelacion = class AnticipoRelacion {
 			self.header_empezable.empezable_type = 'orden_compra';
 			self.$store.dispatch('SET_CURRENT', 'orden_compra');
 			self.header_empezable.aux_empezable_id = orden.id;
+			//debugger;
+			//self.catalogoFormulario.proveedores = this.formatPoveedores(orden.proveedor);
 	   }
 	}
 

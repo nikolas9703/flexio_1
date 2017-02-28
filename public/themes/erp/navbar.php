@@ -24,19 +24,30 @@
 				<li ng-repeat="m in menus track by $index" class="{{menu_superior_seleccionado == m.grupo ? 'active' : ''}}"><a ng-href="#" ng-click="togglemenu($event)" data-grupo="{{m.grupo}}" role="button" ng-cloak=""> {{m.nombre}}</a></li>
 			</ul>
 		</div>
-		<div class="col-xs-0 col-sm-2 col-md-5 col-lg-4 hidden-xs">
+		<div class="col-xs-0 col-sm-2 col-md-5 col-lg-4 hidden-xs" id="notifications_div">
 		    <ul class="nav navbar-top-links navbar-right">
-		        <li class="dropdown hidden-xs hidden-sm">
-		            <a href="#" data-toggle="dropdown" class="dropdown-toggle count-info">
-		                <i class="fa fa-bell"></i>
-		                <span id="count_user" class="label label-warning">0</span>
-		            </a>
-		            <ul id="lista_notificaciones" class="dropdown-menu dropdown-alerts content mCustomScrollbar minimal-dark"></ul>
-		        </li>
+
+				<notifications :notifications.sync="notifications"></notifications>
+
 				<li>
+
 					<a href="<?php echo base_url()?>" class="dropdown-toggle count-info">
 							<i class="fa fa-comments"></i>
 							<span id="count_user" class="label label-warning">0</span>
+							<!--Start of Zendesk Chat Script-->
+							<script type="text/javascript">
+							window.$zopim||(function(d,s){var z=$zopim=function(c){z._.push(c)},$=z.s=
+							d.createElement(s),e=d.getElementsByTagName(s)[0];z.set=function(o){z.set.
+							_.push(o)};z._=[];z.set._=[];$.async=!0;$.setAttribute("charset","utf-8");
+							$.src="https://v2.zopim.com/?4QquKU72AMjdFucb2leXjTiJOrjnRY23";z.t=+new Date;$.
+							type="text/javascript";e.parentNode.insertBefore($,e)})(document,"script");
+
+							$zopim(function() {
+								 $zopim.livechat.setName("<?php echo self::$ci->session->userdata('nombre').' '.self::$ci->session->userdata('apellido').' / '.self::$ci->session->userdata('nombre_empresa'); ?>");
+								 $zopim.livechat.setEmail("<?php echo self::$ci->session->userdata('correo_electronico'); ?>");
+							 });
+							</script>
+							<!--End of Zendesk Chat Script-->​
 					</a>
 				</li>
 				<li class="dropdown">

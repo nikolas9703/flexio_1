@@ -24,12 +24,14 @@ class CronCargosAlquiler {
 
 		//Listado de items entregados
 		$entregados = $this->alquileresEntregados();
-		//dd($entregados);
-		if(empty($entregados)){
+
+		if(empty(collect($entregados)->toArray())){
 			return false;
 		}
+		//dd($entregados);
 
 		//Recorrer y verificar items entregados
+		$contador = 1;
 		foreach ($entregados AS $entrega) {
 
 			$items = !empty($entrega["items"]) ? $entrega["items"] : array();
@@ -59,6 +61,13 @@ class CronCargosAlquiler {
 			// la fecha de entrega y el periodo tarifario.
 			//------------------------------
 			$this->CargosProgramados->registrar($entrega);
+
+			$contador++;
+
+			//finalizar procesos
+			if($contador==count($entregados)){
+				exec("kill $(ps aux | grep '[p]hp' | awk '{print $2}')");
+			}
 		}
 	}
 
@@ -129,7 +138,7 @@ class CronCargosAlquiler {
 					$series = collect($itemsEntregados)->pluck('serie')->reject(function ($name) { return empty($name); });
 
 					$item_id 		= !empty($item["item_id"]) ? $item["item_id"] : "";
-					$cantidad 	= !empty($item["contratos_items_detalles_entregas"][0]["cantidad"]) ? $item["contratos_items_detalles_entregas"][0]["cantidad"] : "";
+					$cantidad 	= !empty($item["contratos_items_detalles_entregas"][0]["cantidad"]) ? count($item["contratos_items_detalles_entregas"]) : "";
 					$tarifa 		= !empty($item["tarifa"]) ? $item["tarifa"] : "";
 					$ciclo 			= !empty($item["ciclo"]) ? $item["ciclo"]["valor"] : "";
 					$ciclo_id 	= !empty($item["ciclo"]) ? $item["ciclo"]["id"] : "";
@@ -141,7 +150,7 @@ class CronCargosAlquiler {
 					$entregados[$i]["items"][$j]["item_id"] 	= $item_id;
 					$entregados[$i]["items"][$j]["cantidad"] 	= $cantidad;
 					$entregados[$i]["items"][$j]["tarifa"] 		= $tarifa;
-					$entregados[$i]["items"][$j]["ciclo"] 		= $ciclo;
+					$entregados[$i]["items"][$j]["ciclo"] 		= str_replace("tarifa_","",$ciclo);
 					$entregados[$i]["items"][$j]["ciclo_id"] 	= $ciclo_id;
 					$entregados[$i]["items"][$j]["impuesto"] 	= $impuesto;
 					$entregados[$i]["items"][$j]["descuento"]	= $descuento;
@@ -162,7 +171,7 @@ class CronCargosAlquiler {
 
 						// Si se han devuelto algunos items serializados
 						// obtener las series que no han sido devueltas.
-						if(!empty($series_devueltas)) {
+						if(!empty(collect($series_devueltas)->toArray())) {
 							$series = $series->diff($series_devueltas);
 						}
 
@@ -181,9 +190,9 @@ class CronCargosAlquiler {
 							// si se han devueltos algunos items
 							// restar la cantidad devuelta
 							// a la cantidad tota de items.
-							if($devueltos > 0){
+							/*if($devueltos > 0){
 								$entregados[$i]["items"][$j]["cantidad"] 	= $cantidad-$devueltos;
-							}
+							}*/
 					}
 
 					//Array items devueltos

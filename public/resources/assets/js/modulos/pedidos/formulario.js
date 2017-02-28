@@ -3,12 +3,13 @@ Vue.transition('listado',{
     leaveClass:'fadeOut'
 });
 
+Vue.directive('select2ajax', require('./../../vue/directives/select2ajax.vue'));
 var form_crear_pedido = new Vue({
 
     el: '#form_crear_pedido_div',
 
     data: {
-
+        loading_item:false,
         comentario: {
 
             comentarios: [],
@@ -18,7 +19,7 @@ var form_crear_pedido = new Vue({
           },
 
         config: {
-
+            cuentas_contables: [],
             vista: window.vista,
             politicaTransaccion:window.politica_transaccion,
             enableWatch: false,
@@ -70,8 +71,10 @@ var form_crear_pedido = new Vue({
                 {
                     id:'',
                     cantidad: '',
+                    cantidad_usada: '',
                     categoria_id: '',
                     cuenta_id: '',
+                    cuenta_nombre: '',
                     item_id: '',
                     item_hidden_id: '',
                     items:[],
@@ -85,7 +88,8 @@ var form_crear_pedido = new Vue({
                     atributo_id:'',
                     cuentas:'[]'
                 }
-            ]
+            ],
+            ordenesdelpedido: window.ordenesPedido
 
         },
         disabledPorPolitica: false
@@ -100,15 +104,15 @@ var form_crear_pedido = new Vue({
     ready:function(){
 
         var context = this;
-        if(context.config.vista == 'editar'){
 
-
+        if (context.config.vista == 'editar') {
             context.config.disableEmpezarDesde = true;
-            Vue.nextTick(function(){
-
-                context.detalle = JSON.parse(JSON.stringify(window.pedido));
-                context.comentario.comentarios = JSON.parse(JSON.stringify(window.pedido.comentario));
-                context.comentario.comentable_id = JSON.parse(JSON.stringify(window.pedido.id));
+            Vue.nextTick(function () {
+                context.comentario.comentarios = window.pedido.comentario;
+                context.comentario.comentable_id = window.pedido.id;
+                var tempArticulos = window.pedido.articulos;
+                window.pedido.articulos = [];
+                context.detalle = window.pedido;
 
                 if(context.detalle.estado == '1'){//por aprobar
                     context.catalogos.estados.splice(2,2);
@@ -118,35 +122,66 @@ var form_crear_pedido = new Vue({
                     context.catalogos.estados.splice(0,1);
                     context.catalogos.estados.splice(1,2);
                 }
+                var disponibilidad = context.detalle.cantidad - context.detalle.cantidad_usada;
+                if(context.detalle.estado == '3' ){
 
-                if(context.detalle.estado > '2'){
+                    context.config.disableDetalle = false;
+                    context.config.disableArticulos = false;
+                 }
+                if(context.detalle.estado > '3' ){
 
                     context.config.disableDetalle = true;
                     context.config.disableArticulos = true;
+                 }
 
-                }
                 Vue.nextTick(function(){
-
                     context.config.enableWatch = true;
-
                 });
+
+
+                _.forEach(tempArticulos, function(articulo){
+
+                                         var cuenta_encontrada = _.find(context.catalogos.cuentas,['id', articulo.cuenta_id]);
+
+                                        if (_.isUndefined(cuenta_encontrada)) {
+                                             context.catalogos.cuentas.push({
+                                              id:articulo.cuenta_id,
+                                              codigo:articulo.cuenta_codigo,
+                                              nombre:articulo.cuenta_nombre,
+                                            });
+                                        }
+
+                                          context.config.disabledByUse = true;
+              });
+
+
+                context.config.enableWatch = true;
+                context.loading_item=true;
+                toastr.info("Cargando items, por favor espere");
+                setTimeout(function () {
+                    context.detalle.articulos = tempArticulos;
+                    Vue.nextTick(function () {
+                        context.loading_item=false;
+                    });
+                }, 2000);
+                context.config.enableWatch = true;
+
 
             });
 
         }else{
-
             Vue.nextTick(function(){
-
                 context.config.enableWatch = true;
-
             });
-
         }
 
 
 
     },
     methods:{
+      ajaxPost(ajaxUrl,datos){
+              return this.$http.post({url: window.phost() + ajaxUrl, method:'POST',data:datos});
+      },
 
         guardar: function () {
             var context = this;
@@ -188,7 +223,7 @@ var form_crear_pedido = new Vue({
             }
 
             if(politicas.length === 0){
-                toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");              
+                toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");
                 return false;
             }
 
@@ -243,6 +278,8 @@ var form_crear_pedido = new Vue({
 
                 return false;
 
+        },ajaxPost: function ajaxPost(ajaxUrl, datos) {
+            return this.$http.post({ url: window.phost() + ajaxUrl, method: 'POST', data: datos });
         }
 
     },
@@ -259,9 +296,18 @@ var form_crear_pedido = new Vue({
                  }
 
               }
+        },
+        'detalle.uuid_centro': function (val, oldVal) {
+            var context = this;
+            if(context.config.vista == 'crear'){
+                _.forEach(context.detalle.articulos, function(articulo){
+                    articulo.cuenta_id = '';
+                });
+            }
         }
-    }
 
+
+    }
 });
 
 Vue.nextTick(function () {

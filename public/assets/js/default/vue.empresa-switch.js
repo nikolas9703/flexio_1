@@ -1,4 +1,4 @@
-Vue.http.options.emulateJSON = true;
+
 var menuEmpresa = new Vue({
   el:"#empresaMenu",
   data:{

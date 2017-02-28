@@ -8,6 +8,8 @@ var formularioCrearEntregaAlquiler = new Vue({
     {
         var context = this;
 
+        context.runPluginsJquery();
+
         if(context.vista == 'editar')
         {
             var entrega_alquiler_json = JSON.parse(entrega_alquiler);
@@ -24,6 +26,8 @@ var formularioCrearEntregaAlquiler = new Vue({
                 context.disabledEditar = true;
             }
         }
+
+        if(window.acceso == '0'){context.disabledEditar = true;}
     },
 
     data: {
@@ -60,7 +64,8 @@ var formularioCrearEntregaAlquiler = new Vue({
             saldo_cliente:0,
             credito_cliente:0,
             fecha_inicio_contrato:'',
-            fecha_fin_contrato:''
+            fecha_fin_contrato:'',
+            fecha_entrega:''
             //fecha_contrato_alquiler:''
         },
 
@@ -80,6 +85,24 @@ var formularioCrearEntregaAlquiler = new Vue({
     },
 
     watch:{
+
+        //al cambiar la fecha de inicio de contrato / empezar desde
+        //se asigna al plugins la fecha minima permita
+        //para realizar la entrega. No se esta usando directiva
+        'entrega_alquiler.fecha_inicio_contrato': function(val, oldVal){
+
+            var context = this;
+            Vue.nextTick(function(){
+                $(".fecha_entrega").data('daterangepicker').minDate = moment(val, 'DD/MM/YYYY');
+            });
+
+        },
+
+        'entrega_alquiler.empezar_desde_id' : function (val, oldVal) {
+                if (vista=='crear') {
+                    this.cambiarEmpezable(val);
+                }
+        },
 
         'entrega_alquiler.cliente_id':function(val, oldVal){
 
@@ -116,6 +139,31 @@ var formularioCrearEntregaAlquiler = new Vue({
     },
 
     methods: {
+
+        runPluginsJquery: function(){
+
+            //mientras se usa con jquery
+
+            $('.fecha_entrega').daterangepicker({
+                autoUpdateInput: false,
+                timePicker24Hour: true,
+                timePicker: true,
+                timePickerIncrement: 5,
+                singleDatePicker: true,
+                showDropdowns: true
+            });
+
+            $('.fecha_entrega').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY H:mm'));
+            });
+
+            $('.fecha_entrega').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+            });
+
+            //...
+
+        },
 
         cambiarTipo: function (tipo)
         {

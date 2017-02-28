@@ -69,7 +69,7 @@ $(function () {
 });
 
 $(document).ready(function () {
-    $('.estado_ubicacion').attr('disabled', 'disabled');
+   // $('.estado_ubicacion').attr('disabled', 'disabled');
     $("#porcentaje_acreedor_ubicacion").inputmask('integer', {min: 1, max: 100}).css("text-align", "left");
     if (vista === 'crear' && permiso_cambio_estado === 0) {
         $('.divestado').hide();

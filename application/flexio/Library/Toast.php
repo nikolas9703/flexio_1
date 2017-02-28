@@ -62,8 +62,8 @@ class Toast
       $this
       ->setTipo("error")
       ->setRedirect(true);
+      $this->run('error',["Usted no cuenta con permiso para esta solicitud"]);
     }
-    $this->run('error',["Usted no cuenta con permiso para esta solicitud"]);
   }
 
   private function runRedirect()

@@ -13,11 +13,10 @@ class PolizasPersonas extends Model
 	public static function listar_personas_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL,$id_poliza) {
         $personas = self::where("id_poliza", $id_poliza)->where(function($query) use($clause,$sidx,$sord,$limit,$start){
             
-            
-            	if((isset($clause['detalle_relacion'])) && (!empty($clause['detalle_relacion']))) $query->where('detalle_relacion','=' , $clause['detalle_relacion']);
-            	if((isset($clause['id_interes'])) && (!empty($clause['id_interes']))) $query->where('detalle_int_asociado','=' , $clause['id_interes']);
+            if((isset($clause['detalle_relacion'])) && (!empty($clause['detalle_relacion']))) $query->where('detalle_relacion','=' , $clause['detalle_relacion']);
+            if((isset($clause['id_interes'])) && (!empty($clause['id_interes']))) $query->where('detalle_int_asociado','=' , $clause['id_interes']);
             if($limit!=NULL) $query->skip($start)->take($limit);            
-            });
+        });
 
         if (isset($clause['nombrePersona']) && $clause['nombrePersona'] != "" ) {
             $personas->where("nombrePersona", "LIKE", "%".$clause['nombrePersona']."%");
@@ -33,7 +32,6 @@ class PolizasPersonas extends Model
 
         return $personas->get();
     }
-
 	
 
 }

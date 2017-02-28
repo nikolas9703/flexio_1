@@ -8,13 +8,13 @@ var AnticiposLocal = class AnticiposLocalStorage{
   get moduloPadre(){
     var padre = _.isEmpty(this.localstorage.getItem("ms-selected"))?'compras':this.localstorage.getItem("ms-selected");
     var aux = this.localstorage.getItem("ml-parent-selected");
-    if(padre ==="compras" || aux==='Precio fijo con proveedores'){
+    if(padre ==="compras" || aux==='Precio fijo con proveedores' || padre === "contratos"){
       return 'compras';
     }
     return  'ventas';
   }
   get tipoAnticipable(){
-    if(this.moduloPadre ==='compras'){
+    if(this.moduloPadre ==='compras' || this.moduloPadre === 'contratos'){
       return 'proveedor';
     }
     return 'cliente';

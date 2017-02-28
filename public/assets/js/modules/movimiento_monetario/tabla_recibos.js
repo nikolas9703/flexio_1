@@ -71,7 +71,7 @@ var tablaRecibos = (function(){
 		   	colNames:[
 				
                     'No. Recibo',
-                    'Cliente/Proveedor',
+                    localStorage.getItem('ms-selected') == 'seguros' ? 'Cliente/Aseguradora' : 'Cliente/Proveedor',
                     'Nombre',
                     'Narraci&oacute;n',
                     'Fecha de recibo',
@@ -86,8 +86,8 @@ var tablaRecibos = (function(){
                 {name:'cliente_proveedor',index:'cliente_proveedor', sortable:true},
                 {name:'nombre',index:'nombre', sortable:true},
                 {name:'narracion',index:'narracion', sortable:true, width:200},
-                {name:'fecha_inicio',index:'fecha_inicio', formatter: 'date', formatoptions: { newformat: 'd/m/Y' }, sortable:true},
-                {name:'credito', index:'credito', formatter:'currency', formatoptions:{decimalSeparator:".", thousandsSeparator: ",", decimalPlaces: 2, prefix: "$ "}, sortable:true},
+                {name:'fecha_inicio',index:'fecha_inicio', formatter: 'date', formatoptions: { newformat: 'd/m/Y' }, sortable:true}, 
+                {name:'credito', index:'credito', sortable:true}, //formatter:'currency', formatoptions:{decimalSeparator:".", thousandsSeparator: ",", decimalPlaces: 2, prefix: "$ "},
                 {name:'link', index:'link', sortable:false, resizable:false, hidedlg:true, align:"center"},
                 {name:'options', index:'options', hidedlg:true, hidden: true}
                 
@@ -497,7 +497,7 @@ $('#cliente_proveedor').removeClass("chosen-filtro").addClass("form-control").se
             },
             processResults: function (data, params) {
 
-
+            	console.log(data);
                 let resultsReturn = data.map(resp=> [{
                     'id': resp['id'],
                     'text': resp['nombre']
@@ -514,4 +514,27 @@ $('#cliente_proveedor').removeClass("chosen-filtro").addClass("form-control").se
         $('.guardar1').removeAttr('disabled');
     });
 tablaRecibos.init();
+
+//$(document).ready(function(){
+	console.log(localStorage.getItem('ms-selected'));
+	if(localStorage.getItem('ms-selected') == 'seguros'){
+		$('div .border-bottom').find('label').each(function(){
+			if($(this).attr('for') == "Cliente"){
+				$(this).empty().append('Cliente/Aseguradora');
+			}
+			console.log($(this).val());
+		});
+
+		$('div .border-bottom').find('select').each(function(){
+			if($(this).attr('id') == "cliente"){
+				console.log($(this).attr('id'));
+				$(this).empty().append('<option value="">Seleccione</option><option value="2">Cliente</option><option value="3">Aseguradora</option>');/*.append('Cliente/Aseguradora'); */
+			}
+		});
+	}else{
+		$('.breadcrumb').empty();
+	}
+
+	//('attr','Cliente').empty().append('Cliente/Aseguradora');
+//});
 

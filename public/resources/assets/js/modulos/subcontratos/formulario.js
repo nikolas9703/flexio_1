@@ -54,6 +54,7 @@ var subcontratoFormulario = new Vue({
           },
           disableEmpezarDesde:false,
           disableDetalle:false,
+           disablePermisoAdenda:window.permiso_adenda,
           agregar_adenda: typeof window.agregar_adenda !== 'undefined' ? true : false
 
       },
@@ -61,8 +62,10 @@ var subcontratoFormulario = new Vue({
       catalogos:{
 
           proveedores: window.proveedores,
+          cloneProveedores:[],//usado por el cambio de proveedores a ajax
           centros_contables: window.centros_contables,
           estados: window.estados,
+          tipos_subcontratos: window.tipos_subcontratos,
           cuentas : window.cuentas
 
       },
@@ -71,6 +74,7 @@ var subcontratoFormulario = new Vue({
 
           id: '',
           proveedor_id: '',
+          tipo_subcontrato_id: '',
           fecha_inicio: '',
           fecha_final:'',
           centro_id:'',
@@ -78,11 +82,11 @@ var subcontratoFormulario = new Vue({
           estado:'por_aprobar',
           monto_adenda:0,
           montos:[
-              {cuenta_id:'', descripcion: '', monto:0}
+              {cuenta_id:'', descripcion: '', monto:''}
           ],
           movimientos:[
-              {monto:0, porcentaje: 0, cuenta_id:'', tipo:'abono'},
-              {monto:0, porcentaje: 0, cuenta_id:'', tipo:'retenido'}
+              {monto:0, porcentaje: 0, cuenta_id:'', tipo:'abono', label:'anticipo'},
+              {monto:0, porcentaje: 0, cuenta_id:'', tipo:'retenido', label:'retenido'}
           ]
 
       }
@@ -109,6 +113,10 @@ var subcontratoFormulario = new Vue({
                 wrapper: '',
                 errorPlacement: function (error, element) {
                     var self = $(element);
+                   /* console.log($('.subcontrato_monto').val());
+                    if($('.subcontrato_monto').val() === '0.00'){
+                        $form.find('.tabla_dinamica_error').empty().append('<label class="error">El campo Monto (Sin ITBMS) es requerido, no puede ser 0.00</label>');
+                    }*/
                     if (self.closest('div').hasClass('input-group') && !self.closest('table').hasClass('itemsTable')) {
                         element.parent().parent().append(error);
                     }else if(self.closest('div').hasClass('form-group') && !self.closest('table').hasClass('itemsTable')){
@@ -123,6 +131,36 @@ var subcontratoFormulario = new Vue({
                     $('input, select').prop('disabled', false);
                     $('form').find(':submit').prop('disabled',true);
                     form.submit();
+                }
+            });
+        },
+
+        selectProveedores(){
+            var context = this;
+            $("#proveedor_id").select2({
+                width:'100%',
+                ajax: {
+                    url: phost() + 'proveedores/ajax_catalogo_proveedores',
+                    dataType: 'json',
+                    delay: 100,
+                    cache: true,
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                            erptkn: tkn
+                        };
+                    },
+                    processResults: function (data, params) {
+
+                        let resultados = data.map(resp=> [{'id': resp.proveedor_id,'text': resp.nombre}]).reduce((a, b) => a.concat(b),[]);
+                        context.catalogos.cloneProveedores = data;
+                        console.log(resultados);
+                        return {
+                            results:resultados
+                        }
+                    },
+                    escapeMarkup: function (markup) { return markup; },
                 }
             });
         }
@@ -141,13 +179,24 @@ var subcontratoFormulario = new Vue({
                 context.comentario.comentarios = JSON.parse(JSON.stringify(window.subcontrato.comentario_timeline));
                 context.comentario.comentable_id = JSON.parse(JSON.stringify(window.subcontrato.id));
 
+                context.catalogos.proveedores = [window.subcontrato.proveedor];
+                context.catalogos.cloneProveedores = _.clone(context.catalogos.proveedores);
+
                 if(context.detalle.estado == 'terminado' || context.detalle.estado == 'terminado')
                 {
                   context.config.disableDetalle = true;
                 }
-
+                  context.config.disablePermisoAdenda = window.permiso_adenda;
+                  context.detalle.movimientos[0]['label'] ='anticipo';
+                  context.detalle.movimientos[1]['label'] ='retenido';
             });
+        }
 
+        if(context.config.vista == 'crear'){
+            this.selectProveedores();
+            //set anticipo cuenta_id
+            context.detalle.movimientos[0].cuenta_id = _.find(cuentas_contrato, function(o){return o.tipo == 'anticipo_activo'}).cuenta_id;
+            context.detalle.movimientos[1].cuenta_id = _.find(cuentas_contrato, function(o){return o.tipo == 'retencion_pasivo'}).cuenta_id
         }
 
     }

@@ -156,10 +156,12 @@ $(function(){
         });
   });
      /*valicación para cuando se accede desde seguros */
+     console.log("holis");
      if(localStorage['ms-selected'] == "seguros") {
       $("a.btn.btn-primary").each(function(index, el) {
         if($(this).html() == "Crear") {
-          $(this).replaceWith('<label class="btn" >Acción</label>');
+
+          $(this).replaceWith('<label class="btn btn-primary" data-toggle="dropdown" >Acción</label>');
         }
       });
       $(".breadcrumb").html($(".breadcrumb").html().replace("Compras","Seguros"));

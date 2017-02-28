@@ -13,11 +13,15 @@ const moduloCobros = class PopularFormularioCobros{
       this.cobro.formulario.saldo_pendiente = this.tipoSeleccionado.saldo_pendiente;
       this.cobro.formulario.credito = this.tipoSeleccionado.credito_favor;
       this.cobro.facturas = this.tipoSeleccionado.facturas;
+      this.cobro.anticipo_cliente = this.tipoSeleccionado.anticipos_cliente;
+      this.cobro.cache_credito = parseFloat(this.tipoSeleccionado.credito_favor);
+      //var facturas = this.tipoSeleccionado.facturas;
 
+      var facturas = this.buildfacturasForCliente(this.tipoSeleccionado.facturas);
       //logica de anticipos
       var anticipos =  [];
       if(_.has(this.tipoSeleccionado, 'anticipos')){
-          anticipos =  this.tipoSeleccionado.anticipos;
+          anticipos =  this.tipoSeleccionado.anticipos_cliente;
       }
 
 
@@ -26,11 +30,13 @@ const moduloCobros = class PopularFormularioCobros{
          this.cobro.formulario.credito = 0;
       }else{
          this.cobro.filtar_metodo = false;
-         var cobros = this.tipoSeleccionado.facturas.map((fac)=>fac.cobros).reduce((a, b) => a.concat(b),[]);
+         var cobros = facturas.map((fac)=>fac.cobros).reduce((a, b) => a.concat(b),[]);
          var metodosCobro = cobros.map((cob)=>cob.metodo_cobro).reduce((a, b) => a.concat(b),[]).filter((met)=> met.tipo_pago == 'credito_favor');
          var total_cobrado = _.sumBy(metodosCobro, function(met){
                  return parseFloat(met.total_pagado);
          });
+         console.log(_.sumBy(anticipos,(ant)=> parseFloat(ant.monto)));
+         console.log(_.sumBy(this.tipoSeleccionado.anticipos,(ant)=> parseFloat(ant.monto)));
          var total_credito = _.sumBy(anticipos,(ant)=> parseFloat(ant.monto)) -total_cobrado;
          if(total_credito === 0){
              this.cobro.filtar_metodo = true;
@@ -141,9 +147,49 @@ const moduloCobros = class PopularFormularioCobros{
              return {icon:i ===0?'fa fa-plus':'fa fa-trash', tipo_pago:value.tipo_pago,total_pagado:value.total_pagado,referencia:referencia};
          });
      });
-      //this.cobro.
-  }
 
+  }
+  buildfacturasForCliente (facturas){
+
+    let objFacturas = [],anticipos=[],metodosCobro=[],cobros=[],total_cobrado=0,total_anticipos=0,cobrado_credito_favor = 0;
+
+    for (let factura of facturas){
+
+      if(_.has(factura, 'contratos') && factura.contratos.length > 0){
+
+        anticipos = factura.contratos.map((cont)=> cont.anticipos).reduce((a, b) => a.concat(b),[]);
+        total_anticipos = anticipos.reduce((ant, bef)=> ant.monto + bef.monto);
+        if(anticipos.length > 0){
+          /*cobros = factura.cobros.map((cob)=>cob).reduce((a, b) => a.concat(b),[]);
+          metodosCobro = cobros.map((cob)=>cob.metodo_cobro).reduce((a, b) => a.concat(b),[]).filter((met)=> met.tipo_pago == 'credito_favor');
+          total_cobrado = metodosCobro.reduce((bef, aft) => bef.total_pagado + aft.total_pagado);
+          objFacturas.push(Object.assign(factura, {tipo:'anticipo',para_anticipo:(total_anticipos - total_cobrado) }));*/
+          objFacturas.push(Object.assign(factura, {tipo:'anticipo',total_anticipo:total_anticipos}));
+        }else{
+          objFacturas.push(Object.assign(factura, {tipo:'normal'}));
+        }
+
+      }else if(_.has(factura, 'ordenes_ventas') && factura.ordenes_ventas.length > 0){
+        anticipos = factura.ordenes_ventas.map((cont)=> cont.anticipos).reduce((a, b) => a.concat(b),[]);
+
+        total_anticipos = _.sumBy(anticipos,(ant)=>ant.monto);
+        if(anticipos.length > 0){
+          /*cobros = factura.cobros.map((cob)=>cob).reduce((a, b) => a.concat(b),[]);
+          metodosCobro = cobros.map((cob)=>cob.metodo_cobro).reduce((a, b) => a.concat(b),[]).filter((met)=> met.tipo_pago == 'credito_favor');
+          total_cobrado = _.sumBy(metodosCobro, (mon)=>mon.total_pagado);
+          objFacturas.push(Object.assign(factura, {tipo:'anticipo',para_anticipo:(total_anticipos - total_cobrado) }));*/
+          objFacturas.push(Object.assign(factura, {tipo:'anticipo',total_anticipo:total_anticipos}));
+        }else{
+          objFacturas.push(Object.assign(factura, {tipo:'normal'}));
+        }
+      }else{
+        objFacturas.push(Object.assign(factura, {tipo:'normal'}));
+      }
+
+    }
+    return objFacturas;
+
+  }
 };
 
 

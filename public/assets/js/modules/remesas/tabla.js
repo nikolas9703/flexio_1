@@ -269,6 +269,20 @@
         }
     });
 
+    $(opcionesModal).on("click", '.descargarRemesa', function (e) {
+        e.preventDefault();
+        e.returnValue = false;
+        e.stopPropagation();
+        //if ($('#tabla').is(':visible') === true) {
+            var id = $(this).attr('data-id');
+            console.log(id);
+            $('#id').val(id);
+            $('form#descargarRemesas').submit();
+            $('body').trigger('click'); 
+            $(opcionesModal).modal('hide');
+        //}
+    });
+
     $(botones.cambiarEstado).on("click", function (e) {
         e.preventDefault();
         e.returnValue = false;

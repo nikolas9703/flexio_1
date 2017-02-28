@@ -5,17 +5,16 @@ export default {
     params: ['config','options'],
 
     bind: function () {
-
         var self = this;
         $(this.el).select2(this.params.config);
+        $(this.el).select2(this.params.config).on('change', function(e) {
+            self.set($(self.el).val());
+        });
     },
 
     update: function (value) {
         var self = this;
-        $(this.el).select2(this.params.config).on('change', function(e) {
-          self.set($(self.el).val());
-         })
-       $(this.el).val(value).trigger('change');
+        $(this.el).val(value).trigger('change');
     },
 
     unbind: function () {

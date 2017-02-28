@@ -15,9 +15,9 @@
                             <th width="8%" class="unidad ">Unidad <span class="required" aria-required="true" v-if="disableValidate">*</span></th>
                             <th width="8%" class="precio_unidad " v-if="precioCompra() || precioInventario() || precioVenta()">Precio unidad <span class="required" aria-required="true" v-if="disableValidate">*</span></th>
                             <th width="8%" class="precio_total " v-if="precioCompra() || precioInventario() || precioVenta()">Subtotal </th>
-                            <th width="12%" class="cuenta " v-if="!( precioCompra() || precioInventario() || precioVenta() )">Cuenta </th>
+                            <th width="12%" class="cuenta " v-if="config.modulo != 'traslados' && !( precioCompra() || precioInventario() || precioVenta() )">Cuenta </th>
                             <th width="1%" style="background: white;padding: 0;padding-right: 8px;">
-                                <button type="button" class="btn btn-default btn-block agregarBtn" agrupador="items" label="<i class=&quot;fa fa-plus&quot;></i>" @click="addRow()" :disabled="config.disableArticulos"><i class="fa fa-plus"></i></button>
+                                <button type="button" class="btn btn-default btn-block agregarBtn" agrupador="items"  @click="addRow()" :disabled="config.disableArticulos || config.disableAddRow"><i class="fa fa-plus"></i></button>
                             </th>
                         </tr>
                     </thead>

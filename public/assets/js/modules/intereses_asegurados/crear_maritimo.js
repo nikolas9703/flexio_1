@@ -76,7 +76,7 @@ $(function () {
 
 });
 $(document).ready(function () {
-   $('.estado_casco').attr('disabled', 'disabled');
+  // $('.estado_casco').attr('disabled', 'disabled');
     var counter = 2;
     $('#del_file_maritimo').hide();
     $('#add_file_maritimo').click(function(){

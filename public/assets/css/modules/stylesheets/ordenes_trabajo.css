@@ -77,3 +77,9 @@ table.tabla-dinamica tfoot .sum-total {
   background-color: #000;
   color: #fff;
 }
+
+/* line 63, ../sass/ordenes_trabajo.scss */
+.grey-bg {
+  background-color: #EEEEEE;
+  color: #555 !important;
+}

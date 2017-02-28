@@ -79,6 +79,7 @@ var form_crear_ordenventa = new Vue({
             credito_cliente:0,
             fecha_desde:moment().format('DD/MM/YYYY'),
             fecha_hasta:moment().add(30,'days').format('DD/MM/YYYY'),
+            cliente_id:'',
             creado_por:'',
             item_precio_id:'',
             centro_contable_id:'',
@@ -156,7 +157,7 @@ var form_crear_ordenventa = new Vue({
                     context.catalogos.estados.splice(1,2);
                 }
 
-                if(context.detalle.estado == 'facturado_parcial' || context.detalle.estado == 'facturado_completo' || context.detalle.estado == 'anulada'){
+                if(context.detalle.estado == 'aprobada' || context.detalle.estado == 'facturado_parcial' || context.detalle.estado == 'facturado_completo' || context.detalle.estado == 'anulada'){
 
                     context.config.disableDetalle = true;
                     context.config.disableArticulos = true;

@@ -26,10 +26,10 @@ abstract class QueryFilters
      */
      function apply(Builder $builder, $clause){
        $this->builder = $builder;
-       
-       foreach($clause as $key => $value){
+
+       foreach(array_filter($clause) as $key => $value){
          if(method_exists($this,$key)){
-             
+
            call_user_func_array([$this, $key], array_filter([$value]));
          }
        }

@@ -1,38 +1,39 @@
 if(desde=="solicitudes" || desde=="poliza"){
+    var counterCoverageCarga = indCoverageArray.length,
+    counterDedutibleCarga = indCoverageArray.length;
+    var tablaSolicitudesCarga = (function () {
 
-var tablaSolicitudesCarga = (function () {
+        var unico = $("#detalleunico").val();
 
-    var unico = $("#detalleunico").val();
+        if(desde == "poliza"){
+            var id_poliza = $("#idPoliza").val();
+            console.log(id_poliza);
+            var tablaUrl = phost() + 'polizas/ajax_listar_carga';
+        }else{
+            var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_carga';
+        }
 
-    if(desde == "poliza"){
-        var id_poliza = $("#idPoliza").val();
-        console.log(id_poliza);
-        var tablaUrl = phost() + 'polizas/ajax_listar_carga';
-    }else{
-        var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_carga';
-    }
-
-    var gridId = "tablaSolicitudesCarga";
-    var gridObj = $("#tablaSolicitudesCarga");
-    var opcionesModal = $('#opcionesModalIntereses');
-    var grid_obj = $("#tablaSolicitudesCarga");
+        var gridId = "tablaSolicitudesCarga";
+        var gridObj = $("#tablaSolicitudesCarga");
+        var opcionesModal = $('#opcionesModalIntereses');
+        var grid_obj = $("#tablaSolicitudesCarga");
 
 
 
-    var botones = {
-        opciones: ".viewOptions",
-        subir_archivo: ".subir_documento_solicitudes_intereses",
-        quitar_interes: ".quitarInteres"
-    };
+        var botones = {
+            opciones: ".viewOptions",
+            subir_archivo: ".subir_documento_solicitudes_intereses",
+            quitar_interes: ".quitarInteres"
+        };
 
-    var tabla = function () {
-        gridObj.jqGrid({
-            url: tablaUrl,
-            mtype: "POST",
-            datatype: "json",
-            colNames: ['No. Interes', 'No. Liquidación', 'Fecha despacho', 'Fecha arribo','Medio transporte','Valor','Origen','Destino','Fecha inclusión','Fecha exclusión','Estado','',''],
-            colModel: desde == "poliza" ?
-            [
+        var tabla = function () {
+            gridObj.jqGrid({
+                url: tablaUrl,
+                mtype: "POST",
+                datatype: "json",
+                colNames: ['No. Interes', 'No. Liquidación', 'Fecha despacho', 'Fecha arribo','Medio transporte','Valor','Origen','Destino','Fecha inclusión','Fecha exclusión','Estado','',''],
+                colModel: desde == "poliza" ?
+                [
                 {name:'numero', index:'numero', width:30},
                 {name:'no_liquidacion', index:'no_liquidacion', width:40},
                 {name:'fecha_despacho', index:'fecha_despacho', width:40},
@@ -47,9 +48,9 @@ var tablaSolicitudesCarga = (function () {
                 
                 {name:'options', index:'options', width:50, sortable:false, resizable:false, hidedlg:true, align:"center"},
                 {name:'link', index:'link', hidedlg:true, hidden: true}
-            ]
-            :
-            [
+                ]
+                :
+                [
                 {name:'numero', index:'int_intereses_asegurados.numero', width:30},
                 {name:'no_liquidacion', index:'int_carga.no_liquidacion', width:40},
                 {name:'fecha_despacho', index:'int_carga.fecha_despacho', width:40},
@@ -66,28 +67,28 @@ var tablaSolicitudesCarga = (function () {
                 {name:'link', index:'link', hidedlg:true, hidden: true}
 
 
-            ],
-            postData: {
-                detalle_unico: unico,
-                desde: vista,
-                erptkn: tkn,
-                id_poliza: id_poliza,
-            },
-            height: "auto",
-            autowidth: true,
-            rowList: [10, 20, 50, 100],
-            rowNum: 10,
-            page: 1,
-            pager: "#" + gridId + "Pager",
-            loadtext: '<p>Cargando...</p>',
-            hoverrows: false,
-            viewrecords: true,
-            refresh: true,
-            gridview: true,
-            sortname: desde == "poliza" ? "estado" : "int_intereses_asegurados.estado",
-            sortorder: "ASC",
+                ],
+                postData: {
+                    detalle_unico: unico,
+                    desde: vista,
+                    erptkn: tkn,
+                    id_poliza: id_poliza,
+                },
+                height: "auto",
+                autowidth: true,
+                rowList: [10, 20, 50, 100],
+                rowNum: 10,
+                page: 1,
+                pager: "#" + gridId + "Pager",
+                loadtext: '<p>Cargando...</p>',
+                hoverrows: false,
+                viewrecords: true,
+                refresh: true,
+                gridview: true,
+                sortname: desde == "poliza" ? "estado" : "int_intereses_asegurados.estado",
+                sortorder: "ASC",
 
-            beforeProcessing: function (data, status, xhr) {
+                beforeProcessing: function (data, status, xhr) {
                 //Check Session
                 if ($.isEmptyObject(data.session) == false) {
                     window.location = phost() + "login?expired";
@@ -112,14 +113,14 @@ var tablaSolicitudesCarga = (function () {
                 // Cargar plugin jquery Sticky Objects
                 //----------
                 //add class to headers
-                 gridObj.jqGrid('setGridWidth', $('.tabladetalle_carga').width());
+                gridObj.jqGrid('setGridWidth', $('.tabladetalle_carga').width());
                 gridObj.closest("div.ui-jqgrid-view").find("div.ui-jqgrid-hdiv").attr("id", "gridHeader");
                 //floating headers
                 $('#gridHeader').sticky({
                     getWidthFrom: '.ui-jqgrid-view',
                     className: 'jqgridHeader'
                 });
-                 var DataGrid = gridObj;
+                var DataGrid = gridObj;
 
                  //sets the grid size initially
                  gridObj.jqGrid('setGridWidth', parseInt(grid_obj.width()));    
@@ -171,7 +172,7 @@ var tablaSolicitudesCarga = (function () {
             documentosModal.modal({
                     backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
                     show: false
-            });
+                });
             $('#opcionesModalIntereses').modal('hide');
             documentosModal.modal('show');
             var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
@@ -224,7 +225,7 @@ var tablaSolicitudesCarga = (function () {
     });
 
     $(opcionesModal).on("click", ".linkCargaInfoCarga", function (e) {
-        
+
         e.preventDefault();
         e.returnValue=false;
         e.stopPropagation();
@@ -284,9 +285,128 @@ var tablaSolicitudesCarga = (function () {
             $("#deducibledetalle_carga").val(response.detalle_deducible);
         });	
 
-	});*/
+    });*/
+    $(opcionesModal).on("click", ".setIndividualCoverageCGA", function (e) {
 
+        e.preventDefault();
+        e.returnValue=false;
+        e.stopPropagation();
+        var solicitud = vista==="crear"?vista:solicitud_id;
+        var planes = $("#planes");
+        if($(planes).val()!==""){
+            var id = $(this).attr("data-int-gr");
+            var idFromTable = $(this).attr("data-id");
+            var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
+            var options = rowINFO.link;
+            var numero_interes =""; 
+            numero_interes = rowINFO.numero;
+            console.log(numero_interes);
+            //Init Modal data-int-gr 
+            var btnDismiss ='<button type="button" class="close" data-dismiss="modal">&times;</button>';      
+            var pantalla = $('.individual');
+            var modalContainer = $("#IndCoberturas");
+            var botones_coberturas = $('.btnIndidualCoverage');
+            $(opcionesModal).modal("hide");
+            
+            pantalla.css('display', 'block');
+            botones_coberturas.css('display', 'block');
+            modalContainer.find('.modal-header').empty().append(btnDismiss+"<h4 style='text-align:center'>Coberturas Interés: "+numero_interes+"</h4>");
+            modalContainer.find('.modal-body').empty().append(pantalla);
+            modalContainer.find('.modal-footer').empty().append(botones_coberturas);
+            $(modalContainer).modal({
+                backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+                show: false
+            });
+            modalContainer.modal("show");
+
+            var wrapper = $("#indCoveragefields");
+            var btnAdd  = $("#btnAddCoverage");
+            $(btnAdd).click(function(e){
+                e.preventDefault();
+                var text = '<div class="resetModal" id="cobertura_'+ counterDedutibleCarga+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="coverageValue[]" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+                $(wrapper).append(text);
+                counterDedutibleCarga++;  
+            });
+
+    $(wrapper).on("click",".del_row", function(e){ //user click on remove text
+        e.preventDefault();  
+        counterDedutibleCarga--;      
+        $('#cobertura_'+ counterDedutibleCarga).remove();
+    });
+
+    var wrapperDeductibles = $("#indDeductiblefields");
+    var btnAddDeductibles  = $("#btnAddDeductible");
+    $(btnAddDeductibles).click(function(e){
+        e.preventDefault();
+        var text = '<div class="resetModal"  id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="deductibleValue[]"  class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+        $(wrapperDeductibles).append(text);
+        counterDedutibleArt++;     
+    });
+
+    $(wrapperDeductibles).on("click",".remove_deductible", function(e){ //user click on remove text
+        e.preventDefault();  
+        counterDedutibleArt--;      
+        $('#deductible_'+ counterDedutibleArt).remove();
+        
+    });
     
+    $.ajax({
+        type: "POST",
+        data: {
+          detalle_unico: unico,
+          id_interes :id,
+          solicitud : solicitud,
+           planId : $(planes).val(),
+          erptkn: tkn
+      },
+      url: phost() + 'solicitudes/ajax_get_invidualCoverage',
+      success: function(data)
+      {    
+        if ($.isEmptyObject(data.session) == false) {
+            window.location = phost() + "login?expired";
+        }else{
+
+           var  temporalArrayCarga = [];
+           $(".resetModal").remove();
+           if(data.coberturas.length){
+               temporalArrayCarga.coberturas = data.coberturas;
+               for (var j =  temporalArrayCarga.coberturas.length - 1; j >= 0; j--) {
+                var value = temporalArrayCarga.coberturas[j];
+                var text = '<div class="resetModal"  id="cobertura_'+ counterDedutibleCarga+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="coverageValue[]" value="'+value.cobertura_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+                $(wrapper).append(text);
+                counterDedutibleCarga++;
+            }
+        }
+        if(data.deducion.length){
+           temporalArrayCarga.deducion = data.deducion;
+
+           for (var i =  temporalArrayCarga.deducion.length - 1; i >= 0; i--) {
+            var value = temporalArrayCarga.deducion[i];
+            var text = '<div class="resetModal" id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="deductibleValue[]"  value="'+value.deducible_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+            $(wrapperDeductibles).append(text);
+            counterDedutibleArt++;
+        } 
+    }
+
+    $(".moneda").inputmask('currency',{
+      prefix: "",
+      autoUnmask : true,
+      removeMaskOnSubmit: true
+  });  
+
+}
+}
+});  
+    
+    $("#saveIndividualCoveragebtn").click(function(){
+
+      saveInvidualCoverage(id,numero_interes);  
+  });  
+}else{
+    $(this).text("Seleccione un plan");
+}
+});
+
 	//Fin funciones para botones del grid de maritimo
 
 
@@ -327,7 +447,7 @@ var tablaSolicitudesCarga = (function () {
             tabla();
             eventos();
             //redimencionar_tabla();
-           
+
         },
         recargar: function () {
             //Reload Grid

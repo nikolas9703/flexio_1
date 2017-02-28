@@ -1,39 +1,40 @@
 <template>
 
     <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <table class="table table-noline" id="prueba">
+        <table class="table table-noline itemsTable" id="prueba">
             <thead>
                 <tr>
-                    <th width="23%" style="color: white;background: #0076BE;font-weight: bold;text-indent: 6px;">Cuenta</th>
+                    <th width="23%" style="color: white;background: #0076BE;font-weight: bold;text-indent: 6px;">Cuenta <span required="" aria-required="true">*</span></th>
                     <th width="1%" style="color: white;background: #0076BE;font-weight: bold;"></th>
-                    <th width="23%" style="color: white;background: #0076BE;font-weight: bold;">Descripci&oacute;n</th>
+                    <th width="23%" style="color: white;background: #0076BE;font-weight: bold;">Descripci&oacute;n <span required="" aria-required="true">*</span></th>
                     <th width="1%" style="color: white;background: #0076BE;font-weight: bold;"></th>
-                    <th width="22.5%" style="color: white;background: #0076BE;font-weight: bold;">Monto (Sin ITBMS)</th>
+                    <th width="22.5%" style="color: white;background: #0076BE;font-weight: bold;">Monto (Sin ITBMS) <span required="" aria-required="true">*</span></th>
                     <th width="1%"></th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="item in detalle.montos">
-                    <td>
-                      <select class="form-control" name="items[{{$index}}][cuenta_id]" id="items_cuenta_id{{$index}}" data-rule-required="true" v-select2="item.cuenta_id" :config="config.select2" :disabled="config.disableDetalle || config.vista != 'crear'">
+                     <td>
+ 
+                      <select class="form-control" name="items[{{$index}}][cuenta_id]" id="items_cuenta_id{{$index}}" data-rule-required="true"  v-select2="item.cuenta_id" :config="config.select2" :disabled="!config.disablePermisoAdenda">
                         <option value="">Seleccione</option>
                         <option :value="cuenta.id" v-for="cuenta in catalogos.cuentas" v-html="cuenta.codigo +' '+cuenta.nombre"></option>
                       </select>
                     </td>
                     <td></td>
                     <td>
-                      <input type="text" class="form-control" name="items[{{$index}}][descripcion]" id="items_descripcion{{$index}}" data-rule-required="true" v-model="item.descripcion" :disabled="config.disableDetalle || config.vista != 'crear'">
+                      <input type="text" class="form-control" name="items[{{$index}}][descripcion]" id="items_descripcion{{$index}}" data-rule-required="true" v-model="item.descripcion" :disabled="!config.disablePermisoAdenda">
                     </td>
                     <td></td>
                     <td>
                         <div class="input-group">
                             <span class="input-group-addon">$</span>
-                            <input type="text" id="monto_{{$index}}" v-model="item.monto | currencyDisplay" @change="calcularPorcentajes()" name="items[{{$index}}][monto]" id="items_subcontrato_monto{{$index}}" class="form-control" data-rule-required="true" data-rule-number="true" :disabled="config.disableDetalle || config.vista != 'crear'">
+                            <input type="text" id="monto_{{$index}}" v-model="item.monto | currencyDisplay" @change="calcularPorcentajes()" name="items[{{$index}}][monto]" id="items_subcontrato_monto{{$index}}" class="form-control subcontrato_monto" placeholder="0.00" data-rule-required="true" :disabled="!config.disablePermisoAdenda">
                         </div>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-default btn-block" v-show="$index === 0"  v-on:click="addRow()" data-rule-required="true" agrupador="items" aria-required="true" :disabled="config.vista != 'crear'"><i class="fa fa-plus"></i></button>
-                        <button  type="button" v-show="$index !== 0" class="btn btn-default btn-block" data-rule-required="true" agrupador="items" aria-required="true" v-on:click="deleteRow(item)" :disabled="config.vista != 'crear'"><i class="fa fa-trash"></i></button>
+                        <button type="button" class="btn btn-default btn-block" v-show="$index === 0"  v-on:click="addRow()" data-rule-required="true" agrupador="items" aria-required="true" :disabled="!config.disablePermisoAdenda"><i class="fa fa-plus"></i></button>
+                        <button  type="button" v-show="$index !== 0" class="btn btn-default btn-block" data-rule-required="true" agrupador="items" aria-required="true" v-on:click="deleteRow(item)" :disabled="!config.disablePermisoAdenda"><i class="fa fa-trash"></i></button>
                     </td>
                 </tr>
 
@@ -59,7 +60,7 @@
                     <td>
                         <div class="input-group">
                             <span class="input-group-addon">$</span>
-                            <input type="text" value="{{getMontoSubcontrato | currency ''}}" name="campo[monto_subcontrato]" class="form-control" data-rule-required="true" :disabled="true">
+                            <input type="text" value="{{getMontoSubcontrato | currency ''}}" name="campo[monto_subcontrato]" class="form-control"  placeholder="0.00" data-rule-required="true" :disabled="true">
                         </div>
                     </td>
                     <td></td>
@@ -67,6 +68,7 @@
 
             </tbody>
         </table>
+        <div class="tabla_dinamica_error"></div>
         <div id="tablaError">
 
             <label class="error" style="display:block;" v-if="!validate_montos">El total del abono m&aacute;s el retenido es mayor al monto del contrato.</label>
@@ -102,7 +104,7 @@ export default {
     methods:{
 
         addRow:function(){
-            this.detalle.montos.push({cuenta_id:'', descripcion: '', monto:0});
+            this.detalle.montos.push({cuenta_id:'', descripcion: '', monto:''});
         },
 
         deleteRow:function(row){

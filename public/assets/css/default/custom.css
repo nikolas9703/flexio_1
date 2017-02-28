@@ -1059,3 +1059,48 @@ div#empresaMenu div#menu_dropdown ul.dropdown-menu{
   height: 500px;
   overflow-y: auto;
 }
+
+.btn-ganada {
+    color: inherit;
+    background: white;
+    border: 1px solid rgb(92, 184, 92);
+}
+.btn-ganada:hover,
+.btn-ganada:focus,
+.btn-ganada:active,
+.btn-ganada.active,
+.open .dropdown-toggle.btn-ganada,
+.btn-ganada:active:focus,
+.btn-ganada:active:hover,
+.btn-ganada.active:hover,
+.btn-ganada.active:focus {
+    color: white;
+    border: 1px solid #d2d2d2;
+    background-color: rgb(92, 184, 92);
+}
+.btn-anulado {
+    color: #000;
+    background: white;
+    border: 1px solid #000;
+}
+.btn-anulado:hover,
+.btn-anulado:focus,
+.btn-anulado:active,
+.btn-anulado.active,
+.open .dropdown-toggle.btn-anulado,
+.btn-anulado:active:focus,
+.btn-anulado:active:hover,
+.btn-anulado.active:hover,
+.btn-anulado.active:focus {
+    color: white;
+    border: 1px solid #000;
+    background-color: #000;
+}
+
+/*
+    Overwrite .ui-jqdialog
+*/
+
+.ui-jqdialog{
+    min-height: 110px;
+}

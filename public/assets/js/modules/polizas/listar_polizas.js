@@ -27,7 +27,7 @@ $(document).ready(function(){
 		grid.jqGrid({
 			url: phost() + 'polizas/ajax-listar',
 			datatype: "json",
-			colNames: ['','No. Póliza','Cliente','Aseguradora','Ramo','Inicio de Vigencia','Fin de Vigencia','Frecuencia Facturación','Ultima Factura','Usuario','Categoria','Estado','Opciones','',''],
+			colNames: ['','No. Póliza','Cliente','Aseguradora','Ramo','Inicio de Vigencia','Fin de Vigencia','Frecuencia Facturación','Ultima Factura','Saldo','Categoria','Estado','Opciones','',''],
 			colModel: [
 			{name:'id', index:'id', hidedlg:true,key: true, hidden: true },
 			{name:'numero', index:'numero',sorttype:"text",sortable:true,width:150},
@@ -38,7 +38,8 @@ $(document).ready(function(){
 			{name:'fin_vigencia', index:'fin_vigencia',sorttype:"text",sortable:true,width:160},
 			{name:'frecuencia_facturacion', index:'frecuencia_facturacion',sorttype:"text",sortable:true,width:200},
 			{name:'ultima_factura', index:'ultima_factura',sorttype:"date",sortable:true,width:150},
-			{name:'usuario', index:'usuario',sorttype:"text",sortable:true,width:120},
+			{name:'saldo', index:'saldo',sorttype:"text",sortable:false,width:150},
+			//{name:'usuario', index:'usuario',sorttype:"text",sortable:true,width:120},
 			{name:'categoria', index:'categoria',sorttype:"text",sortable:true,width:150},
 			{name:'estado', index:'estado',sorttype:"text",sortable:true,width:180},
 			{name:'opciones', index:'opciones', sortable:false, align:'center',width:180},
@@ -387,10 +388,10 @@ $("#cliente").keyup(function(e){
     	console.log(id);
 
 	    //Inicializar opciones del Modal
-	    $('#documentosModal').modal({
+	    /*$('#documentosModal').modal({
 	            backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
 	            show: false
-	        });
+	        });*/
 	    
 	    $('#documentosModal').modal('show');
 	    $('#id_poliza').val(id);

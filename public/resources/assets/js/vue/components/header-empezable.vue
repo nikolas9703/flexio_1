@@ -11,9 +11,9 @@
 
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
 
-                <select name="empezable[empezable_type]" id="empezable_type" v-select3="formEmpezable.empezable_type" :config="config" class="form-control select2" :disabled="disableEmpezarType">
+                <select name="empezable[empezable_type]" id="empezable_type" v-select3="formEmpezable.empezable_type" :config="config" class="form-control select2" :disabled="disableEmpezarType || isDisable">
                     <option value="">Seleccione</option>
-                    <option v-for="type in getOpciones" :value="type.value" >{{type.label}}</option>
+                    <option v-for="type in getOpciones" :value="type.value" v-text="type.label"></option>
                 </select>
             </div>
 
@@ -39,7 +39,7 @@ export default {
 
         return {
             disableEmpezarId:true,
-            disableEmpezarType:false,
+            disableEmpezarType:this.info.disableEditar,
             disableEditar:this.info.disableEditar,
             urls_catalogo:[],
             titulo:'',

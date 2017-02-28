@@ -20,7 +20,10 @@
             </div>
 
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                <select name="empezable_id" id="empezable_id" v-model="empezable.id" v-select2="empezable.id" :config="config.select2" :disabled="empezable.type == '' || config.disableEmpezarDesde">
+                <select v-if="typeof config.select2empezableId !== 'undefined'" name="empezable_id" v-select2ajax="empezable.id" :config="config.select2empezableId" :disabled="empezable.type == '' || config.disableEmpezarDesde">
+                    <option value="">Seleccione</option>
+                </select>
+                <select v-if="typeof config.select2empezableId === 'undefined'" name="empezable_id" id="empezable_id" v-model="empezable.id" v-select2="empezable.id" :config="config.select2" :disabled="empezable.type == '' || config.disableEmpezarDesde">
                     <option value="">Seleccione</option>
                     <option :value="emp.id" v-for="emp in getEmpezables">{{{emp.nombre}}}</option>
                 </select>

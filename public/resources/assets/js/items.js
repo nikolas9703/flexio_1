@@ -23,6 +23,7 @@ export default {
       en_alquiler:0,
       por_entregar:0,
       entregado:0,
-      devuelto:0
+      devuelto:0,
+      catalogo_periodos_tarifario: []
   }]
 }

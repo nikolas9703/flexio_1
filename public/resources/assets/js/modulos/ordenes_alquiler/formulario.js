@@ -79,11 +79,10 @@ var form_crear_ordenventa = new Vue({
             fecha_hasta:moment().add(30,'days').format('DD/MM/YYYY'),
             creado_por:'',
             item_precio_id:'',
-            precio_alquiler_id: '',
+            lista_precio_alquiler_id: '',
             centro_contable_id:'',
             centro_facturacion_id:'',
             centros_facturacion:[],
-            precio_alquiler_id:'',
             bodega_id:'',
             estado:'abierta',
             observaciones:'',
@@ -196,6 +195,8 @@ var form_crear_ordenventa = new Vue({
             Vue.nextTick(function(){
 
                 scope.detalle = JSON.parse(JSON.stringify(window.orden_venta));
+                scope.detalle.lista_precio_alquiler_id = scope.detalle.contrato_alquiler.lista_precio_alquiler_id;
+
                 //scope.detalle.articulos = typeof scope.detalle.articulos != 'undefined' && scope.detalle.articulos.length > 0 ? scope.detalle.articulos.items : [];
                 scope.comentario.comentarios = JSON.parse(JSON.stringify(window.orden_venta.comentario_timeline));
                 scope.comentario.comentable_id = JSON.parse(JSON.stringify(window.orden_venta.id));
@@ -301,7 +302,20 @@ var form_crear_ordenventa = new Vue({
             });
         }
 
-    }
+    },
+    /*watch:{
+        'detalle.item_precio_id': function(val, oldVal){
+
+            var scope = this;
+
+            _.forEach(this.detalle.articulos, function(value) {
+
+              console.log(value, scope);
+
+            });
+
+        },
+    },*/
 
 });
 

@@ -44,11 +44,11 @@
 
                                         <th width="1%" style="background: white;"></th>
                                         <th width="14%" class="categoria ">Categoría de item<span class="required" aria-required="true">*</span></th>
-                                        <th width="14%" class="item ">Item <span class="required" aria-required="true">*</span></th>
-                                        <th width="14%" class="atributo ">Atributo </th>
-                                        <th width="14%" class="cantidad ">Cantidad <span class="required" aria-required="true">*</span></th>
-                                        <th width="14%" class="unidad ">Periodo tarifario <span class="required" aria-required="true">*</span></th>
-                                        <th width="14%" class="precio_unidad ">Tarifa pactada <span class="required" aria-required="true">*</span></th>
+                                        <th width="30%" class="item ">Item <span class="required" aria-required="true">*</span></th>
+                                        <th width="12%" class="atributo ">Atributo </th>
+                                        <th width="8%" class="cantidad ">Cantidad <span class="required" aria-required="true">*</span></th>
+                                        <th width="12%" class="unidad ">Periodo tarifario <span class="required" aria-required="true">*</span></th>
+                                        <th width="8%" class="precio_unidad ">Tarifa pactada <span class="required" aria-required="true">*</span></th>
                                         <th width="1%" style="background: white;">&nbsp;</th>
 
                                     </tr>
