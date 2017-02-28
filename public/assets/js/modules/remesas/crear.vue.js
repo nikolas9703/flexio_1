@@ -52,12 +52,9 @@ var formularioCrear = new Vue({
                         self.$set('cobros',response.data.idCobros);
                         console.log(response.data);
                         self.$set('codigo_remesa',response.data.codigoRemesa);
-                        $("#id_aseguradora_pagar").val(id_aseguradora);
-                        $("#id_aseguradora_guardar").val(id_aseguradora);
-                        $("#monto_remesa_pagar").val(response.data.monto);
-                        $("#monto_remesa_guardar").val(response.data.monto);
+                        $("#id_aseguradora").val(id_aseguradora);
+                        $("#monto_remesa").val(response.data.monto);
                         $("#id_ramos").val(id_ramos);
-                        $("#id_ramos1").val(id_ramos);
 
                         if(response.data.guardar == 1){
 
@@ -98,68 +95,6 @@ var formularioCrear = new Vue({
 });
 
 
-$("#pagar_remesa").click( function(e){
-
-    e.preventDefault();
-    e.returnValue=false;
-    e.stopPropagation();
-
-    var options = $('#opciones_modal');
-    var codigo_remesa = $('#codigo_remesa').val();
-
-    //Init boton de opciones
-    options.css('display', 'block');
-    $('#opcionesModal').find('.modal-title').empty().append('Remesa: '+codigo_remesa);
-    $('#opcionesModal').find('.modal-body').empty().append(options);
-    $('#opcionesModal').find('.modal-footer').empty();
-    $('#opcionesModal').modal('show');
-
-    $('#opcionesModal').change('#forma_pago',function(e){
-        var forma_pago = $('#forma_pago').val();
-        
-        if(forma_pago == "Efectivo"){
-
-            $("#banco").attr('disabled',true);
-            $("#numero_cheque").attr('disabled',true);
-        }else if(forma_pago ==  "Transferencia"){
-
-            $("#banco").attr('disabled',false);
-             $("#numero_cheque").attr('disabled',true);
-        }else if(forma_pago == "Cheque"){
-
-            $("#banco").attr('disabled',false);
-            $("#numero_cheque").attr('disabled',false);
-        }
-    });
-
-    /*
-    $('#opcionesModal').on('click','#procesar_remesa',function(e){
-
-        var forma_pago = $('#forma_pago').val();
-        var banco = $("#banco").val();
-        var cheque = $("#numero_cheque").val();
-
-        if(forma_pago == '' ){
-            $("#errorForma").append('<p style="color:red;">Campo Obligatorio</p>');
-        }else if(forma_pago !=  "" && banco == ''){
-            $("#errorBanco").append('<p style="color:red;">Campo Obligatorio</p>');
-        }else if(forma_pago != '' && forma_pago == "Cheque" && banco != '' && cheque == ''){
-            $("#errorCheque").append('<p style="color:red;">Campo Obligatorio</p>');
-        }else{
-            $("#errorForma").append('');
-            $("#errorBanco").append('');
-            $("#errorCheque").append('');
-
-            var cobros = $("input[name='id_cobros[]']").map(function () {
-                return $(this).val();
-            }).get();
-            console.log(cobros);
-
-        }
-    });*/
-
-});
-
 $("#ramos").change(function(){
     if($(this).val()=="todos"){
       //$("#ramos option[value='todos']").remove();
@@ -196,7 +131,6 @@ $(document).ready(function(){
 
         formularioCrear.getRemesas();
     }
-    $('#remesa_pagar').validate().form();
 
 });
 

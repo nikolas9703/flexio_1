@@ -83,9 +83,11 @@ var interesesAsegurados = (function(){
           $('#provincia').val($('#id_provincia').val());
         }
         //$('.letra').val('');
-         $(".provincia").prop("disabled", false);
+         
         if($("#provincia").data("disabled")===true){
           $(".provincia").prop("disabled", true);
+        }else{
+          $(".provincia").prop("disabled", false);
         }
        
       }
@@ -238,6 +240,10 @@ var interesesAsegurados = (function(){
         }
       });             
     }
+	$(window).load(function(){
+		$('#provincia').attr('disabled', 'disabled');
+		$('.provincia').attr('disabled', 'disabled');
+	});
     $(document).ready(function(){
 		if(cliente==='si')
 		{

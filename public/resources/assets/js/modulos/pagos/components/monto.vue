@@ -12,13 +12,13 @@
           </div>
       </div>
       <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-        <select name="campo[depositable_type]" aria-required="true" data-rule-required="true" v-select2="detalle.depositable_type" :config="config.select2" :disabled="config.disableDetalle">
+        <select name="campo[depositable_type]" aria-required="true" data-rule-required="true" v-select2="detalle.depositable_type" :config="config.select2">
           <option value="">Seleccione</option>
           <option :value="tipo_pago.etiqueta" v-for="tipo_pago in catalogos.tipos_pago">{{tipo_pago.valor}}</option>
         </select>
       </div>
       <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 ">
-        <select name="campo[depositable_id]" aria-required="true" data-rule-required="true" v-select2="detalle.depositable_id" :config="config.select2" :disabled="config.disableDetalle">
+        <select name="campo[depositable_id]" aria-required="true" data-rule-required="true" v-select2ajax="detalle.depositable_id" :config="depositableIdSelect">
           <option value="">Seleccione</option>
           <option :value="depositable.id" v-for="depositable in getDepositables">{{depositable.nombre}}</option>
         </select>
@@ -30,59 +30,75 @@
 </template>
 
 <script>
+    export default {
 
-export default {
+        props: {
 
-  props:{
+            config: Object,
+            detalle: Object,
+            catalogos: Object
 
-        config: Object,
-        detalle: Object,
-        catalogos: Object
+        },
 
-    },
+        data: function() {
 
-    data:function(){
+            var context = this;
 
-        return {};
+            return {
+                depositableIdSelect: {
+                    ajax: {
+                        url: function(params) {
+                            return phost() + 'contabilidad/ajax-get-cuentas?depositable_type=' + context.detalle.depositable_type;
+                        },
+                        data: function(params) {
+                            return {
+                                q: params.term
+                            }
+                        }
+                    }
+                }
+            };
 
-    },
+        },
 
-    watch:{
+        watch: {
 
-      'detalle.depositable_type':function(val, oldVal){
+            'detalle.depositable_type': function(val, oldVal) {
 
-        console.log('execute: watch -> detalle.depositable_type in monto.vue');
-        this.detalle.depositable_id = '';
+                console.log('execute: watch -> detalle.depositable_type in monto.vue');
+                this.detalle.depositable_id = '';
 
-      }
+            }
 
-    },
+        },
 
-    computed:{
+        computed: {
 
-          getMonto:function(){
+            getMonto: function() {
 
-              var context = this;
-              return _.sumBy(context.detalle.pagables, function(pagable){
-                return pagable.monto_pagado;
-              });
+                var context = this;
+                return _.sumBy(context.detalle.pagables, function(pagable) {
+                    return parseFloat(pagable.monto_pagado);
+                });
 
-          },
+            },
 
-          getDepositables:function(){
+            getDepositables: function() {
 
-              var context = this;
-              if (context.detalle.depositable_type == 'banco'){
-                  return context.catalogos.cuentas;//son las cuentas de banco
-              }else if (context.detalle.depositable_type == 'caja') {
-                  return context.catalogos.cajas;//son las cuentas de caja
-              }
-              return [];
+                var context = this;
+                if (context.detalle.depositable_type == 'banco') {
+                    return context.catalogos.cuentas; //son las cuentas de banco
+                } else if (context.detalle.depositable_type == 'caja') {
+                    return context.catalogos.cajas; //son las cuentas de caja
+                } else if (context.detalle.depositable_type == 'cuenta_contable') {
 
-          }
+                    return context.catalogos.cuenta_contable; //son las cuentas de caja
+                }
+                return [];
+
+            }
+
+        }
 
     }
-
-}
-
 </script>

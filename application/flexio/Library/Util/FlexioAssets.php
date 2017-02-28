@@ -41,7 +41,9 @@ class FlexioAssets
       'public/assets/css/plugins/jquery/switchery.min.css',
       //select2
       'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
-      'public/assets/css/plugins/bootstrap/select2.min.css'
+      'public/assets/css/plugins/bootstrap/select2.min.css',
+      //popover
+      'public/assets/css/plugins/jquery/jquery.webui-popover.css',
     ]);
 
   }
@@ -71,6 +73,8 @@ class FlexioAssets
           'public/assets/js/plugins/ckeditor/adapters/jquery.js',
           //nueva version de inputmask
           'public/assets/js/default/jquery.inputmask.bundle.min.js',
+          //popover
+          'public/assets/js/plugins/jquery/jquery.webui-popover.js'
       ]);
   }
 

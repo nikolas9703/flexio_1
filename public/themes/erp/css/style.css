@@ -1123,6 +1123,51 @@ button.dim:active:before {
   background-color: #2A2E36;
   color: #8B91A0;
 }
+.badge-dark2 {
+  background-color: #000000;
+  color: #ffffff;
+}
+/*Labels para estados */
+.estado-modal1 {
+  background:white!important; 
+  color:#f8ac59!important;
+}
+.estado-modal1:hover {
+  background:#f8ac59!important; 
+  color:#ffffff!important;
+}
+.estado-modal2 {
+  background:white!important; 
+  color:#f8ac59!important;
+}
+.estado-modal2:hover {
+  background:#f8ac59!important; 
+  color:#ffffff!important;
+}
+.estado-modal3 {
+  background:white!important; 
+  color:#1c84c6!important;
+}
+.estado-modal3:hover {
+  background:#1c84c6!important; 
+  color:#ffffff!important;
+}
+.estado-modal4 {
+  background:white!important; 
+  color:#1ab394!important;
+}
+.estado-modal4:hover {
+  background:#1ab394!important; 
+  color:#ffffff!important;
+}
+.estado-modal5 {
+  background:white!important; 
+  color:#333!important;
+}
+.estado-modal5:hover {
+  background:#333!important; 
+  color:#ffffff!important;
+}
 /* TOOGLE SWICH */
 .onoffswitch {
   position: relative;
@@ -8264,4 +8309,14 @@ body.md-skin {
   #page-wrapper {
     margin: 0;
   }
+}
+/* para chosen*/
+.chosen-container-multi .chosen-choices{
+overflow-y: scroll!important;
+max-height: 50px!important;
+} 
+/*Labels para estados pedidos*/
+.estadop-modal2 {
+  background:#1C84C6!important; 
+  color:#ffffff!important;
 }

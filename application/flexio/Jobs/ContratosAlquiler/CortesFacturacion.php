@@ -64,7 +64,7 @@ class CortesFacturacion implements CortesFacturacionInterface {
 		// siguiente iteracion
 		//------------------------------------------
 		if(empty($this->periodo[$corte_facturacion])){
-			continue;
+			return false;
 		}
 
 		//------------------------------------------
@@ -155,6 +155,7 @@ class CortesFacturacion implements CortesFacturacionInterface {
 		$fecha_entrega 	= Carbon::parse($contrato["fecha_entrega"]);
 		$empresa_id 		= !empty($contrato["empresa_id"]) ? $contrato["empresa_id"] : "";
 		$contrato_id 		= !empty($contrato["contrato_id"]) ? $contrato["contrato_id"] : "";
+		$lista_precio_alquiler_id 		= !empty($contrato["lista_precio_alquiler_id"]) ? $contrato["lista_precio_alquiler_id"] : "";
 		$items_alquiler = !empty($contrato["items"]) ? $contrato["items"] : array();
 		$fecha_desde 		= $fecha_orden_venta->format('d/m/Y');
 		$fecha_hasta 		= $fecha_orden_venta->addMonth()->format('d/m/Y');
@@ -182,7 +183,8 @@ class CortesFacturacion implements CortesFacturacionInterface {
 			"creado_por" 						=> $creado_por,
 			"created_by" 						=> $creado_por,
 			"centro_contable_id" 		=> $centro_contable_id,
-			"centro_facturacion_id" => $centro_facturacion_id ,
+			"centro_facturacion_id" => $centro_facturacion_id,
+			"lista_precio_alquiler_id" => $lista_precio_alquiler_id,
 			"estado" 								=> $estado->etiqueta,
 			"formulario" 						=> "orden_alquiler",
 		);
@@ -238,7 +240,7 @@ class CortesFacturacion implements CortesFacturacionInterface {
 
 				$total = $this->OrdenVentaAlquilerRepository->lista_totales(['empresa_id' => $fieldset["empresa_id"]]);
 				$year = Carbon::now()->format('y');
-				$codigo = Utiles::generar_codigo('SO' . $year, $total + 1);
+				$codigo = Utiles::generar_codigo("", $total + 1);
 				$fieldset['codigo'] = $codigo;
 
 				$data = array('ordenalquiler' => $fieldset, 'lineitem' => $items);

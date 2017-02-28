@@ -1,0 +1,60 @@
+   <div class="col-lg-12 col-md-12">
+            <div class="table-responsive">
+
+                  <table id="itemsTable" class="table table-noline tabla-dinamica itemsTable">
+                    <tbody>
+                        <tr>
+                            <td width="75%"></td>
+                            <td width="20%" style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Subtotal:</td>
+                            <td width="5%" style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right" v-text="getSubtotales | dollar"></td>
+                             <td width="1%"></td>
+                        </tr>
+                        <tr>
+                            <td width="75%"></td>
+                            <td width="20%" style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Descuento:</td>
+                            <td width="5%" style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right" v-text="getDescuentos | dollar"></td>
+                             <td width="1%"></td>
+                        </tr>
+                        <tr>
+                            <td width="75%"></td>
+                            <td width="20%" style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Impuesto:</td>
+                            <td width="5%" style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right" v-text="getImpuestos | dollar"></td>
+                             <td width="1%"></td>
+                        </tr>
+
+                        <tr>
+                            <td width="75%"></td>
+                            <td width="20%" style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Total:
+                                <input type="hidden" name="campo[subtotal]" :value="getSubtotales" v-moneda>
+                                <input type="hidden" name="campo[descuento]" :value="getDescuentos" v-moneda>
+                                <input type="hidden" name="campo[impuestos]" :value="getImpuestos" v-moneda>
+                                <input type="hidden" id="total" name="campo[total]" :value="getTotales" v-moneda>
+                            </td>
+                            <td width="5%" style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right" v-text="getTotales | dollar">
+
+
+                                <!-- <input type="hidden" name="campo[retencion]" value="{{getRetenidoSubContratoTotal}}"> -->
+                            </td>
+                        </tr>
+
+                        <tr v-if="showPagos">
+                            <td width="75%"></td>
+                            <td width="20%" style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">
+                                <span class="label label-successful">Pagos </span>
+                            </td>
+                            <td width="5%" style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">0</td>
+                             <td width="1%"></td>
+                        </tr>
+                        <tr v-if="showSaldo">
+                            <td width="75%"></td>
+                            <td width="20%" style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">
+                                <span class="label label-danger">Saldo </span>
+                            </td>
+                            <td width="5%" style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">0</td>
+                            <td width="1%"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>

@@ -33,7 +33,7 @@
 
             <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
                 <label>Categoría(s) del item <span required="" aria-required="true">*</span></label>
-                <select name="campo[categorias][]" data-rule-required="true" aria-required="true" multiple="multiple" v-select2="detalle.categorias" :config="config.select2" :disabled="config.disableDetalle">
+                <select name="campo[categorias][]" data-rule-required="true" aria-required="true" v-select2="detalle.categorias" :config="config.select2" :disabled="config.disableDetalle">
                     <option :value="categoria.id" v-for="categoria in catalogos.categorias">{{categoria.nombre}}</option>
                 </select>
             </div>

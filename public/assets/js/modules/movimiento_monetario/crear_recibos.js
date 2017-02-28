@@ -261,6 +261,14 @@ $(document).ready(function () {
     }).on("change", function () {
         $('.id_cliente_proveedor').val($(this).val());
         $('.guardar1').removeAttr('disabled', "disabled");
+
+        $.post(phost() + "movimiento_monetario/ajax-cuenta-contable", {cliente_aseguradora: $('#categoria').val(), erptkn: window.tkn}, function(response){
+            if(response.length > 0 ){
+                $('#cuenta_id0').val(response[0].cuenta_id).trigger("chosen:updated");  
+                $('#cuenta_id0').prop('disabled', true).trigger("chosen:updated");
+            }
+        });
+       
     });
     //Inicializar Chosen plugin
     if ($().chosen) {
@@ -510,6 +518,9 @@ $(document).ready(function () {
 ;
 
 
+
+
+
 $('.chekbox-incluir').change(function () {
     if ($(this).is(':checked')) {
         $('.chekbox-incluir').val("1");
@@ -517,3 +528,31 @@ $('.chekbox-incluir').change(function () {
         $('.chekbox-incluir').val("0");
     }
 });
+
+
+$('#permisosForm').append('<input type="hidden" name="campo[id_categoria]" class="id_categoria" style="display:none;" value="">');
+$('#permisosForm').append('<input type="hidden" name="campo[id_cliente_proveedor]" class="id_cliente_proveedor" style="display:none;" value="">');
+console.log(localStorage.getItem('ms-selected'));
+if(localStorage.getItem('ms-selected') == 'seguros'){
+
+
+    $('div .filtro-formularios').find('select').each(function(){
+        if($(this).attr('id') == "categoria"){
+            console.log($(this).attr('id'));
+            $(this).empty().append('<option value="">Seleccione</option><option value="2">Cliente</option><option value="3">Aseguradora</option>');/*.append('Cliente/Aseguradora'); */
+        }
+    });  
+
+    if(vista == 'editar'){
+
+        $('#categoria').prop('disabled','disabled').trigger("chosen:updated");
+    }else if(vista == 'crear'){
+        $('.guardar1').on('click',function(){
+            $('#cuenta_id0').prop('disabled', false).trigger("chosen:updated");;
+            $('#permisosForm').submit();
+        })
+    }
+
+}else{
+    $('.breadcrumb').empty();
+}

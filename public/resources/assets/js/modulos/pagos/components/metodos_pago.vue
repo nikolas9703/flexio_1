@@ -7,7 +7,7 @@
               <label>Forma de Pago <span required="" aria-required="true">*</span></label>
           </div>
           <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-              <select name="metodo_pago[{{$index}}][tipo_pago]" aria-required="true" data-rule-required="true" v-select2="metodo_pago.tipo_pago" :config="config.select2" :disabled="config.disableDetalle">
+              <select name="metodo_pago[{{$index}}][tipo_pago]" aria-required="true" data-rule-required="true" v-select2="metodo_pago.tipo_pago" :config="config.select2">
                   <option value="">Seleccione</option>
                   <option :value="ele.etiqueta" v-for="ele in catalogos.metodos_pago">{{{ele.valor}}}</option>
               </select>
@@ -19,7 +19,7 @@
               <div class="row">
                   <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12">
                       <div class="input-group"><span class="input-group-addon">$</span>
-                          <input type="text" name="metodo_pago[{{$index}}][total_pagado]" class="form-control" style="text-align: right;" aria-required="true" data-rule-required="true" placeholder="0.00" v-model="metodo_pago.total_pagado | currencyDisplay" :disabled="config.disableDetalle"/>
+                          <input type="text" name="metodo_pago[{{$index}}][total_pagado]" class="form-control" style="text-align: right;" aria-required="true" data-rule-required="true" placeholder="0.00" v-model="metodo_pago.total_pagado | currencyDisplay" />
                       </div>
                       <label id="total_pagado{{$index}}-error" class="error" for="total_pagado{{$index}}"></label>
                   </div>
@@ -36,7 +36,7 @@
               <label>Banco del proveedor</label>
           </div>
           <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-              <select name="metodo_pago[{{$index}}][referencia][nombre_banco_ach]" aria-required="true" data-rule-required="true" v-select2="metodo_pago.referencia.nombre_banco_ach" :config="config.select2" :disabled="config.disableDetalle">
+              <select name="metodo_pago[{{$index}}][referencia][nombre_banco_ach]" aria-required="true" data-rule-required="true" v-select2="metodo_pago.referencia.nombre_banco_ach" :config="config.select2">
                   <option value="">Seleccione</option>
                   <option :value="banco.id" v-for="banco in catalogos.bancos">{{banco.nombre}}</option>
               </select>
@@ -45,7 +45,7 @@
               <label>Número de cuenta del Proveedor</label>
           </div>
           <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-              <input type="text" name="metodo_pago[{{$index}}][referencia][cuenta_proveedor]" class="form-control" aria-required="true" data-rule-required="true" v-model="metodo_pago.referencia.cuenta_proveedor" :disabled="config.disableDetalle"/>
+              <input type="text" name="metodo_pago[{{$index}}][referencia][cuenta_proveedor]" class="form-control" aria-required="true" data-rule-required="true" v-model="metodo_pago.referencia.cuenta_proveedor"/>
           </div>
       </div>
 
@@ -55,13 +55,13 @@
               <label>Número Cheque</label>
           </div>
           <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-              <input type="text" name="metodo_pago[{{$index}}][referencia][numero_cheque]" class="form-control" disabled="" v-model="metodo_pago.referencia.numero_cheque"/>
+              <input type="text" name="metodo_pago[{{$index}}][referencia][numero_cheque]" class="form-control" v-model="metodo_pago.referencia.numero_cheque"/>
           </div>
           <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
               <label>Cuenta de Banco</label>
           </div>
           <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3 last-input">
-              <input type="text" name="metodo_pago[{{$index}}][referencia][nombre_banco_cheque]" class="form-control" disabled="" v-model="metodo_pago.referencia.nombre_banco_cheque"/>
+              <input type="text" name="metodo_pago[{{$index}}][referencia][nombre_banco_cheque]" class="form-control" v-model="metodo_pago.referencia.nombre_banco_cheque"/>
           </div>
       </div>
 
@@ -71,18 +71,18 @@
           <label>Número de tarjeta</label>
         </div>
         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-          <input type="text" name="metodo_pago[{{$index}}][referencia][numero_tarjeta]" class="form-control" aria-required="true" data-rule-required="true" v-model="metodo_pago.referencia.numero_tarjeta" :disabled="config.disableDetalle"/>
+          <input type="text" name="metodo_pago[{{$index}}][referencia][numero_tarjeta]" class="form-control" aria-required="true" data-rule-required="true" v-model="metodo_pago.referencia.numero_tarjeta" />
         </div>
         <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
           <label>Número de recibo</label>
         </div>
         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3 last-input">
-          <input type="text" name="metodo_pago[{{$index}}][referencia][numero_recibo]" class="form-control" aria-required="true" data-rule-required="true" v-model="metodo_pago.referencia.numero_recibo" :disabled="config.disableDetalle"/>
+          <input type="text" name="metodo_pago[{{$index}}][referencia][numero_recibo]" class="form-control" aria-required="true" data-rule-required="true" v-model="metodo_pago.referencia.numero_recibo" />
         </div>
       </div>
 
 
-      <div style="clear:both"></script>
+      <div style="clear:both"></div>
       <br><br>
       <!-- Sumatoria de metodos de pago-->
       <div>

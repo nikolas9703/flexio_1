@@ -136,6 +136,71 @@ var moduloConfiguracionContabilidad = (function() {
 		},
 		getCuentaPlanilla:function(){
 			return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuenta-planilla', {erptkn: tkn});
-		}
+		},
+		getCuentaAseguradoraPagar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuenta-aseguradora-pagar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},eliminarCuentaAseguradorapagar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-eliminar-cuenta-aseguradora-pagar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},guardarCuentaAseguradoraPagar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-guardar-cuenta-aseguradora-por-pagar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},getCuentaAgentePagar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuenta-agente-pagar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},eliminarCuentaAgentepagar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-eliminar-cuenta-agente-pagar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},guardarCuentaAgentePagar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-guardar-cuenta-agente-pagar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},getCuentaRemesaEntrante:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuenta-remesa-entrante', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},eliminarCuentaRemesaEntrante:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-eliminar-cuenta-remesa-entrante', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},guardarCuentaRemesaEntrante:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-guardar-cuenta-remesa-entrante', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},
+
+		getCuentaRemesaSaliente:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuenta-remesa-saliente', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},eliminarCuentaRemesaSaliente:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-eliminar-cuenta-remesa-saliente', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},guardarCuentaRemesaSaliente:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-guardar-cuenta-remesa-saliente', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},
+
+		getCuentaAseguradoraCobrar:function(){
+			return $.post(phost() + 'configuracion_contabilidad/ajax_get_cuenta_aseguradora_cobrar', {erptkn: tkn});
+		},
+		eliminarCuentaAseguradoraCobrar:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-eliminar-cuenta-aseguradora-cobrar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},
+		guardarCuentaAseguradoraCobro:function(parametros){
+			return $.post(phost() + 'configuracion_contabilidad/ajax-guardar-cuenta-aseguradora-cobrar', $.extend({
+				erptkn: tkn
+			}, parametros));
+		},
 	};
 })();

@@ -3,6 +3,7 @@ Vue.transition('listado',{
     leaveClass:'fadeOut'
 });
 
+Vue.directive('select2ajax', require('./../../vue/directives/select2ajax.vue'));
 var items = require('./../../config/lines_items.js'); //objecto compartido del items
 var form_factura_compra = new Vue({
 
@@ -17,7 +18,7 @@ var form_factura_compra = new Vue({
             comentable_id: '',
 
           },
-
+        por_facturar:0,
         config:{
 
             vista:window.vista,
@@ -30,15 +31,18 @@ var form_factura_compra = new Vue({
                 cantidad: {'mask':'9{1,4}','greedy':false},
                 descuento: {'mask':'9{1,2}[.9{0,2}]','greedy':false},
                 currency: {'mask':'9{1,8}[.9{0,2}]','greedy':false},
-                currency2: {'mask':'9{1,8}[.9{0,4}]','greedy':false}
+                currency2: {'mask':'9{1,8}[.9{0,5}]','greedy':false}
 
             },
             //disabledPorCantidad:false,
             disableEmpezarDesde:false,
             disableDetalle:false,
+            disableDetallePorcentaje:false,
             disableArticulos:false,
             facturaSuspendida:false,
-            modulo:'facturas_compras'
+            modulo:'facturas_compras',
+            muestroRetenidoSubContrato: false,
+            superUsuario: typeof super_user != 'undefined' ? super_user : ''
 
         },
 
@@ -54,6 +58,7 @@ var form_factura_compra = new Vue({
             cuentas:window.cuentas,
             impuestos:window.impuestos,
             empresa:window.empresa,
+            cloneProveedores:[],//usado por el cambio de proveedores a ajax
             aux:{}
 
         },
@@ -75,8 +80,12 @@ var form_factura_compra = new Vue({
             observaciones:'',
             pagos:0,
             saldo:0,
+            creditos_aplicados:0,
             saldo_proveedor:0,
+            porcentaje_retencion:0,
             credito_proveedor:0,
+            operacion_type:'',
+            referencia:'',
             articulos:[
                 {
                     id:'',
@@ -135,15 +144,32 @@ var form_factura_compra = new Vue({
 
             context.config.disableEmpezarDesde = true;
 
+
             Vue.nextTick(function(){
 
-                context.empezable = $.extend({label:context.empezable.label,types:context.empezable.types},JSON.parse(JSON.stringify(window.empezable)));
+                 context.empezable = $.extend({label:context.empezable.label,types:context.empezable.types},JSON.parse(JSON.stringify(window.empezable)));
                 context.detalle = JSON.parse(JSON.stringify(window.factura));
+                context.referencia = JSON.parse(JSON.stringify(window.factura.referencia));
                 context.comentario.comentarios = JSON.parse(JSON.stringify(window.factura.comentario));
                 context.comentario.comentable_id = JSON.parse(JSON.stringify(window.factura.id));
                 context.catalogos.aux = JSON.parse(JSON.stringify(window.factura));
 
+                context.catalogos.proveedores = [window.factura.proveedor];
+                context.catalogos.cloneProveedores = _.clone(context.catalogos.proveedores);
 
+                // /*&& permiso_editar_retenido == 1*/
+                if(context.detalle.operacion_type=='subcontrato'){
+                  context.config.muestroRetenidoSubContrato = true;
+                  if(permiso_editar_retenido == 1){
+
+                        context.config.disableDetallePorcentaje= false;
+                  }else{
+                        context.config.disableDetallePorcentaje= true;
+                  }
+
+                }else{
+                  context.config.muestroRetenidoSubContrato = false;
+                }
                 if(context.detalle.estado == 13){
                     context.catalogos.estados.splice(2,2);
                 }
@@ -191,17 +217,75 @@ var form_factura_compra = new Vue({
 
         }
 
-        Vue.nextTick(function(){
 
-        if(context.config.disableDetalle == true){
-              toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");
-
-          }
-
-        });
-
+        if(context.config.vista == 'crear'){
+         this.selectProveedores();
+        }
     },
     methods:{
+        selectProveedores(){
+            var context = this;
+            $("#proveedor_id").select2({
+            width:'100%',
+            ajax: {
+                url: phost() + 'proveedores/ajax_catalogo_proveedores',
+                dataType: 'json',
+                delay: 100,
+                cache: true,
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page,
+                        erptkn: tkn
+                    };
+                },
+                processResults: function (data, params) {
+
+                   let resultados = data.map(resp=> [{'id': resp.proveedor_id,'text': resp.nombre}]).reduce((a, b) => a.concat(b),[]);
+
+                   context.catalogos.cloneProveedores = data;
+
+                     return {
+                          results:resultados
+                     };
+                },
+                escapeMarkup: function (markup) { return markup; },
+            }
+        });
+        },
+        getEmpezableAjax: function(empezable){
+
+            var context = this;
+            var datos = $.extend({erptkn: tkn},{type:empezable.type, id:empezable.id});
+
+            context.config.enableWatch = false;
+            context.$http.post({
+                url: window.phost() + "facturas_compras/ajax-get-empezable",
+                method:'POST',
+                data:datos
+            }).then(function(response){
+
+                if(_.has(response.data, 'session')){
+                    window.location.assign(window.phost());
+                    return;
+                }
+                if(!_.isEmpty(response.data)){
+                    context.catalogos.proveedores = [response.data.proveedor];
+                    context.catalogos.cloneProveedores = _.clone(context.catalogos.proveedores);
+                    context.por_facturar = response.data.por_facturar;
+                    context.detalle = $.extend(context.detalle,JSON.parse(JSON.stringify(response.data)));
+
+                    context.detalle.id = '';
+                    Vue.nextTick(function(){
+                        context.detalle.proveedor_id = response.data.proveedor_id;
+                        context.config.enableWatch = true;
+                    });
+
+                }
+            });
+
+
+        },
 
         guardar: function () {
             var context = this;
@@ -212,6 +296,10 @@ var form_factura_compra = new Vue({
                 wrapper: '',
                 errorPlacement: function (error, element) {
                     var self = $(element);
+                    if(self.hasClass("cuenta")){
+                        toastr.error("Verifique en los items el campo 'Cuenta', es obligatorio", "Mensaje");
+                    }
+
                     if (self.closest('div').hasClass('input-group') && !self.closest('table').hasClass('itemsTable')) {
                         element.parent().parent().append(error);
                     }else if(self.closest('div').hasClass('form-group') && !self.closest('table').hasClass('itemsTable')){
@@ -325,6 +413,47 @@ var form_factura_compra = new Vue({
         }
     },
     watch:{
+
+        'detalle.centro_contable_id':function(val, oldVal){
+            var context = this;
+            if(context.config.vista == 'crear'){
+                _.forEach(context.detalle.articulos, function(articulo){
+                    articulo.cuenta_id = '';
+                });
+            }
+        },
+
+        'empezable.id': function(val, oldVal){
+
+            console.log('execute watch for empezable.id from facturas_compras/formulario.js');
+            var context = this;
+            if(context.config.vista == 'crear')
+            {
+                context.getEmpezableAjax(context.empezable);
+            }
+
+        },
+
+          'empezable.type': function (val, oldVal) {
+
+            //empezable_type
+
+                var context = this; // /*&& permiso_editar_retenido == 1*/
+
+
+                if(val == 'subcontrato' || context.detalle.operacion_type=='subcontrato'){
+                      context.config.muestroRetenidoSubContrato = true;
+                       if(permiso_editar_retenido == 1){
+                          context.config.disableDetallePorcentaje= false;
+                       }else{
+                          context.config.disableDetallePorcentaje= true;
+                       }
+
+               }else{
+                        context.config.muestroRetenidoSubContrato = false;
+               }
+
+          },
         'detalle.estado': function (val, oldVal) {
               var context = this;
 
@@ -366,9 +495,25 @@ var form_factura_compra = new Vue({
             _.forEach(context.detalle.articulos, function(articulo){
                      if(parseFloat(articulo.cantidad) > parseFloat(articulo.cantidad_maxima)){
                       context.config.disableDetalle = true;
-                       return false
+                       return false;
                     }
               });
+        },
+        subtotal(){
+            let subtotal=   _.sumBy(this.detalle.articulos,(a)=>parseFloat(a.cantidad) * parseFloat(a.precio_unidad));
+            return parseFloat(roundNumber(subtotal, 2));
+        },
+        validarContrato(){
+            return this.empezable.type == 'subcontrato';
+        },
+        validacionPorContrato(){
+            if(this.validarContrato){
+                if(this.subtotal > this.por_facturar){
+                    toastr.error("El subtotal de la factura de ser "+this.por_facturar,"Error al crear factura");
+                    return true;
+                }
+            }
+            return false;
         }
      }
 

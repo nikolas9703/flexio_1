@@ -1,4 +1,6 @@
-<?php namespace Flexio\Transformers;
+<?php 
+namespace Flexio\Transformers;
+
 abstract class Transformer{
   public function transformCollection(array $collection)
   {

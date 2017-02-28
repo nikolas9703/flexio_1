@@ -68,7 +68,7 @@ $.validator.addMethod(
 
 
 $(document).ready(function(){
-    $('.estado_articulo').attr('disabled', 'disabled');
+    //$('.estado_articulo').attr('disabled', 'disabled');
 	var counter = 2;
     $('#del_file_articulo').hide();
     $('#add_file_articulo').click(function(){

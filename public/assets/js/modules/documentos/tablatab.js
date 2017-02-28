@@ -46,6 +46,7 @@ var tablaAccionPersonal = (function(){
 	var polizaId = "";
 	var facturassegurosId="";
 	var endosoId="";
+	var reclamoId="";
 		var ocultar_opciones = false;
 
 		if(typeof modulo_id != "undefined"){
@@ -125,6 +126,9 @@ var tablaAccionPersonal = (function(){
 		if(typeof endoso_id != "undefined"){
 			endosoId = endoso_id;
 		}
+		if(typeof id_reclamo != "undefined"){
+			reclamoId = id_reclamo;
+		}
 		
 		if(typeof facturas_seguros_id != "undefined")
 		{
@@ -188,6 +192,7 @@ var tablaAccionPersonal = (function(){
 		  poliza_id:polizaId,
 		  factura_seguro:facturassegurosId,
 		  endoso_id:endosoId,
+		  reclamo_id:reclamoId,
 
 		   	},
 			height: "auto",
@@ -257,6 +262,8 @@ var tablaAccionPersonal = (function(){
 		    opcionesModal.find('.modal-body').empty().append(options);
 		    opcionesModal.find('.modal-footer').empty();
 		    opcionesModal.modal('show');
+
+
 		});
 
 		//Ver Detalle

@@ -1,0 +1,201 @@
+<<<<<<< HEAD
+<tr>
+     <td style="background: white;">
+         <i class="fa" :class="fa_caret" style="font-size: 28px;width: 10px;" @click="changeCaret"></i>
+         <input type="hidden" name="items[{{parent_index}}][id]" class="item_hidden" id="id{{parent_index}}" value="{{row.id}}">
+     </td>
+     <td class="categoria{{parent_index}} ">
+ 		<select name="items[{{parent_index}}][categoria_id]" class="categoria" id="categoria{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.categoria_id" :config="select2Config" :disabled="disabledFila || debeEditar || desabledPorEstado">
+                 <option value="">Seleccione</option>
+                 <option :value="categoria.id" v-for="categoria in catalogos.categorias" v-text="categoria.nombre"></option>
+             </select>
+ 	</td>
+
+ 	<td class="item{{parent_index}} ">
+ 		<input type="hidden" name="items[{{parent_index}}][item_hidden]" class="item_hidden" id="item_hidden{{parent_index}}" v-model="row.item_hidden_id">
+ 		<input type="hidden" name="items[{{parent_index}}][item_id]" class="item_hidden" id="item{{parent_index}}" v-model="row.item_id">
+ 		<input type="hidden" id="comentario{{parent_index}}" name="items[{{parent_index}}][comentario]" value="{{row.comentario}}">
+ 		<div class="input-group">
+ 			<typeahead :item_url="item_url" :categoria_id.sync="categoria_id" :parent_index="parent_index" :disabled="disabledFila || debeEditar"></typeahead>
+ 			<span class="input-group-btn">
+                   <a id="boton{{parent_index}}" type="button" class="btn btn-default" rel=popover v-item-comentario="row.comentario"  :i="parent_index" :comentado="row.comentario"> <span class="fa fa-comment"></span></a>
+ 			</span>
+ 		</div>
+ 	</td>
+
+ 	<td class="atributo{{parent_index}} ">
+ 		<input type="text" name="items[{{parent_index}}][atributo_text]" class="form-control atributo" id="atributo_text{{parent_index}}" v-if="typeof row.atributos != 'undefined' && row.atributos.length == 0" v-model="row.atributo_text" :disabled="disabledFila || debeEditar">
+ 		<select name="items[{{parent_index}}][atributo_id]" class="atributo" id="atributo_id{{parent_index}}" v-if="typeof row.atributos != 'undefined' && row.atributos.length > 0" v-select2="row.atributo_id" :config="select2Config"   :disabled="disabledFila || debeEditar|| desabledPorEstado">
+                 <option value="">Seleccione</option>
+                 <option :value="atributo.id" v-for="atributo in row.atributos" v-text="atributo.nombre"></option>
+        </select>
+ 	</td>
+
+ 	<td class="cantidad{{parent_index}}  input-group">
+ 		<input type="text" name="items[{{parent_index}}][cantidad]" class="form-control cantidad" data-rule-requiredvalidation="true" id="cantidad{{parent_index}}" v-cantidad="row.cantidad" v-model="row.cantidad" :disabled="disabledFila || debeEditar || desabledPorEstado">
+ 	</td>
+
+ 	<td class="unidad{{parent_index}} ">
+ 		<input type="hidden" name="items[{{parent_index}}][unidad_hidden]" class="unidad_hidden" id="unidad_hidden{{parent_index}}" v-model="row.unidad_hidden_id">
+ 		<select name="items[{{parent_index}}][unidad_id]" class="unidad" id="unidad{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.unidad_id" :config="select2Config" :disabled="disabledFila || debeEditar || desabledPorEstado">
+                 <option value="">Seleccione</option>
+                 <option :value="unidad.id" v-for="unidad in row.unidades" v-text="unidad.nombre"></option>
+             </select>
+ 	</td>
+
+ 	<td class="precio_unidad{{parent_index}}">
+ 		<div class="input-group">
+ 			<span class="input-group-addon"><i class="fa fa-dollar"></i></span>
+ 			<input type="text" name="items[{{parent_index}}][precio_unidad]" class="form-control precio_unidad valid" data-rule-requiredvalidation="true" aria-required="true" id="precio_unidad{{parent_index}}" v-model="row.precio_unidad" v-moneda :disabled="permisoEditarPrecio || debeEditar">
+ 		</div>
+ 	</td>
+
+ 	<td class="precio_total{{parent_index}}">
+ 		<div class="input-group">
+ 			<span class="input-group-addon"><i class="fa fa-dollar"></i></span>
+ 			<input type="text" name="items[{{parent_index}}][precio_total]" :value="getSubtotal" class="form-control precio_total" :disabled="subTotalDisabled" id="precio_total{{parent_index}}" v-moneda >
+ 			<input type="hidden" name="items[{{parent_index}}][impuesto_total]" value="{{getImpuestoTotal}}" class="form-control impuesto_total" id="impuesto_total{{parent_index}}">
+ 			 <input type="hidden" name="items[{{parent_index}}][descuento_total]" value="{{getDescuentoTotal}}" class="form-control descuento_total" id="descuento_total{{parent_index}}">
+ 			<!--<input type="hidden" name="items[{{parent_index}}][retenido_total]" value="{{getRetenidoTotal}}" class="form-control retenido_total" id="retenido_total{{parent_index}}"> -->
+ 		</div>
+ 	</td>
+ 	<td style="background: white;">
+ 		<button type="button" class="btn btn-default btn-block eliminarBtn" agrupador="items" label="<i class=&quot;fa fa-trash&quot;></i>" @click="removeRow(row,parent_index)" :disabled="desabledPorEstado"><i class="fa fa-trash"></i></button>
+ 		<!--<input type="hidden" name="items[{{parent_index}}][id_pedido_item]" value="{{row.id}}" class="form-control" id="id_pedido_item">-->
+ 	</td>
+ </tr>
+
+ <tr v-show="fa_caret == 'fa-caret-down'">
+ 	<td></td>
+ 	<td colspan="7">
+ 		<table style="width: 100%;background: #A2C0DA;">
+
+ 			<td class="impuesto{{parent_index}}" width="33%" style="padding: 10px;">
+ 				<label>Impuesto</label>
+ 				<select name="items[{{parent_index}}][impuesto_id]" class="impuesto" id="impuesto{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.impuesto_id" :config="select2Config" :disabled="debeEditar || desabledPorEstado">
+                         <option value="">Seleccione</option>
+                         <option :value="impuesto.id" v-for="impuesto in catalogos.impuestos" v-text="impuesto.nombre"></option>
+                     </select>
+ 			</td>
+
+ 			<td class="descuento{{parent_index}}" width="33%" style="padding: 10px;">
+ 				<label>Descuento</label>
+ 				<div class="input-group" style="width: 100%;">
+ 					<input type="input-right-addon" name="items[{{parent_index}}][descuento]" class="form-control descuento" id="descuento{{parent_index}}" agrupador="items" v-porcentaje v-model="row.descuento" :disabled="debeEditar || desabledPorEstado">
+ 					<span class="input-group-addon">%</span>
+ 				</div>
+ 			</td>
+
+ 			<td class="cuenta{{parent_index}}" width="33%" style="padding: 10px;">
+ 				<label>Cuenta</label>
+ 				<select name="items[{{parent_index}}][cuenta_id]" class="cuenta" id="cuenta{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.cuenta_id" :config="select2Config" :disabled="debeEditar || desabledPorEstado">
+                         <option value="">Seleccione</option>
+                         <option :value="cuenta.id" v-for="cuenta in getCuentas" v-text="cuenta.nombre"></option>
+                     </select>
+ 			</td>
+
+ 		</table>
+ 	</td>
+ 	<td></td>
+</tr>
+=======
+<tr>
+     <td style="background: white;">
+         <i class="fa" :class="fa_caret" style="font-size: 28px;width: 10px;" @click="changeCaret"></i>
+         <input type="hidden" name="items[{{parent_index}}][id]" class="item_hidden" id="id{{parent_index}}" value="{{row.id}}">
+     </td>
+     <td class="categoria{{parent_index}} ">
+ 		<select name="items[{{parent_index}}][categoria_id]" class="categoria" id="categoria{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.categoria_id" :config="select2Config" :disabled="disabledFila || debeEditar || desabledPorEstado">
+                 <option value="">Seleccione</option>
+                 <option :value="categoria.id" v-for="categoria in catalogos.categorias" v-text="categoria.nombre"></option>
+             </select>
+ 	</td>
+
+ 	<td class="item{{parent_index}} ">
+ 		<input type="hidden" name="items[{{parent_index}}][item_hidden]" class="item_hidden" id="item_hidden{{parent_index}}" v-model="row.item_hidden_id">
+ 		<input type="hidden" name="items[{{parent_index}}][item_id]" class="item_hidden" id="item{{parent_index}}" v-model="row.item_id">
+ 		<input type="hidden" id="comentario{{parent_index}}" name="items[{{parent_index}}][comentario]" value="{{row.comentario}}">
+ 		<div class="input-group">
+ 			<typeahead :item_url="item_url" :categoria_id.sync="categoria_id" :parent_index="parent_index" :disabled="disabledFila || debeEditar"></typeahead>
+ 			<span class="input-group-btn">
+                   <a id="boton{{parent_index}}" type="button" class="btn btn-default" rel=popover v-item-comentario="row.comentario"  :i="parent_index" :comentado="row.comentario"> <span class="fa fa-comment"></span></a>
+ 			</span>
+ 		</div>
+ 	</td>
+
+ 	<td class="atributo{{parent_index}} ">
+ 		<input type="text" name="items[{{parent_index}}][atributo_text]" class="form-control atributo" id="atributo_text{{parent_index}}" v-if="typeof row.atributos != 'undefined' && row.atributos.length == 0" v-model="row.atributo_text" :disabled="disabledFila || debeEditar || desabledPorEstado">
+ 		<select name="items[{{parent_index}}][atributo_id]" class="atributo" id="atributo_id{{parent_index}}" v-if="typeof row.atributos != 'undefined' && row.atributos.length > 0" v-select2="row.atributo_id" :config="select2Config"   :disabled="disabledFila || debeEditar|| desabledPorEstado">
+                 <option value="">Seleccione</option>
+                 <option :value="atributo.id" v-for="atributo in row.atributos" v-text="atributo.nombre"></option>
+        </select>
+ 	</td>
+
+ 	<td class="cantidad{{parent_index}}  input-group">
+ 		<input type="text" name="items[{{parent_index}}][cantidad]" class="form-control cantidad" data-rule-requiredvalidation="true" id="cantidad{{parent_index}}" v-cantidad="row.cantidad" v-model="row.cantidad" :disabled="disabledFila || debeEditar || desabledPorEstado">
+ 	</td>
+
+ 	<td class="unidad{{parent_index}} ">
+ 		<input type="hidden" name="items[{{parent_index}}][unidad_hidden]" class="unidad_hidden" id="unidad_hidden{{parent_index}}" v-model="row.unidad_hidden_id">
+ 		<select name="items[{{parent_index}}][unidad_id]" class="unidad" id="unidad{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.unidad_id" :config="select2Config" :disabled="disabledFila || debeEditar || desabledPorEstado">
+                 <option value="">Seleccione</option>
+                 <option :value="unidad.id" v-for="unidad in row.unidades" v-text="unidad.nombre"></option>
+             </select>
+ 	</td>
+
+ 	<td class="precio_unidad{{parent_index}}">
+ 		<div class="input-group">
+ 			<span class="input-group-addon"><i class="fa fa-dollar"></i></span>
+ 			<input type="text" name="items[{{parent_index}}][precio_unidad]" class="form-control precio_unidad valid" data-rule-requiredvalidation="true" aria-required="true" id="precio_unidad{{parent_index}}" v-model="row.precio_unidad" v-moneda :disabled="permisoEditarPrecio || debeEditar|| desabledPorEstado">
+ 		</div>
+ 	</td>
+
+ 	<td class="precio_total{{parent_index}}">
+ 		<div class="input-group">
+ 			<span class="input-group-addon"><i class="fa fa-dollar"></i></span>
+ 			<input type="text" name="items[{{parent_index}}][precio_total]" :value="getSubtotal" class="form-control precio_total" :disabled="subTotalDisabled" id="precio_total{{parent_index}}" v-moneda >
+ 			<input type="hidden" name="items[{{parent_index}}][impuesto_total]" value="{{getImpuestoTotal}}" class="form-control impuesto_total" id="impuesto_total{{parent_index}}">
+ 			 <input type="hidden" name="items[{{parent_index}}][descuento_total]" value="{{getDescuentoTotal}}" class="form-control descuento_total" id="descuento_total{{parent_index}}">
+ 			<!--<input type="hidden" name="items[{{parent_index}}][retenido_total]" value="{{getRetenidoTotal}}" class="form-control retenido_total" id="retenido_total{{parent_index}}"> -->
+ 		</div>
+ 	</td>
+ 	<td style="background: white;">
+ 		<button type="button" class="btn btn-default btn-block eliminarBtn" agrupador="items" label="<i class=&quot;fa fa-trash&quot;></i>" @click="removeRow(row,parent_index)" :disabled="desabledPorEstado"><i class="fa fa-trash"></i></button>
+ 		<!--<input type="hidden" name="items[{{parent_index}}][id_pedido_item]" value="{{row.id}}" class="form-control" id="id_pedido_item">-->
+ 	</td>
+ </tr>
+
+ <tr v-show="fa_caret == 'fa-caret-down'">
+ 	<td></td>
+ 	<td colspan="7">
+ 		<table style="width: 100%;background: #A2C0DA;">
+
+ 			<td class="impuesto{{parent_index}}" width="33%" style="padding: 10px;">
+ 				<label>Impuesto</label>
+ 				<select name="items[{{parent_index}}][impuesto_id]" class="impuesto" id="impuesto{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.impuesto_id" :config="select2Config" :disabled="debeEditar || desabledPorEstado">
+                         <option value="">Seleccione</option>
+                         <option :value="impuesto.id" v-for="impuesto in catalogos.impuestos" v-text="impuesto.nombre"></option>
+                     </select>
+ 			</td>
+
+ 			<td class="descuento{{parent_index}}" width="33%" style="padding: 10px;">
+ 				<label>Descuento</label>
+ 				<div class="input-group" style="width: 100%;">
+ 					<input type="input-right-addon" name="items[{{parent_index}}][descuento]" class="form-control descuento" id="descuento{{parent_index}}" agrupador="items" v-porcentaje v-model="row.descuento" :disabled="debeEditar || desabledPorEstado">
+ 					<span class="input-group-addon">%</span>
+ 				</div>
+ 			</td>
+
+ 			<td class="cuenta{{parent_index}}" width="33%" style="padding: 10px;">
+ 				<label>Cuenta</label>
+ 				<select name="items[{{parent_index}}][cuenta_id]" class="cuenta" id="cuenta{{parent_index}}" data-rule-requiredvalidation="true" aria-required="true" v-select2="row.cuenta_id" :config="select2Config" :disabled="debeEditar || desabledPorEstado">
+                         <option value="">Seleccione</option>
+                         <option :value="cuenta.id" v-for="cuenta in getCuentas" v-text="cuenta.nombre"></option>
+                     </select>
+ 			</td>
+
+ 		</table>
+ 	</td>
+ 	<td></td>
+</tr>
+>>>>>>> master

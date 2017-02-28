@@ -104,7 +104,7 @@ if (typeof Object.create !== "function") {
     		 */
     		var html = $('<tr id="'+ index +'" />');
      		$.each(campos, function(indice, campo){
-
+                        
      			var tdClass		= $(campo).closest('td').attr('class');
      			if(typeof tdClass == "string"){
      				tdClass		= tdClass.replace(/\d{1,2}/g, index);
@@ -119,6 +119,7 @@ if (typeof Object.create !== "function") {
 
     			//continuar a la siguiente iteracion
     			//si es indefinido.
+                        
     			if(className == undefined || className == "" || className == "default" || field_new_column == "false"){
     				return;
     			}
@@ -128,22 +129,44 @@ if (typeof Object.create !== "function") {
 
       				//Input Group de Bootstrap
       				var fieldhtml = $(this).closest('td').clone();
-
-      				//input text
+                                
+      				
       				var id = $(fieldhtml).find('input[type="text"]:not([field-new-colum])').attr('id');
+                               //input text
 			        if(id !== undefined){
+                                        
 			    		//input visible
 			        	id = id.replace(/\d{1,2}/g, index);
 			    		var name = $(fieldhtml).find('input[type="text"]:not([field-new-colum])').attr('name');
 			    			name = name.replace(/\d{1,2}/g, index);
 			    		var ngmodel = $(fieldhtml).find('input[type="text"]:not([field-new-colum])').attr('ng-model');
+                                        
 			    		if(ngmodel){
 			    			ngmodel = ngmodel.replace(/\d{1,2}/g, index);
 			    			$(fieldhtml).find('input[type="text"]:not([field-new-colum])').attr("ng-model", ngmodel);
 			    		}
 						$(fieldhtml).find('input[type="text"]:not([field-new-colum])').attr("name", name).attr("id", id).removeAttr("checked").attr("value", "").val('');
+                                               
 			        }
-			        //input checkbox
+                                var id = $(fieldhtml).find('input[type="input-right-addon"]:not([field-new-colum])').attr('id');
+                                //input input-right-addon
+                                if(id !== undefined){
+                                        
+			    		//input visible
+			        	id = id.replace(/\d{1,2}/g, index);
+			    		var name = $(fieldhtml).find('input[type="input-right-addon"]:not([field-new-colum])').attr('name');
+                                       
+			    			name = name.replace(/\d{1,2}/g, index);
+			    		var ngmodel = $(fieldhtml).find('input[type="input-right-addon"]:not([field-new-colum])').attr('ng-model');
+                                        
+			    		if(ngmodel){
+			    			ngmodel = ngmodel.replace(/\d{1,2}/g, index);
+			    			$(fieldhtml).find('input[type="input-right-addon"]:not([field-new-colum])').attr("ng-model", ngmodel);
+			    		}
+						$(fieldhtml).find('input[type="input-right-addon"]:not([field-new-colum])').attr("name", name).attr("id", id).removeAttr("checked").attr("value", "").val('');
+                                                console.log(fieldhtml);
+			        }
+			        
       				var id = $(fieldhtml).find('input[type="checkbox"]').attr('id');
 			        if(id !== undefined){
 			    		//input visible
@@ -189,6 +212,7 @@ if (typeof Object.create !== "function") {
       				var id = $(fieldhtml).find('input[field-new-colum]').attr('id');
 			        if(id !== undefined){
 			    		//input visible
+                                        console.log('input type new column');
 			        	id = id.replace(/\d{1,2}/g, index);
 			    		var name = $(fieldhtml).find('input[field-new-colum]').attr('name');
 			    			name = name.replace(/\d{1,2}/g, index);
@@ -199,7 +223,7 @@ if (typeof Object.create !== "function") {
 			    		}
 						$(fieldhtml).find('input[field-new-colum]').attr("name", name).attr("id", id).removeAttr("checked").attr("value", "").val('');
 			        }
-
+                                
 			        $(fieldhtml).find('label').attr("for", id);
 		  			html.append(
 		  				$('<td class="'+ tdClass +'" />').append($(fieldhtml).html())
@@ -208,11 +232,11 @@ if (typeof Object.create !== "function") {
     			else if(tagName == "select" ){
     				//select
     				var fieldhtml = $(this).closest('td').clone();
-  					var id = $(fieldhtml).find('select').attr('id');
-    					id = id.replace(/\d{1,2}/g, index);
+  				var id = $(fieldhtml).find('select').attr('id');
+    				id = id.replace(/\d{1,2}/g, index);
     				var name = $(fieldhtml).find('select').attr('name');
-    					name = name.replace(/\d{1,2}/g, index);
-					var ngmodel = $(fieldhtml).find('select').attr('ng-model');
+    				name = name.replace(/\d{1,2}/g, index);
+				var ngmodel = $(fieldhtml).find('select').attr('ng-model');
 		    		if(ngmodel){
 		    			ngmodel = ngmodel.replace(/\d{1,2}/g, index);
 		    			$(fieldhtml).find('select').attr("ng-model", ngmodel);

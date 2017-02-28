@@ -66,12 +66,13 @@ var form_crear_cotizacion = new Vue({
             cuentas:window.cuentas,
             impuestos:window.impuestos,
             usuario_id:window.usuario_id,
+            clientes:window.clientes,
             aux:{}
 
         },
 
         detalle:{
-            
+
             id:'',
             cliente_id:empezable.id,
             termino_pago:'al_contado',
@@ -138,9 +139,7 @@ var form_crear_cotizacion = new Vue({
     ready:function(){
 
         var context = this;
-
         if(context.config.vista == 'editar'){
-
 
             context.config.disableEmpezarDesde = true;
             context.empezable = $.extend({label:context.empezable.label,types:context.empezable.types},window.empezable);
@@ -165,6 +164,10 @@ var form_crear_cotizacion = new Vue({
                     context.config.disableArticulos = true;
 
                 }
+                if(acceso != 1){
+                $('form').find(':submit').prop('disabled',true);
+                }
+
                 Vue.nextTick(function(){
 
                     context.config.enableWatch = true;
@@ -187,6 +190,10 @@ var form_crear_cotizacion = new Vue({
                     Vue.nextTick(function(){
 
                         context.empezable.id = window.empezable.id;
+                        //console.log(typeof window.cotizacion, typeof window.cotizacion ==! 'undefined');
+                        if(typeof window.cotizacion !== 'undefined'){
+                            context.detalle = $.extend(context.detalle, JSON.parse(JSON.stringify(window.cotizacion)));
+                        }
 
                     });
 
@@ -195,9 +202,6 @@ var form_crear_cotizacion = new Vue({
             });
 
         }
-
-
-
     },
 
     methods:{

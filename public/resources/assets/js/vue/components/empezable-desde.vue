@@ -4,7 +4,7 @@
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 header-empezable">
 
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3 text-header">
-                
+
                 <span><strong v-text="titulo"></strong></span>
 
             </div>

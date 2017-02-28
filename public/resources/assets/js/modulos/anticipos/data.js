@@ -14,7 +14,9 @@ var formulario={
   tipo_anticipable: AnticiposLocalStorage.tipoAnticipable,
   anticipable_id:'',
   opciones_metodo_acticipo:{ach:{nombre_banco_ach:'', cuenta:''},cheque:{numero_cheque:'',nombre_banco_cheque:''}},
-  id:''
+  id:'',
+  creado_por: window.usuario_id,
+  centro_contable_id:''
 };
 module.exports = {
   formulario:formulario

@@ -201,6 +201,38 @@ var tablaReclamos = (function () {
                                     opcionesModalCerrado.find('.modal-body').empty().append(optionscerrar);
                                     opcionesModalCerrado.find('.modal-footer').empty();
                                     opcionesModalCerrado.modal('show'); 
+
+                                    opcionesModalCerrado.on('click', '.massive', function (e) {
+                                        var motivo = opcionesModalCerrado.find('#motivocerrar').val();
+                                        var nreclamo = opcionesModalCerrado.find('input[name="nreclamo"]').val();
+                                        var idreclamo = opcionesModalCerrado.find('input[name="id_reclamo"]').val();
+                                        if (motivo != "") {
+                                            var estado = $(this).attr("data-estado");
+                                            var estado_anterior = $(this).attr("data-estado-anterior");
+                                            var datos = {campo: {estado: estado, ids: [idreclamo]}};
+                                            var cambio = moduloReclamos.cambiarEstadoReclamos(datos);
+
+                                            cambio.done(function (response) {
+                                                opcionesModalCerrado.modal('hide');
+                                                var id_modificado = opcionesModalCerrado.find('input[name="id_reclamo"]').val();
+                                                $("#mensaje").hide();
+                                                ids = [];
+                                                recargar();
+                                                toastr.success('Se ha cerrado el reclamo correctamente.');
+                                                var datosbitacora = {campo: {estado: estado, estado_anterior: estado_anterior, tipo: 'Cambio de Estado', motivo: motivo, reclamo: nreclamo, id: id_modificado}};
+                                                var cambiobitacora = moduloReclamosBitacora.cambiarEstadoReclamosBitacora(datosbitacora);
+
+                                                cambiobitacora.done(function (response) {
+
+                                                });
+                                            });
+                                            cambio.fail(function (response) {
+                                                toastr.error('No se pudo efectuar el Cambio de Estado correctamente.');
+                                            });
+                                        } else {
+                                            toastr.warning('Debe ingresar el Motivo para Cerrar el reclamo.');
+                                        }
+                                    }); 
                                 }
                                 if (estado == "Anulado") { 
                                     opcionesModalAnulado.find('.modal-title').empty().append('Opciones: ' + $(rowINFO.recnumero).text() + '');
@@ -210,11 +242,12 @@ var tablaReclamos = (function () {
 
                                     opcionesModalAnulado.on('click', '.massive', function (e) {
                                         var motivo = opcionesModalAnulado.find('#motivoanula').val();
-                                        var nreclamo = opcionesModalAnulado.find('input[name="id_reclamo"]').val();
+                                        var nreclamo = opcionesModalAnulado.find('input[name="nreclamo"]').val();
+                                        var idreclamo = opcionesModalAnulado.find('input[name="id_reclamo"]').val();
                                         if (motivo != "") {
                                             var estado = $(this).attr("data-estado");
                                             var estado_anterior = $(this).attr("data-estado-anterior");
-                                            var datos = {campo: {estado: estado, ids: [nreclamo]}};
+                                            var datos = {campo: {estado: estado, ids: [idreclamo]}};
                                             var cambio = moduloReclamos.cambiarEstadoReclamos(datos);
 
                                             cambio.done(function (response) {

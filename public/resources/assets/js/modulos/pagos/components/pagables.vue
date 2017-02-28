@@ -9,9 +9,9 @@
         <tr>
           <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;">No. Documento</th>
           <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;">Fecha de Emisión</th>
-          <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;">Monto</th>
-          <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;">Pagado</th>
-          <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;">Saldo Pendiente</th>
+          <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;" v-html="detalle.formulario =='retenido' ? 'Monto Retenido' : 'Monto'"></th>
+          <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;" v-html="detalle.formulario =='retenido' ? 'Retenido Pagado' : 'Pagado'"></th>
+          <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;" v-html="detalle.formulario =='retenido' ? 'Retenido Por Pagar' : 'Saldo Pendiente'"></th>
           <th width="14%" style="color: white;background-color: #0076BE;border:1px solid white;">Pago</th>
         </tr>
 

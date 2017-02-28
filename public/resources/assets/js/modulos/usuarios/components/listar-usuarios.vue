@@ -69,9 +69,7 @@ export default {
         },
 
         populateForm: function(fila, id){
-
             var context = this;
-
             context.detalle.id = id;
             context.detalle.nombre = fila['nombre'];
             context.detalle.apellido = fila['apellido'];
@@ -79,6 +77,8 @@ export default {
             context.detalle.rol = fila['rol_sistema_id'];
             context.detalle.roles = fila['rol_id'];
             context.detalle.centros_contables = fila['centros_contables'].split(",");
+			      context.detalle.categorias = fila['categorias'].split(",");
+            context.detalle.tipos_subcontrato		= fila["tipos_subcontrato_id"].split(",");
 
         },
 
@@ -112,6 +112,7 @@ export default {
     			'Correo Electr&oacute;nico',
     			'Fecha Creaci&oacute;n',
                 'Centro(s) contable(s)',
+				'Categoria(s)',
     			'Estado',
     			'Acci&oacute;n',
     			'',
@@ -119,13 +120,16 @@ export default {
     			'',
     			'',
     			'',
-                '',//centros contables
+                '',//centros contables,
+				'',//categorias
+				''//tipos subcontrato
     		],
     	   	colModel:[
     			{name:'Nombre Completo', index:'nombre_completo', width:70},
     			{name:'Correo', index:'correo', width:70},
     			{name:'Fecha de Creacion', index:'fecha_creacion', formatter: 'date', formatoptions: { newformat: 'd-m-Y' }, width:70, align:"center"},
-          {name:'centros_contables_label', index:'centros_contables_label', width:70},
+                {name:'centros_contables_label', index:'centros_contables_label', width:70},
+				{name:'filtro_categoria_label', index:'filtro_categoria_label', width:50},
     			{name:'Estado', index:'estado', width: 50, align:"center" },
     			{name:'link', index:'link', width:50, sortable:false, resizable:false, hidedlg:true, align:"center"},
     			{name:'options', index:'options', hidedlg:true, hidden: true},
@@ -133,7 +137,9 @@ export default {
     			{name:'apellido', index:'apellido', hidedlg:true, hidden: true},
     			{name:'rol_sistema_id', index:'rol_sistema_id', hidedlg:true, hidden: true},
     			{name:'rol_id', index:'rol_id', hidedlg:true, hidden: true},
-          {name:'centros_contables', index:'centros_contables', hidedlg:true, hidden: true},
+                {name:'centros_contables', index:'centros_contables', hidedlg:true, hidden: true},
+				 {name:'categorias', index:'categorias', hidedlg:true, hidden: true},
+         {name:'tipos_subcontrato_id', index:'tipos_subcontrato_id', hidedlg:true, hidden: true},
     	   	],
     		mtype: "POST",
     	   	postData: {

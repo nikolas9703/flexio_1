@@ -159,7 +159,7 @@ export default {
                   scope.detalle.centro_contable_id = typeof response.data.centro_contable_id != 'undefined' ? response.data.centro_contable_id : "";
                   scope.detalle.centro_facturacion_id = typeof response.data.centro_facturacion_id !='undefined' ? response.data.centro_facturacion_id : "";
                   scope.detalle.creado_por = typeof response.data.created_by != 'undefined' ? response.data.created_by : "";
-                  scope.detalle.precio_alquiler_id = typeof response.data.lista_precio_alquiler_id != 'undefined' ? response.data.lista_precio_alquiler_id : "";
+                  scope.detalle.lista_precio_alquiler_id = typeof response.data.lista_precio_alquiler_id != 'undefined' ? response.data.lista_precio_alquiler_id : "";
 
                 });
             }else{

@@ -24,9 +24,9 @@ $(document).ready(function(){
 	$('#CrearEndososForm').validate({
 
         submitHandler: function (form) {
-            $('#id_ramo').attr('disabled',true);
-            $('#cliente_id').attr('disabled',true);
-            $('#id_poliza').attr('disabled',true);
+            $('#id_ramo').attr('disabled',false);
+            $('#cliente_id').attr('disabled',false);
+            $('#id_poliza').attr('disabled',false);
             $('#tipo_endoso').attr('disabled',false);
             $('#motivo_endoso').attr('disabled',false);
             if($('#CrearEndososForm').validate().form() == true){

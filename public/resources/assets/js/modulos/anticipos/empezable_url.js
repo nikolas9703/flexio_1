@@ -3,7 +3,7 @@ import {AnticiposLocalStorage} from './clases/anticipo-local-storage';
 
 var labelAnticiposEmprezable = [];
 
-if(AnticiposLocalStorage.moduloPadre ==='compras'){
+if(AnticiposLocalStorage.moduloPadre ==='compras' || AnticiposLocalStorage.moduloPadre === 'contratos'){
   labelAnticiposEmprezable=[
     {label:'Orden de Compra',value:'orden_compra'},{label:'Subcontrato',value:'subcontrato'}
   ];
@@ -14,7 +14,7 @@ if(AnticiposLocalStorage.moduloPadre ==='compras'){
 }
 
 var urls_catalogo = {};
-if(AnticiposLocalStorage.moduloPadre ==='compras'){
+if(AnticiposLocalStorage.moduloPadre ==='compras' || AnticiposLocalStorage.moduloPadre === 'contratos'){
     var urls_catalogo = {
         'orden_compra':'ajax_catalogo/catalogo_ordenes_por_facturar',
         'subcontrato':'ajax_catalogo/catalogo_subcontratos_compras'

@@ -65,7 +65,8 @@ class CobroJqgrid extends JqgridAbstract{
 			$registros->join("cob_cobro_metodo_pago as pago2", "pago2.cobro_id", "=", "cob_cobros.id");
 			$sidx='pago2.tipo_pago';
 		}
-		
+		//var_dump($registros);
+		$registros->orderByRaw('FIELD(cob_cobros.estado, "vencido", "agendado", "aplicado", "anulado")');
 		if(!is_null($sidx) && !is_null($sord)) $registros->orderBy($sidx, $sord);
 		if(!is_null($limit) && !is_null($start)) $registros->skip($start)->take($limit);
 

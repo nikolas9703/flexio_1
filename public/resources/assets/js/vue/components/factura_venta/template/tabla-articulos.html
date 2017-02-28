@@ -1,0 +1,49 @@
+<<<<<<< HEAD
+<div class="col-lg-12 col-md-12">
+    <table class="table table-noline tabla-dinamica">
+        <thead>
+            <tr>
+                <th width="1%" style="background: white;"></th>
+                <th width="12%">Categoria<span class="required" aria-required="true">*</span></th>
+                <th width="30%">Item<span class="required" aria-required="true">*</span></th>
+                <th width="12%">Atributo<span class="required" aria-required="true">*</span></th>
+                <th width="10%">Cantidad<span class="required" aria-required="true">*</span></th>
+                <th width="12%">Unidad<span class="required" aria-required="true">*</span></th>
+                <th>Precio<span class="required" aria-required="true">*</span></th>
+                <th>Subtotal<span class="required" aria-required="true">*</span></th>
+                <th width="1%" style="background: white;padding: 0px 8px 0px 0px;">
+                    <button type="button" class="btn btn-default btn-block agregarBtn" :disabled="desabledPorEstado" @click="addRow"><i class="fa fa-plus"></i></button>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr is="articulo" v-for="row in articulos"
+             :parent_index="$index" :row="row" :catalogos="catalogos" :lista-articulos="articulos" :campo-disabled="campoDisabled" :config="config"></tr>
+        </tbody>
+    </table>
+</div>
+=======
+<div class="col-lg-12 col-md-12">
+    <table class="table table-noline tabla-dinamica">
+        <thead>
+            <tr>
+                <th width="1%" style="background: white;"></th>
+                <th width="12%">Categoria<span class="required" aria-required="true">*</span></th>
+                <th width="30%">Item<span class="required" aria-required="true">*</span></th>
+                <th width="12%">Atributo<span class="required" aria-required="true">*</span></th>
+                <th width="10%">Cantidad<span class="required" aria-required="true">*</span></th>
+                <th width="12%">Unidad<span class="required" aria-required="true">*</span></th>
+                <th>Precio<span class="required" aria-required="true">*</span></th>
+                <th>Subtotal<span class="required" aria-required="true">*</span></th>
+                <th width="1%" style="background: white;padding: 0px 8px 0px 0px;">
+                    <button type="button" class="btn btn-default btn-block agregarBtn" :disabled="desabledPorEstado" @click="addRow"><i class="fa fa-plus"></i></button>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr is="articulo" v-for="row in articulos"
+             :parent_index="$index" :row="row" :catalogos="catalogos" :lista-articulos="articulos" :campo-disabled="campoDisabled" :config="config"></tr>
+        </tbody>
+    </table>
+</div>
+>>>>>>> master

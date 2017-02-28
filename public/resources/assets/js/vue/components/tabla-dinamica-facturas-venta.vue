@@ -47,7 +47,7 @@
                 <td>
                     <div class="input-group">
                         <span class="input-group-addon">$</span>
-                        <input type="text" id="precio_unidad{{$index}}" name="items[{{$index}}][precio_unidad]" v-model="item.precio_unidad" class="form-control precio_unidad" :disabled="item.precio_permiso =='0'" @keyup="calcularPrecioTotal($index)"/>
+                        <input type="text" id="precio_unidad{{$index}}" name="items[{{$index}}][precio_unidad]" v-model="item.precio_unidad" class="form-control precio_unidad" :disabled="disabledPrecio==true" @keyup="calcularPrecioTotal($index)"/>
                     </div>
                 </td>
                 <td>
@@ -92,7 +92,7 @@
                                     <b>Cuenta</b>
                                     <select id="cuenta_id0" name="items[{{$index}}][cuenta_id]" data-rule-required="true" v-model="item.cuenta_uuid" class="form-control" :disabled="item.id != ''">
                                         <option value="">Seleccione</option>
-                                        <option value="{{option.uuid}}" v-for="option in item.cuenta_transaccionales">{{option.codigo}} {{option.nombre}}</option>
+                                        <option value="{{option.id}}" v-for="option in item.cuenta_transaccionales">{{option.codigo}} {{option.nombre}}</option>
                                     </select>
                                 </td>
                             </tr>
@@ -116,7 +116,7 @@ export default {
         categorias: Array,
         impuestos: Array,
         cuenta_transaccionales: Array,
-        factura: Object,
+        factura: Object
     },
 
     components:{
@@ -136,6 +136,7 @@ export default {
                 scope.$emit('popularTablaItems', infofactura.items);
             });
         }
+        if(editar_precio == 0)this.$set('disabledPrecio',true);
     },
     data: function () {
 
@@ -143,6 +144,7 @@ export default {
 
             //typeahead
             item_url:'inventarios/ajax_get_typehead_items?ventas=1',
+            disabledPrecio: false,
 
             columnas: [
                 {nombre: 'Categor&iacute;a de item', width: '12', colspan: '2'},
@@ -185,11 +187,18 @@ export default {
 
             var context = this;
             _.forEach(context.items, function(articulo, key){
-                var precio_unidad = _.find(articulo.precios, function(precio){
+                try {
+
+
+                var precio_unidad = typeof articulo != 'undefined' && typeof articulo.precios != 'undefined' ? _.find(articulo.precios == undefined ? articulo.itemsList[key].precios : articulo.precios, function(precio){
                     return precio.id == context.factura.lista_precio_id;
-                });
-                articulo.precio_unidad = !_.isEmpty(precio_unidad) ? precio_unidad.pivot.precio : 0;
+                }) : '';
+                articulo.precio_unidad = !_.isEmpty(precio_unidad) ? roundNumber(precio_unidad.pivot.precio, 2) : 0;
                 context.$parent.calcularPrecioTotal(key);
+                }
+                catch(err) {
+                  console.log(err)
+                }
             });
         },
 
@@ -199,14 +208,29 @@ export default {
             var context = this;
             context.items[item.parent_index].itemsList=[item];
 
+            context.enableWatch = false;
+
             var selected_categoria = _.head(item.categoria);
             context.items[item.parent_index].categoria_id = selected_categoria.id;
             context.items[item.parent_index].item_id = item.id;
             context.items[item.parent_index].atributos = item.atributos;
             context.items[item.parent_index].atributo_id = item.atributo_id;
             context.items[item.parent_index].cantidad = '';
-            context.items[item.parent_index].cuenta_id = item.cuenta_id;
+            context.items[item.parent_index].cuenta_uuid = item.cuenta_id;
             context.items[item.parent_index].cuentas = item.cuentas;//string con json para el filtro de cuentas
+            //#case 1499 verificar si tiene solo una cuenta para seleccionarla por defualt
+                  var cuentas = JSON.parse(item.cuentas);
+                  var i = 0;
+                  for (i = 0; i < cuentas.length; ++i) {
+                        var entry = cuentas[i];
+                        if (entry.match('ingreso') == "ingreso") {
+                            var ids = entry.split(':');
+                            if (entry.split(':').length == 2) {
+                                this.items[item.parent_index].cuenta_uuid = entry.split(':')[1];
+                            }
+                            break;
+                        }
+                    }
             context.items[item.parent_index].cuenta_transaccionales = context.filtrarCuentas(item).length > 0 ? context.filtrarCuentas(item) : context.cuenta_transaccionales,
             context.items[item.parent_index].unidades = item.unidades;
             context.items[item.parent_index].tipo_id = item.tipo_id;
@@ -216,9 +240,18 @@ export default {
                 });
                 context.items[item.parent_index].unidad_id = item.unidad_id;
                 context.items[item.parent_index].precios = item.precios;
-                context.items[item.parent_index].precio_unidad = !_.isEmpty(precio_unidad) ? precio_unidad.pivot.precio : 0;
+                context.items[item.parent_index].precio_unidad = !_.isEmpty(precio_unidad) ? roundNumber(precio_unidad.pivot.precio, 2) : 0;
                 context.items[item.parent_index].impuesto_id = item.impuesto_id;
+                var impuesto = _.find(context.impuestos,function(impuesto){
+                    return impuesto.impuesto == 0.00;
+                });
+                if($('#cliente_ID').val() != "" && $('#cliente_ID').val() != null && impuesto != null){
+                  $('.item-impuesto option')
+                  .filter(function() { return $.trim( $(this).val() ) == impuesto.uuid_impuesto; })
+                  .attr('selected',true).trigger('change');
+                }else{
                 context.items[item.parent_index].impuesto_uuid = item.impuesto_uuid;
+                }
             });
         },
 
@@ -229,7 +262,7 @@ export default {
         //
         popularTablaItems: function (items) {
             var scope = this;
-
+            console.log('populando items');
             if (typeof items === 'undefined' || items.length === 0) {
                 this.resetItems();
                 return false;
@@ -237,7 +270,7 @@ export default {
 
             scope.items = [];
             $.each(items, function (index, item) {
-
+                console.log('item'+index);
                 //Lista de Items
                 var categoria = _.find(scope.categorias, function (categoria) {
                     return categoria.id == item.categoria_id;
@@ -266,7 +299,10 @@ export default {
 
                         //Lista unidades
                         var unidadesList = !_.isEmpty(iteminfo) && iteminfo.unidades.length > 0 ? iteminfo.unidades : [];
-
+                        var cuentas_trans = scope.filtrarCuentas(iteminfo)
+                        if (cuentas_trans.length == 0){
+                            cuentas_trans = this.cuenta_transaccionales;
+                        }
                         scope.items.push({
                             id: item.id,
                             categoria_id: item.categoria_id,
@@ -275,18 +311,18 @@ export default {
                             atributo_text: item.atributo_text,
                             cantidad: item.cantidad,
                             unidad_id: item.unidad_id,
-                            precio_unidad: item.precio_unidad,
+                            precio_unidad: roundNumber(item.precio_unidad, 2),
                             precio_total: item.precio_total,
                             descuento: item.descuento,
                             impuesto_uuid: typeof item.impuesto != 'undefined' && item.impuesto != null ? item.impuesto.uuid_impuesto : '',
                             impuesto_porcentaje: typeof item.impuesto != 'undefined' && item.impuesto != null ? item.impuesto.impuesto : '',
-                            cuenta_uuid: typeof item.cuenta != 'undefined' && item.cuenta != null ? item.cuenta.uuid_cuenta : '',
+                            cuenta_uuid: typeof item.cuenta != 'undefined' && item.cuenta != null ? item.cuenta.id : '',
                             factura_item_id: '',
                             itemsList: itemsList,
                             atributos: atributosList,
                             unidades: unidadesList,
                             impuestos: scope.impuestos,
-                            cuenta_transaccionales: scope.filtrarCuentas(iteminfo),
+                            cuenta_transaccionales: cuentas_trans,
                             comentario: item.comentario
                         });
 
@@ -321,16 +357,20 @@ export default {
 
         },
         recomputeimpuesto: function(index) {
-            var impuestonumber = 0;
+            var newimpuesto_uuid = '';
+            var newimpuesto_id = '';
             $.each(JSON.parse(impuestos), function (e, value) {
-                if (event.target.value == value.uuid_impuesto) { 
-                    impuestonumber = value.impuesto;
-                    
+                if (event.target.value == value.uuid_impuesto) {
+                    newimpuesto_uuid = value.uuid_impuesto;
+                    newimpuesto_id = value.id;
+
                 }
             });
-            this.$parent.impuesto = ( impuestonumber * this.$parent.subtotal ) / 100
-            
+           this.items[index].impuesto_id = newimpuesto_id;
+           this.items[index].impuesto_uuid = newimpuesto_uuid;
+           this.$parent.calcularPrecioTotal(index);
         },
+
         calcularPrecioTotal: function (index) {
             this.$parent.calcularPrecioTotal(index);
         },

@@ -21,6 +21,7 @@ echo Modal::config(array(
 	<toast_v2 :mensaje.sync="mensaje"></toast_v2>
 </div>
 
+<?php $commit = exec('git log --pretty="%H" -n1 HEAD');?>
 
 <input type="hidden" id="alert_expiracion" name="alert_expiracion" value="<?php echo (isset($this->ci->session->userdata['por_vencer']) && $this->ci->session->userdata['por_vencer'] !='')?1 :0; ?>"  >
 <!-- <script src="<?php echo base_url('public/assets/js/default/jquery-1.11.2.min.js') ?>" type="text/javascript"></script>
@@ -66,10 +67,19 @@ if(getenv('APP_ENV') =='local'){?>
 <!-- <script src="<?php echo base_url('public/assets/js/default/jqgrid-toggle-resize.js') ?>" type="text/javascript"></script> -->
 
 <?php Assets::js_vars(); ?>
-<script src="<?php echo base_url('public/resources/compile/modulos/zflexio/zflexio.js') ?>" type="text/javascript"></script>
-<script src="<?php echo base_url('public/assets/js/default/vue.empresa-switch.js') ?>" type="text/javascript"></script>
+<script src="<?php echo base_url('public/resources/compile/modulos/zflexio/zflexio.js').'?rev='.$commit ?>" type="text/javascript"></script>
+<script src="<?php echo base_url('public/resources/compile/modulos/notifications/notifications.js').'?rev='.$commit ?>" type="text/javascript"></script>
+<script src="<?php echo base_url('public/assets/js/default/vue.empresa-switch.js').'?rev='.$commit ?>" type="text/javascript"></script>
 <!-- <script src="<?php echo base_url('public/assets/js/default/subcripcion.js') ?>" type="text/javascript"></script> -->
 <?php Assets::js(); ?>
 <?php endif; ?>
+<?php
+if(getenv('VER_BRANCH') =='SI'){
+	$stringfromfile = file('.git/HEAD', FILE_USE_INCLUDE_PATH);
+	$firstLine = $stringfromfile[0];
+	$explodedstring = explode("/", $firstLine, 3);
+	$branchname = $explodedstring[2];
+	echo "<div style='clear: both; width: 100%; font-size: 12px; font-family: Helvetica; color: #000; background: #fff; text-align: right; '>branch: <span style='color:#000; font-weight: bold; text-transform: uppercase;'>" . $branchname . "</span></div>";
+ }?>
 </body>
 </html>

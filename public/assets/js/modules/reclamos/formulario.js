@@ -145,28 +145,9 @@ $('#verModalIntereses').find('.modal-footer').empty();
 
 $(document).ready(function () {
 
-    if (tablaTipo == "vida" || tablaTipo == "accidentes" || tablaTipo == "accidente") {
-        console.log(tablaTipo);
-        $('.salud').hide();
-    } else if (tablaTipo == "salud") {
-        console.log(tablaTipo);
-        $('.vida').hide();
-    } else {
-        $('.persona').hide();
-        $('.salud').hide();
-    }
-    if (tablaTipo == 'vida' || tablaTipo == "accidentes" || tablaTipo == "accidente") {
-
-        setting = {
-            nacionalidad: true,
-            relacion: false,
-            participacion: false,
-            estatura: true,
-            peso: true,
-            treeview: true
-        };
-
-    } else if (tablaTipo == 'salud') {
+    
+    if (validasalud == 1) {
+        tablaTipo = "salud";
         setting = {
             nacionalidad: false,
             relacion: false,
@@ -174,15 +155,6 @@ $(document).ready(function () {
             estatura: true,
             peso: true,
             treeview: true
-        };
-    } else {
-        setting = {
-            nacionalidad: true,
-            relacion: true,
-            participacion: true,
-            estatura: false,
-            peso: false,
-            treeview: false
         };
     }
 
@@ -236,8 +208,16 @@ $(document).ready(function () {
                         });
                         if (accid>0) {
                             $("#uuid_vehiculo, #chasis, #unidad, #marca, #modelo, #placa, #ano, #motor, #color, #capacidad, #operador, #extras, #valor_extras, #porcentaje_acreedor, #observaciones_vehiculo, #uso, .condicion_vehiculo, .acreedor, .estado ").attr("disabled", false);
-                            $("#fecha_reclamo")removeAttr("disabled");
-                            form.submit();
+                            $("#fecha_reclamo").removeAttr("disabled");
+                            if ($("#numero_cheque").val() != "") {
+                                if ($("#fecha_cheque").val() != "") {
+                                    form.submit();
+                                }else{
+                                    toastr.error("Debe seleccionar una fecha de cheque.");
+                                }
+                            }else{
+                                form.submit();
+                            }                            
                         }else{
                             toastr.warning("Debe seleccionar un tipo de accidente.");
                         }
@@ -249,8 +229,16 @@ $(document).ready(function () {
                         $("#nombrePersona, #identificacion, #pasaporte, #provincia, #letra, #tomo, #asiento, .noPAS, .PAS, #fecha_nacimiento, #edad, #estado_civil, #nacionalidad, #sexo, #estatura, #peso, #telefono_residencial, #telefono_oficina, #direccion, #direccion_laboral, #observacionesPersona, #estadoPersona, #idPersona, #correoPersona, #telefono_residencial_check, #telefono_oficina_check, #direccion_residencial_check, #direccion_laboral_check").attr("disabled", false);
                         $(".uuid_proyecto, #nombre_proyecto, #contratista_proyecto, #representante_legal_proyecto, #fecha_concurso, #no_orden_proyecto, .no_ordenr, #duracion_proyecto, .fecha_proyecto, .monto_proyecto, #monto_afianzado, #asignado_acreedor, #ubicacion_proyecto, #acreedor_opcional, #validez_fianza_opcional, #observaciones_proyecto, .tipo_fianza, .tipo_propuesta, .acreedor_proyecto, .validez_fianza_pr, .estado_proyecto").attr("disabled", false);
                         $(".uuid_ubicacion, #nombre_ubicacion, #direccion_ubicacion, .serier, #edif_mejoras, #contenido, #maquinaria, #inventario, #acreedor_ubicacion_opcional, #porcentaje_acreedor_ubicacion, #observaciones_ubicacion, #acreedor_ubicacion, .estado_ubicacion").attr("disabled", false);
-                        $("#fecha_reclamo")removeAttr("disabled");
-                        form.submit();
+                        $("#fecha_reclamo").removeAttr("disabled");
+                        if ($("#numero_cheque").val() != "") {
+                            if ($("#fecha_cheque").val() != "") {
+                                form.submit();
+                            }else{
+                                toastr.error("Debe seleccionar una fecha de cheque.");
+                            }
+                        }else{
+                            form.submit();
+                        }
                     } 
                 }                
             });
@@ -354,12 +342,12 @@ $(document).ready(function () {
         e.stopPropagation();
 
         //Inicializar opciones del Modal
-        $('#documentosModalEditar').modal({
+        $('#documentosModal').modal({
             backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
             //show: false
         });
         $('.docentregados').removeClass('hidden');
-        $('#documentosModalEditar').modal('show');
+        $('#documentosModal').modal('show');
         //$('#id_solicitud').val(id);
     });
 
@@ -367,7 +355,7 @@ $(document).ready(function () {
     $('#del_file_solicitud').hide();
     $('#add_file_solicitud').click(function () {
 
-        $('#file_tools_solicitud').before('<div class="file_upload_solicitud row" id="fsolicitud' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
+        $('#file_tools_solicitud').before('<div class="file_upload_solicitud row" id="fsolicitud' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><input type="hidden" value="new" name="campotipodoc[]"><br><br></div>');
         $('#del_file_solicitud').fadeIn(0);
         counter++;
     });
@@ -429,7 +417,7 @@ $(document).ready(function () {
         email: "Por favor ingrese una dirección de correo válida."
     });
 
-    $("#doc_entregados").hide();
+    $("#doc_entregados").remove();
     $("#espac").remove();
     if (id_tipo_int_asegurado == 4) {
         $(".divestado_casco").hide();
@@ -441,10 +429,18 @@ $(document).ready(function () {
         $(".divestado").hide();
     }
 
-    if (id_tipo_int_asegurado==8) {
+    if (id_tipo_int_asegurado == 5 && validasalud == 1) {
         $("#detallereclamo_todos").remove();
-    }else{
         $("#detallereclamo_vehiculo").remove();
+        $(".documentos_vehiculo").remove();
+    }else if (id_tipo_int_asegurado == 8) {
+        $("#detallereclamo_todos").remove();
+        $(".documentos_todos").remove();
+        $("#detallereclamo_salud").remove();
+    }else{
+        $("#detallereclamo_salud").remove();
+        $("#detallereclamo_vehiculo").remove();
+        $(".documentos_vehiculo").remove();
     }
 
 
@@ -452,6 +448,31 @@ $(document).ready(function () {
 
     $("#verModalIntereses .modal-lg").width((window.innerWidth)-50);
 
-    $(".guardarsolicitud").remove();
+    $("#exportarReclamosLnk").on("click", function (e) {
+        e.preventDefault();
+        e.returnValue = false;
+        e.stopPropagation();
+        if ($('#tabla,#tablaDocumentos').is(':visible') === true) {
+            //Exportar Seleccionados del jQgrid
+            var ids = [];
+            ids = $("#tablaDocumentosGrid").jqGrid('getGridParam', 'selarrrow');
+            //Verificar si hay seleccionados
+            if (ids.length > 0) {
+                $('#ids_documentos').val(ids);
+                $('form#exportarDocumentos').submit();
+                $('body').trigger('click');
+                //(ids);
+            } else {
+                toastr.warning("Seleccione un registro para exportar.");
+            }
+        }
+    });
+
+    $(".viewOptions").on("click", function (e) {
+        console.log("Entro");
+        //$('#optionsModal').find('.editnombreBtn').remove();
+    });
+
+    
 
 });

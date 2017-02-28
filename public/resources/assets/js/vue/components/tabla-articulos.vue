@@ -1,5 +1,5 @@
 <template>
-
+    <!--  USADO EN COTIZACION DE ALQUILER-->
     <div class="row">
         <div class="col-lg-12">
             <div class="table-responsive">
@@ -8,18 +8,18 @@
                         <tr>
                             <th width="1%" style="background: white;"></th>
                             <th width="14%" class="categoria ">Categoría de item<span class="required" aria-required="true">*</span></th>
-                            <th width="14%" class="item ">Item <span class="required" aria-required="true">*</span></th>
-                            <th width="14%" class="atributo ">Atributo </th>
-                            <th width="14%" class="cantidad ">Cantidad <span class="required" aria-required="true">*</span></th>
-                            <th width="14%" class="unidad ">Periodo tarifario <span class="required" aria-required="true">*</span></th>
-                            <th width="14%" class="precio_unidad ">Tarifa pactada <span class="required" aria-required="true">*</span></th>
+                            <th width="30%" class="item ">Item <span class="required" aria-required="true">*</span></th>
+                            <th width="12%" class="atributo ">Atributo </th>
+                            <th width="8%" class="cantidad ">Cantidad <span class="required" aria-required="true">*</span></th>
+                            <th width="12%" class="unidad ">Periodo tarifario <span class="required" aria-required="true">*</span></th>
+                            <th width="8%" class="precio_unidad ">Tarifa pactada <span class="required" aria-required="true">*</span></th>
                             <th width="1%" style="background: white;">&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody>
 
                         <!--componente articulo-->
-                        <tr :catalogos="catalogos" v-for="row in articulos"
+                        <tr :catalogos="catalogos" v-for="row in detalle.articulos_alquiler"
                             :is="articulo"
                             :parent_index="$index"
                             :row.sync="row"
@@ -28,61 +28,7 @@
                             :configv="config"
                           ></tr>
 
-                        <tr>
-                            <td colspan="5"><br></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Subtotal:</td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{getSubTotal | currency}}</td>
-                            <td><br></td>
-                        </tr>
-                        <tr>
-                            <td colspan="5"><br></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Descuento:</td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{getDescuentoTotal | currency}}</td>
-                            <td><br></td>
-                        </tr>
-                        <tr>
-                            <td colspan="5"><br></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Impuesto:</td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{getImpuestoTotal | currency}}</td>
-                            <td><br></td>
-                        </tr>
-                        <tr>
-                            <td colspan="5"><label id="items-errores" class="text-red"></label></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">Total:</td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{getTotal | currency}}</td>
-                            <td>
-                                <br>
-                                <input type="hidden" name="campo[subtotal]" :value="getSubTotal">
-                                <input type="hidden" name="campo[descuento]" :value="getDescuentoTotal">
-                                <input type="hidden" name="campo[impuestos]" :value="getImpuestoTotal">
-                                <input type="hidden" name="campo[total]" :value="getTotal">
-                                <input type="hidden" name="campo[monto]" :value="getTotal">
-                            </td>
-                        </tr>
-                        <tr v-if="showRetenido">
-                            <td colspan="6"><br></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">
-                                <span class="label label-warning">Retenido </span>
-                            </td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{getRetenidoTotal | currency}}</td>
-                            <td><br></td>
-                        </tr>
-                        <tr v-if="showPagos()">
-                            <td colspan="6"><br></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">
-                                <span class="label label-successful">Pagos </span>
-                            </td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{detalle.pagos | currency}}</td>
-                            <td><br></td>
-                        </tr>
-                        <tr v-if="showSaldo()">
-                            <td colspan="6"><br></td>
-                            <td style="border: 1px solid silver !important;border-right: 0px !important;font-weight: bold">
-                                <span class="label label-danger">Saldo </span>
-                            </td>
-                            <td style="border: 1px solid silver !important;border-left: 0px !important;font-weight: bold;text-align: right">{{detalle.saldo | currency}}</td>
-                            <td><br></td>
-                        </tr>
+
                     </tbody>
                 </table>
                 <span class="tabla_dinamica_error"></span>
@@ -99,7 +45,7 @@
 import Articulos from '../../../js/items'
 export default {
 //mixins: [columnas],
- props:['config','catalogos', 'articulos'],
+ props:['config','catalogos', 'detalle'],
   data () {
     return {
       HedearColumnas: [],
@@ -112,7 +58,7 @@ export default {
   },
   ready(){
 
-
+console.log(this.detalle);
   },
   components:{
     'articulo':require('./articulo.vue')
@@ -122,7 +68,7 @@ export default {
     getSubTotal:function(){
 
            var context = this;
-           return _.sumBy(context.articulos, function(articulo){
+           return _.sumBy(context.detalle.articulos_alquiler, function(articulo){
                return context.getSubtotalArticulo(articulo);
            });
 
@@ -131,7 +77,7 @@ export default {
        getImpuestoTotal:function(){
 
            var context = this;
-           return _.sumBy(context.articulos, function(articulo){
+           return _.sumBy(context.detalle.articulos_alquiler, function(articulo){
                return context.getImpuestoArticulo(articulo);
            });
            return 0;
@@ -140,7 +86,7 @@ export default {
        getRetenidoTotal:function(){
 
              var context = this;
-             return _.sumBy(context.articulos, function(articulo){
+             return _.sumBy(context.detalle.articulos_alquiler, function(articulo){
                  return context.getRetenidoArticulo(articulo);
              });
         return 0;
@@ -149,7 +95,7 @@ export default {
         getDescuentoTotal:function (){
 
              var context = this;
-             return _.sumBy(context.articulos, function(articulo){
+             return _.sumBy(context.detalle.articulos_alquiler, function(articulo){
                  return context.getDescuentoArticulo(articulo);
              });
             return 0;
@@ -181,7 +127,7 @@ export default {
 
           Vue.nextTick(function(){
                setTimeout(function(){
-                   self.$set('articulos',Articulos.items);
+                   self.$set('detalle.articulos_alquiler',Articulos.items);
                },500);
           });
       });

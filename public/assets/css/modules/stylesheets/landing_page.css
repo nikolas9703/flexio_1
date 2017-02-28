@@ -26,7 +26,7 @@
 /* line 22, ../sass/landing_page.scss */
 #content-landing .filas {
   zoom: 1;
-  height: 75px;
+  height: 100%;
 }
 /* line 25, ../sass/landing_page.scss */
 #content-landing .filas .date-content {

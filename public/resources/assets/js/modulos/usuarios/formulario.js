@@ -22,6 +22,8 @@ var form_usuarios = new Vue({
             rol: window.rol,
             roles: window.roles,
             centros_contables: window.centros_contables,
+            tipos_subcontrato: window.tipos_subcontrato,
+            categorias:[],
             aux:{}
 
         },
@@ -35,7 +37,9 @@ var form_usuarios = new Vue({
             password:'',
             repetir_password:'',
             roles:'',
-            centros_contables:[]
+            tipos_subcontrato:[],
+            centros_contables:[],
+            categorias:[],
         },
 
     },
@@ -45,7 +49,9 @@ var form_usuarios = new Vue({
         'listar-usuarios': require('./components/listar-usuarios.vue')
 
     },
-
+    created(){
+        this.buscarCategoria();
+    },
     computed:{
 
         todosOptionSelected:function(){
@@ -57,7 +63,14 @@ var form_usuarios = new Vue({
 
             return typeof todos_option !== 'undefined' ? true : false;
         },
+        categoriaSelectOption(){
+             var context = this;
+            var todos_option = _.find(context.detalle.categorias, function(categoria){
+                return categoria == 'todos';
+            });
 
+            return typeof todos_option !== 'undefined' ? true : false;
+        },
         getCentrosContables:function(){
 
             var context = this;
@@ -65,6 +78,15 @@ var form_usuarios = new Vue({
                 return [];
             }
             return context.catalogos.centros_contables;
+        },
+
+        getCategorias:function(){
+
+            var context = this;
+            if(context.categoriaSelectOption){
+                return [];
+            }
+            return context.catalogos.categorias;
         }
 
     },
@@ -83,7 +105,7 @@ var form_usuarios = new Vue({
         clearForm: function(){
 
             var context = this;
-            context.detalle = {id:'', nombre: '', apellido: '', email:'', rol:'',password:'', repetir_password:'', roles:'', centros_contables:[]};
+            context.detalle = {id:'', nombre: '', apellido: '', email:'', rol:'',password:'', repetir_password:'', roles:'', centros_contables:[],categorias:[]};
 
         },
 
@@ -116,6 +138,32 @@ var form_usuarios = new Vue({
             });
 
 
+        },
+        postAjax(ajaxUrl, datos) {
+			return this.$http.post({
+				url: window.phost() + ajaxUrl,
+				method: 'POST',
+				data: datos
+			});
+		},
+        logout(response) {
+			if (_.has(response.data, 'session')) {
+				window.location.assign(window.phost());
+				return;
+			}
+		},
+        buscarCategoria(){
+            var datos = {
+				erptkn: tkn
+			};
+			var categorias = this.postAjax('inventarios/ajax_categoria', datos);
+            var self = this;
+            categorias.then((response) => {
+				this.logout(response);
+				this.$nextTick(function () {
+					self.catalogos.categorias = response.data;
+				});
+			});
         }
 
     },

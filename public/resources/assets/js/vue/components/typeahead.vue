@@ -102,6 +102,7 @@ export default {
       if(_.isEmpty(this.query)){
         return true;
       }
+
       var item = _.find(items, ['nombre',this.query]) || false;
 
       return _.isObject(item)?true:this.query="";

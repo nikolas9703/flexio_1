@@ -53,7 +53,7 @@ var tablaReclamosPersonas = (function () {
                     desde: vista,
                     erptkn: tkn,
                     id_poliza: id_poliza,
-                    relacion: tablaTipo
+                    relacion: tablaTipo == "salud" ? 'Principal' : ''
                 },
                 //  caption: "Stack Overflow Adjacency Example",
                 height: "auto",

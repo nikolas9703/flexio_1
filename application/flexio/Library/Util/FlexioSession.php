@@ -48,8 +48,13 @@ class FlexioSession{
     return $this->codeigniter->session->userdata('huuid_usuario');
   }
   public function usuarioId(){
-    return $this->usuario->findByUuid($this->usuarioUuid())->id;
+    return $this->codeigniter->session->userdata('id_usuario');
   }
+
+    public function usuario()
+    {
+        return $this->usuario->findByUuid($this->usuarioUuid());
+    }
 
     public function usuarioCentrosContables()
     {

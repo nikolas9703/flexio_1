@@ -268,6 +268,10 @@ var ODTModel = new Vue({
 			scope.popularDatosCliente();
 		}
 
+            if(acceso != 1){
+            this.guardarBtnDisabled = true;
+            }
+
 		this.$nextTick(function () {
 			//Mostrar formulario
 			$('div.loader').remove();
@@ -503,6 +507,7 @@ var ODTModel = new Vue({
 			this.clienteCentroFacturable = ordenes.cliente.centro_facturable;
 			this.centro_facturable_id = ordenes.centro_facturacion_id;
 			this.facturable_id = 10;
+                        this.comentario = ordenes.comentario;
 			Vue.nextTick(function(){
 
 				this.lista_precio_id = ordenes.item_precio_id;
@@ -536,6 +541,7 @@ var ODTModel = new Vue({
 					this.clienteCentroFacturable = datos.cliente.centro_facturable;
 					this.centro_facturable_id = datos.centro_facturable_id;
 					this.equipo_trabajo_id = datos.equipo_trabajo_id;
+                                        this.comentario = datos.comentario;
 					this.detalle.articulos = datos.items;
 					this.itemsStorage = datos.items;
 				}

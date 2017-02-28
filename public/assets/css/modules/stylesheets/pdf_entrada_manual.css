@@ -1,0 +1,68 @@
+/* line 1, ../sass/pdf_entrada_manual.scss */
+h2 {
+  font-size: 24px;
+}
+
+/* line 4, ../sass/pdf_entrada_manual.scss */
+table.entradas {
+  display: table;
+}
+/* line 7, ../sass/pdf_entrada_manual.scss */
+table.entradas thead tr {
+  background-color: #0070BA;
+  display: table-row;
+}
+/* line 10, ../sass/pdf_entrada_manual.scss */
+table.entradas thead tr th {
+  padding-left: 6px;
+  background-color: #0070BA;
+  display: table-cell;
+  color: #ffffff;
+  font-size: 18px;
+}
+/* line 20, ../sass/pdf_entrada_manual.scss */
+table.entradas tbody tr {
+  padding: 12px 2px;
+}
+/* line 22, ../sass/pdf_entrada_manual.scss */
+table.entradas tbody tr:nth-of-type(odd) {
+  border: 1px solid #000;
+}
+/* line 25, ../sass/pdf_entrada_manual.scss */
+table.entradas tbody tr td {
+  color: #111111;
+  font-size: 12px;
+  font-weight: bolder;
+}
+
+/* line 35, ../sass/pdf_entrada_manual.scss */
+table.transacciones {
+  display: table;
+}
+/* line 38, ../sass/pdf_entrada_manual.scss */
+table.transacciones thead tr {
+  background-color: #565758;
+  display: table-row;
+}
+/* line 41, ../sass/pdf_entrada_manual.scss */
+table.transacciones thead tr th {
+  padding-left: 6px;
+  background-color: #565758;
+  display: table-cell;
+  color: #ffffff;
+  font-size: 14px;
+}
+/* line 51, ../sass/pdf_entrada_manual.scss */
+table.transacciones tbody tr {
+  padding: 12px 2px;
+}
+/* line 53, ../sass/pdf_entrada_manual.scss */
+table.transacciones tbody tr:nth-of-type(even) {
+  background-color: #eee;
+}
+/* line 56, ../sass/pdf_entrada_manual.scss */
+table.transacciones tbody tr td {
+  color: #111111;
+  font-size: 12px;
+  font-weight: normal;
+}

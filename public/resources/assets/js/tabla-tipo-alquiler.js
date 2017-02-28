@@ -126,6 +126,8 @@ watch:{
 
    'catClientes.catalogo.cliente_id'(val, oldVal){
 
+       var context = this;
+
 
      if(this.config.vista === 'crear'){
        this.formulario.cliente_id = val;
@@ -144,6 +146,9 @@ watch:{
         if(cliente_actual.centro_facturable.length > 0){
           var centro_seleccionado = _.head(cliente_actual.centro_facturable);
           this.formulario.centro_facturacion_id = centro_seleccionado.id;
+          _.forEach(cliente_actual.centro_facturable, function(o){
+              if(o.principal == 1){context.formulario.centro_facturacion_id = o.id;}
+          });
         }
      }
      }

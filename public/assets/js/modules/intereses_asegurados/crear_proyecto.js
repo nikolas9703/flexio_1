@@ -52,7 +52,7 @@ $(function () {
 
 });
 $(document).ready(function () {
-    $('.estado_proyecto').attr('disabled', 'disabled');
+    //$('.estado_proyecto').attr('disabled', 'disabled');
     $("#monto_afianzado").inputmask('integer', {min: 1, max: 100}).css("text-align", "left");
     $("#asignado_acreedor").inputmask('integer', {min: 1, max: 100}).css("text-align", "left");
     var validar_tipo_fianza = $('.tipo_fianza').val();

@@ -62,7 +62,6 @@
 	border-top:none;
 }
 .ui-jqgrid .ui-jqgrid-htable thead th {
-	 height: 45px !important;
 	overflow : hidden; 
 	border-bottom : none;
 	padding-right: 2px;

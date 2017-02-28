@@ -28,7 +28,7 @@ use Flexio\Modulo\Ajustadores\Models\AjustadoresContacto;
 class Reclamos extends Model
 {
     protected $table        = 'rec_reclamos';    
-    protected $fillable     = ['uuid_reclamos', 'numero','id_poliza', 'fecha', 'numero_caso', 'fecha_siniestro', 'fecha_notificacion', 'id_cliente', 'telefono', 'celular', 'updated_at', 'created_at', 'correo', 'no_certificado', 'id_interes_asegurado', 'reclamante', 'estado', 'empresa_id', 'id_ramo', 'id_usuario', 'causa', 'ajustador', 'contacto', 'telefonodetalle', 'descripcionsiniestro', 'total_reclamar', 'pago_asegurado', 'pago_deducible', 'gastos_no_cubiertos', 'numero_cheque', 'fecha_cheque', 'fecha_juicio', 'taller', 'tipo_interes'];
+    protected $fillable     = ['uuid_reclamos', 'numero','id_poliza', 'fecha', 'numero_caso', 'fecha_siniestro', 'fecha_notificacion', 'id_cliente', 'telefono', 'celular', 'updated_at', 'created_at', 'correo', 'no_certificado', 'id_interes_asegurado', 'reclamante', 'estado', 'empresa_id', 'id_ramo', 'id_usuario', 'causa', 'ajustador', 'contacto', 'telefonodetalle', 'descripcionsiniestro', 'total_reclamar', 'pago_asegurado', 'pago_deducible', 'gastos_no_cubiertos', 'numero_cheque', 'fecha_cheque', 'fecha_juicio', 'taller', 'tipo_interes', 'tipo_salud', 'hospital', 'especialidad_salud', 'doctor', 'detalle_salud', 'fecha_salud', 'monto_salud'];
     protected $guarded      = ['id'];
     
     //scopes

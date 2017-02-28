@@ -145,6 +145,7 @@ class Cargos implements CargosInterface{
 
 		// ITEMS SERIALIZADOS
 		$itemsarr = array();
+		$series = array_unique($series);
 		if(!empty($series) && count($series) > 0){
 
 			$item["cantidad"] = 1;
@@ -155,17 +156,24 @@ class Cargos implements CargosInterface{
 				$serie = !empty($series[$j]) ? $series[$j] : 0;
 				$item["serie"] = $serie;
 
-				$prorrateo = new \Flexio\Jobs\ContratosAlquiler\Prorrateo\Prorrateo($modelo_retorno);
-				$item_info = $prorrateo->calcular($item, $devoluciones, $this->periodo, $fecha_cargo, $fecha_cargo_sin_lapso, $lista_precio_alquiler_id);
+				$CalculoRetorno = new \Flexio\Jobs\ContratosAlquiler\CalculoRetorno\CalculoRetorno($modelo_retorno);
+				$item_info = $CalculoRetorno->calcular($item, $devoluciones, $this->periodo, $fecha_cargo, $fecha_cargo_sin_lapso, $lista_precio_alquiler_id);
+
 				$itemsarr[] = !empty($item_info[0]) ? $item_info[0] : $item_info;
 			}
+			/*echo "HERE WE AER";
+			echo "<pre>";
+			print_r($item);
+			print_r($series);
+			echo "</pre>";
+			dd($itemsarr);*/
 			$item = $itemsarr;
 
 		}else{
 
 				$item["total_cargo"] = round(($item["tarifa"] * $cantidad), 2, PHP_ROUND_HALF_UP);
-				$prorrateo = new \Flexio\Jobs\ContratosAlquiler\Prorrateo\Prorrateo($modelo_retorno);
-				$item = $prorrateo->calcular($item, $devoluciones, $this->periodo, $fecha_cargo, $fecha_cargo_sin_lapso, $lista_precio_alquiler_id);
+				$CalculoRetorno = new \Flexio\Jobs\ContratosAlquiler\CalculoRetorno\CalculoRetorno($modelo_retorno);
+				$item = $CalculoRetorno->calcular($item, $devoluciones, $this->periodo, $fecha_cargo, $fecha_cargo_sin_lapso, $lista_precio_alquiler_id);
 				return $item;
 		}
 
@@ -208,17 +216,36 @@ class Cargos implements CargosInterface{
 
 			foreach ($item AS $itm){
 
-				if(!is_array($itm)){
+				if(!is_array($itm)
+				|| empty($itm)
+				|| isset($itm['id'])
+				|| !empty($itm['tarifa']) && (int)$itm['tarifa']==0
+				|| empty($itm['ciclo_id'])
+				|| empty($itm['cantidad'])){
+					continue;
+				}
+
+				//Verificar si el cargo ya fue ejcutado
+				$check = CargosAlquiler::clauseFiltro($itm)->first();
+
+				//Verificar si ya fue devuelto
+				$clause_devuleto = $itm;
+				$clause_devuleto["devuelto"] = 1;
+				unset($clause_devuleto["fecha_cargo"]);
+				unset($clause_devuleto["fecha_devolucion"]);
+				$check_devuelto = CargosAlquiler::clauseFiltro($clause_devuleto)->first();
+				/*echo "HERE SI SI<pre>";
+				print_r($itm);
+				echo "</pre>";*/
+				//continuar siguiente si ya existe o fue devuelto
+				if(!empty($check) && !empty($check->toArray())
+				|| !empty($check_devuelto) && !empty($check_devuelto->toArray())){
 					continue;
 				}
 
 				//NUMERO DEL CARGO
 				$total = CargosAlquiler::where('empresa_id', $empresa_id)->count();
 				$itm["numero"] = Utiles::generar_codigo('CAR' . $year, $total + 1, 19);
-
-				if(isset($itm['id'])) {
-					continue;
-				}
 
 				Capsule::beginTransaction();
 				try {
@@ -228,6 +255,8 @@ class Cargos implements CargosInterface{
 					Capsule::rollback();
 				}
 				Capsule::commit();
+				
 			}
+
 	}
 }
