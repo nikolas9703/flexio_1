@@ -33,6 +33,7 @@ var formularioCrear = new Vue({
         catalogoMetodoPago :metodoPago,
         catalogoFrecuenciaPagos :frecuenciaPagos,
         catalogoCentroFacturacion:centrosFacturacion,
+        centrosContables : centrosContables,
         pagador:pagador
 
     },
@@ -103,7 +104,18 @@ var formularioCrear = new Vue({
 
         },
         sendRenewalData: function(e)
-        {
+        {   
+            var formIdArray=[ 
+
+            { id:1 ,formIdName:"articulo"},
+            { id:2 ,formIdName:"formCarga"},
+            { id:3 ,formIdName:"formcasco_aereo"},
+            { id:4 ,formIdName:"formCasco_maritimo"},
+            { id:5 ,formIdName:"persona"},
+            { id:6 ,formIdName:"formProyecto_actividad"},
+            { id:7 ,formIdName:"formUbicacion"},
+            { id:8 ,formIdName:"vehiculo"}] ,values = {};
+
             if($('#formPolizasCrear').validate().form()){
 
                 var participationArray = [];
@@ -117,6 +129,31 @@ var formularioCrear = new Vue({
 
                 });
 
+                if (tipo_ramo == "individual" ) {
+
+
+                    for (var i =formIdArray.length - 1; i >= 0; i--) {
+                        var value= formIdArray[i],stringId;
+                        if (id_tipo_int_asegurado == value.id) {
+                            stringId= '#' +value.formIdName;
+                            if ($(stringId).validate().form()) {
+
+                                var inputs = $(''+stringId+' :input');
+
+
+                                inputs.each(function () {
+                                    values[this.name] = $(this).val();
+                                });
+                            }else {
+                                window.location.href = "#divintereses";
+
+                            } 
+
+                        }
+                    }
+
+                } 
+               // alert(this.vigenciaPolizaDeclarativa);
                 this.$http.post({
                     url: phost() + 'polizas/policyRenewal',
                     method:'POST',
@@ -129,6 +166,35 @@ var formularioCrear = new Vue({
                         renovarPoliza :true,
                         idPolicy :this.idPolicy,
                         comision: this.comision,
+                        interesValues :values,
+                        clienteGrupo: this.clienteGrupo,
+                        clienteTelefono : this.clienteTelefono,
+                        clienteCorreo : this.clienteCorreo,
+                        clienteDireccion: this.clienteDireccion,
+                        clienteExoneradoImp :this.polizaCliente.exonerado_impuesto,
+                        planesCoberturas: $("#planesCoberturasDeducibles").val(),
+                        sumaAsegurada: this.sumaAsegurada,
+                        vigenciapagador : this.vigenciaPagador,
+                        vigenciaNombrePagado: this.polizaVigencia.pagador,
+                        vigenciaPersonaAsegurada: this.vigenciaPersonaAsegurada,
+                        vigenciaPolizaDeclarativa:this.vigenciaPolizaDeclarativa,
+                        primaAnual : this.primaAnual,
+                        primaDescuentos : this.primaDescuentos,
+                        primaOtros : this.primaOtros,
+                        primaImpuesto: this.primaImpuesto,
+                        primaTotal:this.primaTotal,
+                        pagosFrecuencia : this.pagosFrecuencia,
+                        pagosMetodo : this.pagosMetodo,
+                        pagosPrimerPago: this.pagosPrimerPago,
+                        pagosCantidad : this.pagosCantidad,
+                        pagosSitio :this.pagosSitio,
+                        pagosCentroFac :this.pagosCentroFac,
+                        pagosDireccion:this.pagosDireccion,
+                        centroContable :this.centroContable
+
+
+
+
                     }
                 }).then(function(response){
                     if (!_.isEmpty(response.data) && response.data.msg =='OK') {
@@ -137,7 +203,7 @@ var formularioCrear = new Vue({
                     }else{
 
                         msg='Ocurrido un error al guardar la renovación '+'<br>'+response.data.field+'<b>';
-                        
+
                         toastr.error(msg);
                     }           
                 }); 
@@ -265,34 +331,34 @@ var formularioCrear = new Vue({
         this.$set("cambiarOpcionesPago",false);
     },
     getOpcionPagador: function () {
-    var self = this;
-    var pagador_tipo = $('#pagador').val();
-    if (pagador_tipo == "cliente" || pagador_tipo == "otro") {
-        $("#divpagadornombre").show();
-        $("#divpgnombre").show();
-        $("#campopagador").attr("data-rule-required", true);
-        $("#divselpagador").hide();
-        $("#selpagadornombre").removeAttr("data-rule-required");
-        var paga = $(".ncli").val();
-        if (pagador_tipo == "cliente") {
-            $("#campopagador").val(vigencia.pagador);
-            $("#campopagador").attr("readonly", "readonly");
+        var self = this;
+        var pagador_tipo = $('#pagador').val();
+        if (pagador_tipo == "cliente" || pagador_tipo == "otro") {
+            $("#divpagadornombre").show();
+            $("#divpgnombre").show();
+            $("#campopagador").attr("data-rule-required", true);
+            $("#divselpagador").hide();
+            $("#selpagadornombre").removeAttr("data-rule-required");
+            var paga = $(".ncli").val();
+            if (pagador_tipo == "cliente") {
+                $("#campopagador").val(vigencia.pagador);
+                $("#campopagador").attr("readonly", "readonly");
+            } else {
+                $("#campopagador").val("");
+                $("#campopagador").removeAttr("readonly");
+            }
+        } else if (pagador_tipo == "asegurado") {
+            $("#divpagadornombre").show();
+            $("#divpgnombre").hide();
+            $("#campopagador").removeAttr("data-rule-required");
+            $("#divselpagador").show();
+            $("#selpagadornombre").attr("data-rule-required", true);
         } else {
-            $("#campopagador").val("");
-            $("#campopagador").removeAttr("readonly");
+            $("#divpagadornombre").hide();
+            $("#campopagador").removeAttr("data-rule-required");
+            $("#selpagadornombre").removeAttr("data-rule-required");
         }
-    } else if (pagador_tipo == "asegurado") {
-        $("#divpagadornombre").show();
-        $("#divpgnombre").hide();
-        $("#campopagador").removeAttr("data-rule-required");
-        $("#divselpagador").show();
-        $("#selpagadornombre").attr("data-rule-required", true);
-    } else {
-        $("#divpagadornombre").hide();
-        $("#campopagador").removeAttr("data-rule-required");
-        $("#selpagadornombre").removeAttr("data-rule-required");
-    }
-},
+    },
     getClienteDireccion: function () {
             //polula el segundo select del header
             var self = this;
@@ -315,9 +381,12 @@ var formularioCrear = new Vue({
             //polula el segundo select del header
             var self = this;
             var interes = $('#selInteres').val();
-            console.log(interes);
             var tipointeres = $('#formulario').val();
-            console.log(tipointeres);
+            var URL =window.location.href.split("/");
+            var urlLastSegment= URL.pop();
+
+            
+
             if (interes != "") {
                 this.$http.post({
                     url: phost() + 'polizas/ajax_get_intereses',
@@ -329,103 +398,142 @@ var formularioCrear = new Vue({
                         window.location.assign(phost());
                     }
                     if (!_.isEmpty(response.data)) {
-                        console.log(response.data.inter);
                         var tipoint = response.data.inter.tipointeres;
                         if (tipoint == 1) {
                             $(".uuid_carga, #nombre, #clase_equipo, #marca, #modelo, #anio_articulo, #numero_serie, .valor_articulo, #observaciones_articulo").val("");
                             $("#uuid_articulo").val(response.data.inter.uuid_intereses);
                             $("#nombre").val(response.data.inter.nombre);
-                            $("#nombre").attr('disabled',true);
+
                             $("#clase_equipo").val(response.data.inter.clase_equipo);
-                            $("#clase_equipo").attr('disabled',true);
+
                             $("#marca").val(response.data.inter.marca);
-                            $("#marca").attr('disabled',true);
+
                             $("#modelo").val(response.data.inter.modelo);
-                            $("#modelo").attr('disabled',true);
+
                             $("#anio_articulo").val(response.data.inter.anio);
-                            $("#anio_articulo").attr('disabled',true);
+
                             $("#numero_serie").val(response.data.inter.numero_serie);
-                            $("#numero_serie").attr('disabled',true);
+
                             $(".valor_articulo").val(response.data.inter.valor);
-                            $(".valor_articulo").attr('disabled',true);
+
                             $("#observaciones_articulo").val(response.data.inter.observaciones);
-                            $("#observaciones_articulo").attr('disabled',true);
+
                             $("#id_condicion").val(response.data.inter.id_condicion); //option[value='" + response.data.inter.id_condicion + "']
-                            $("#id_condicion").attr('disabled',true);
+                            
                             $(".estado_articulo").empty();
                             $(".estado_articulo").append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
-                            $(".estado_articulo").attr("disabled",true);
 
                             if(tipo_ramo == "colectivo"){
                                 $("#certificadodetalle_articulo").val(response.data.inter.detalle_certificado);
-                                $("#certificadodetalle_articulo").attr('disabled',true);
+                                
                                 $("#sumaaseguradadetalle_articulo").val(response.data.inter.detalle_suma_asegurada);
-                                $("#sumaaseguradadetalle_articulo").attr('disabled',true);
+                                
                                 $("#primadetalle_articulo").val(response.data.inter.detalle_prima);
-                                $("#primadetalle_articulo").attr('disabled',true);
+                                
                                 $("#deducibledetalle_articulo").val(response.data.inter.detalle_deducible);
-                                $("#deducibledetalle_articulo").attr('disabled',true);
+                                
+                                
+
                             }
-                            
-                        } else if (tipoint == 2) {
+                            if(urlLastSegment!=="renovar"){
+                             //disabled Fields
+                             $("#id_condicion").attr('disabled',true);
+                             $("#observaciones_articulo").attr('disabled',true);
+                             $(".estado_articulo").attr("disabled",true);
+                             $("#nombre").attr('disabled',true);
+                             $("#clase_equipo").attr('disabled',true);
+                             $("#marca").attr('disabled',true);
+                             $("#modelo").attr('disabled',true);
+                             $("#anio_articulo").attr('disabled',true);
+                             $(".valor_articulo").attr('disabled',true);
+                             $("#numero_serie").attr('disabled',true);
+                            //disabled fields 
+                            $("#certificadodetalle_articulo").attr('disabled',true);
+                            $("#sumaaseguradadetalle_articulo").attr('disabled',true);
+                            $("#primadetalle_articulo").attr('disabled',true);
+                            $("#deducibledetalle_articulo").attr('disabled',true);
+                        }
 
-                            $(".uuid_carga, #no_liquidacion, #fecha_despacho, #fecha_arribo, #fecha_arribo, #detalle, #origen, #destino, .valor_mercancia, #acreedor_carga_opcional, #tipo_obligacion_opcional, #observaciones_carga").val("");
-                            $(".uuid_carga").val(response.data.inter.uuid_intereses);
-                            $("#no_liquidacion").val(response.data.inter.no_liquidacion);
-                            $("#no_liquidacion").attr('disabled',true);
-                            $("#fecha_despacho").val(response.data.inter.fecha_despacho);
-                            $("#fecha_despacho").attr('disabled',true);
-                            $("#fecha_arribo").val(response.data.inter.fecha_arribo);
-                            $("#fecha_arribo").attr('disabled',true);
-                            $("#detalle").val(response.data.inter.detalle);
-                            $("#detalle").attr('disabled',true);
-                            $("#origen").val(response.data.inter.origen);
-                            $("#origen").attr('disabled',true);
-                            $("#destino").val(response.data.inter.destino);
-                            $("#destino").attr('disabled',true);
-                            $(".valor_mercancia").val(response.data.inter.valor);
-                            $(".valor_mercancia").attr('disabled',true);
-                            $("#observaciones_carga").val(response.data.inter.observaciones);
-                            $("#observaciones_carga").attr('disabled',true);
+                    } else if (tipoint == 2) {
+
+                        $(".uuid_carga, #no_liquidacion, #fecha_despacho, #fecha_arribo, #fecha_arribo, #detalle, #origen, #destino, .valor_mercancia, #acreedor_carga_opcional, #tipo_obligacion_opcional, #observaciones_carga").val("");
+                        $(".uuid_carga").val(response.data.inter.uuid_intereses);
+                        $("#no_liquidacion").val(response.data.inter.no_liquidacion);
+
+                        $("#fecha_despacho").val(response.data.inter.fecha_despacho);
+
+                        $("#fecha_arribo").val(response.data.inter.fecha_arribo);
+
+                        $("#detalle").val(response.data.inter.detalle);
+
+                        $("#origen").val(response.data.inter.origen);
+
+                        $("#destino").val(response.data.inter.destino);
+
+                        $(".valor_mercancia").val(response.data.inter.valor);
+
+                        $("#observaciones_carga").val(response.data.inter.observaciones);
+
                             $(".tipo_empaque").val(response.data.inter.tipo_empaque); //option[value='" + response.data.inter.tipo_empaque + "']
-                            $(".tipo_empaque").attr('disabled',true);
-
-                            var y = $(".acreedor_carga option[value='" + response.data.inter.acreedor + "']");
-                            if (y.length == 1) {
+                            
+                            //disabled fields
+                            if(urlLastSegment!=="renovar"){
+                                $(".tipo_empaque").attr('disabled',true);
+                                $("#observaciones_carga").attr('disabled',true);
+                                $("#destino").attr('disabled',true);
+                                $("#origen").attr('disabled',true);
+                                $("#detalle").attr('disabled',true);
+                                $("#fecha_arribo").attr('disabled',true);
+                                $(".valor_mercancia").attr('disabled',true);
+                                $("#fecha_despacho").attr('disabled',true);
+                                $("#no_liquidacion").attr('disabled',true);
+                                $(".condicion_envio").attr('disabled',true);
+                                $(".medio_transporte").attr('disabled',true);
+                                $(".estado_carga").attr('disabled',true);
+                             //disabled fields
+                             $("#deducibledetalle_carga").attr('disabled',true);
+                             $("#certificadodetalle_carga").attr('disabled',true);
+                             $("#sumaaseguradadetalle_carga").attr('disabled',true);
+                             $("#primadetalle_carga").attr('disabled',true);
+                         }
+                         var y = $(".acreedor_carga option[value='" + response.data.inter.acreedor + "']");
+                         if (y.length == 1) {
                                 $(".acreedor_carga").val(response.data.inter.acreedor); //option[value='" + response.data.inter.acreedor + "']
-                                $(".acreedor_carga").attr('disabled',true);
+                                
                                 if (response.data.inter.acreedor == "otro") {
                                     $("#acreedor_carga_opcional").val(response.data.inter.acreedor_opcional);
                                 }
                                 $("#acreedor_carga_opcional").attr('disabled',true);
+                                $(".acreedor_carga").attr('disabled',true);
                             }
                             var w = $(".tipo_obligacion option[value='" + response.data.inter.tipo_obligacion + "']");
                             if (w.length == 1) {
                                 $(".tipo_obligacion").val(response.data.inter.tipo_obligacion); //option[value='" + response.data.inter.tipo_obligacion + "']
-                                $(".tipo_obligacion").attr('disabled',true);
+                                
                                 if (response.data.inter.tipo_obligacion == "otro") {
                                     $("#tipo_obligacion_opcional").val(response.data.inter.tipo_obligacion_opcional);
                                 }
                                 $("#tipo_obligacion_opcional").attr('disabled',true);
+                                $(".tipo_obligacion").attr('disabled',true);
                             }
 
                             $(".condicion_envio").val(response.data.inter.condicion_envio); //option[value='" +  + "']
-                            $(".condicion_envio").attr('disabled',true);
+
                             $(".medio_transporte").val(response.data.inter.medio_transporte); //option[value='" + response.data.inter.medio_transporte + "']
-                            $(".medio_transporte").attr('disabled',true);
+                            
                             $(".estado_carga").empty();
                             $(".estado_carga").append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
-                            $(".estado_carga").attr('disabled',true);
+
 
                             if(tipo_ramo == "colectivo"){
                                 $("#certificadodetalle_carga").val(response.data.inter.detalle_certificado);
-                                $("#certificadodetalle_carga").attr('disabled',true);
+                                
                                 $("#sumaaseguradadetalle_carga").val(response.data.inter.detalle_suma_asegurada);
-                                $("#sumaaseguradadetalle_carga").attr('disabled',true);
+                                
                                 $("#primadetalle_carga").val(response.data.inter.detalle_prima);
-                                $("#primadetalle_carga").attr('disabled',true);
+                                
                                 $("#deducibledetalle_carga").val(response.data.inter.detalle_deducible);
-                                $("#deducibledetalle_carga").attr('disabled',true);
+
                             }
                             
                         } else if (tipoint == 3) {
@@ -433,123 +541,240 @@ var formularioCrear = new Vue({
                             $(".uuid_aereo, #serie_aereo, #marca_aereo, #modelo_aereo, #matricula_aereo, #valor_aereo, #pasajeros_aereo, #tripulacion_a, #observaciones_aereo").val("");
                             $(".uuid_aereo").val(response.data.inter.uuid_intereses);
                             $("#serie_aereo").val(response.data.inter.serie);
-                            $("#serie_aereo").attr('disabled',true);
+                            
                             $("#marca_aereo").val(response.data.inter.marca);
-                            $("#marca_aereo").attr('disabled',true);
+                            
                             $("#modelo_aereo").val(response.data.inter.modelo);
-                            $("#modelo_aereo").attr('disabled',true);
+                            
                             $("#matricula_aereo").val(response.data.inter.matricula);
-                            $("#matricula_aereo").attr('disabled',true);
+                            
                             $("#valor_aereo").val(response.data.inter.valor);
-                            $("#valor_aereo").attr('disabled',true);
+                            
                             $("#pasajeros_aereo").val(response.data.inter.pasajeros);
-                            $("#pasajeros_aereo").attr('disabled',true);
+                            
                             $("#tripulacion_a").val(response.data.inter.tripulacion);
-                            $("#tripulacion_a").attr('disabled',true);
+                            
                             $("#observaciones_aereo").val(response.data.inter.observaciones);
-                            $("#observaciones_aereo").attr('disabled',true);
+                            
                             $(".estado_aereo").empty();
                             $(".estado_aereo").append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");  
-                            $(".estado_aereo").attr('disabled',true);
-
-                            if(tipo_ramo == "colectivo"){
-                                $("#certificadodetalle_aereo").val(response.data.inter.detalle_certificado);
-                                $("#certificadodetalle_aereo").attr('disabled',true);
-                                $("#sumaaseguradadetalle_aereo").val(response.data.inter.detalle_suma_asegurada);
-                                $("#sumaaseguradadetalle_aereo").attr('disabled',true);
-                                $("#primadetalle_aereo").val(response.data.inter.detalle_prima);
-                                $("#primadetalle_aereo").attr('disabled',true);
-                                $("#deducibledetalle_aereo").val(response.data.inter.detalle_deducible);
-                                $("#deducibledetalle_aereo").attr('disabled',true);
-                            }
                             
-                        } else if (tipoint == 4) {
 
-                            $(".uuid_casco_maritimo, #serie_maritimo, .serier, #marca_maritimo, #nombre_embarcacion, .porcentaje_acreedor_maritimo, #valor_maritimo, #pasajeros_maritimo, #observaciones_maritimo").val("");
-                            $(".uuid_casco_maritimo").val(response.data.inter.uuid_intereses);
-                            $("#serie_maritimo").val(response.data.inter.serie);
-                            $("#serie_maritimo").attr('disabled',true);
-                            $(".serier").val(response.data.inter.serie);
-                            $(".serier").attr('disabled',true);
-                            $("#nombre_embarcacion").val(response.data.inter.nombre_embarcacion);
-                            $("#nombre_embarcacion").attr('disabled',true);
-                            $("#marca_maritimo").val(response.data.inter.marca);
-                            $("#marca_maritimo").attr('disabled',true);
-                            $(".porcentaje_acreedor_maritimo").val(response.data.inter.porcentaje_acreedor);
-                            $(".porcentaje_acreedor_maritimo").attr('disabled',true);
-                            $("#valor_maritimo").val(response.data.inter.valor);
-                            $("#valor_maritimo").attr('disabled',true);
-                            $("#pasajeros_maritimo").val(response.data.inter.pasajeros);
-                            $("#pasajeros_maritimo").attr('disabled',true);
-                            $("#observaciones_maritimo").val(response.data.inter.observaciones);
-                            $("#observaciones_maritimo").attr('disabled',true);
-                            $(".tipo_maritimo option[value='" + response.data.inter.tipo + "']").attr("selected", "selected");
-                            $(".tipo_maritimo").attr('disabled',true);
-                            $(".acreedor_maritimo option[value='" + response.data.inter.acreedor + "']").attr("selected", "selected");
-                            $(".acreedor_maritimo").attr('disabled',true);
-                            $(".estado_casco").empty();
-                            $(".estado_casco").append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
-                            $(".estado_casco").attr('disabled',true);  
 
-                            if(tipo_ramo == "colectivo"){
-                                $("#certificadodetalle_maritimo").val(response.data.inter.detalle_certificado);
-                                $("#certificadodetalle_maritimo").attr('disabled',true);
-                                $("#sumaaseguradadetalle_maritimo").val(response.data.inter.detalle_suma_asegurada);
-                                $("#sumaaseguradadetalle_maritimo").attr('disabled',true);
-                                $("#primadetalle_maritimo").val(response.data.inter.detalle_prima);
-                                $("#primadetalle_maritimo").attr('disabled',true);
-                                $("#deducibledetalle_maritimo").val(response.data.inter.detalle_deducible);
-                                $("#deducibledetalle_maritimo").attr('disabled',true);
-                            }
-                            
-                        } else if (tipoint == 5) {
+                            //disabled fields
+                            if(urlLastSegment!=="renovar"){
+                                $("#serie_aereo").attr('disabled',true);
+                                $("#marca_aereo").attr('disabled',true);
+                                $("#modelo_aereo").attr('disabled',true);
+                                $("#matricula_aereo").attr('disabled',true);
+                                $("#valor_aereo").attr('disabled',true);
+                                $("#pasajeros_aereo").attr('disabled',true);
+                                $("#tripulacion_a").attr('disabled',true);
+                                $("#observaciones_aereo").attr('disabled',true);
+                                $(".estado_aereo").attr('disabled',true);
+                            // disabled fields 
+                            $("#certificadodetalle_aereo").attr('disabled',true);
+                            $("#sumaaseguradadetalle_aereo").attr('disabled',true);
+                            $("#primadetalle_aereo").attr('disabled',true);
+                            $("#deducibledetalle_aereo").attr('disabled',true);
+                        }
 
-                            $(".uuid").val(response.data.inter.uuid_intereses);
-                            $("#nombrePersona").val(response.data.inter.nombrePersona);
-                            $("#nombrePersona").attr('disabled',true);
+                        if(tipo_ramo == "colectivo"){
+                            $("#certificadodetalle_aereo").val(response.data.inter.detalle_certificado);
 
-                            $("input:checkbox").prop('checked',false);
-                            var splitIden = response.data.inter.identificacion;
-                            if (splitIden.indexOf('-') > -1) {
-                                $("#identificacion").val("cedula");
-                                $('.noPAS').show();
-                                $(".PAS").hide();
-                                splitIden = splitIden.split("-");
-                                if (splitIden.length == 4) {
-                                    $("#provincia").val(splitIden[0]);
-                                    $("#letra").val(splitIden[1]);
-                                    $("#tomo").val(splitIden[2]);
-                                    $("#asiento").val(splitIden[3]);
+                            $("#sumaaseguradadetalle_aereo").val(response.data.inter.detalle_suma_asegurada);
+
+                            $("#primadetalle_aereo").val(response.data.inter.detalle_prima);
+
+                            $("#deducibledetalle_aereo").val(response.data.inter.detalle_deducible);
+
+
+
+
+                        }
+
+                    } else if (tipoint == 4) {
+
+                        $(".uuid_casco_maritimo, #serie_maritimo, .serier, #marca_maritimo, #nombre_embarcacion, .porcentaje_acreedor_maritimo, #valor_maritimo, #pasajeros_maritimo, #observaciones_maritimo").val("");
+                        $(".uuid_casco_maritimo").val(response.data.inter.uuid_intereses);
+                        $("#serie_maritimo").val(response.data.inter.serie);
+
+                        $(".serier").val(response.data.inter.serie);
+
+                        $("#nombre_embarcacion").val(response.data.inter.nombre_embarcacion);
+
+                        $("#marca_maritimo").val(response.data.inter.marca);
+
+                        $(".porcentaje_acreedor_maritimo").val(response.data.inter.porcentaje_acreedor);
+
+                        $("#valor_maritimo").val(response.data.inter.valor);
+
+                        $("#pasajeros_maritimo").val(response.data.inter.pasajeros);
+
+                        $("#observaciones_maritimo").val(response.data.inter.observaciones);
+
+                        $(".tipo_maritimo option[value='" + response.data.inter.tipo + "']").attr("selected", "selected");
+
+                        $(".acreedor_maritimo option[value='" + response.data.inter.acreedor + "']").attr("selected", "selected");
+
+                        $(".estado_casco").empty();
+                        $(".estado_casco").append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
+
+
+                            //disabled fields 
+                            if(urlLastSegment!=="renovar"){
+                                $(".estado_casco").attr('disabled',true);
+                                $(".acreedor_maritimo").attr('disabled',true);
+                                $(".tipo_maritimo").attr('disabled',true);
+                                $("#observaciones_maritimo").attr('disabled',true);
+                                $("#pasajeros_maritimo").attr('disabled',true);
+                                $("#valor_maritimo").attr('disabled',true);
+                                $(".porcentaje_acreedor_maritimo").attr('disabled',true);
+                                $("#marca_maritimo").attr('disabled',true);
+                                $("#nombre_embarcacion").attr('disabled',true);
+                                $(".serier").attr('disabled',true);
+                                $("#serie_maritimo").attr('disabled',true);
+                             //disabled fields
+                             $("#deducibledetalle_maritimo").attr('disabled',true);
+                             $("#primadetalle_maritimo").attr('disabled',true);
+                             $("#sumaaseguradadetalle_maritimo").attr('disabled',true);
+                             $("#certificadodetalle_maritimo").attr('disabled',true);
+                         }
+                         if(tipo_ramo == "colectivo"){
+                            $("#certificadodetalle_maritimo").val(response.data.inter.detalle_certificado);
+
+                            $("#sumaaseguradadetalle_maritimo").val(response.data.inter.detalle_suma_asegurada);
+
+                            $("#primadetalle_maritimo").val(response.data.inter.detalle_prima);
+
+                            $("#deducibledetalle_maritimo").val(response.data.inter.detalle_deducible);
+
+                        }
+
+                    } else if (tipoint == 5) {
+
+                        $(".uuid").val(response.data.inter.uuid_intereses);
+                        $("#nombrePersona").val(response.data.inter.nombrePersona);
+
+
+                        $("input:checkbox").prop('checked',false);
+                        var splitIden = response.data.inter.identificacion;
+                        if (splitIden.indexOf('-') > -1) {
+                            $("#identificacion").val("cedula");
+                            $('.noPAS').show();
+                            $(".PAS").hide();
+                            splitIden = splitIden.split("-");
+                            if (splitIden.length == 4) {
+                                $("#provincia").val(splitIden[0]);
+                                $("#letra").val(splitIden[1]);
+                                $("#tomo").val(splitIden[2]);
+                                $("#asiento").val(splitIden[3]);
+                                $("#provincia").prop("disabled", false);
+                                $('#id_letras').val(splitIden[1]);
+
+                            } else if(splitIden.length == 3) {
+                                if(isNaN(splitIden[0])){
+
+                                    $("#provincia").val("");
+                                    $("#provincia").prop("disabled", true);
+                                    $("#letra").val(splitIden[0]);
+                                    $("#tomo").val(splitIden[1]);
+                                    $("#asiento").val(splitIden[2]);
+                                }else{
+
                                     $("#provincia").prop("disabled", false);
-                                    $('#id_letras').val(splitIden[1]);
-
-                                } else if(splitIden.length == 3) {
-                                    if(isNaN(splitIden[0])){
-
-                                        $("#provincia").val("");
-                                        $("#provincia").prop("disabled", true);
-                                        $("#letra").val(splitIden[0]);
-                                        $("#tomo").val(splitIden[1]);
-                                        $("#asiento").val(splitIden[2]);
-                                    }else{
-
-                                        $("#provincia").prop("disabled", false);
-                                        $("#provincia").val(splitIden[0]);   
-                                        $("#letra").val("0");
-                                        $("#tomo").val(splitIden[1]);
-                                        $("#asiento").val(splitIden[2]);
-                                    }
+                                    $("#provincia").val(splitIden[0]);   
+                                    $("#letra").val("0");
+                                    $("#tomo").val(splitIden[1]);
+                                    $("#asiento").val(splitIden[2]);
                                 }
-                                $('#id_letras').val(splitIden[0]);
-
-                            } else {
-                                $("#identificacion").val("pasaporte");
-                                $("#pasaporte").val(splitIden);
-                                $('.noPAS').hide();
-                                $(".PAS").show();
-                                $('#id_letras').val(0);
-                                $('#id_provincia').val(0);
                             }
+                            $('#id_letras').val(splitIden[0]);
+
+                        } else {
+                            $("#identificacion").val("pasaporte");
+                            $("#pasaporte").val(splitIden);
+                            $('.noPAS').hide();
+                            $(".PAS").show();
+                            $('#id_letras').val(0);
+                            $('#id_provincia').val(0);
+                        }
+
+                        $("#fecha_nacimiento").val(response.data.inter.fecha_nacimiento);
+
+                        var today = new Date();
+                        var format = response.data.inter.fecha_nacimiento.split("-");
+                        var dob = new Date(format[0], format[1], format[2]);
+                        var diff = (today - dob ) ;
+                        var age = Math.floor(diff / 31536000000);
+                        $("[id*=edad]").val(age);
+
+                        $('#estado_civil').val(response.data.inter.estado_civil);
+
+                        $('#nacionalidad').val(response.data.inter.nacionalidad);
+
+                        $('#sexo').val(response.data.inter.sexo);
+
+                        $('#estatura').val(response.data.inter.estatura);
+
+                        $('#peso').val(response.data.inter.peso);
+
+                        $('#telefono_residencial').val(response.data.inter.telefono_residencial);
+
+                        $('#telefono_oficina').val(response.data.inter.telefono_oficina);
+
+                        $('#direccion').val(response.data.inter.direccion_residencial);
+
+                        $('#direccion_laboral').val(response.data.inter.direccion_laboral);
+
+                        $('#observacionesPersona').val(response.data.inter.observaciones);
+
+                        $('#estadoPersona').empty();
+                        $('#estadoPersona').append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
+
+                        $('#idPersona').val(response.data.inter.interesestable_id);
+
+
+                        $('#correoPersona').val(response.data.inter.correo);
+
+
+                        if(response.data.inter.telefono_principal == 'Residencial'){
+                         $('#telefono_residencial_check').prop('checked',true);     
+                     }else if(response.data.inter.telefono_principal == 'Laboral'){
+                        $('#telefono_oficina_check').prop('checked',true);
+                    }
+
+                    if(response.data.inter.direccion_principal=='Residencial'){
+                        $('#direccion_residencial_check').prop('checked',true);
+                    }else if(response.data.inter.direccion_principal=='Laboral'){
+                        $('#direccion_laboral_check').prop('checked',true);
+                    }
+
+
+
+                    $('.relaciondetalle_persona_vida_otros').val(response.data.inter.detalle_relacion);
+                    $('.relaciondetalle_persona_vida').val(response.data.inter.detalle_relacion);
+                    $('.relaciondetalle_persona_vida_otros').attr('disabled',true);
+
+                        //$('#relaciondetalle_persona').val(response.data.inter.detalle_relacion);
+                        //$('#relaciondetalle_persona').attr('disabled',true);
+                        response.data.inter.detalle_int_asociado!==0 ? $('#asociadodetalle_persona').val(response.data.inter.detalle_int_asociado).trigger("change"):'';
+
+                        
+                        $("#certificadoPersona").val(response.data.inter.detalle_certificado);
+
+                        $("#beneficiodetalle_persona").val(response.data.inter.detalle_beneficio);
+                        
+                        $('#suma_asegurada_persona').val(response.data.inter.detalle_suma_asegurada);
+                        
+                        $('#participacion_persona').val(response.data.inter.detalle_participacion);
+                        
+                        $("#montodetalle_persona").val(response.data.inter.detalle_monto);
+                        
+                        $("#primadetalle_persona").val(response.data.inter.detalle_prima);
+                        
+                        //disabled fields
+                        if(urlLastSegment!=="renovar"){
                             $("#identificacion").attr('disabled',true);
                             $("#pasaporte").attr('disabled',true);
                             $("#provincia").attr('disabled',true);
@@ -558,172 +783,155 @@ var formularioCrear = new Vue({
                             $("#asiento").attr('disabled',true);
                             $('.noPAS').attr('disabled',true);
                             $(".PAS").attr('disabled',true);
-
-                            $("#fecha_nacimiento").val(response.data.inter.fecha_nacimiento);
-                            $("#fecha_nacimiento").attr('disabled',true);
-                            var today = new Date();
-                            console.log(today);
-                            var format = response.data.inter.fecha_nacimiento.split("-");
-                            var dob = new Date(format[0], format[1], format[2]);
-                            var diff = (today - dob ) ;
-                            var age = Math.floor(diff / 31536000000);
-                            $("[id*=edad]").val(age);
-                            $("#edad").attr('disabled',true);
-                            $('#estado_civil').val(response.data.inter.estado_civil);
-                            $('#estado_civil').attr('disabled',true);
-                            $('#nacionalidad').val(response.data.inter.nacionalidad);
-                            $('#nacionalidad').attr('disabled',true);
-                            $('#sexo').val(response.data.inter.sexo);
-                            $('#sexo').attr('disabled',true);
-                            $('#estatura').val(response.data.inter.estatura);
-                            $('#estatura').attr('disabled',true);
-                            $('#peso').val(response.data.inter.peso);
-                            $('#peso').attr('disabled',true);
-                            $('#telefono_residencial').val(response.data.inter.telefono_residencial);
-                            $('#telefono_residencial').attr('disabled',true);
-                            $('#telefono_oficina').val(response.data.inter.telefono_oficina);
-                            $('#telefono_oficina').attr('disabled',true);
-                            $('#direccion').val(response.data.inter.direccion_residencial);
-                            $('#direccion').attr('disabled',true);
-                            $('#direccion_laboral').val(response.data.inter.direccion_laboral);
-                            $('#direccion_laboral').attr('disabled',true);
-                            $('#observacionesPersona').val(response.data.inter.observaciones);
-                            $('#observacionesPersona').attr('disabled',true);
-                            $('#estadoPersona').empty();
-                            $('#estadoPersona').append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
-                            $('#estadoPersona').attr('disabled',true);
-                            $('#idPersona').val(response.data.inter.interesestable_id);
-                            $('#idPersona').attr('disabled',true);
-
-                            $('#correoPersona').val(response.data.inter.correo);
-                            $('#correoPersona').attr('disabled',true);
-                            
-                            if(response.data.inter.telefono_principal == 'Residencial'){
-                             $('#telefono_residencial_check').prop('checked',true);     
-                         }else if(response.data.inter.telefono_principal == 'Laboral'){
-                            $('#telefono_oficina_check').prop('checked',true);
-                        }
-
-                        if(response.data.inter.direccion_principal=='Residencial'){
-                            $('#direccion_residencial_check').prop('checked',true);
-                        }else if(response.data.inter.direccion_principal=='Laboral'){
-                            $('#direccion_laboral_check').prop('checked',true);
-                        }
-
+                        // validacion
+                        $("#nombrePersona").attr('disabled',true);
+                        $("#fecha_nacimiento").attr('disabled',true);
+                        $("#primadetalle_persona").attr('disabled',true);
+                        $("#montodetalle_persona").attr('disabled',true);
+                        $('#participacion_persona').attr('disabled',true);
+                        $('#suma_asegurada_persona').attr('disabled',true);
+                        $("#beneficiodetalle_persona").attr('disabled',true);
+                        $("#certificadoPersona").attr('disabled',true);
+                        $('#asociadodetalle_persona').attr('disabled',true);
+                        $('.relaciondetalle_persona_vida').attr('disabled',true);
                         $('#telefono_residencial_check').attr('disabled',true);
                         $('#telefono_oficina_check').attr('disabled',true);
                         $('#direccion_residencial_check').attr('disabled',true);
                         $('#direccion_laboral_check').attr('disabled',true);
+                        $('#correoPersona').attr('disabled',true);
+                        $("#edad").attr('disabled',true);
+                        $('#estado_civil').attr('disabled',true);
+                        $('#idPersona').attr('disabled',true);
+                        $('#estadoPersona').attr('disabled',true);
+                        $('#observacionesPersona').attr('disabled',true);
+                        $('#nacionalidad').attr('disabled',true);
+                        $('#sexo').attr('disabled',true);
+                        $('#estatura').attr('disabled',true);
+                        $('#peso').attr('disabled',true);
+                        $('#telefono_residencial').attr('disabled',true);
+                        $('#telefono_oficina').attr('disabled',true);
+                        $('#direccion').attr('disabled',true);
+                        $('#direccion_laboral').attr('disabled',true);
+                    }
+                } else if (tipoint == 6) {
+                    $(".uuid_proyecto, #nombre_proyecto, #contratista_proyecto, #representante_legal_proyecto, #fecha_concurso, #no_orden_proyecto, .no_ordenr, #duracion_proyecto, .fecha_proyecto, .monto_proyecto, #monto_afianzado, #asignado_acreedor, #ubicacion_proyecto, #acreedor_opcional, #validez_fianza_opcional, #observaciones_proyecto").val("");
 
-                        $('.relaciondetalle_persona_vida_otros').val(response.data.inter.detalle_relacion);
-                        $('.relaciondetalle_persona_vida').val(response.data.inter.detalle_relacion);
-                        $('.relaciondetalle_persona_vida_otros').attr('disabled',true);
-                        $('.relaciondetalle_persona_vida').attr('disabled',true);
-                        //$('#relaciondetalle_persona').val(response.data.inter.detalle_relacion);
-                        //$('#relaciondetalle_persona').attr('disabled',true);
-                        response.data.inter.detalle_int_asociado!==0 ? $('#asociadodetalle_persona').val(response.data.inter.detalle_int_asociado).trigger("change"):'';
+                    $(".uuid_proyecto").val(response.data.inter.uuid_intereses);
+                    $("#nombre_proyecto").val(response.data.inter.nombre_proyecto);
 
-                        $('#asociadodetalle_persona').attr('disabled',true);
-                        $("#certificadoPersona").val(response.data.inter.detalle_certificado);
-                        $("#certificadoPersona").attr('disabled',true);
-                        $("#beneficiodetalle_persona").val(response.data.inter.detalle_beneficio);
-                        $("#beneficiodetalle_persona").attr('disabled',true);
-                        $('#suma_asegurada_persona').val(response.data.inter.detalle_suma_asegurada);
-                        $('#suma_asegurada_persona').attr('disabled',true);
-                        $('#participacion_persona').val(response.data.inter.detalle_participacion);
-                        $('#participacion_persona').attr('disabled',true);
-                        $("#montodetalle_persona").val(response.data.inter.detalle_monto);
-                        $("#montodetalle_persona").attr('disabled',true);
-                        $("#primadetalle_persona").val(response.data.inter.detalle_prima);
-                        $("#primadetalle_persona").attr('disabled',true);
+                    $("#contratista_proyecto").val(response.data.inter.contratista);
 
-                    } else if (tipoint == 6) {
-                        $(".uuid_proyecto, #nombre_proyecto, #contratista_proyecto, #representante_legal_proyecto, #fecha_concurso, #no_orden_proyecto, .no_ordenr, #duracion_proyecto, .fecha_proyecto, .monto_proyecto, #monto_afianzado, #asignado_acreedor, #ubicacion_proyecto, #acreedor_opcional, #validez_fianza_opcional, #observaciones_proyecto").val("");
+                    $("#representante_legal_proyecto").val(response.data.inter.representante_legal);
 
-                        $(".uuid_proyecto").val(response.data.inter.uuid_intereses);
-                        $("#nombre_proyecto").val(response.data.inter.nombre_proyecto);
-                        $("#nombre_proyecto").attr("disabled",true);
-                        $("#contratista_proyecto").val(response.data.inter.contratista);
-                        $("#contratista_proyecto").attr("disabled",true);
-                        $("#representante_legal_proyecto").val(response.data.inter.representante_legal);
-                        $("#representante_legal_proyecto").attr("disabled",true);
-                        $("#fecha_concurso").val(response.data.inter.fecha_concurso);
-                        $("#fecha_concurso").attr("disabled",true);
-                        $("#no_orden_proyecto").val(response.data.inter.no_orden);
-                        $("#no_orden_proyecto").attr("disabled",true);
-                        $(".no_ordenr").val(response.data.inter.no_orden);
-                        $(".no_ordenr").attr("disabled",true);
-                        $("#duracion_proyecto").val(response.data.inter.duracion);
-                        $("#duracion_proyecto").attr("disabled",true);
-                        $(".fecha_proyecto").val(response.data.inter.fecha);
-                        $(".fecha_proyecto").attr("disabled",true);
-                        $(".monto_proyecto").val(response.data.inter.monto);
-                        $(".monto_proyecto").attr("disabled",true);
-                        $("#monto_afianzado").val(response.data.inter.monto_afianzado);
-                        $("#monto_afianzado").attr("disabled",true);
-                        $("#asignado_acreedor").val(response.data.inter.asignado_acreedor);
-                        $("#asignado_acreedor").attr("disabled",true);
-                        $("#ubicacion_proyecto").val(response.data.inter.ubicacion);
-                        $("#ubicacion_proyecto").attr("disabled",true);
-                        $("#acreedor_opcional").val(response.data.inter.acreedor_opcional);
-                        $("#acreedor_opcional").attr("disabled",true);
-                        $("#validez_fianza_opcional").val(response.data.inter.validez_fianza_opcional);
-                        $("#validez_fianza_opcional").attr("disabled",true);
-                        $("#observaciones_proyecto").val(response.data.inter.observaciones);
-                        $("#observaciones_proyecto").attr("disabled",true);
+                    $("#fecha_concurso").val(response.data.inter.fecha_concurso);
+
+                    $("#no_orden_proyecto").val(response.data.inter.no_orden);
+
+                    $(".no_ordenr").val(response.data.inter.no_orden);
+
+                    $("#duracion_proyecto").val(response.data.inter.duracion);
+
+                    $(".fecha_proyecto").val(response.data.inter.fecha);
+
+                    $(".monto_proyecto").val(response.data.inter.monto);
+
+                    $("#monto_afianzado").val(response.data.inter.monto_afianzado);
+
+                    $("#asignado_acreedor").val(response.data.inter.asignado_acreedor);
+
+                    $("#ubicacion_proyecto").val(response.data.inter.ubicacion);
+
+                    $("#acreedor_opcional").val(response.data.inter.acreedor_opcional);
+
+                    $("#validez_fianza_opcional").val(response.data.inter.validez_fianza_opcional);
+
+                    $("#observaciones_proyecto").val(response.data.inter.observaciones);
+
                             $(".tipo_fianza").val(response.data.inter.tipo_fianza); // option[value='" + response.data.inter.tipo_fianza + "']
-                            $(".tipo_fianza").attr("disabled",true);
+                            
                             $(".tipo_propuesta").val(response.data.inter.tipo_propuesta); //option[value='" + response.data.inter.tipo_propuesta + "']
-                            $(".tipo_propuesta").attr("disabled",true);
+                            
                             $(".acreedor_proyecto").val(response.data.inter.acreedor); //option[value='" + response.data.inter.acreedor + "']
-                            $(".acreedor_proyecto").attr("disabled",true);
+                            
                             $(".validez_fianza_pr").val(response.data.inter.validez_fianza_pr); //option[value='" + response.data.inter.validez_fianza_pr + "']
-                            $(".validez_fianza_pr").attr("disabled",true);
+
                             $(".estado_proyecto").empty();
                             $(".estado_proyecto").append("<option value="+response.data.inter.estado+">"+response.data.inter.estado+"</option>");
-                            $(".estado_proyecto").attr("disabled",true);
+                            
 
                             if(tipo_ramo == "colectivo"){
                                 $("#certificadodetalle_proyecto").val(response.data.inter.detalle_certificado);
-                                $("#certificadodetalle_proyecto").attr('disabled',true);
-                                $("#sumaaseguradadetalle_proyecto").val(response.data.inter.detalle_suma_asegurada);
-                                $("#sumaaseguradadetalle_proyecto").attr('disabled',true);
-                                $("#primadetalle_proyecto").val(response.data.inter.detalle_prima);
-                                $("#primadetalle_proyecto").attr('disabled',true);
-                                $("#deducibledetalle_proyecto").val(response.data.inter.detalle_deducible);
-                                $("#deducibledetalle_proyecto").attr('disabled',true);
-                            }
 
-                        } else if (tipoint == 7) {
-                        	
-                            $(".uuid_ubicacion, #nombre_ubicacion, #direccion_ubicacion, .serier, #edif_mejoras, #contenido, #maquinaria, #inventario, #acreedor_ubicacion_opcional, #porcentaje_acreedor_ubicacion, #observaciones_ubicacion").val("");
-                            $(".uuid_ubicacion").val(response.data.inter.uuid_intereses);
-                            $("#nombre_ubicacion").val(response.data.inter.nombre);
-                            $("#nombre_ubicacion").attr('disabled',true);
-                            $("#direccion_ubicacion").val(response.data.inter.direccion);
-                            $("#direccion_ubicacion").attr('disabled',true);
-                            $(".serier").val(response.data.inter.direccion);
-                            $(".serier").attr('disabled',true);
-                            $("#edif_mejoras").val(response.data.inter.edif_mejoras);
-                            $("#edif_mejoras").attr('disabled',true);
-                            $("#contenido").val(response.data.inter.contenido);
-                            $("#contenido").attr('disabled',true);
-                            $("#maquinaria").val(response.data.inter.maquinaria);
-                            $("#maquinaria").attr('disabled',true);
-                            $("#inventario").val(response.data.inter.inventario);
-                            $("#inventario").attr('disabled',true);
-                            $("#acreedor_ubicacion_opcional").val(response.data.inter.acreedor_ubicacion_opcional);
-                            $("#acreedor_ubicacion_opcional").attr('disabled',true);
-                            $("#porcentaje_acreedor_ubicacion").val(response.data.inter.porcentaje_acreedor);
-                            $("#porcentaje_acreedor_ubicacion").attr('disabled',true);
-                            $("#observaciones_ubicacion").val(response.data.inter.observaciones);
-                            $("#observaciones_ubicacion").attr('disabled',true);
-                            console.log(response.data.inter.acreedor);
+                                $("#sumaaseguradadetalle_proyecto").val(response.data.inter.detalle_suma_asegurada);
+                                
+                                $("#primadetalle_proyecto").val(response.data.inter.detalle_prima);
+                                
+                                $("#deducibledetalle_proyecto").val(response.data.inter.detalle_deducible);
+                                
+
+
+                            }
+                            //disabled fields
+                            if(urlLastSegment!=="renovar"){
+                                $("#nombre_proyecto").attr("disabled",true);
+                                $("#contratista_proyecto").attr("disabled",true);
+                                $(".estado_proyecto").attr("disabled",true);
+                                $(".validez_fianza_pr").attr("disabled",true);
+                                $(".acreedor_proyecto").attr("disabled",true);
+                                $(".tipo_propuesta").attr("disabled",true);
+                                $(".tipo_fianza").attr("disabled",true);
+                                $("#observaciones_proyecto").attr("disabled",true);
+                                $("#validez_fianza_opcional").attr("disabled",true);
+                                $("#acreedor_opcional").attr("disabled",true);
+                                $("#ubicacion_proyecto").attr("disabled",true);
+                                $("#asignado_acreedor").attr("disabled",true);
+                                $("#monto_afianzado").attr("disabled",true);
+                                $(".monto_proyecto").attr("disabled",true);
+                                $("#representante_legal_proyecto").attr("disabled",true);
+                                $(".fecha_proyecto").attr("disabled",true);
+                                $(".no_ordenr").attr("disabled",true);
+                                $("#no_orden_proyecto").attr("disabled",true);
+                                $("#fecha_concurso").attr("disabled",true);
+
+                           //disabled fields 
+                           $("#duracion_proyecto").attr("disabled",true);
+                           $("#deducibledetalle_proyecto").attr('disabled',true);
+                           $("#certificadodetalle_proyecto").attr('disabled',true);
+                           $("#primadetalle_proyecto").attr('disabled',true);
+                           $("#sumaaseguradadetalle_proyecto").attr('disabled',true);
+                       }
+
+                   } else if (tipoint == 7) {
+
+                    $(".uuid_ubicacion, #nombre_ubicacion, #direccion_ubicacion, .serier, #edif_mejoras, #contenido, #maquinaria, #inventario, #acreedor_ubicacion_opcional, #porcentaje_acreedor_ubicacion, #observaciones_ubicacion").val("");
+                    $(".uuid_ubicacion").val(response.data.inter.uuid_intereses);
+                    $("#nombre_ubicacion").val(response.data.inter.nombre);
+
+                    $("#direccion_ubicacion").val(response.data.inter.direccion);
+
+                    $(".serier").val(response.data.inter.direccion);
+
+                    $("#edif_mejoras").val(response.data.inter.edif_mejoras);
+
+                    $("#contenido").val(response.data.inter.contenido);
+
+                    $("#maquinaria").val(response.data.inter.maquinaria);
+
+                    $("#inventario").val(response.data.inter.inventario);
+
+                    $("#acreedor_ubicacion_opcional").val(response.data.inter.acreedor_ubicacion_opcional);
+
+                    $("#porcentaje_acreedor_ubicacion").val(response.data.inter.porcentaje_acreedor);
+
+                    $("#observaciones_ubicacion").val(response.data.inter.observaciones);
+
+
                             $("#acreedor_ubicacion").val(response.data.inter.acreedor);  //option[value='" + response.data.inter.acreedor + "']
-                            $("#acreedor_ubicacion").attr('disabled',true);
+                            
                             $(".estado_ubicacion").empty();
                             $(".estado_ubicacion").append("<option value="+response.data.inter.estado+">"+response.data.inter.estado+"</option>");
-                            $(".estado_ubicacion").attr('disabled',true);
+                            
+
 
                             var acreedor_ubicacion = $('.acreedor_ubicacion').val();
                             if (acreedor_ubicacion === 'otro') {
@@ -735,71 +943,128 @@ var formularioCrear = new Vue({
 
                           if(tipo_ramo == "colectivo"){
                             $("#certificadodetalle_ubicacion").val(response.data.inter.detalle_certificado);
-                            $("#certificadodetalle_ubicacion").attr('disabled',true);
+                            
                             $("#sumaaseguradadetalle_ubicacion").val(response.data.inter.detalle_suma_asegurada);
-                            $("#sumaaseguradadetalle_ubicacion").attr('disabled',true);
+                            
                             $("#primadetalle_ubicacion").val(response.data.inter.detalle_prima);
-                            $("#primadetalle_ubicacion").attr('disabled',true);
+                            
                             $("#deducibledetalle_ubicacion").val(response.data.inter.detalle_deducible);
-                            $("#deducibledetalle_ubicacion").attr('disabled',true);
+                            
                         }
 
-                    } else if (tipoint == 8) {
+                         //disabled fields 
+                         if(urlLastSegment!=="renovar"){
+                           $(".estado_ubicacion").attr('disabled',true);
+                           $("#acreedor_ubicacion").attr('disabled',true);
+                           $("#observaciones_ubicacion").attr('disabled',true);
+                           $("#porcentaje_acreedor_ubicacion").attr('disabled',true);
+                           $("#acreedor_ubicacion_opcional").attr('disabled',true);
+                           $("#inventario").attr('disabled',true);
+                           $("#maquinaria").attr('disabled',true);
+                           $("#contenido").attr('disabled',true);
+                           $("#edif_mejoras").attr('disabled',true);
+                           $(".serier").attr('disabled',true);
+                           $("#direccion_ubicacion").attr('disabled',true);
+                           $("#nombre_ubicacion").attr('disabled',true);
+                           $("#certificadodetalle_ubicacion").attr('disabled',true);
+                           $("#sumaaseguradadetalle_ubicacion").attr('disabled',true);
+                           $("#primadetalle_ubicacion").attr('disabled',true);
+                           $("#deducibledetalle_ubicacion").attr('disabled',true);
+                       }
 
-                        $("#uuid_vehiculo, #chasis, #unidad, #marca, #modelo, #placa, #ano, #motor, #color, #capacidad, #operador, #extras, #valor_extras, #porcentaje_acreedor, #observaciones_vehiculo ").val("");
-                        $("#uuid_vehiculo").val(response.data.inter.uuid_intereses);
-                        $("#chasis").val(response.data.inter.chasis);
-                        $("#chasis").attr('disabled',true);
-                        $("#unidad").val(response.data.inter.unidad);
-                        $("#unidad").attr('disabled',true);
-                        $("#placa").val(response.data.inter.placa);
-                        $("#placa").attr('disabled',true);
-                        $(".marca_vehiculo").val(response.data.inter.marca);
-                        $(".marca_vehiculo").attr('disabled',true);
-                        $(".modelo_vehiculo").val(response.data.inter.modelo);
-                        $(".modelo_vehiculo").attr('disabled',true);
-                        $("#ano").val(response.data.inter.ano);
-                        $("#ano").attr('disabled',true);
-                        $("#motor").val(response.data.inter.motor);
-                        $("#motor").attr('disabled',true);
-                        $("#color").val(response.data.inter.color);
-                        $("#color").attr('disabled',true);
-                        $("#capacidad").val(response.data.inter.capacidad);
-                        $("#capacidad").attr('disabled',true);
-                        $("#operador").val(response.data.inter.operador);
-                        $("#operador").attr('disabled',true);
-                        $("#extras").val(response.data.inter.extras);
-                        $("#extras").attr('disabled',true);
-                        $("#valor_extras").val(response.data.inter.valor_extras);
-                        $("#valor_extras").attr('disabled',true);
-                        $(".porcentaje_vehiculo").val(response.data.inter.porcentaje_acreedor);
-                        $(".porcentaje_vehiculo").attr('disabled',true);
-                        $("#observaciones_vehiculo").val(response.data.inter.observaciones);
-                        $("#observaciones_vehiculo").attr('disabled',true);
+                   } else if (tipoint == 8) {
+
+                    $("#uuid_vehiculo, #chasis, #unidad, #marca, #modelo, #placa, #ano, #motor, #color, #capacidad, #operador, #extras, #valor_extras, #porcentaje_acreedor, #observaciones_vehiculo ").val("");
+                    $("#uuid_vehiculo").val(response.data.inter.uuid_intereses);
+                    $("#chasis").val(response.data.inter.chasis);
+
+                    $("#unidad").val(response.data.inter.unidad);
+
+                    $("#placa").val(response.data.inter.placa);
+
+                    $(".marca_vehiculo").val(response.data.inter.marca);
+
+                    $(".modelo_vehiculo").val(response.data.inter.modelo);
+
+                    $("#ano").val(response.data.inter.ano);
+
+                    $("#motor").val(response.data.inter.motor);
+
+                    $("#color").val(response.data.inter.color);
+
+                    $("#capacidad").val(response.data.inter.capacidad);
+
+                    $("#operador").val(response.data.inter.operador);
+
+                    $("#extras").val(response.data.inter.extras);
+
+                    $("#valor_extras").val(response.data.inter.valor_extras);
+
+                    $(".porcentaje_vehiculo").val(response.data.inter.porcentaje_acreedor);
+
+                    $("#observaciones_vehiculo").val(response.data.inter.observaciones);
+
                             $("#uso").val(response.data.inter.uso); //option[value='" + response.data.inter.uso + "']
-                            $("#uso").attr('disabled',true);
+
                             $(".condicion_vehiculo").val(response.data.inter.condicion); //option[value='" + response.data.inter.condicion + "']
-                            $(".condicion_vehiculo").attr('disabled',true);
+
                             $(".acreedor").val(response.data.inter.acreedor); //option[value='" + response.data.inter.acreedor + "']
-                            $(".acreedor").attr('disabled',true);
+                            
                             $(".estado").empty();
                             $(".estado").append("<option value='"+response.data.inter.estado+"'>"+response.data.inter.estado+"</option>");
-                            $(".estado").attr('disabled',true);
+
 
                             if(tipo_ramo == "colectivo"){
                                 $("#certificadodetalle_vehiculo").val(response.data.inter.detalle_certificado);
-                                $("#certificadodetalle_vehiculo").attr('disabled',true);
+                                
                                 $("#sumaaseguradadetalle_vehiculo").val(response.data.inter.detalle_suma_asegurada);
-                                $("#sumaaseguradadetalle_vehiculo").attr('disabled',true);
+                                
                                 $("#primadetalle_vehiculo").val(response.data.inter.detalle_prima);
-                                $("#primadetalle_vehiculo").attr('disabled',true);
-                                $("#deducibledetalle_vehiculo").val(response.data.inter.detalle_deducible);
-                                $("#deducibledetalle_vehiculo").attr('disabled',true);
-                            }
 
-                        } 
-                    }
-                });
+                                $("#deducibledetalle_vehiculo").val(response.data.inter.detalle_deducible);
+                                
+                            }
+                             //disabled field
+                             if(urlLastSegment!=="renovar"){
+                               $("#chasis").attr('disabled',true);
+                               $("#unidad").attr('disabled',true); 
+                               $("#deducibledetalle_vehiculo").attr('disabled',true);
+                               $("#primadetalle_vehiculo").attr('disabled',true);
+                               $("#sumaaseguradadetalle_vehiculo").attr('disabled',true);
+                               $("#certificadodetalle_vehiculo").attr('disabled',true);
+                               $(".estado").attr('disabled',true);
+                               $(".acreedor").attr('disabled',true);
+                               $(".condicion_vehiculo").attr('disabled',true);
+                               $("#observaciones_vehiculo").attr('disabled',true);
+                               $(".porcentaje_vehiculo").attr('disabled',true);
+                               $("#uso").attr('disabled',true);
+                               $("#valor_extras").attr('disabled',true);
+                               $("#extras").attr('disabled',true);
+                               $("#operador").attr('disabled',true);
+                               $("#capacidad").attr('disabled',true);
+                               $("#color").attr('disabled',true);
+                               $("#motor").attr('disabled',true);
+                               $("#ano").attr('disabled',true); 
+                               $(".modelo_vehiculo").attr('disabled',true);
+                               $("#placa").attr('disabled',true);
+                               $(".marca_vehiculo").attr('disabled',true); 
+                           } 
+                       } 
+                   }
+               });
+}
+else{
+   $("#uuid_articulo, #nombre, #clase_equipo, #marca_articulo, #modelo_articulo, #anio_articulo, #numero_serie, .valor_articulo, #observaciones_articulo, certificadodetalle_articulo, #sumaaseguradadetalle_articulo, #primadetalle_articulo, #deducibledetalle_articulo").val("");
+   $(".uuid_carga, #no_liquidacion, #fecha_despacho, #fecha_arribo, #fecha_arribo, #detalle, #origen, #destino, .valor_mercancia, #acreedor_carga_opcional, #tipo_obligacion_opcional, #observaciones_carga, #certificadodetalle_carga, #sumaaseguradadetalle_carga, #primadetalle_carga, #deducibledetalle_carga").val("");
+   $(".uuid_aereo, #serie_aereo, #marca_aereo, #modelo_aereo, #matricula_aereo, #valor_aereo, #pasajeros_aereo, #tripulacion_a, #observaciones_aereo, #certificadodetalle_aereo, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #deducibledetalle_aereo").val("");
+   $(".uuid_casco_maritimo, #serie_maritimo, .serier, #nombre_embarcacion, #marca_maritimo, .porcentaje_acreedor_maritimo, #valor_maritimo, #pasajeros_maritimo, #observaciones_maritimo, #certificadodetalle_maritimo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #deducibledetalle_maritimo").val("");
+   $(".uuid,#correoPersona,#nombrePersona,#provincia,#idPersona,#fecha_nacimiento,#estado_civil,#nacionalidad,#sexo,#estatura,#peso,#telefono_residencial,#telefono_oficina,#direccion,#direccion_laboral,#observacionesPersona,#identificacion,#pasaporte,#provinicia,#letra,#tomo,#asiento,#certificadoPersona, #primadetalle_persona, #montodetalle_persona,#participacion_persona,#suma_asegurada_persona").val("");
+   $(".uuid_proyecto, #nombre_proyecto, .no_ordenr, #contratista_proyecto, #representante_legal_proyecto, #fecha_concurso, #no_orden_proyecto, #duracion_proyecto, .fecha_proyecto, .monto_proyecto, #monto_afianzado, #asignado_acreedor, #ubicacion_proyecto, #acreedor_opcional, #validez_fianza_opcional, #observaciones_proyecto, #certificadodetalle_proyecto, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #deducibledetalle_proyecto").val("");
+   $(".uuid_ubicacion, #nombre_ubicacion, #direccion_ubicacion, #edif_mejoras, #contenido, #maquinaria, #inventario, #acreedor_ubicacion_opcional, #porcentaje_acreedor_ubicacion, #observaciones_ubicacion, #certificadodetalle_ubicacion, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #deducibledetalle_ubicacion").val("");
+   $("#uuid_vehiculo, #chasis, #unidad, #marca, #modelo, #placa, #ano, #motor, #color, #capacidad, #operador, #extras, #valor_extras, #porcentaje_acreedor, #observaciones_vehiculo, #certificadodetalle_vehiculo, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #deducibledetalle_vehiculo").val("");
+   $("#selInteres,#asociadodetalle_persona,#relaciondetalle_persona,#beneficiodetalle_persona").val('');
+   $("#asociadodetalle_persona").trigger('change');
+   $("input:checkbox").prop('checked', false);
 }
 },
 
@@ -855,8 +1120,15 @@ $(document).ready(function () {
         return false;
     });
      formularioCrear.renovationModal(uuidPolicy);
+     $("span.switchery-default").remove();
+     var elem = document.querySelector('#polizaDeclarativa');
+     var init = new Switchery(elem);
+     init.enable(); 
+     if(tipo_ramo =="individual"){
+        $("#poliza_suma_asegurada").prop("disabled",false);
+    }
 
- }else{
+}else{
     $(".renewal").remove();
     $('.detail_endoso').remove();
 }
@@ -943,9 +1215,10 @@ $(".documentos_entregados").remove();
       $(" #articuloTab, #cargaTab, #casco_aereoTab, #casco_maritimoTab , #personaTab , #proyecto_actividadTab , #ubicacionTab , #vehiculoTab").css("margin-bottom","-31px");
 
       if(RegExp('\\bvida\\b',"gi").test(nombre_ramo) || RegExp('\\bsalud\\b',"gi").test(nombre_ramo) || RegExp('\\baccidente\\b',"gi").test(nombre_ramo) || RegExp('\\baccidentes\\b',"gi").test(nombre_ramo) ){
-        $(".detalleinteres_persona").show();   
+        $(".detalleinteres_persona").show();
+        $(".tabladetalle_personas").show();   
     }
-    $(".tabladetalle_personas").show();
+    
     
 
 }else if(tipo_ramo == "colectivo"){

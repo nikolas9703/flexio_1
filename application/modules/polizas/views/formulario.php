@@ -57,7 +57,7 @@ echo $campos['creado_por'];
         </div> 
         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
             <label>Grupo <span required="" aria-required="true">*</span></label>
-            <select name="natural[grupo]" data-rule-required="true" class="form-control grupo_sel" id="grupo_nombre" @change="grupoInfo()" :disabled="disabledfechaInicio">
+            <select name="natural[grupo]" data-rule-required="true" class="form-control grupo_sel" id="grupo_nombre" @change="grupoInfo()" :disabled="disabledfechaInicio" v-model="clienteGrupo">
                 <option>Seleccione</option>
                 <option v-for="grupo in polizaGrupo"  v-bind:value="grupo.nombre"  selected="{{grupo.nombre == polizaCliente.grupo}}" >
                     {{grupo.nombre}}
@@ -68,21 +68,21 @@ echo $campos['creado_por'];
             <label>Teléfono </label>
             <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                <input type="text" value="{{polizaCliente.telefono}}" name="poliza_cliente_telefono"  class="form-control" id="poliza_cliente_telefono" :disabled="disabledfechaInicio"  />
+                <input type="text" value="{{polizaCliente.telefono}}" name="poliza_cliente_telefono"  class="form-control" id="poliza_cliente_telefono" :disabled="disabledfechaInicio" v-model="clienteTelefono"  />
             </div>
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
             <label>Correo electrónico <span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon">@</span>
-                <input type="input-left-addon" value="{{polizaCliente.correo_electronico}}" name="poliza_cliente_correo" class="form-control debito"  id="poliza_cliente_correo" :disabled="disabledfechaInicio"  />
+                <input type="input-left-addon" value="{{polizaCliente.correo_electronico}}" name="poliza_cliente_correo" class="form-control debito"  id="poliza_cliente_correo" :disabled="disabledfechaInicio" v-model="clienteCorreo" />
             </div>
         </div>
 
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 Dirección" >
             <label>Dirección</label>
             <!-- <input type="text" name="campo[direccion]" v-model="clienteInfo.direccion" class="form-control" id="campo[direccion]" disabled> -->
-            <select class="form-control" name="natural[direccion]" class="form-control grupo_sel" id="direccion_nombre" @change="direccionInfo()" :disabled="disabledfechaInicio" >
+            <select class="form-control" name="natural[direccion]" class="form-control grupo_sel" id="direccion_nombre" @change="direccionInfo()" :disabled="disabledfechaInicio" v-model="clienteDireccion">
              <option value="">Seleccione</option>
              <option v-for="centroFac in catalogoCentroFacturacion" v-bind:value="centroFac.id" :selected="centroFac.direccion == polizaCliente.direccion">{{{centroFac.direccion}}}</option>
          </select>
@@ -120,7 +120,7 @@ echo $campos['creado_por'];
                 <span class="input-group-addon">%</span>
                 <input type="input-left-addon" name="poliza_comision" v-model="comision" class="form-control"  id="poliza_comision" value="{{polizaComision}}" @change="prueba()" :disabled="!disabledComision" /><div id="divintereses">
                 <input type="hidden" name="idPolicy" v-model="idPolicy">
-                <input type="hidden" name="coberturas" id="planesCoberturasDeducibles">
+                <input type="hidden" name="coberturas" v-model="planesCoberturas" id="planesCoberturasDeducibles">
             </div>  
         </div> 
     </div>
@@ -168,13 +168,13 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Suma Asegurada <span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_suma_asegurada" class="form-control"  id="poliza_suma_asegurada" value="{{polizaVigencia.suma_asegurada}}" disabled />
+                <input type="input-left-addon" name="poliza_suma_asegurada" class="form-control"  id="poliza_suma_asegurada" value="{{polizaVigencia.suma_asegurada}}" disabled  v-model="sumaAsegurada"/>
             </div>                                
         </div>
 
         <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 plan">
             <label>Pagador  <span required="" aria-required="true">*</span></label>
-            <select  name="campovigencia[tipo_pagador]" class="form-control" id="pagador" data-rule-required="true" @change="getOpcionPagador();" disabled="disabledfechaInicio">
+            <select  name="campovigencia[tipo_pagador]" class="form-control" id="pagador" data-rule-required="true" @change="getOpcionPagador();" :disabled="disabledfechaInicio" v-model="vigenciaPagador">
                 <option value="">Seleccione</option>
                 <option v-for="pag in pagador" v-bind:value="pag.valor" :selected="pag.valor == polizaVigencia.tipo_pagador">{{pag.etiqueta}}</option>
             </select>
@@ -183,7 +183,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Nombre  <span required="" aria-required="true">*</span></label>
             <div id="divpgnombre"><input type="text" name="campovigencia[pagadornombre]" id="campopagador"  v-model="polizaVigencia.pagador" class="form-control" :disabled="disabledfechaInicio">
             </div>
-            <div id="divselpagador" style="display:none"><select  name="campovigencia[selpagadornombre]" id="selpagadornombre" class="form-control" :disabled="disabledfechaInicio">
+            <div id="divselpagador" style="display:none"><select  name="campovigencia[selpagadornombre]" id="selpagadornombre" class="form-control" :disabled="disabledfechaInicio" v-model="vigenciaPersonaAsegurada">
                 <option value="">Seleccione</option>
                 <option v-for="interaso in InteresesAsociados" v-bind:value="interaso.nombrePersona" :selected="interaso.numero == vigencia.pagador">{{interaso.nombrePersona}}</option>
             </select>
@@ -191,7 +191,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 poliza_declarativa">
         <label>Póliza declarativa</label>
-        <div id="divprima"></div><input type="checkbox" class="js-switch" name='poliza_declarativa' id='polizaDeclarativa' <?php if($campos['poliza_declarativa'] == "si"){echo "checked";} ?> disabled />
+        <div id="divprima"></div><input type="checkbox" class="js-switch" name='poliza_declarativa' id='polizaDeclarativa' <?php if($campos['poliza_declarativa'] == "si"){echo "checked";} ?> disabled v-model="vigenciaPolizaDeclarativa" />
     </div>
 </div>   
 </div>
@@ -218,7 +218,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Prima Anual <span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_prima_anual" class="form-control"  id="poliza_prima_anual" value="{{polizaPrima.prima_anual}}" :disabled="cambiarOpcionesPago" />
+                <input type="input-left-addon" name="poliza_prima_anual" class="form-control"  id="poliza_prima_anual" value="{{polizaPrima.prima_anual}}" :disabled="cambiarOpcionesPago" v-model="primaAnual" />
             </div>                          
         </div>
         <div class="form-group col-xs-6 col-sm-3 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -228,7 +228,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Descuentos </label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_descuentos" class="form-control"  id="poliza_descuentos" value="{{polizaPrima.descuentos}}" :disabled="cambiarOpcionesPago" />
+                <input type="input-left-addon" name="poliza_descuentos" class="form-control"  id="poliza_descuentos" value="{{polizaPrima.descuentos}}" :disabled="cambiarOpcionesPago" v-model="primaDescuentos" />
             </div>                                
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -238,7 +238,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Otros </label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_otros" class="form-control" id="poliza_otros" value="{{polizaPrima.otros}}" :disabled="cambiarOpcionesPago" />
+                <input type="input-left-addon" name="poliza_otros" class="form-control" id="poliza_otros" value="{{polizaPrima.otros}}" :disabled="cambiarOpcionesPago" v-model="primaOtros"/>
             </div>                                
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -248,7 +248,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Impuesto <span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_impuesto" class="form-control" id="poliza_impuesto" value="{{polizaPrima.impuesto}}" :disabled="cambiarOpcionesPago" />
+                <input type="input-left-addon" name="poliza_impuesto" class="form-control" id="poliza_impuesto" value="{{polizaPrima.impuesto}}" :disabled="cambiarOpcionesPago" v-model="primaImpuesto" />
             </div>                                
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -258,7 +258,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Total </label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_total" class="form-control"  id="poliza_total" value="{{polizaPrima.total}}" :disabled="cambiarOpcionesPago" />
+                <input type="input-left-addon" name="poliza_total" class="form-control"  id="poliza_total" value="{{polizaPrima.total}}" :disabled="cambiarOpcionesPago" v-model="primaTotal" />
             </div>                                
         </div>
     </div> 
@@ -266,14 +266,15 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     <div class="row">
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
             <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago">
+            <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago"
+            v-model="pagosFrecuencia">
                 <option value="">Seleccione</option>
                 <option v-for="frecuencia in catalogoFrecuenciaPagos" v-bind:value="frecuencia.valor" :selected="frecuencia.valor == polizaPrima.frecuencia_pago">{{frecuencia.etiqueta}}</option>
             </select>
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-4 plan">
             <label>M&eacute;todo de pago <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[metodo_pago]" class="form-control" id="metodopago" data-rule-required="true" :disabled="cambiarOpcionesPago">
+            <select  name="campoprima[metodo_pago]" class="form-control" id="metodopago" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosMetodo">
                 <option value="">Seleccione</option>
                 <option v-for="metodoPago in catalogoMetodoPago" v-bind:value="metodoPago.valor" :selected="metodoPago.valor == polizaPrima.metodo_pago" >{{{metodoPago.etiqueta}}}</option>
             </select>
@@ -282,14 +283,14 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Fecha primer Pago <span required="" aria-required="true">*</span> </label>
             <div class="input-group" >
                 <span class="input-group-addon"><i class="fa fa-calendar "></i></span>    
-                <input type="input" id="fecha_primer_pago" name="campoprima[fecha_primer_pago]"  class="form-control date datepicker2" value="{{polizaPrima.fecha_primer_pago}} " data-rule-required="true" :disabled="cambiarOpcionesPago">
+                <input type="input" id="fecha_primer_pago" name="campoprima[fecha_primer_pago]"  class="form-control date datepicker2" value="{{polizaPrima.fecha_primer_pago}} " data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosPrimerPago">
             </div>
         </div>
     </div> 
     <div class="row">
         <div class="form-group col-xs-12 col-sm-4 col-md-2 col-lg-2 plan">
             <label>Cantidad de pagos <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[cantidad_pagos]" class="form-control" id="cantidadpagos" data-rule-required="true" :disabled="cambiarOpcionesPago">
+            <select  name="campoprima[cantidad_pagos]" class="form-control" id="cantidadpagos" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosCantidad">
                 <option value="">Seleccione</option>
                 <option v-for="canpag in catalogoCantidadPagos" v-bind:value="canpag.valor" :selected="canpag.etiqueta == polizaPrima.cantidad_pagos">{{canpag.etiqueta}}</option>
             </select>
@@ -297,21 +298,21 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
             <label>Sitio de pago <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[sitio_pago]" class="form-control" id="sitiopago" data-rule-required="true" :disabled="cambiarOpcionesPago">
+            <select  name="campoprima[sitio_pago]" class="form-control" id="sitiopago" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosSitio">
                 <option value="">Seleccione</option>
                 <option v-for="sitio in catalogoSitioPago" v-bind:value="sitio.valor" :selected="sitio.valor == polizaPrima.sitio_pago">{{{sitio.etiqueta}}}</option>
             </select>
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
             <label>Centro de facturaci&oacute;n  </label>
-            <select  name="campoprima[centro_facturacion]" class="form-control" id="centro_facturacion" @change="getClienteDireccion()" data-rule-required="true" :disabled="cambiarOpcionesPago">
+            <select  name="campoprima[centro_facturacion]" class="form-control" id="centro_facturacion" @change="getClienteDireccion()" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosCentroFac">
                 <option value="">Seleccione</option>
                 <option v-for="centroFac in catalogoCentroFacturacion" v-bind:value="centroFac.id" :selected="centroFac.id == polizaPrima.centro_facturacion">{{{centroFac.nombre}}}</option>
             </select>
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">  
             <label for="direccion">Dirección</label>
-            <div id="participacion"></div><input name="campoprima[direccion_pago]" type="text" v-model="clienteCentro" class="form-control" value="{{polizaPrima.direccion_pago}}" :disabled="cambiarOpcionesPago"/>
+            <div id="participacion"></div><input name="campoprima[direccion_pago]" type="text" v-model="clienteCentro" class="form-control" value="{{polizaPrima.direccion_pago}}" :disabled="cambiarOpcionesPago" v-model="pagosDireccion"/>
         </div>
     </div>
     <h5 style="font-size:14px">Distribuci&oacute;n de participaci&oacute;n</h5>
@@ -413,7 +414,10 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-2" style="margin-left: -20px;">
             <label>Centro Contable</label>
-            <input type="text" name="nombre_centroContable" id="centro_contable" class="form-control" value="{{nombre_centroContable}}" disabled>
+            <select type="text" name="nombre_centroContable" id="centro_contable" class="form-control"  :disabled="disabledfechaInicio" v-model="centroContable">
+                <option value="">Seleccione</option>
+                <option v-for="centro in centrosContables" id="{{centro.id}}" :selected="centro.nombre==nombre_centroContable">{{centro.nombre}}</option>
+            </select>
         </div>
     </div>
 </div>
