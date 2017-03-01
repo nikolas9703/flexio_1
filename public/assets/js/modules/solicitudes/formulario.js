@@ -162,7 +162,7 @@ function modalEstados(form){
                         });
                         tkn = values.erptkn;
                         console.log(values);
-                        var guardarsolicitud = moduloSolicitudes.ajaxguardarsolicitud(values);
+                       /* var guardarsolicitud = moduloSolicitudes.ajaxguardarsolicitud(values);
 
                         guardarsolicitud.success (function(){
                             var datosbitacora = {campo: {estado: estado, estado_anterior: estado_anterior, tipo: 'Solicitud_aprobada', motivo: motivo, solicitud: solicitud, id: ids}};
@@ -176,7 +176,7 @@ function modalEstados(form){
                                     location.href = phost() + 'polizas/editar/' + inf.uuid;
                                 }
                             });
-                        });
+                        });*/
                         
                     } else {
                         toastr.error('Este Numero de Poliza ya existe en el Sistema. Ingrese otro.');

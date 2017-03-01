@@ -430,7 +430,7 @@ class Solicitudes extends CRM_Controller {
 
         $agenteprincipaltotal=Agentes::where('principal',1)->
         where('id_empresa',$this->empresa_id)->first()->count();
-
+        
         if($agenteprincipaltotal>0)
         {
          $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();

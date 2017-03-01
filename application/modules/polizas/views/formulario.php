@@ -57,7 +57,7 @@ echo $campos['creado_por'];
         </div> 
         <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
             <label>Grupo <span required="" aria-required="true">*</span></label>
-            <select name="natural[grupo]" data-rule-required="true" class="form-control grupo_sel" id="grupo_nombre" @change="grupoInfo()" :disabled="disabledfechaInicio" v-model="clienteGrupo">
+            <select name="natural[grupo]" data-rule-required="true" class="form-control grupo_sel" id="grupo_nombre" :disabled="disabledfechaInicio" v-model="clienteGrupo">
                 <option>Seleccione</option>
                 <option v-for="grupo in polizaGrupo"  v-bind:value="grupo.nombre"  selected="{{grupo.nombre == polizaCliente.grupo}}" >
                     {{grupo.nombre}}
@@ -82,9 +82,9 @@ echo $campos['creado_por'];
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 Dirección" >
             <label>Dirección</label>
             <!-- <input type="text" name="campo[direccion]" v-model="clienteInfo.direccion" class="form-control" id="campo[direccion]" disabled> -->
-            <select class="form-control" name="natural[direccion]" class="form-control grupo_sel" id="direccion_nombre" @change="direccionInfo()" :disabled="disabledfechaInicio" v-model="clienteDireccion">
+            <select class="form-control" name="natural[direccion]" class="form-control grupo_sel" id="direccion_nombre"  :disabled="disabledfechaInicio" v-model="clienteDireccion">
              <option value="">Seleccione</option>
-             <option v-for="centroFac in catalogoCentroFacturacion" v-bind:value="centroFac.id" :selected="centroFac.direccion == polizaCliente.direccion">{{{centroFac.direccion}}}</option>
+             <option v-for="centroFac in catalogoCentroFacturacion" v-bind:value="centroFac.direccion" :selected="centroFac.direccion == polizaCliente.direccion">{{{centroFac.direccion}}}</option>
          </select>
      </div>
      <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
@@ -417,7 +417,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Centro Contable</label>
             <select type="text" name="nombre_centroContable" id="centro_contable" class="form-control"  :disabled="disabledfechaInicio" v-model="centroContable">
                 <option value="">Seleccione</option>
-                <option v-for="centro in centrosContables" id="{{centro.id}}" :selected="centro.nombre==nombre_centroContable">{{centro.nombre}}</option>
+                <option v-for="centro in centrosContables" v-bind:value="centro.id" :selected="centro.nombre==nombre_centroContable">{{centro.nombre}}</option>
             </select>
         </div>
     </div>
