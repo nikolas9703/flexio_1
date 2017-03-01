@@ -138,12 +138,14 @@ var formularioCrear = new Vue({
                             stringId= '#' +value.formIdName;
                             if ($(stringId).validate().form()) {
 
-                                var inputs = $(''+stringId+' :input');
+                                var inputs = $(stringId+' :input');
 
 
                                 inputs.each(function () {
-                                    values[this.name] = $(this).val();
+                                    
+                                    values[this.name] =$(this).val();
                                 });
+                               
                             }else {
                                 window.location.href = "#divintereses";
 
@@ -153,7 +155,7 @@ var formularioCrear = new Vue({
                     }
 
                 } 
-               // alert(this.vigenciaPolizaDeclarativa);
+                alert(this.pagosDireccion);
                 this.$http.post({
                     url: phost() + 'polizas/policyRenewal',
                     method:'POST',
@@ -166,7 +168,8 @@ var formularioCrear = new Vue({
                         renovarPoliza :true,
                         idPolicy :this.idPolicy,
                         comision: this.comision,
-                        interesValues :values,
+                        camposInteres:JSON.stringify(values),
+                        interesId:this.InteresId,
                         clienteGrupo: this.clienteGrupo,
                         clienteTelefono : this.clienteTelefono,
                         clienteCorreo : this.clienteCorreo,
@@ -175,7 +178,7 @@ var formularioCrear = new Vue({
                         planesCoberturas: $("#planesCoberturasDeducibles").val(),
                         sumaAsegurada: this.sumaAsegurada,
                         vigenciapagador : this.vigenciaPagador,
-                        vigenciaNombrePagado: this.polizaVigencia.pagador,
+                        vigenciaNombrePagador: this.polizaVigencia.pagador,
                         vigenciaPersonaAsegurada: this.vigenciaPersonaAsegurada,
                         vigenciaPolizaDeclarativa:this.vigenciaPolizaDeclarativa,
                         primaAnual : this.primaAnual,

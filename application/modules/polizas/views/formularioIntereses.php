@@ -17,7 +17,7 @@
                 </select>
             </div>
             <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5 ">
-                <select id="selInteres" class="white-bg form-control select2" role="tablist" :disabled="disabledfechaInicio" onchange="formularioCrear.getInteres()">
+                <select id="selInteres" class="white-bg form-control select2" role="tablist" :disabled="disabledfechaInicio" v-model="interesId" onchange="formularioCrear.getInteres()">
                     <option value="">Nuevo</option>
                     <option v-for="inter in sIntereses" v-bind:value="inter.id">{{inter.numero}}</option>
                 </select>

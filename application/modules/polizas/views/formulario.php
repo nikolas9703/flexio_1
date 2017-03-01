@@ -312,7 +312,8 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">  
             <label for="direccion">Dirección</label>
-            <div id="participacion"></div><input name="campoprima[direccion_pago]" type="text" v-model="clienteCentro" class="form-control" value="{{polizaPrima.direccion_pago}}" :disabled="cambiarOpcionesPago" v-model="pagosDireccion"/>
+            <div id="participacion"></div>
+            <input name="campoprima[direccion_pago]" type="text" class="form-control" value="{{polizaPrima.direccion_pago}}" :disabled="cambiarOpcionesPago" v-model="pagosDireccion"/>
         </div>
     </div>
     <h5 style="font-size:14px">Distribuci&oacute;n de participaci&oacute;n</h5>
