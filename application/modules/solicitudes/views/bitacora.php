@@ -37,7 +37,7 @@
                                                 $titBit = "Cambio de Estado";
                                                 $logoBit = "fa-refresh";
                                                 break;
-                                            case 'Creación':
+                                            case 'Creacion':
                                                 $titBit = "Creación de solicitud";
                                                 $logoBit = "fa-building";
                                                 break;
@@ -52,6 +52,10 @@
 											case 'Creacion_vigencia':
                                                 $titBit = "Vigencia y detalle de solicitud";
                                                 $logoBit = "fa-calendar";
+                                                break;
+											case 'actualizacion_comision_principal':
+                                                $titBit = "Ajuste Datos de Comisión Agente Principal";
+                                                $logoBit = "fa-usd";
                                                 break;
 											case 'actualizacion_comision':
                                                 $titBit = "Ajuste Datos de Comisión";

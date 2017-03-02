@@ -23,6 +23,7 @@ use Flexio\Modulo\Solicitudes\Repository\SolicitudesRepository as solicitudesRep
 use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
 use Flexio\Modulo\Contabilidad\Models\Impuestos as impuestosModel;
 use Flexio\Modulo\Solicitudes\Models\Solicitudes as solicitudesModel;
+use Flexio\Modulo\Solicitudes\Models\SegSolicitudesAgentePrin as SegSolicitudesAgentePrin;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_cat as InteresesAsegurados_catModel;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_detalles as InteresesAsegurados_detalles;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesVigencia as solicitudesVigenciaModel;
@@ -47,6 +48,7 @@ use Flexio\Modulo\Planes\Models\PlanesComisiones;
 use Flexio\Modulo\Coberturas\Models\Coberturas as coberturaModel;
 use Flexio\Modulo\aseguradoras\Repository\AseguradorasRepository as AseguradorasRepository;
 use Flexio\Modulo\Planes\Models\Deducibles;
+use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesCoberturas;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesDeduccion;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesParticipacion as Participacion;
@@ -139,6 +141,7 @@ class Solicitudes extends CRM_Controller {
     private $interesesAseguradosRep;
     private $RamosDocumentos;
     private $Documentos;
+    private $SegSolicitudesAgentePrin;
 
     /**
      * @var string
@@ -206,7 +209,7 @@ class Solicitudes extends CRM_Controller {
         $this->interesesAseguradosRep = new interesesAseguradosRep();
         $this->RamosDocumentos = new RamosDocumentos();
         $this->Documentos = new Documentos();
-
+        $this->SegSolicitudesAgentePrin=new SegSolicitudesAgentePrin();
 
         $politicas_transaccion = $this->PoliticasRepository->getAllPoliticasRoles($clause);
 
@@ -380,6 +383,10 @@ class Solicitudes extends CRM_Controller {
         if (count($prima) == 0) {
             $prima = 'undefined';
         }
+        $acreedores = $this->solicitudesRepository->verAcreedores($solicitudes->id);
+        if (count($acreedores) == 0) {
+            $acreedores = 'undefined';
+        }
         $participacion = $this->solicitudesRepository->verParticipacion($solicitudes->id);
         if (count($participacion) == 0) {
             $participacion = 'undefined';
@@ -430,20 +437,45 @@ class Solicitudes extends CRM_Controller {
 
         $agenteprincipaltotal=Agentes::where('principal',1)->
         where('id_empresa',$this->empresa_id)->first()->count();
-        
+
         if($agenteprincipaltotal>0)
         {
-         $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
-         $agenteprincipalnombre=$agenteprincipal->nombre;
+           $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
+           $agenteprincipalnombre=$agenteprincipal->nombre;
 
-         $totalparticipacion=$this->Participacion->where('id_solicitud',$solicitudes->id)->sum('porcentaje_participacion');
-         $agtPrincipalporcentaje=number_format((100-$totalparticipacion),2);
-     }
-     else
-     {
-         $agenteprincipalnombre="";
-         $agtPrincipalporcentaje=0;
-     }
+           $totalparticipacion=$this->Participacion->where('id_solicitud',$solicitudes->id)->sum('porcentaje_participacion');
+           $agtPrincipalporcentaje=number_format((100-$totalparticipacion),2);
+       }
+       else
+       {
+           $agenteprincipalnombre="";
+           $agtPrincipalporcentaje=0;
+       }
+
+    $solicitudes_titulo = Ramos::find($solicitudes->ramo_id);
+    $ramo = $solicitudes_titulo->nombre;
+    $id_ramo = $solicitudes_titulo->id;
+    $idpadre = $solicitudes_titulo->padre_id;
+    $tipo_solicitud=Ramos::find($id_ramo)->first();
+    $indcolec = $tipo_solicitud->id_tipo_poliza;
+    $ramocadena=$ramo;
+
+    while ($idpadre != 0) {
+        $ram = Ramos::where('id', $idpadre)->first();
+        $id_ramo = $ram->id;
+        $idpadre = $ram->padre_id;
+        $ramocadena = $ram->nombre . "/" . $ramocadena;
+    }
+
+    $ram1 = Ramos::where('id', $id_ramo)->first();
+    $nombrepadre = $ram1->nombre;
+
+    if (strpos($ramocadena, "Vida")>-1) {
+        $validavida = 1;
+    }else{
+        $validavida = 0;
+    }
+
 
      $data = array();
      $this->assets->agregar_var_js(array(
@@ -475,6 +507,7 @@ class Solicitudes extends CRM_Controller {
         "prima" => $prima,
         "estado" => $solicitudes->estado,
         "participacion" => $participacion,
+        "acreedores" => $acreedores,
         "observaciones" => $solicitudes->observaciones,
         "desde" => "solicitudes",
         "indcolec"=>$indcolec,
@@ -490,7 +523,9 @@ class Solicitudes extends CRM_Controller {
         "editar_asignado" => $editar_asignado,
         "numero_soliciud" => $solicitudes->numero,
         "centros_contables" => $centroContable,
-        "id_centro_contable" => $solicitudes->centro_contable
+        "id_centro_contable" => $solicitudes->centro_contable,
+        "validavida" => $validavida,
+        "contacre" => count($acreedores)
         ));
 
      $titulo = $solicitudes->numero;
@@ -530,9 +565,6 @@ class Solicitudes extends CRM_Controller {
     $this->template->agregar_breadcrumb($breadcrumb);
     $this->template->agregar_contenido($data);
     $this->template->visualizar();
-}
-
-public function ocultotabla() {
     $this->assets->agregar_js(array(
         'public/assets/js/modules/solicitudes/tabla.js'
         ));
@@ -571,6 +603,7 @@ public function ajax_listar($grid = NULL) {
         }
     } else if ($modulo == "Aseguradoras") {
 
+        //$ase = $this->AseguradorasRepository->verAseguradora(hex2bin($uuid));
         $ase = $this->AseguradorasRepository->verAseguradora(hex2bin($uuid));
         $id_aseguradora = $ase->id;
         if ($id_aseguradora) {
@@ -674,7 +707,7 @@ public function ajax_listar($grid = NULL) {
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->id . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 //$hidden_options .= '<a href="'. base_url('colaboradores/ver/'. $uuid_colaborador) .'" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
 
-            $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarSolicitud" >Ver Solicitud</a>';
+            $hidden_options = '<a href="' . $url . '?reg=age&val='.strtoupper($uuid).'" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarSolicitud" >Ver Solicitud</a>';
                 //$hidden_options .= '<button data-id="' . $row['id'] . '" id="cambio_estado_solicitud" class="btn btn-block btn-outline btn-success " data-type="" data-estado="' . $row->estado . '" >Cambio de Estado</button>';
             $hidden_options .= $row->estado == "Anulada" ? '' : ($row->estado == "Aprobada" ? '' : ($row->estado == "Rechazada" ? '' : '<a href="javascript:" data-id="' . $row['id'] . '" data-solicitud="' . $row->numero . '" data-cliente="' . $row->cliente->nombre . '" class="btn btn-block btn-outline btn-success anular_solicitud" data-type="' . $row['id'] . '" >Anular</a>' ));
             $hidden_options .= '<a href="' . $urlbitacora . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success bitacora_solicitud" data-type="' . $row['id'] . '" >Bitácora</a>';
@@ -845,7 +878,7 @@ public function formularioModal($data = NULL) {
 
 function comentariosformulario() {
     $uuid = $this->uuid_soli;
-//		$uuid = $campo['uuid'];
+//      $uuid = $campo['uuid'];
     $bitacora = $this->solicitudesRepository->verSolicitudes(hex2bin(strtolower($uuid)));
 
 
@@ -869,7 +902,7 @@ function ajax_carga_comentarios() {
 
         $uuid = $this->uuid_soli;
         $fechas = $this->bitacoraModel;
-//		$uuid = $campo['uuid'];
+//      $uuid = $campo['uuid'];
         $Bitacora = $this->solicitudesRepository->verSolicitudes(hex2bin(strtolower($uuid)));
         $historial = bitacoraModel::join('usuarios', 'seg_solicitudes_bitacora.usuario_id', '=', 'usuarios.id')
         ->where('comentable_id', $id_solicitud)
@@ -1328,7 +1361,7 @@ public function ajax_cambioestado_bitacora() {
         $fieldset["comentable_id"] = $id_comentario;
         $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
         $fieldset["empresa_id"] = $this->empresa_id;
-
+        
         $interesaseg = $this->bitacoraModel->create($fieldset);
 
 //            $campo = ['comentario' => $comentario, 'comentable_type' => $tipo, 'usuario_id' => $usuario, 'empresa_id' => $this->empresa_id, 'comentable_id'=>$id_comentario ];
@@ -1409,6 +1442,12 @@ public function crear($id_ramo = null, $id_interes = null) {
 
     $ram1 = Ramos::where('id', $id_ramo)->first();
     $nombrepadre = $ram1->nombre;
+
+    if (strpos($ramocadena, "Vida")>-1) {
+        $validavida = 1;
+    }else{
+        $validavida = 0;
+    }
 
     if (!$this->auth->has_permission('acceso')) {
             // No, tiene permiso, redireccionarlo.
@@ -1523,6 +1562,7 @@ public function crear($id_ramo = null, $id_interes = null) {
     "prima" => "undefined",
     "estado" => "undefined",
     "participacion" => "undefined",
+    "acreedores" => "undefined",
     "observaciones" => "undefined",
     "uuid_solicitudes" => "undefined",
     "comision" => "undefined",
@@ -1540,7 +1580,8 @@ public function crear($id_ramo = null, $id_interes = null) {
     "usersList" => $usersList,
     "editar_asignado" => 1,
     "centros_contables" => $centroContable,
-    "id_centro_contable" => $id_centro_contable
+    "id_centro_contable" => $id_centro_contable,
+    "validavida" => $validavida
     ));
 
 
@@ -2081,9 +2122,12 @@ function ajax_get_comision() {
     function guardar() {
         if ($_POST) {
             //print_r($_POST["campo"]);
+            $reg = !empty($_POST['reg']) ? $_POST['reg'] : '' ;
             unset($_POST["campo"]["guardar"]);
+            unset($_POST["reg"]);
             $campo = Util::set_fieldset("campo");
             $campovigencia = Util::set_fieldset("campovigencia");
+            //$campoacreedores = Util::set_fieldset("campoacreedores");
             $campoprima = Util::set_fieldset("campoprima");
             $campoPlanesCoberturas = Util::set_fieldset("campoPlanesCoberturas");
             $campoparticipacion = Util::set_fieldset("campoparticipacion");
@@ -2105,10 +2149,6 @@ function ajax_get_comision() {
                     $date = $date->format('Y-m-d');
                     $campo['fecha_creacion'] = $date;
                     $solicitudes = $this->solicitudesModel->create($campo);
-
-
-
-
 
                     //Create Coverage and dedutibles
                     if (!empty($campoPlanesCoberturas["planesCoberturasDeducibles"])) {
@@ -2163,6 +2203,27 @@ function ajax_get_comision() {
                     $int_ase['fecha_inclusion'] = $campovigencia['vigencia_desde'];
                     $det = InteresesAsegurados_detalles::where('detalle_unico', $_POST['detalleunico'])->update($int_ase);
 
+                    //Crear Acreedores
+                    $fieldsetacre = array();
+                    $campoacreedores = $this->input->post('campoacreedores');
+                    if($campoacreedores!=NULL){
+                        $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                        $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                        $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                        $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                        foreach ($campoacreedores as $key => $value) {
+                            $fieldsetacre['acreedor'] = $value;
+                            $fieldsetacre["id_solicitud"] = $solicitudes->id;
+                            $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                            $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                            $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                            $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                            if ($value != "") {
+                                SolicitudesAcreedores::create($fieldsetacre);    
+                            }                                                       
+                        }
+                    }
+
                     /* $det = InteresesAsegurados_detalles::where('detalle_unico', $_POST['detalleunico'])->get()->toArray();
 
                       foreach ($det as $deta) {
@@ -2181,107 +2242,57 @@ function ajax_get_comision() {
 
                   $arreglo_agentes = explode(",", $campoparticipacion['id_agente']);
                   $arreglo_porcentajes = explode(",", $campoparticipacion['porcentajes']);
-                  for ($i = 0; $i <= $cantidad; $i++) {
-                    if ($arreglo_agentes[$i] != '') {
-                        $campoparticipacion['id_solicitud'] = $solicitudes->id;
-                        $campoparticipacion['agente'] = $arreglo_agentes[$i];
-                        $campoparticipacion['porcentaje_participacion'] = $arreglo_porcentajes[$i];
-                        $solicitudesparticipacion = $this->Participacion->create($campoparticipacion);
-                    }
-                }
-                    //guardar tabla documentacion
-                if (isset($campodocumentacion['opcion']) && $campodocumentacion['opcion'] != "") {
-                    $arreglo_documentacion = explode(",", $campodocumentacion['opcion']);
-                    $cantidad_doc = $campodocumentacion['cantidad_check'];
 
-                    for ($h = 0; $h <= count($arreglo_documentacion); $h++) {
-                        if (isset($arreglo_documentacion[$h]) && $arreglo_documentacion[$h] != '') {
-                            $campodocumentacion['id_solicitud'] = $solicitudes->id;
-                            $campodocumentacion['valor'] = $arreglo_documentacion[$h];
-                            $this->solicitudesDocumentosModel->create($campodocumentacion);
+                    $totalparotrosagentes=0;
+                    for ($i = 0; $i <= $cantidad; $i++) {
+                        if ($arreglo_agentes[$i] != '') {
+                            $campoparticipacion['id_solicitud'] = $solicitudes->id;
+                            $campoparticipacion['agente'] = $arreglo_agentes[$i];
+                            $campoparticipacion['porcentaje_participacion'] = $arreglo_porcentajes[$i];
+                            $solicitudesparticipacion = $this->Participacion->create($campoparticipacion);
+
+                            $totalparotrosagentes+=$arreglo_porcentajes[$i];
                         }
                     }
-                }
+                    //guardar tabla documentacion
+                    if (isset($campodocumentacion['opcion']) && $campodocumentacion['opcion'] != "") {
+                        $arreglo_documentacion = explode(",", $campodocumentacion['opcion']);
+                        $cantidad_doc = $campodocumentacion['cantidad_check'];
+
+                        for ($h = 0; $h <= count($arreglo_documentacion); $h++) {
+                            if (isset($arreglo_documentacion[$h]) && $arreglo_documentacion[$h] != '') {
+                                $campodocumentacion['id_solicitud'] = $solicitudes->id;
+                                $campodocumentacion['valor'] = $arreglo_documentacion[$h];
+                                $this->solicitudesDocumentosModel->create($campodocumentacion);
+                            }
+                        }
+                    }
 
 //                    $campodocumentacion['id_solicitud'] = $solicitudes->id;
 //                    $solicituddocumentos = $this->solicitudesDocumentosModel->create($campodocumentacion);
 
                     //
-                $impuestoPlanes = Planes::where(['seg_planes.id' => $solicitudes->plan_id])->join('contab_impuestos','contab_impuestos.id','=','seg_planes.id_impuesto')->select('contab_impuestos.impuesto AS impuesto')->first();
-                $sobreComision = PlanesComisiones::where(['id_planes' => $solicitudes->plan_id])->first();
-                $this->solicitudesModel->find($solicitudes->id)->update(['impuesto_sobre_comision' => $sobreComision->sobre_comision, 'impuesto' => $impuestoPlanes->impuesto ]);
+                    $impuestoPlanes = Planes::where(['seg_planes.id' => $solicitudes->plan_id])->join('contab_impuestos','contab_impuestos.id','=','seg_planes.id_impuesto')->select('contab_impuestos.impuesto AS impuesto')->first();
+                    $sobreComision = PlanesComisiones::where(['id_planes' => $solicitudes->plan_id])->first();
+                    $this->solicitudesModel->find($solicitudes->id)->update(['impuesto_sobre_comision' => $sobreComision->sobre_comision, 'impuesto' => $impuestoPlanes->impuesto ]);
 
 
 
                     //Subir documentos
-                if (!empty($_FILES['file'])) {
-                    $id_solicitud = $solicitudes->id;
-                    $modeloInstancia = $this->solicitudesModel->find($id_solicitud);
-                    $this->documentos->subir($modeloInstancia);
-                }
-
-
-                    /*
-                    if (isset($campodocumentacion['opcion']) && $campodocumentacion['opcion'] != "") {
-                        $arreglo_documentacion = explode(",", $campodocumentacion['opcion']);
-                        for ($h = 0; $h <= $campodocumentacion['cantidad_check']; $h++) {
-                            if (isset($campodocumentacion['modulo_' . $h]) && $campodocumentacion['modulo_' . $h] == "Cliente") {
-                                $doc_cliente = $this->Documentos->where('documenasdftable_id', "=", 194)
-                                        ->where('nombre_documento', '=', "'" . $campodocumentacion['nombre_' . $h] . "'")
-                                        ->first();
-                                $column["empresa_id"] = $doc_cliente->empresa_id;
-                                $column["archivo_ruta"] = $doc_cliente->archivo_ruta;
-                                $column["archivo_nombre"] = $doc_cliente->archivo_nombre;
-                                $column["extra_datos"] = $doc_cliente->extra_datos;
-                                $column["subido_por"] = $doc_cliente->subido_por;
-                                $column["documentable_id"] = $solicitudes->cliente_id;
-                                $column["documentable_type"] = "Flexio\Modulo\Cliente\Models\Cliente";
-                                $prueba = $this->Documentos->create($column);
-                            } else if (isset($campodocumentacion['modulo_' . $h]) && $campodocumentacion['modulo_' . $h] == "Intereses asegurado") {
-                                $id_intereses = InteresesAsegurados_detalles::where(['id_solicitudes' => $solicitudes->id])->first();
-                                $interes_id = InteresesAsegurados::where(['id' => $id_intereses->id_intereses])->first();
-                                $id_intereses2 = $interes_id->interesestable_type;
-                                if ($id_intereses2 == "1") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\ArticuloAsegurados";
-                                } elseif ($id_intereses2 == "2") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\CargaAsegurados";
-                                } elseif ($id_intereses2 == "3") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\AereoAsegurados";
-                                } elseif ($id_intereses2 == "4") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\MaritimoAsegurados";
-                                } elseif ($id_intereses2 == "5") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\PersonasAsegurados";
-                                } elseif ($id_intereses2 == "6") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\ProyectoAsegurados";
-                                } elseif ($id_intereses2 == "7") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\UbicacionAsegurados";
-                                } elseif ($id_intereses2 == "8") {
-                                    $documento = "Flexio\Modulo\InteresesAsegurados\Models\VehiculoAsegurados";
-                                }
-                                $doc_cliente2 = $this->Documentos->where('documentable_id', "=", 194)
-                                        ->where('nombre_documento', '=', "'" . $campodocumentacion['nombre_' . $h] . "'")
-                                        ->first();
-                                $column_2["empresa_id"] = $doc_cliente2->empresa_id;
-                                $column_2["archivo_ruta"] = $doc_cliente2->archivo_ruta;
-                                $column_2["archivo_nombre"] = $doc_cliente2->archivo_nombre;
-                                $column_2["extra_datos"] = $doc_cliente2->extra_datos;
-                                $column_2["subido_por"] = $doc_cliente2->subido_por;
-                                $column_2["documentable_id"] = $solicitudes->aseguradora_id;
-                                $column_2["documentable_type"] = $documento;
-                                $prueba22 = $this->Documentos->create($column_2);
-                            }
-                        }
-
-                        //var_dump($prueba . " <br><br><br> " . $prueba22 . " <br><br><br> " . $doc_cliente . " <br><br><br> " . $doc_cliente2);
+                    if (!empty($_FILES['file'])) {
+                        $id_solicitud = $solicitudes->id;
+                        $modeloInstancia = $this->solicitudesModel->find($id_solicitud);
+                        $this->documentos->subir($modeloInstancia);
                     }
-                    */
-                    $fieldset["comentario"] = "Creación de solicitud<br>Estado: " . $campo['estado'];
-                    $fieldset["comentable_type"] = "Creación";
+
+                    
+                    $fieldset["comentario"] = "Creación de solicitud<br>Estado: ".$solicitudes->estado;
+                    $fieldset["comentable_type"] = "Creacion";
                     $fieldset['created_at'] = date('Y-m-d H:i:s');
                     $fieldset["comentable_id"] = $solicitudes->id;
                     $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
                     $fieldset["empresa_id"] = $this->empresa_id;
-
+                    
                     $interesase = $this->bitacoraModel->create($fieldset);
 
                     $IInteres = array();
@@ -2289,6 +2300,22 @@ function ajax_get_comision() {
                     //$IInteres['created_at'] = date('Y-m-d H:i:s');
                     $IInteres["comentable_type"] = "Creacion_interes_solicitudes";
                     $bitacora = $this->bitacoraModel->where('comentable_id', $_POST['detalleunico'])->update($IInteres);
+                    
+                    $agenteprincipaltotal=Agentes::where('principal',1)->
+                    where('id_empresa',$this->empresa_id)->count();
+
+                    if($agenteprincipaltotal>0)
+                    {
+                         $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
+                         $datossegprincipal['agente_id']=$agenteprincipal->id;
+                         $datossegprincipal['solicitud_id']=$solicitudes->id;
+                         $datossegprincipal['created_at']=date('Y-m-d H:i:s');
+                         $datossegprincipal['updated_at']=date('Y-m-d H:i:s');
+                         $datossegprincipal['comision']=number_format((100-$totalparotrosagentes),2);
+                         
+                         $poragenteprincipal=$this->SegSolicitudesAgentePrin->create($datossegprincipal);
+                     }
+                 
                 } else {
 
                     //Actualizar
@@ -2347,6 +2374,28 @@ function ajax_get_comision() {
                     unset($campovigencia["selpagadornombre"]);
                     $solicitudesvigencia = $this->solicitudesVigenciaModel->where(['id_solicitudes' => $id_solicitud])->update($campovigencia);
 
+                    //Crear Acreedores
+                    $fieldsetacre = array();
+                    $campoacreedores = $this->input->post('campoacreedores');
+                    SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
+                    if($campoacreedores!=NULL){                        
+                        $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                        $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                        $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                        $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                        foreach ($campoacreedores as $key => $value) {
+                            $fieldsetacre['acreedor'] = $value;
+                            $fieldsetacre["id_solicitud"] = $id_solicitud;
+                            $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                            $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                            $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                            $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                            if ($value != "") {
+                                SolicitudesAcreedores::create($fieldsetacre);    
+                            }                                                       
+                        }
+                    }
+
                     $primerpago = $this->input->post('fecha_primer_pago'); //$campoprima['fecha_primer_pago'];
 
                     $campoprima['fecha_primer_pago'] = date('Y-m-d', strtotime($primerpago));
@@ -2360,9 +2409,9 @@ function ajax_get_comision() {
                     unset($campoparticipacion['cantidad']);
                     unset($campoparticipacion['total']);
 
-
                     /* $this->Participacion->where(['id_solicitud' => $id_solicitud])->delete(); */
-
+                    
+                    $totalparotrosagentes=0;
                     for ($i = 0; $i < count($arreglo_agentes); $i++) {
 
                         if ($arreglo_agentes[$i] != '') {
@@ -2381,7 +2430,38 @@ function ajax_get_comision() {
                                 $solicitudesparticipacion = $this->Participacion->create($campoparticipacion);
                             }
                         }
+                        $totalparotrosagentes+=$arreglo_porcentajes[$i];
                     }
+                    
+                    $agenteprincipaltotal=Agentes::where('principal',1)->
+                    where('id_empresa',$this->empresa_id)->count();
+
+                    if($agenteprincipaltotal>0)
+                    {
+                         $comisionagenteprincipal=$this->SegSolicitudesAgentePrin->where('solicitud_id',$id_solicitud)->count();
+                         
+                         $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
+                         
+                         if($comisionagenteprincipal>0)
+                         {
+                             $datossegprincipal['agente_id']=$agenteprincipal->id;
+                             $datossegprincipal['updated_at']=date('Y-m-d H:i:s');
+                             $datossegprincipal['comision']=number_format((100-$totalparotrosagentes),2);
+                             
+                             $poragenteprincipal=$this->SegSolicitudesAgentePrin->where('solicitud_id',$id_solicitud)->update($datossegprincipal);
+                         }
+                         else
+                         {
+                             $datossegprincipal['agente_id']=$agenteprincipal->id;
+                             $datossegprincipal['solicitud_id']=$id_solicitud;
+                             $datossegprincipal['created_at']=date('Y-m-d H:i:s');
+                             $datossegprincipal['updated_at']=date('Y-m-d H:i:s');
+                             $datossegprincipal['comision']=number_format((100-$totalparotrosagentes),2);
+                             
+                             $poragenteprincipal=$this->SegSolicitudesAgentePrin->create($datossegprincipal);
+                         }
+                     }
+                     
                     $participacion = $this->Participacion->where(['id_solicitud' => $id_solicitud])->get();
                     foreach ($participacion as $key => $value) {
                         if (!in_array($value->agente, $arreglo_agentes)) {
@@ -2426,6 +2506,7 @@ function ajax_get_comision() {
                 log_message('error', $e);
                 Capsule::rollback();
             }
+            
             if (!is_null($solicitudes) || (!is_null($solicitudesvigencia) || !is_null($solicitudesprima) || !is_null($solicitudesparticipacion) || !is_null($solicitudes) )) {
 
                 $mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente', 'titulo' => 'Solicitud ' . $codigo . '');
@@ -2435,10 +2516,21 @@ function ajax_get_comision() {
         } else {
             $mensaje = array('class' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
         }
-
+        
+        if(empty($campo['uuid']))
+        {
+            $soli=SolicitudesModel::find($solicitudes->id);
+            //$fieldsetupdate["created_at"]=date('Y-m-d H:i:s');
+            $fieldsetupdate["comentario"] = "Creación de solicitud<br>Estado: ".$soli->estado;
+            $interesase = $this->bitacoraModel->where('comentable_type','Creacion')
+            ->where('comentable_id',$soli->id)->update($fieldsetupdate);
+        }
+        
         $this->session->set_flashdata('mensaje', $mensaje);
-        redirect(base_url('solicitudes/listar'));   
-
+        if (!empty($url) && $reg == "age" ) 
+            redirect(base_url('agentes/ver/'.$_POST['val']));
+        else
+            redirect(base_url('solicitudes/listar'));   
         
     }
 

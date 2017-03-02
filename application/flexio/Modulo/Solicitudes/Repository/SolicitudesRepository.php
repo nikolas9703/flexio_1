@@ -8,7 +8,7 @@ use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesVigencia;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesPrima;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesParticipacion;
-
+use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores;
 
 class SolicitudesRepository {
     
@@ -45,7 +45,7 @@ class SolicitudesRepository {
         }
         }
 		
-		$query->join('seg_ramos_usuarios', 'seg_ramos_usuarios.id_ramo', '=', 'seg_solicitudes.ramo_id');
+		$query->leftjoin('seg_ramos_usuarios', 'seg_ramos_usuarios.id_ramo', '=', 'seg_solicitudes.ramo_id');
         $query->where("seg_ramos_usuarios.id_usuario", $clause['usuario_id']);  
 		$query->groupBy('seg_solicitudes.id');
 		unset($clause['usuario_id']);
@@ -68,17 +68,17 @@ class SolicitudesRepository {
 		}
 		
 		 if(!empty($clause['cliente_id'])){  
-			$query->join('cli_clientes', 'seg_solicitudes.cliente_id', '=', 'cli_clientes.id');
+			$query->leftjoin('cli_clientes', 'seg_solicitudes.cliente_id', '=', 'cli_clientes.id');
             $query->where("cli_clientes.nombre", 'LIKE','%'.$clause['cliente_id'].'%');  
         }
 		
 		 if(!empty($clause['aseguradora_id'])){  
-			$query->join('seg_aseguradoras', 'seg_solicitudes.aseguradora_id', '=', 'seg_aseguradoras.id');
+			$query->leftjoin('seg_aseguradoras', 'seg_solicitudes.aseguradora_id', '=', 'seg_aseguradoras.id');
             $query->where("seg_aseguradoras.nombre", 'LIKE','%'.$clause['aseguradora_id'].'%');  
         }
 		
 		if(!empty($clause['ramo_id'])){  
-			$query->join('seg_ramos', 'seg_solicitudes.ramo_id', '=', 'seg_ramos.id');
+			$query->leftjoin('seg_ramos', 'seg_solicitudes.ramo_id', '=', 'seg_ramos.id');
             $query->where("seg_ramos.nombre", 'LIKE','%'.$clause['ramo_id'].'%');  
         }
 		
@@ -88,7 +88,7 @@ class SolicitudesRepository {
         }
 		
 		if(!empty($clause['agentes_id'])){  
-			$query->join('seg_solicitudes_participacion', 'seg_solicitudes.id', '=', 'seg_solicitudes_participacion.id_solicitud');
+			$query->leftjoin('seg_solicitudes_participacion', 'seg_solicitudes.id', '=', 'seg_solicitudes_participacion.id_solicitud');
             $query->where("seg_solicitudes_participacion.agente",$clause['agentes_id']);  
 			$query->groupBy('seg_solicitudes_participacion.id_solicitud');
         }
@@ -107,20 +107,22 @@ class SolicitudesRepository {
         
         if($clause!=NULL && !empty($clause) && is_array($clause))
         {
-                foreach($clause AS $field => $value)
-                {  
-                    if($field=='id' && count($value)){
-                        $query->whereIn('seg_solicitudes.'.$field,$value);
-                    }
-                    //verificar si valor es array
-                    elseif(is_array($value) ){
-                        
-                            $query->where('seg_solicitudes.'.$field, $value[0], $value[1]);
-                            
-                    }else{
-                            $query->where('seg_solicitudes.'.$field, '=', $value);
-                    }
-                }
+			foreach($clause AS $field => $value)
+			{  
+				if($field=='aseguradora_id1')
+					$field='aseguradora_id';
+				if($field=='id' && count($value)){
+					$query->whereIn('seg_solicitudes.'.$field,$value);
+				}
+				//verificar si valor es array
+				elseif(is_array($value) ){
+					
+						$query->where('seg_solicitudes.'.$field, $value[0], $value[1]);
+						
+				}else{
+						$query->where('seg_solicitudes.'.$field, '=', $value);
+				}
+			}
         }
 		
 		if(preg_match("/(fecha_creacion1)/i", $sidx)){
@@ -135,17 +137,17 @@ class SolicitudesRepository {
 					
 					if($sidx=='nombre_cliente')
 					{
-						$query->join('cli_clientes', 'seg_solicitudes.cliente_id', '=', 'cli_clientes.id');
+						$query->leftjoin('cli_clientes', 'seg_solicitudes.cliente_id', '=', 'cli_clientes.id');
 						$query->orderBy('cli_clientes.nombre', $sord);
 					}
 					else if($sidx=='aseguradora_id')
 					{
-						$query->join('seg_aseguradoras', 'seg_solicitudes.aseguradora_id', '=', 'seg_aseguradoras.id');
+						$query->leftjoin('seg_aseguradoras', 'seg_solicitudes.aseguradora_id', '=', 'seg_aseguradoras.id');
 						$query->orderBy('seg_aseguradoras.nombre', $sord);
 					}
 					else if($sidx=='ramo_id')
 					{
-						$query->join('seg_ramos', 'seg_solicitudes.ramo_id', '=', 'seg_ramos.id');
+						$query->leftjoin('seg_ramos', 'seg_solicitudes.ramo_id', '=', 'seg_ramos.id');
 						$query->orderBy('seg_ramos.nombre', $sord);
 					}
 					else
@@ -190,6 +192,13 @@ class SolicitudesRepository {
         $participacion = SolicitudesParticipacion::where('id_solicitud',$id_solicitudes);
         
         return $participacion->get();
+
+    }
+
+    public function verAcreedores($id_solicitudes){
+        $acreedores = SolicitudesAcreedores::where('id_solicitud',$id_solicitudes);
+        
+        return $acreedores->get();
 
     }
 }
