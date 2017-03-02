@@ -110,7 +110,6 @@ var tablaAseguradoras = (function () {
             var rowINFO = grid_obj.getRowData(id);
             //alert(rowINFO);			
             var option = rowINFO["options"];
-            console.log(option);
             //evento para boton collapse sub-menu Accion Personal
             opcionesModal.on('click', 'a[href="#collapse' + id + '"]', function () {
                 opcionesModal.find('#collapse' + id).collapse();
