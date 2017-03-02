@@ -204,7 +204,7 @@
 <div class="row col-xs-12 col-sm-12 col-md-12 col-lg-12 last-div">
     <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
     <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-      <a onclick="window.history.back();" class="btn btn-default btn-block" id="cancelarFormBtn">Cancelar </a>
+      <a href="<?php echo base_url('cobros/listar');?>" class="btn btn-default btn-block" id="cancelarFormBtn">Cancelar </a>
     </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
      <input type="hidden" name="campo[id]" id="cobro_id" value="{{datosCobro.id}}" ng-disabled="datosCobro.id ===''"/>

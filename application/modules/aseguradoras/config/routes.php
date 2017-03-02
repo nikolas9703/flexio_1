@@ -2,7 +2,7 @@
 
 
 $route['aseguradoras/listar']= 'aseguradoras/listar';
-$route['aseguradoras/crear/']= 'aseguradoras/crear';
+$route['aseguradoras/crear']= 'aseguradoras/crear';
 $route['aseguradoras/ver'] = 'aseguradoras/ver';
 $route['aseguradoras/editar']= 'aseguradoras/editar';
 $route['aseguradoras/ajax_listar']= 'aseguradoras/ajax_listar';

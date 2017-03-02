@@ -46,7 +46,7 @@ $route['agentes/ocultotabla'] = 'agentes/ocultotabla';
 
 //Formulario crear/editar
 $route['agentes/crear'] = 'agentes/crear';
-$route['agentes/editar'] = 'agentes/editar';
+//$route['agentes/editar'] = 'agentes/editar';
 //$route['agentes/guardar'] = 'agentes/guardar';
 //$route['agentes/crear-agente'] = 'agentes/crear_agente';
 $route['agentes/ver/(:any)'] = 'agentes/ver/$1';
