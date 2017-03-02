@@ -3138,59 +3138,155 @@ if (!$exist) {
 
      $p7 = $poliza7->create($solCliente);
 
-     
+
      $policyType=$solicitudes['id_tipo_int_asegurado'];
      $clause["interesestable_type"]=$policyType;
      $clause["empresa_id"] = $this->empresa_id;
      if($policyType == 1){
-        $datosArticulo = PolizasArticulo::where(['id_poliza' => $solicitudes['id']])->get();
-        if(count($datosArticulo)){
-           foreach ($datosArticulo as $key => $value) {
-               # code...
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
 
-            unset($value->id);
-            unset($value->updated_at);
-            unset($value->created_at);
-            $value->id_poliza = $p->id;
-            PolizasArticulo::create($value->toArray());
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('ART', count($total) + 1);
+        }else{
+            $numero = $result->numero;
         }
-    }
+        $clause=[
+        "uuid_articulo"=>hex2bin($camposInteres["campo[uuid]"]),
+        "id_poliza"=>$p->id,
+        "numero"=>$numero,
+        "empresa_id"=>$this->empresa_id,
+        "nombre"=>$camposInteres["campo[nombre]"],
+        "clase_equipo"=>$camposInteres["campo[clase_equipo]"],
+        "marca"=>$camposInteres["campo[marca]"],
+        "modelo"=>$camposInteres["campo[modelo]"],
+        "anio"=>$camposInteres["campo[anio]"],
+        "numero_serie"=>$camposInteres["campo[numero_serie]"],
+        "id_condicion"=>$camposInteres["campo[id_condicion]"],
+        "valor"=>$camposInteres["campo[valor]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        ];
+        PolizasArticulo::create($clause);
+        
+    
 }elseif($policyType == 2){
 
-    $datoscarga = PolizasCarga::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datoscarga)){
-        foreach ($datoscarga as $key => $value) {
-         unset($value->id);
-         unset($value->updated_at);
-         $value->id_poliza = $p->id;
+    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+    ->where("interesestable_id",$campos["interesId"])
+    ->select("numero")
+    ->first();
 
-         PolizasCarga::create($value->toArray());
-     }
-
-
- }
-}elseif($policyType == 3){
-    $datosAereo = PolizasAereo::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosAereo)){
-        foreach ($datosAereo as $key => $value) {
-            unset($value->id);
-            unset($value->updated_at);
-            unset($value->created_at);
-            $value->id_poliza = $p->id;
-            PolizasAereo::create($value->toArray());
-        }
+    if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('CGA', count($total) + 1);
+    }else{
+        $numero = $result->numero;
     }
+    $clause =[
+    "empresa_id"=>$this->empresa_id,
+    "id_poliza"=>$p->id,
+    "numero"=>$numero,
+    "detalle"=>$camposInteres["campo[detalle]"],
+    "no_liquidacion"=>$camposInteres["campo[no_liquidacion]"],
+    "fecha_despacho"=>$camposInteres["campo[fecha_despacho]"],
+    "fecha_arribo","valor"=>$camposInteres[""],
+    "tipo_empaque"=>$camposInteres["campo[fecha_arribo]"],
+    "condicion_envio"=>$camposInteres["campo[condicion_envio]"],
+    "medio_transporte"=>$camposInteres["campo[medio_transporte]"],
+    "origen"=>$camposInteres["campo[origen]"],
+    "destino"=>$camposInteres["campo[destino]"],
+    "observaciones"=>$camposInteres["campo[observaciones]"],
+    "tipo_id"=>$camposInteres["campo[tipo_empaque]"],
+    "tipo_obligacion"=>$camposInteres["campo[tipo_obligacion]"],
+    "acreedor"=>$camposInteres["campo[acreedor]"],
+    "estado"=>$camposInteres["campo[estado]"],
+    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+    "tipo_obligacion_opcional"=>$camposInteres["campo[tipo_obligacion_opcional]"],
+    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+    ];
+    PolizasCarga::create($clause);
+
+}elseif($policyType == 3){
+    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+    ->where("interesestable_id",$campos["interesId"])
+    ->select("numero")
+    ->first();
+
+    if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('CAE', count($total) + 1);
+    }else{
+        $numero = $result->numero;
+    }
+    $clause =[
+
+    "empresa_id"=>$this->empresa_id,
+    "id_poliza"=>$p->id,
+    "serie"=>$camposInteres["campo[serie]"],
+    "marca"=>$camposInteres["campo[marca_aereo]"],
+    "modelo"=>$camposInteres["campo[modelo_aereo]"],
+    "matricula"=>$camposInteres["campo[matricula_aereo]"],
+    "valor"=>$camposInteres["campo[valor_aereo]"],
+    "pasajeros"=>$camposInteres["campo[pasajeros_aereo]"],
+    "tripulacion"=>$camposInteres["campo[tripulacion_aereo]"],
+    "observaciones"=>$camposInteres["campo[observaciones]"],
+    "numero"=>$numero,
+    "tipo_id"=>$camposInteres["campo[tipo_id]"],
+    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+    "estado"=>$camposInteres["campo[estado]"],
+    ]; 
+
+    PolizasAereo::create($clause);
 }elseif($policyType == 4){
-    $datosMaritimo = PolizasMaritimo::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosMaritimo)){
-      foreach ($datosMaritimo as $key => $value) {
-       unset($value->id);
-       unset($value->updated_at);
-       unset($value->created_at);
-       $value->id_poliza = $p->id;
-       PolizasMaritimo::create($value->toArray());
-   }
-}
+    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+    ->where("interesestable_id",$campos["interesId"])
+    ->select("numero")
+    ->first();
+
+    if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('CAE', count($total) + 1);
+    }else{
+        $numero = $result->numero;
+    }
+    $clause= [
+    "uuid_casco_maritimo"=>hex2bin($camposInteres["campo[uuid]"]),
+    "empresa_id"=>$this->empresa_id,
+    "id_poliza"=>$p->id,
+    "numero"=>$numero,
+    "serie"=>$camposInteres["campo[serie]"],
+    "nombre_embarcacion"=>$camposInteres["campo[nombre_embarcacion]"],
+    "tipo"=>$camposInteres["campo[tipo]"],
+    "marca"=>$camposInteres["campo[marca]"],
+    "valor"=>$camposInteres["campo[valor]"],
+    "pasajeros"=>$camposInteres["campo[pasajeros]"],
+    "acreedor"=>$camposInteres["campo[acreedor]"],
+    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+    "observaciones"=>$camposInteres["campo[observaciones]"],
+    "tipo_id"=>$camposInteres["campo[tipo_id]"],
+    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+    "estado"=>$camposInteres["campo2[estado]"],
+    ];    
+
+    PolizasMaritimo::create($clause);
+
 
 
 }elseif($policyType == 5){
@@ -3253,41 +3349,138 @@ if (!$exist) {
     
 
 }elseif($policyType == 6){
-    $datosProyecto = PolizasProyecto::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosProyecto)){
-       foreach ($datosProyecto as $key => $value) {
-           unset($value->id);
-           unset($value->updated_at);
-           unset($value->created_a);
-           $value->id_poliza = $p->id;
-           PolizasProyecto::create($value->toArray());
-       }
-   }
-}elseif($policyType == 7){
-    $datosUbicacion = PolizasUbicacion::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosUbicacion)){
-       foreach ($datosUbicacion as $key => $value) {
-           # code...
-        unset($value->id);
-        unset($value->updated_at);
-        unset($value->created_a);
-        $value->id_poliza = $p->id;
-        PolizasUbicacion::create($value->toArray());
+    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+    ->where("interesestable_id",$campos["interesId"])
+    ->select("numero")
+    ->first();
+
+    if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('PRO', count($total) + 1);
+    }else{
+        $numero = $result->numero;
     }
+    $clause =[
+    "uuid_proyecto"=>hex2bin($camposInteres[""]),
+    "id_poliza"=>$p->id,
+    "empresa_id"=>$this->empresa_id,
+    "numero"=>$numero,
+    "nombre_proyecto"=>$camposInteres["campo[nombre_proyecto]"],
+    "no_orden"=>$camposInteres["campo[no_orden]"],
+    "contratista"=>$camposInteres["campo[contratista]"],
+    "representante_legal"=>$camposInteres["campo[representante_legal]"],
+    "duracion"=>$camposInteres["campo[duracion]"],
+    "fecha"=>$camposInteres["campo[fecha]"],
+    "monto"=>$camposInteres["campo[monto]"],
+    "monto_afianzado"=>$camposInteres["campo[monto_afianzado]"],
+    "acreedor"=>$camposInteres["campo[acreedor]"],
+    "porcentaje_acreedor"=>$camposInteres["campo[monto_afianzado]"],
+    "ubicacion"=>$camposInteres["campo[ubicacion]"],
+    "observaciones"=>$camposInteres["campo[observaciones]"],
+    "estado"=>$camposInteres["campo2[estado]"],
+    "tipo_id"=>$camposInteres["campo[tipo_id]"],
+    "tipo_propuesta"=>$camposInteres["campo[tipo_propuesta]"],
+    "validez_fianza_pr"=>$camposInteres["campo[validez_fianza_pr]"],
+    "tipo_fianza"=>$camposInteres["campo[tipo_fianza]"],
+    "asignado_acreedor"=>$camposInteres["campo[acreedor]"],
+    "fecha_concurso"=>$camposInteres["campo[fecha_concurso]"],
+    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+    "validez_fianza_opcional"=>$camposInteres["campo[validez_fianza_opcional]"],
+    "tipo_propuesta_opcional"=>$camposInteres["campo[tipo_propuesta_opcional]"],
+    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"]
+    ];  
 
-}
+    PolizasProyecto::create($clause);
+
+}elseif($policyType == 7){
+
+    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+    ->where("interesestable_id",$campos["interesId"])
+    ->select("numero")
+    ->first();
+
+    if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('UBI', count($total) + 1);
+    }else{
+        $numero = $result->numero;
+    }
+    $clause =[
+    "uuid_ubicacion"=>hex2bin($camposInteres["campo[uuid]"]),
+    "empresa_id"=>$this->empresa_id,
+    "id_poliza"=>$p->id,
+    "numero"=>$numero,
+    "nombre"=>$camposInteres["campo[nombre]"],
+    "direccion"=>$camposInteres["campo[direccion]"],
+    "edif_mejoras"=>$camposInteres["campo[edif_mejoras]"],
+    "contenido"=>$camposInteres["campo[contenido]"],
+    "maquinaria"=>$camposInteres["campo[maquinaria]"],
+    "inventario"=>$camposInteres["campo[inventario]"],
+    "acreedor"=>$camposInteres["campo[acreedor]"],
+    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+    "observaciones"=>$camposInteres["campo[observaciones]"],
+    "estado"=>$camposInteres["campo2[estado]"],
+    "tipo_id"=>$camposInteres["campo[id]"],
+    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+    ]; 
+
+    PolizasUbicacion::create($clause);
+    
+
+
 }elseif($policyType == 8){
-    $datosVehiculo = PolizasVehiculo::where(['id_poliza' => $solicitudes['id']])->get();
-    if(count($datosVehiculo)){
-       foreach ($datosVehiculo as $key => $value) {
-           unset($value->id);
-           unset($value->updated_at);
-           unset($value->created_a);
-           $value->id_poliza = $p->id;
-           PolizasVehiculo::create($value->toArray());
-       }
 
-   }
+     $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+    ->where("interesestable_id",$campos["interesId"])
+    ->select("numero")
+    ->first();
+
+    if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('VEH', count($total) + 1);
+    }else{
+        $numero = $result->numero;
+    }
+   $clause= [
+        "id_poliza"=>$p->id,
+        "numero"=>$numero,
+        "chasis"=>$camposInteres["campo[chasis]"],
+        "uuid_vehiculo"=>hex2bin($camposInteres["campo[uuid]"]),
+        "unidad"=>$camposInteres["campo[unidad]"],
+        "marca"=>$camposInteres["campo[marca]"],
+        "modelo"=>$camposInteres["campo[modelo]"],
+        "placa"=>$camposInteres["campo[placa]"],
+        "ano"=>$camposInteres["campo[ano]"],
+        "motor"=>$camposInteres["campo[motor]"],
+        "color"=>$camposInteres["campo[color]"],
+        "capacidad"=>$camposInteres["campo[capacidad]"],
+        "uso"=>$camposInteres["campo[uso]"],
+        "condicion"=>$camposInteres["campo[condicion]"],
+        "operador"=>$camposInteres["campo[operador]"],
+        "extras"=>$camposInteres["campo[extras]"],
+        "valor_extras"=>$camposInteres["campo[valor_extras]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "empresa_id"=>$this->empresa_id,
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+    ];
+
+    PolizasVehiculo::create($clause);
+
+
+
 }
 
 
