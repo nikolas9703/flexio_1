@@ -226,6 +226,8 @@ $formAttr = array(
                     <input type="hidden"  name="campo[plan_id]" id="planes2">               
 
                     <input type="hidden" name="detalleunico" id="detalleunico" value="<?php echo strtotime('now'); ?>"> 
+                    <input type="hidden" name="reg" id="reg" value="<?php echo $_GET['reg']; ?>"> 
+                    <input type="hidden" name="val" id="val" value="<?php echo $_GET['val']; ?>"> 
 
                     <!-- Vigencia y detalle de solicitud -->    
                     <div class="row">
@@ -234,7 +236,6 @@ $formAttr = array(
                             $campo = array();
                         }
                         ?>
-
                         <?php echo modules::run('solicitudes/formulariovigencia', $campo); ?>
 
                     </div>
@@ -256,8 +257,14 @@ $formAttr = array(
                     </div>
                 </div></div>
         </div>           
+        <?php
+            $url = 'solicitudes/listar';
+            if($_GET['reg'] == "age"){
+                $url = 'agentes/ver/'.$_GET['val'];
+            }
+        ?>
         <div class="row"> <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
-            <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2"><a href="<?php echo base_url('solicitudes/listar'); ?>" class="btn btn-default btn-block" id="cancelar">Cancelar </a> </div>
+            <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2"><a href="<?php echo base_url($url); ?>" class="btn btn-default btn-block" id="cancelar">Cancelar </a> </div>
 
             <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2 guardarsolicitud">
                 <input type="submit" name="campo[guardar]" value="Guardar " class="btn btn-primary btn-block" id="campo[guardar]" :disabled="disabledSubmit">
