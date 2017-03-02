@@ -426,15 +426,18 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 <br><br>
 <div class="row"> <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
 <?php
-        /* if($_GET['reg']=="ase")
-          $url='aseguradoras/editar/'.$_GET['val'];
-          else if($_GET['reg']=="age")
-          $url='agentes/ver/'.$_GET['val'];
-          else */
+        if($_GET['reg']=="ase"){
+            $url = 'aseguradoras/editar/'.$_GET['val'];
+        }
+        else if($_GET['reg']=="age"){
+            $url = 'agentes/ver/'.$_GET['val'];
+        }
+        else {
             $url = 'polizas/listar';
+        }
 
         ?>
-        <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2"><!--<a href="<?php echo base_url($url); ?>" class="btn btn-default btn-block cancelar" id="cancelar">Cancelar </a>--><a href="" onclick="window.history.back();" class="btn btn-default btn-block cancelar" id="cancelar">Cancelar </a> </div>
+        <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2"><a href="<?php echo !empty($_GET['ysto']) ? $url : base_url($url); ?>" class="btn btn-default btn-block cancelar" id="cancelar">Cancelar </a><!--a href="" onclick="window.history.back();" class="btn btn-default btn-block cancelar" id="cancelar">Cancelar </a--> </div>
         <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
             <?php
             if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {

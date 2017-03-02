@@ -81,6 +81,7 @@
                 echo form_open(base_url("planes/crear/planes"), $formAttr);
                 ?>
 				<input type='hidden' name='regreso' id='regreso' value='<?php if(isset($_GET['regr'])) echo $_GET['regr']; else '';?>' />
+        <input type='hidden' name='regreso' id='rutaorigen' value='<?php if(isset($_GET['history'])) echo base64_decode($_GET['history']); else '';?>' />
 				<input type='hidden' name='valor_regreso' id='valor_regreso' value='<?php if(isset($_GET['val_regr'])) echo $_GET['val_regr']; else '';?>' />
                 <div class="tab-content">
                  <div id="tab2-1" class="tab-pane active" style="margin-top: -60px; margin-left: -40px">

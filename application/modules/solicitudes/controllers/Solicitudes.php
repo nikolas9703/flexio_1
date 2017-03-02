@@ -565,6 +565,9 @@ class Solicitudes extends CRM_Controller {
     $this->template->agregar_breadcrumb($breadcrumb);
     $this->template->agregar_contenido($data);
     $this->template->visualizar();
+}
+
+public function ocultotabla() {
     $this->assets->agregar_js(array(
         'public/assets/js/modules/solicitudes/tabla.js'
         ));
@@ -1182,6 +1185,19 @@ public function ajax_cambioestado_bitacora() {
                 $solParticipacion['porcentaje_participacion'] = $value->porcentaje_participacion == '' ? 0 : $value->porcentaje_participacion;
                 $p6 = $poliza6->create($solParticipacion);
             }
+            //--------------------------------------------------------
+            $poliza8 = new Flexio\Modulo\Polizas\Models\PolizasAcreedores;
+            $acreedores = $this->solicitudesRepository->verAcreedores($solicitudes['id']);
+            foreach ($acreedores AS $value) {
+                $solAcreedores = [
+                'id_poliza' => $p->id,
+                'acreedor' => $value->acreedor,
+                'porcentaje_cesion' => $value->porcentaje_cesion,
+                'monto_cesion' => $value->monto_cesion
+                ];
+                $p8 = $poliza8->create($solAcreedores);
+            }
+            //--------------------------------------------------------
 
             $poliza7 = new Flexio\Modulo\Polizas\Models\PolizasCliente;
             $clause['cli_clientes.empresa_id'] = $this->empresa_id;
@@ -2121,7 +2137,7 @@ function ajax_get_comision() {
 
     function guardar() {
         if ($_POST) {
-            //print_r($_POST["campo"]);
+            //print_r($_POST["campo"]); 
             $reg = !empty($_POST['reg']) ? $_POST['reg'] : '' ;
             unset($_POST["campo"]["guardar"]);
             unset($_POST["reg"]);
@@ -2527,10 +2543,11 @@ function ajax_get_comision() {
         }
         
         $this->session->set_flashdata('mensaje', $mensaje);
-        if (!empty($url) && $reg == "age" ) 
+        if (!empty($reg) && $reg == "age" ) 
             redirect(base_url('agentes/ver/'.$_POST['val']));
         else
-            redirect(base_url('solicitudes/listar'));   
+            redirect(base_url('solicitudes/listar'));  
+
         
     }
 

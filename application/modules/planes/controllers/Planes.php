@@ -862,7 +862,7 @@ function guardar() {
                 $hidden_options = "";
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->id .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $hidden_options .= '<a href="'. base_url('planes/ver/'. $row->uuid_planes.'?regr='.$regr) .'" data-id="'. $row->id .'" class="btn btn-block btn-outline btn-success">Ver detalle</a>';
-                $hidden_options .= '<a href="'. base_url('planes/editar/'. $row->uuid_planes.'?regr='.$regr) .'" data-id="'. $row->id .'" class="btn btn-block btn-outline btn-success">Editar</a>';
+                $hidden_options .= '<a href="'. base_url('planes/editar/'. $row->uuid_planes.'?regr='.$regr).'&history='.base64_encode($_SERVER['HTTP_REFERER']) .'" data-id="'. $row->id .'" class="btn btn-block btn-outline btn-success">Editar</a>';
                 $level = substr_count($row['nombre'], ".");
                 $spanStyle = ($row['estado'] == 1) ? 'success' : 'danger';
                 $response->rows[$i] = array("id" => $row['id'], 'cell' => array(

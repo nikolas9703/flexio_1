@@ -173,7 +173,7 @@
                             <div class="row botones">
                                 <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
                                 <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2" ><a
-                                        href="<?php echo base_url('intereses_asegurados/listar'); ?>" class="btn btn-default btn-block"
+                                        onclick="window.history.back();" class="btn btn-default btn-block"
                                         id="cancelar">Cancelar </a></div>
                                 <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
                                     <input type="submit" name="campo[guardar]" value="Guardar "
