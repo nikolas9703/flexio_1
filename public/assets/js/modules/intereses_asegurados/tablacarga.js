@@ -1,6 +1,6 @@
 if(desde=="solicitudes" || desde=="poliza"){
-    var counterCoverageCarga = indCoverageArray.length,
-    counterDedutibleCarga = indCoverageArray.length;
+    var counterCoverageCarga = 1,
+    counterDedutibleCarga =    1;
     var tablaSolicitudesCarga = (function () {
 
         var unico = $("#detalleunico").val();

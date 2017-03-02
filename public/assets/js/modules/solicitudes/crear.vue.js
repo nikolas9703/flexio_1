@@ -1,6 +1,7 @@
 Vue.http.options.emulateJSON = true;
 var conta = 0;
 var hasInteres;
+var indCoverageArray=[];
 var planesCoberturasDeducibles = [];
 var arrayauxiliar=[];
 for (var i =0; i< documentacionesgbd.length; i++) {
@@ -43,6 +44,7 @@ var formularioCrear = new Vue({
         prima: prima != "undefined" ? prima : false,
         estado: estado != "undefined" ? estado : false,
         participacion: participacion != "undefined" ? participacion : false,
+        acreedores: acreedores != "undefined" ? acreedores : false,
         centros_contables: centros_contables,
         id_centro: id_centro_contable,
         //***************************************************
@@ -276,6 +278,7 @@ var formularioCrear = new Vue({
                 }
                 if (!_.isEmpty(response.data)) {
                     coberturasForm.$set('coberturasInfo', response.data);
+                    indCoverageArray = response.data;
                     self.$set('disabledCoberturas', false);
                     self.$set('disabledSubmit', false);
                 }
@@ -1116,24 +1119,24 @@ sumatotal: function () {
              var imp = 7;
              if ((cadena.indexOf("Auto Individual") > -1) || (cadena.indexOf("Auto Colectivo/Flota") > -1)) {
              imp = 6;
-         }*/
-         console.log(this.impuestoPlan);
-         if (this.exoneradoImpuestos == null || this.exoneradoImpuestos == "" || this.exoneradoImpuestos == false) {
-            this.exoneradoImpuestos = false;
-        }
-        var impuesto = this.exoneradoImpuestos == false ? this.impuestoPlan : 0;
-        var impuesto_monto = (parseFloat(this.primaAnual) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima)) * (impuesto / 100);
+             }*/
+             console.log(this.impuestoPlan);
+             if (this.exoneradoImpuestos == null || this.exoneradoImpuestos == "" || this.exoneradoImpuestos == false) {
+                this.exoneradoImpuestos = false;
+            }
+            var impuesto = this.exoneradoImpuestos == false ? this.impuestoPlan : 0;
+            var impuesto_monto = (parseFloat(this.primaAnual) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima)) * (impuesto / 100);
 
-        return parseFloat(impuesto_monto);
-    },
-    totalPrima: function () {
-        this.primaAnual = this.primaAnual == '' ? '0.00' : this.primaAnual;
-        this.otrosPrima = this.otrosPrima == '' ? '0.00' : this.otrosPrima;
-        this.descuentosPrima = this.descuentosPrima == '' ? '0.00' : this.descuentosPrima;
-        var impuesto_monto = this.impuestoMonto;
-        var total = parseFloat(this.primaAnual) + parseFloat(impuesto_monto) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima);
-        return parseFloat(total);
-    },
+            return parseFloat(impuesto_monto);
+        },
+        totalPrima: function () {
+            this.primaAnual = this.primaAnual == '' ? '0.00' : this.primaAnual;
+            this.otrosPrima = this.otrosPrima == '' ? '0.00' : this.otrosPrima;
+            this.descuentosPrima = this.descuentosPrima == '' ? '0.00' : this.descuentosPrima;
+            var impuesto_monto = this.impuestoMonto;
+            var total = parseFloat(this.primaAnual) + parseFloat(impuesto_monto) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima);
+            return parseFloat(total);
+        },
 
 }
 
@@ -1240,6 +1243,21 @@ var coberturasForm = new Vue({
 
 });
 
+function eliminaacreedor(x){
+    $('#a' + x +'').remove();  
+}
+
+if (vista == "crear") {
+    var counter_acre = 2;
+    var counter_acre2 = 2;
+    $('.del_file_acreedores_adicionales').hide();
+}else if (vista == "editar") {
+    console.log(contacre);
+    var counter_acre = contacre+2;
+    var counter_acre2 = contacre+2;
+    $('#del_acre').hide();
+}
+
 
 $(document).ready(function () {
 	
@@ -1249,6 +1267,8 @@ $(document).ready(function () {
         $("#nombre_doc_titulo").hide();
         $("#nombre_doc_titulo_editar").hide();
         $('#cantidad_check').val(documentaciones.length);
+
+        $("#campos_vida_acreedor_crear").remove();
 		
 		if(agtPrincipal!="")
 		{
@@ -1261,12 +1281,19 @@ $(document).ready(function () {
 		{
 			$('.agentePrincipal').hide();
 		}
+
+        //Inicializa El Check de Poliza Declrativa con valor
+        $("span.switchery-default").remove();
+        var elem = document.querySelector('#polizaDeclarativa');
+        var init = new Switchery(elem); 
 		
     } else {
         $("#documentos_editar").hide();
         $('#docentregados_crear').show();
         $("#nombre_doc_titulo").hide();
         $("#nombre_doc_titulo_editar").hide();
+
+        $("#campos_vida_acreedor_editar").remove();
 		
 		
 		if(agtPrincipal!="")
@@ -1299,8 +1326,476 @@ $(document).ready(function () {
     if (editar_asignado != 1) {
         $("#usuario_id").attr("disabled", "disabled");
     }
+    //----------------------------------------------------------------------
+    //Inicializa Parametros para acreedores
+    //----------------------------------------------------------------------
+    $(".monto_cesion_acreedor").inputmask('currency',{ 
+        prefix: "", 
+        autoUnmask : true, 
+        removeMaskOnSubmit: true 
+    });
+
+    $(".porcentaje_cesion_acreedor").inputmask('Regex', { regex: "^[1-9][0-9][.][0-9][0-9]?$|^100[.]00?$|^[0-9][.][0-9][0-9]$" });
+    //$(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
+
+    $('.fechas_acreedores_inicio').each(function () {
+        var f = $(this).val();
+        if ($(this).val() == "0000-00-00") {
+            f = "";
+        }
+        $(this).daterangepicker({ //
+           locale: { format: 'YYYY-MM-DD' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+        }).val(f);
+    });
+    $('.fechas_acreedores_fin').each(function () {
+        var f = $(this).val();
+        if ($(this).val() == "0000-00-00") {
+            f = "";
+        }
+        $(this).daterangepicker({ //
+           locale: { format: 'YYYY-MM-DD' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+        }).val(f);
+    });
+
+    
+    /*$('.fechas_acreedores_fin').daterangepicker({ //
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     });
+
+    $('#fechainicio_1').daterangepicker({ //
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val('');*/
+    $('#fechafin_1').daterangepicker({ //
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val('');
+
+     $(".fechas_acreedores_inicio").change(function () {
+        var vigini = $("#vigencia_desde").val();
+        var vigfin = $("#vigencia_hasta").val();
+        var actual = $(this).val();
+
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var final = $("#fechafin_"+x[1]).val();
+
+        if (vigini.indexOf('/') > -1) {
+            var dat = vigini.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigini = anio + '-' + mes + '-' + dia ;
+        }
+        if (vigfin.indexOf('/') > -1) {
+            var dat = vigfin.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigfin = anio + '-' + mes + '-' + dia ;
+        }
+
+        var ini = new Date(vigini);
+        var fin = new Date(vigfin);
+        var act = new Date(actual);
+        var fefin = new Date(final);
+
+        if (act < ini) {
+            $(this).val(vigini);
+        }else if(act > fin){
+            $(this).val(vigfin);
+        }else if(final != "" && act > fefin){
+            $(this).val(final);
+        }
+    });
+    
+    $(".fechas_acreedores_fin").change(function () {
+        var vigini = $("#vigencia_desde").val();
+        var vigfin = $("#vigencia_hasta").val();
+        var actual = $(this).val();
+
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var inicial = $("#fechainicio_"+x[1]).val();
+
+        if (vigini.indexOf('/') > -1) {
+            var dat = vigini.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigini = anio + '-' + mes + '-' + dia ;
+        }
+        if (vigfin.indexOf('/') > -1) {
+            var dat = vigfin.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigfin = anio + '-' + mes + '-' + dia ;
+        }
+
+        var ini = new Date(vigini);
+        var fin = new Date(vigfin);
+        var act = new Date(actual);
+        var feini = new Date(inicial);
+
+        if (act < ini) {
+            $(this).val(vigini);
+        }else if(act > fin){
+            $(this).val(vigfin);
+        }else if(inicial != "" && act < feini){
+            $(this).val(inicial);
+        }
+    });
+
+    $(".monto_cesion_acreedor").keyup(function(){
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var monto = $("#montocesion_"+x[1]).val();
+
+        var sumaasegurada = $("#suma_asegurada").val();
+        if (sumaasegurada == "") { sumaasegurada = 0;}
+        var porcentaje = (monto * 100 )/(sumaasegurada);
+        if (porcentaje > 100) { porcentaje = 100;}
+        console.log(porcentaje);
+        $("#porcentajecesion_"+x[1]).val(porcentaje);
+    });
+
+    $(".porcentaje_cesion_acreedor").keyup(function(){
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var porcentaje = $("#porcentajecesion_"+x[1]).val();
+        if (porcentaje == "") { porcentaje = 0;}
+        var sumaasegurada = $("#suma_asegurada").val();
+        var monto = (porcentaje * sumaasegurada )/(100);
+        console.log(monto);
+        if (porcentaje>100) {
+            $("#montocesion_"+x[1]).val(sumaasegurada);
+        }else{
+            $("#montocesion_"+x[1]).val(monto);
+        }            
+    });
+    //----------------------------------------------------------------------
+    //Fin Inicializacion Parametros para acreedores
+    //----------------------------------------------------------------------
+
+    $('input[name="campovigencia[suma_asegurada]"]').keyup(function(){
+        var total = $(this).val();        
+        $('input[name="campoacreedores_por[]"]').each(function () {
+            var id = $(this).attr("id");
+            var y = id.split('_');
+            var x = $(this).val();
+            if (x != "") {
+               var monto = (parseFloat(total) * parseFloat(x))/100 ;
+               $("#montocesion_"+y[1]).val(monto);
+            }                
+        });
+    });
+
+    //Agregar Acreedores a la Vigencia    
+    /*$('.add_file_acreedores_adicionales1').click(function () {
+        $(".add_file_acreedores_adicionales").hide();
+        $(".del_file_acreedores_adicionales").show();
+        $('#agrega_acre').before('<div class="row" id="a' + counter_acre2 + '"><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px"><input type="text" name="campoacreedores[]" id="acreedor_'+counter_acre2+'" class="form-control"></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">%</span> <input type="text" name="campoacreedores_por[]" id="porcentajecesion_'+counter_acre2+'" class="form-control porcentaje_cesion_acreedor" value="0"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">$</span> <input type="text" name="campoacreedores_mon[]" id="montocesion_'+counter_acre2+'" value="0" class="form-control monto_cesion_acreedor"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_ini[]" id="fechainicio_'+counter_acre2+'" class="form-control fechas_acreedores_inicio"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_fin[]" id="fechafin_'+counter_acre2+'" class="form-control fechas_acreedores_fin"></div></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><button type="button" data="'+counter_acre2+'" class="btn btn-default btn-block add_file_acreedores_adicionales" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i></button><button type="button" data="'+counter_acre2+'" style="float: left; width: 40px; margin-top:0px!important; display: none" class="btn btn-default btn-block del_file_acreedores_adicionales"><i class="fa fa-trash"></i></button></div></div>');
+        //$('#del_file_acreedores_adicionales').fadeIn(0);
+        //-----------------------------------------------------
+        $(".monto_cesion_acreedor").inputmask('currency',{ 
+            prefix: "", 
+            autoUnmask : true, 
+            removeMaskOnSubmit: true 
+        });
+        $(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
+        $('#fechainicio_'+counter_acre2+'').daterangepicker({ //
+           locale: { format: 'YYYY-MM-DD' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+        }).val('');
+        $('#fechafin_'+counter_acre2+'').daterangepicker({ //
+           locale: { format: 'YYYY-MM-DD' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+        }).val('');
+
+        $(".fechas_acreedores_inicio").change(function () {
+            var vigini = $("#vigencia_desde").val();
+            var vigfin = $("#vigencia_hasta").val();
+            var actual = $(this).val();
+
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var final = $("#fechafin_"+x[1]).val();
+
+            if (vigini.indexOf('/') > -1) {
+                var dat = vigini.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigini = anio + '-' + mes + '-' + dia ;
+            }
+            if (vigfin.indexOf('/') > -1) {
+                var dat = vigfin.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigfin = anio + '-' + mes + '-' + dia ;
+            }
+
+            var ini = new Date(vigini);
+            var fin = new Date(vigfin);
+            var act = new Date(actual);
+            var fefin = new Date(final);
+
+            if (act < ini) {
+                $(this).val(vigini);
+            }else if(act > fin){
+                $(this).val(vigfin);
+            }else if(final != "" && act > fefin){
+                $(this).val(final);
+            }
+        });
+        $(".fechas_acreedores_fin").change(function () {
+            var vigini = $("#vigencia_desde").val();
+            var vigfin = $("#vigencia_hasta").val();
+            var actual = $(this).val();
+
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var inicial = $("#fechainicio_"+x[1]).val();
+
+            if (vigini.indexOf('/') > -1) {
+                var dat = vigini.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigini = anio + '-' + mes + '-' + dia ;
+            }
+            if (vigfin.indexOf('/') > -1) {
+                var dat = vigfin.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigfin = anio + '-' + mes + '-' + dia ;
+            }
+
+            var ini = new Date(vigini);
+            var fin = new Date(vigfin);
+            var act = new Date(actual);
+            var feini = new Date(inicial);
+
+            if (act < ini) {
+                $(this).val(vigini);
+            }else if(act > fin){
+                $(this).val(vigfin);
+            }else if(inicial != "" && act < feini){
+                $(this).val(inicial);
+            }
+        });
+
+        $(".monto_cesion_acreedor").keyup(function(){
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var monto = $("#montocesion_"+x[1]).val();
+
+            var sumaasegurada = $("#suma_asegurada").val();
+            var porcentaje = (monto * 100 )/(sumaasegurada);
+            console.log(porcentaje);
+            $("#porcentajecesion_"+x[1]).val(porcentaje);
+        });
+
+        $(".porcentaje_cesion_acreedor").keyup(function(){
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var porcentaje = $("#porcentajecesion_"+x[1]).val();
+
+            var sumaasegurada = $("#suma_asegurada").val();
+            var monto = (porcentaje * sumaasegurada )/(100);
+            console.log(monto);
+            if (porcentaje>100) {
+                $("#montocesion_"+x[1]).val(sumaasegurada);
+            }else{
+                $("#montocesion_"+x[1]).val(monto);
+            }            
+        });
+        //-------------------------------------------------------
+        counter_acre++;
+        $('.del_file_acreedores_adicionales').unbind().click(function () {
+            var d = $(this).attr('data');
+           $('#a' + d +'').remove();                        
+        });
+
+        counter_acre2++;
+
+    });*/
+    // Fin Acreedores
+    
+   
+
+    if (validavida == 1) {
+        if (id_tipo_poliza == 1) {
+            $("#vigencia_vida_individual").show();
+            $("#vigencia_vida_colectivo").remove();
+        }else{
+            $("#vigencia_vida_colectivo").show();
+            $("#vigencia_vida_individual").remove();
+        }
+    }else{
+        $("#vigencia_vida_individual").remove();
+    }
+        //-------------------------------------------------------------------------------
+
 
 });
+ 
+
+function agregaracre(){
+    $(".add_file_acreedores_adicionales").hide();
+    $(".del_file_acreedores_adicionales").show();
+    $('#agrega_acre').before('<div class="row" id="a' + counter_acre2 + '"><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px"><input type="text" name="campoacreedores[]" id="acreedor_'+counter_acre2+'" class="form-control"></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">%</span> <input type="text" name="campoacreedores_por[]" id="porcentajecesion_'+counter_acre2+'" class="form-control porcentaje_cesion_acreedor" value="0"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">$</span> <input type="text" name="campoacreedores_mon[]" id="montocesion_'+counter_acre2+'" value="0" class="form-control monto_cesion_acreedor"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_ini[]" id="fechainicio_'+counter_acre2+'" class="form-control fechas_acreedores_inicio"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_fin[]" id="fechafin_'+counter_acre2+'" class="form-control fechas_acreedores_fin"></div></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><button type="button" data="'+counter_acre2+'" class="btn btn-default btn-block add_file_acreedores_adicionales" onclick="agregaracre()" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i></button><button type="button" data="'+counter_acre2+'" onclick="eliminaracre('+counter_acre2+')" style="float: left; width: 40px; margin-top:0px!important; display: none" class="btn btn-default btn-block del_file_acreedores_adicionales"><i class="fa fa-trash"></i></button></div></div>');
+        //$('#del_file_acreedores_adicionales').fadeIn(0);
+        //-----------------------------------------------------
+        $(".monto_cesion_acreedor").inputmask('currency',{ 
+            prefix: "", 
+            autoUnmask : true, 
+            removeMaskOnSubmit: true 
+        });
+        $(".porcentaje_cesion_acreedor").inputmask('Regex', { regex: "^[1-9][0-9][.][0-9][0-9]?$|^100[.]00?$|^[0-9][.][0-9][0-9]$" });
+        //$(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
+        $('#fechainicio_'+counter_acre2+'').daterangepicker({ //
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val('');
+        $('#fechafin_'+counter_acre2+'').daterangepicker({ //
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val('');
+
+        $(".fechas_acreedores_inicio").change(function () {
+            var vigini = $("#vigencia_desde").val();
+            var vigfin = $("#vigencia_hasta").val();
+            var actual = $(this).val();
+
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var final = $("#fechafin_"+x[1]).val();
+
+            if (vigini.indexOf('/') > -1) {
+                var dat = vigini.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigini = anio + '-' + mes + '-' + dia ;
+            }
+            if (vigfin.indexOf('/') > -1) {
+                var dat = vigfin.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigfin = anio + '-' + mes + '-' + dia ;
+            }
+
+            var ini = new Date(vigini);
+            var fin = new Date(vigfin);
+            var act = new Date(actual);
+            var fefin = new Date(final);
+
+            if (act < ini) {
+                $(this).val(vigini);
+            }else if(act > fin){
+                $(this).val(vigfin);
+            }else if(final != "" && act > fefin){
+                $(this).val(final);
+            }
+        });
+        $(".fechas_acreedores_fin").change(function () {
+            var vigini = $("#vigencia_desde").val();
+            var vigfin = $("#vigencia_hasta").val();
+            var actual = $(this).val();
+
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var inicial = $("#fechainicio_"+x[1]).val();
+
+            if (vigini.indexOf('/') > -1) {
+                var dat = vigini.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigini = anio + '-' + mes + '-' + dia ;
+            }
+            if (vigfin.indexOf('/') > -1) {
+                var dat = vigfin.split('/');
+                var dia = dat[1];
+                var mes = dat[0];
+                var anio = dat[2];
+                vigfin = anio + '-' + mes + '-' + dia ;
+            }
+
+            var ini = new Date(vigini);
+            var fin = new Date(vigfin);
+            var act = new Date(actual);
+            var feini = new Date(inicial);
+
+            if (act < ini) {
+                $(this).val(vigini);
+            }else if(act > fin){
+                $(this).val(vigfin);
+            }else if(inicial != "" && act < feini){
+                $(this).val(inicial);
+            }
+        });
+
+        $(".monto_cesion_acreedor").keyup(function(){
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var monto = $("#montocesion_"+x[1]).val();
+            var sumaasegurada = $("#suma_asegurada").val();
+            if (sumaasegurada == "") { sumaasegurada = 0;}
+            var porcentaje = (monto * 100 )/(sumaasegurada);
+            if (porcentaje > 100) { porcentaje = 100;}
+            console.log(porcentaje);
+            $("#porcentajecesion_"+x[1]).val(porcentaje);
+        });
+
+        $(".porcentaje_cesion_acreedor").keyup(function(){
+            var id = $(this).attr("id");
+            var x = id.split('_');
+            var porcentaje = $("#porcentajecesion_"+x[1]).val();
+            if (porcentaje == "") { porcentaje = 0;}
+            var sumaasegurada = $("#suma_asegurada").val();
+            var monto = (porcentaje * sumaasegurada )/(100);
+            console.log(monto);
+            if (porcentaje>100) {
+                $("#montocesion_"+x[1]).val(sumaasegurada);
+            }else{
+                $("#montocesion_"+x[1]).val(monto);
+            }            
+        });
+        counter_acre++;
+
+    counter_acre2++;
+}
+
+function eliminaracre(d){
+    $('#a' + d +'').remove(); 
+}
 
 function customModalValidation(type) {
 
@@ -1592,42 +2087,9 @@ $(document).ajaxStop(function () {
 $("input[name='campo[comision]']").on('change blur', function () {
     $("#comision").val($(this).val());
 });
-$(function () {
-//    console.log(documentaciones.length());
-//    jQuery.validator.setDefaults({
-//        debug: true,
-//        success: "valid"
-//    });
-//    $(formularioCrear).validate({
-//        rules: {
-//            documentacion: {
-//                required: true
-//            }
-//        }
-//    });
 
-//    var cantidad_check = $("#cantidad_check").val();
-//    var $fields = ('input[name="list"]:checked');
-//    if (!$fields.length) {
-//        alert('You must check at least one box!');
-//        return false;
-//    }
-//    for (var i = 0; i < cantidad_check; i++) {
-//    $('input[name="documentacion[]:checked').rules(
-//            "add", {
-//                required: true
-//            });
-//        }
-});
 
 var search = $("#selInteres");
-/*$(search).on("select2:open", function(e) { 
- console.log("opening ...");       
- $('ul.select2-results__options li').each(function(){
- $(this).attr("aria-selected",false);
- 
- });
-});*/
 
 
 $("body").on("click", search, function () {
@@ -1636,3 +2098,60 @@ $("body").on("click", search, function () {
 
     });
 });
+
+function saveInvidualCoverage(interesId,interesNumero){
+    var coverageArray =[],
+    deductiblesArray =[];
+    var solicitud = vista==="crear"?vista:solicitud_id;
+    var unico = $('#detalleunico').val();
+    var validateCoverageFields = [
+    {field: {input: "input[name='coverageName[]']", valiation: "alfanúmerico", type: "cn"}},
+    {field: {input: "input[name='coverageValue[]']", valiation: "numeric", type: "cv"}},
+    {field: {input: "input[name='deductibleName[]']", valiation: "alfanúmerico", type: "dn"}},
+    {field: {input: "input[name='deductibleValue[]']", valiation: "numeric", type: "dv"}}];
+    if (customModalValidation(validateCoverageFields) === 0) {
+        coverageArray.push({
+            'coberturas': {nombre: $("input[name='coverageName[]']").map(function () {
+                return $(this).val();
+            }).get(),
+            valor: $("input[name='coverageValue[]']").map(function () {
+                return $(this).val();
+            }).get()
+        }});
+        deductiblesArray.push({'deducibles': {nombre: $("input[name='deductibleName[]']").map(function () {
+            return $(this).val();
+        }).get(),
+        valor: $("input[name='deductibleValue[]']").map(function () {
+            return $(this).val();
+        }).get()
+    } });
+
+
+        $.ajax({
+            type: "POST",
+            data: {
+              deductibles: deductiblesArray[0],
+              coverage:  coverageArray[0],
+              unicDetail:unico,
+              interesId : interesId,
+              solicitud : solicitud,
+              erptkn: tkn
+          },
+          url: phost() + 'solicitudes/saveIndividualCoverage',
+          success: function(data)
+          {    
+
+            if ($.isEmptyObject(data.session) == false) {
+                    window.location = phost() + "login?expired";
+                }
+                else if(data==="success"){
+                  $("#IndCoberturas").modal("hide");  
+                  toastr.success('Se han Guardado los cambios correctamente para Interés <b>'+interesNumero);
+              }else{
+                toastr.error('Ocurrio un error al Guardar las coberturas para Interés <b>'+interesNumero);
+              }                 
+               
+          }
+      });   
+    }
+}

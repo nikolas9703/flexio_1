@@ -1,13 +1,13 @@
 if(desde=="solicitudes" || desde == "poliza"){
-    var counterCoverageArt = indCoverageArray.length,
-     counterDedutibleArt = indCoverageArray.length;
+    var counterCoverageArt = 1,
+    counterDedutibleArt = 1;
     var tablaSolicitudesArticulo = (function () {
 
         var unico = $("#detalleunico").val();
 
         if(desde == "poliza"){
             var id_poliza = $("#idPoliza").val();
-           
+            
             var tablaUrl = phost() + 'polizas/ajax_listar_articulo';
         }else{
             var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_articulo';
@@ -180,12 +180,12 @@ if(desde=="solicitudes" || desde == "poliza"){
         });
 
         gridObj.on("click", botones.quitar_interes, function (e) {
-           
+         
             e.preventDefault();
             e.returnValue = false;
             e.stopPropagation();
             var intgr = $(this).attr("data-int-gr");
-                       
+            
         });
 
     };
@@ -227,7 +227,7 @@ if(desde=="solicitudes" || desde == "poliza"){
         if(desde == "poliza"){
 
             var selInteres = $(this).attr("data-int-id");
-        
+            
             $("#selInteres").val(selInteres);
             $("#selInteres").trigger('change'); 
             formularioCrear.getInteres();       
@@ -250,7 +250,7 @@ if(desde=="solicitudes" || desde == "poliza"){
             setTimeout(function() {
                 var obtener = modIntereses.obtenerDetalleAsociado(datos);
                 obtener.done(function (response) {
-                
+                    
                     $("#certificadodetalle_articulo").val(response.detalle_certificado);
                     $("#sumaaseguradadetalle_articulo").val(response.detalle_suma_asegurada);
                     $("#primadetalle_articulo").val(response.detalle_prima);
@@ -314,12 +314,12 @@ if(desde=="solicitudes" || desde == "poliza"){
         e.preventDefault();
         var text = '<div class="resetModal"  id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="deductibleValue[]"  class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
         $(wrapperDeductibles).append(text);
-         counterDedutibleArt++;     
+        counterDedutibleArt++;     
     });
 
     $(wrapperDeductibles).on("click",".remove_deductible", function(e){ //user click on remove text
         e.preventDefault();  
-         counterDedutibleArt--;      
+        counterDedutibleArt--;      
         $('#deductible_'+ counterDedutibleArt).remove();
         
     });
@@ -340,9 +340,9 @@ if(desde=="solicitudes" || desde == "poliza"){
             window.location = phost() + "login?expired";
         }else{
 
-           var temporalArrayArt = [];
-          $(".resetModal").remove();
-           if(data.coberturas.length){
+         var temporalArrayArt = [];
+         $(".resetModal").remove();
+         if(data.coberturas.length){
             temporalArrayArt.coberturas = data.coberturas;
             for (var j = temporalArrayArt.coberturas.length - 1; j >= 0; j--) {
                 var value =temporalArrayArt.coberturas[j];
@@ -358,12 +358,12 @@ if(desde=="solicitudes" || desde == "poliza"){
                 var value =temporalArrayArt.deducion[i];
                 var text = '<div class="resetModal" id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="deductibleValue[]"  value="'+value.deducible_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
                 $(wrapperDeductibles).append(text);
-                 counterDedutibleArt++;
+                counterDedutibleArt++;
             } 
         }
         
         
-            
+        
         
         
         

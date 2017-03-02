@@ -14,7 +14,6 @@ if (!defined('BASEPATH'))
  */
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon as Carbon;
-use Flexio\Library\Util\GenerarCodigo as GenerarCodigo;
 use League\Csv\Writer as Writer;
 use Flexio\Modulo\SegCatalogo\Repository\SegCatalogoRepository as SegCatalogoRepository;
 use Flexio\Modulo\SegCatalogo\Models\SegCatalogo;
@@ -29,7 +28,6 @@ use Flexio\Modulo\Documentos\Repository\DocumentosRepository as DocumentosReposi
 use Flexio\Modulo\Solicitudes\Models\Solicitudes as solicitudesModel;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable as centroModel;
 use Flexio\Modulo\Planes\Models\Planes;
-use Flexio\Modulo\Planes\Models\PlanesComisiones;
 use Dompdf\Dompdf;
 use Flexio\Modulo\Polizas\Models\PolizasPrima;
 use Flexio\Modulo\Polizas\Models\PolizasVigencia;
@@ -56,9 +54,12 @@ use Flexio\Modulo\Politicas\Repository\PoliticasRepository as PoliticasRepositor
 use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
 use Flexio\Modulo\Ramos\Repository\RamoRepository as RamoRepository;
-use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
+use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros;
+use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados as AseguradosModel;
 use Flexio\Modulo\Usuarios\Models\CentrosUsuario;
-use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados as AseguradosModel; 
+use Flexio\Modulo\CentrosContables\Models\CentrosContables;
+use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
+
 
 class Polizas extends CRM_Controller {
 
@@ -125,9 +126,9 @@ class Polizas extends CRM_Controller {
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
         $this->empresa_id = $empresa->id;
-
-        $this->roles = $this->session->userdata("roles");
         $this->interesesAseguradosRep = new AseguradosModel();
+        $this->roles = $this->session->userdata("roles");
+
         $clause['empresa_id'] = $this->empresa_id;
         $clause['modulo'] = 'polizas';
         $clause['usuario_id'] = $this->usuario_id;
@@ -195,6 +196,7 @@ class Polizas extends CRM_Controller {
         //$menuOpciones["#cambiarEstadoPolizasLnk"] = "Cambiar estado";
         $menuOpciones["#imprimirCartaPolizasLnk"] = "Imprimir carta";
         $menuOpciones["#exportarPolizasLnk"] = "Exportar";
+        $menuOpciones["#agendarCobroLnk"] = "Agendar cobro";
         $breadcrumb["menu"]["opciones"] = $menuOpciones;
 
         $breadcrumb["botones"]["Polizas"] = '<i class="fa fa-tasks"></i> Pipeline';
@@ -387,12 +389,12 @@ class Polizas extends CRM_Controller {
         $rows = (object) $rows;
         if (!empty($rows)) {
             foreach ($rows AS $i => $row) {
-               $renovationUrl=  base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas)).'/renovar');
+             $renovationUrl=  base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas)).'/renovar');
 
-               $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
+             $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
 
-               $color_factura = "";
-               switch (strtoupper($row->frecuencia_facturacion)) {
+             $color_factura = "";
+             switch (strtoupper($row->frecuencia_facturacion)) {
                 case 'MENSUAL':
                         //Calculo ultima factura no mayor a un mes
                 $ultimaFactura = $row->ultima_factura;
@@ -445,6 +447,9 @@ class Polizas extends CRM_Controller {
             $hidden_options .= $row->poliza_declarativa == 'si' ? '<a href="'.base_url().'endosos/crear/'.$row->id.'" id="crearDeclaracionBtn"  class="viewOptions btn btn-block btn-outline btn-success">Crear Declaración</a>' : '';
             $hidden_options .= '<a href="#" id="agregarReclamoBtn" data-id="' . $row->id . '" data-ramo="'.$row->ramo_id.'" class="viewOptions btn btn-block btn-outline btn-success">Crear Reclamo</a>';
                 //$hidden_options .= '<a href="#" id="renovarBtn" data-id="' . $row->id . '" class="viewOptions btn btn-block btn-outline btn-success renovationModal">Renovar</a>';
+            if($row->estado == "Facturada"){
+                $hidden_options .= '<a href="#" id="AgendarCobro" data-id="' . $row->id . '" class="btn btn-block btn-outline btn-success AgendarCobro">Agendar cobro</a>';
+            }
 
             if( ($row->estado == "Facturada" || $row->estado == "Expirada") && $ver_renovacion == 1){
                 $hidden_options .= '<a href="'.$renovationUrl.'" id="renovarBtn" data-id="' . $row->id . '" permiso_comision="'.$permiso_comision.'" permiso_agente="'.$permiso_agente.'" permiso_participacion="'.$permiso_participacion.'" class="viewOptions btn btn-block btn-outline btn-success">Renovar</a>';
@@ -501,6 +506,9 @@ class Polizas extends CRM_Controller {
 
 
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->id . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+
+            $saldo = PolizasModel::saldo_pendiente($row->id);
+
             $response->rows[$i]["id"] = $row->id;
             $response->rows[$i]["cell"] = array(
                 $row->id,
@@ -512,7 +520,9 @@ class Polizas extends CRM_Controller {
                 $row->fin_vigencia,
                 $row->frecuencia_facturacion,
                 '<span class="btn btn-block btn-xs" style="' . $color_factura . '">' . $row->ultima_factura . '</span>',
-                $row->usuariofk->nombre . " " . $row->usuariofk->apellido,
+                //$row->present()->saldo_pendiente,
+                $saldo,
+                //$row->usuariofk->nombre . " " . $row->usuariofk->apellido,
                 $row->categoriafk->valor,
                 '<span class="btn btn-block btn-xs estadoPoliza" style="color:white;' . $estado_color . '" data-id="' . $row->id . '" data-estado="'.$row->estado.'" >' . $row->estado . '</span>',
                 $link_option,
@@ -627,7 +637,6 @@ function guardar() {
             redirect(base_url('polizas/listar'));
         }
 
-
         if (!$uuid) {
             echo "Error.";
             die();
@@ -654,26 +663,31 @@ function guardar() {
                     $poliza->estado = $campo["estado"];
                     $poliza->updated_at = date("Y-m-d H:i:s");
                     if(isset($prima)){
-                     $polizaPagos = new PolizasPrima ();
-                     $polizaPagos = $polizaPagos->where("id_poliza",$poliza->id)->first(); 
-                     $poliza->frecuencia_facturacion=$prima['frecuencia_pago'];
-                     $polizaPagos->frecuencia_pago = $prima['frecuencia_pago'];
-                     $polizaPagos->metodo_pago = $prima['metodo_pago'];
-                     $primerPago = new Carbon($prima['fecha_primer_pago']);    
-                     $polizaPagos->fecha_primer_pago =  $primerPago->format('Y/m/d/');
-                     $polizaPagos->cantidad_pagos = $prima['cantidad_pagos'];
-                     $polizaPagos->sitio_pago = $prima['sitio_pago'];
-                     $polizaPagos->centro_facturacion = $prima['centro_facturacion'];
-                     $polizaPagos->direccion_pago = $prima['direccion_pago'];    
-                     $polizaPagos->save();
-                 }
+                       $polizaPagos = new PolizasPrima ();
+                       $polizaPagos = $polizaPagos->where("id_poliza",$poliza->id)->first(); 
+                       $poliza->frecuencia_facturacion=$prima['frecuencia_pago'];
+                       $polizaPagos->frecuencia_pago = $prima['frecuencia_pago'];
+                       $polizaPagos->metodo_pago = $prima['metodo_pago'];
+                       $primerPago = new Carbon($prima['fecha_primer_pago']);    
+                       $polizaPagos->fecha_primer_pago =  $primerPago->format('Y/m/d/');
+                       $polizaPagos->cantidad_pagos = $prima['cantidad_pagos'];
+                       $polizaPagos->sitio_pago = $prima['sitio_pago'];
+                       $polizaPagos->centro_facturacion = $prima['centro_facturacion'];
+                       $polizaPagos->direccion_pago = $prima['direccion_pago']; 
+                       $polizaPagos->prima_anual =$prima["poliza_prima_anual"];
+                       $polizaPagos->descuentos = $prima["poliza_descuentos"]; 
+                       $polizaPagos->otros = $prima["poliza_otros"];
+                       $polizaPagos->impuesto =$prima["poliza_impuesto"];
+                       $polizaPagos->total =$prima["poliza_total"]; 
+                       $polizaPagos->save();
+                   }
 
-                 $poliza->save();
+                   $poliza->save();
 
-                 $factura = FacturaSeguro::where(['id_poliza' => $poliza->id])->count();
-                 $fecha_creado = date('Y-m-d H:i:s');
+                   $factura = FacturaSeguro::where(['id_poliza' => $poliza->id])->count();
+                   $fecha_creado = date('Y-m-d H:i:s');
 
-                 if ( ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'no' && $factura == 0) || ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'si') ) {
+                   if ( ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'no' && $factura == 0) || ($poliza->estado == 'Facturada' && $poliza->poliza_declarativa == 'si') ) {
 
 
                     $array_factura['uuid_factura'] = Capsule::raw("ORDER_UUID(uuid())");
@@ -843,10 +857,10 @@ function guardar() {
 
 
 if ($response) {
-   $campo = $this->input->post("campo");
-   $this->session->set_userdata('updatedPoliza', $poliza->id);
+ $campo = $this->input->post("campo");
+ $this->session->set_userdata('updatedPoliza', $poliza->id);
 						//var_dump($campo["regreso_valor"]);exit();
-   if ($campo["regreso"] == 'ase')
+ if ($campo["regreso"] == 'ase')
     redirect(base_url('aseguradoras/editar/' . $campo["regreso_valor"]));
 else if ($campo["regreso"] == 'age')
     redirect(base_url('agentes/ver/' . $campo["regreso_valor"]));
@@ -854,8 +868,8 @@ else
     redirect(base_url('polizas/listar'));
 }else {
 						//Establecer el mensaje a mostrar
-   $data["mensaje"]["clase"] = "alert-danger";
-   $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
+ $data["mensaje"]["clase"] = "alert-danger";
+ $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
 						//$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
 }
 }
@@ -868,8 +882,9 @@ $this->_css();
 $this->_js();
 
 $this->assets->agregar_js(array(
-   'public/assets/js/modules/polizas/crear.vue.js'
-   ));
+ 'public/assets/js/modules/polizas/crear.vue.js',
+ 'public/assets/js/modules/intereses_asegurados/formulario.js'
+ ));
 
 $estado = $this->SegCatalogoRepository->listar_catalogo('estado_p', 'orden');
 $estado = $estado->whereIn('key', array('polizas_pf', 'polizas_f'));
@@ -878,11 +893,11 @@ $estado_pol = $poliza->estado;
 
 $cliente = PolizasCliente::where(['id_poliza' => $poliza->id])->first();
 if(count($cliente) == 0){
-   $cliente = '';
+ $cliente = '';
 }
 $aseguradora = Aseguradoras::where(['id' => $poliza->aseguradora_id])->get(array('id', 'nombre'));
 if (count($aseguradora) == 0) {
-   $aseguradora = '';
+ $aseguradora = '';
 }
 $plan = Planes::where(['id' => $poliza->plan_id])->get(array('nombre'));
 $coberturas = PolizasCobertura::where(['id_poliza' => $poliza->id])->get();
@@ -891,25 +906,25 @@ $deducciones = PolizasDeduccion::where(['id_poliza' => $poliza->id])->get();
 $comision = $poliza->comision;
 $vigencia = PolizasVigencia::where(['id_poliza' => $poliza->id])->first();
 if(count($vigencia) == 0){
-   $vigencia = '';
+ $vigencia = '';
 }
 $prima = PolizasPrima::where(['id_poliza' => $poliza->id])->first();
 $centroFacturacion = centroModel::where(['id' => $prima->centro_facturacion])->first();
 if ($centroFacturacion == '') {
-   $centroFacturacion = '';
+ $centroFacturacion = '';
 }
 $participacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->get();
 $totalParticipacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->sum('porcentaje_participacion');
 if ($totalParticipacion == '') {
-   $totalParticipacion = '';
+ $totalParticipacion = '';
 }
 
 if($poliza->centros != null){
-   $id_centroContable = $poliza->centros->id;
-   $nombre_centroContable = $poliza->centros->nombre;
+ $id_centroContable = $poliza->centros->id;
+ $nombre_centroContable = $poliza->centros->nombre;
 }else{
-   $id_centroContable = 0;
-   $nombre_centroContable = '';
+ $id_centroContable = 0;
+ $nombre_centroContable = '';
 }
 $ver_renovacion = 0;
 $permiso_comision = 0;
@@ -917,19 +932,19 @@ $permiso_agente = 0;
 $permiso_participacion = 0;
 
 if($this->auth->has_permission('acceso', 'polizas/crear renovación') == true){
-   $ver_renovacion = 1;
+ $ver_renovacion = 1;
 }
 
 if($this->auth->has_permission('acceso', 'polizas/editar comisión plan') == true){
-   $permiso_comision = 1;
+ $permiso_comision = 1;
 }
 
 if($this->auth->has_permission('acceso', 'polizas/editar agentes') == true){
-   $permiso_agente = 1;
+ $permiso_agente = 1;
 }
 
 if($this->auth->has_permission('acceso', 'polizas/editar participación') == true){
-   $permiso_participacion = 1;
+ $permiso_participacion = 1;
 }
 $cantidad_pagos =    $this->SegInteresesAseguradosRepository->listar_catalogo('cantidad_pagos', 'orden');
 $frecuencia_pagos = $this->SegInteresesAseguradosRepository->listar_catalogo('frecuencia_pagos', 'orden');
@@ -937,12 +952,21 @@ $metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_
 $sitio_pago =$this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
 $pagador = $this->SegInteresesAseguradosRepository->listar_catalogo('pagador_seguros', 'orden');
 if($poliza->id_tipo_int_asegurado !=5){
- unset($pagador[1]);
+   unset($pagador[1]);
 }
 $centrosFacturacion = centroModel:: where("cliente_id",$poliza->cliente)
-->where("empresa_id",$this->empresa_id)
-->get();
-$centrosContables = CentrosUsuario::where(['usuarios_has_centros.usuario_id' => $this->usuario_id, 'usuarios_has_centros.empresa_id' => $this->empresa_id])->join('cen_centros','cen_centros.id','=','usuarios_has_centros.centro_id')->get(array('cen_centros.id','cen_centros.nombre'));
+->where("empresa_id",$this->empresa_id)->get();
+$datosUsuarios = Usuarios::where(['id' => $this->usuario_id])->first();
+if($datosUsuarios->filtro_centro_contable == "todos"){
+    $centroContable = CentrosContables::where(['empresa_id' => $this->empresa_id])->get();
+}else{
+    $centrosContables = CentrosUsuario::where(['usuarios_has_centros.usuario_id' => $this->usuario_id, 'usuarios_has_centros.empresa_id' => $this->empresa_id])->join('cen_centros','cen_centros.id','=','usuarios_has_centros.centro_id')->get(array('cen_centros.id','cen_centros.nombre'));
+    if(count($centrosContables) > 0){
+        $centroContable = $centrosContables;
+    }else{
+        $centroContable = ''; 
+    }
+}
 $clause['cli_clientes.empresa_id'] = $this->empresa_id;
 $clause['cli_clientes.id'] = $poliza->cliente;
 $group = clienteModel::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_cliente', '=', 'cli_clientes.uuid_cliente')
@@ -954,7 +978,7 @@ $group = clienteModel::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_clien
 
 $agenteprincipaltotal=Agente::where('principal',1)->
 where('id_empresa',$this->empresa_id)->count();
-$grupo = base_url("solicitudes/ajax_get_cliente");
+
 if($agenteprincipaltotal>0)
 {
     $agenteprincipal=Agente::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
@@ -969,55 +993,55 @@ else
 }
 
 $this->assets->agregar_var_js(array(
-   "vista" => 'editar',
-   "agtPrincipal"=>$agenteprincipalnombre,
-   "agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
-   "estado_solicitud" => $estado,
-   "estado_pol" => $estado_pol,
-   "poliza_id" => $poliza->id,
-   "cliente" => $cliente,
-   "aseguradora" => $aseguradora,
-   "plan" => $plan,
-   "coberturas" => $coberturas,
-   "deducciones" => $deducciones,
-   "comision" => $comision,
-   "vigencia" => $vigencia,
-   "prima" => $prima,
-   "centroFacturacion" => $centroFacturacion,
-   "participacion" => $participacion,
-   "totalParticipacion" => $totalParticipacion,
-   "id_tipo_int_asegurado" => $poliza->id_tipo_int_asegurado,
-   "nombre_ramo" => $poliza->ramo, 
-   "tipo_ramo" => $poliza->tipo_ramo,
-   "ramo" => $poliza->ramo,
-   "id_tipo_poliza" => $poliza->tipo_ramo == "colectivo" ? 2 : 1,
-   "desde" => "poliza",
-   "tablaTipo" => "vida",
-   "permiso_editar" => "undefined",
-   "validarenovacion" => $validarenovacion,
-   "id_centroContable" => $id_centroContable,
-   "nombre_centroContable" => $nombre_centroContable,
-   "permiso_comision" => $permiso_comision,
-   "permiso_agente"=>    $permiso_agente,
-   "permiso_participacion" => $permiso_participacion,
-   "cantidadPagos" => $cantidad_pagos,
-   "frecuenciaPagos" => $frecuencia_pagos,
-   "sitioPago" => $sitio_pago,
-   "metodoPago" => $metodo_pago,
-   "centrosFacturacion" =>$centrosFacturacion,
-   "poliza_declarativa" => $poliza->poliza_declarativa,
-   "grupo" => $group,
-   "pagador" => $pagador,
-   "centrosContables" => $centrosContables
-   ));
+ "vista" => 'editar',
+ "agtPrincipal"=>$agenteprincipalnombre,
+ "agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
+ "estado_solicitud" => $estado,
+ "estado_pol" => $estado_pol,
+ "poliza_id" => $poliza->id,
+ "cliente" => $cliente,
+ "aseguradora" => $aseguradora,
+ "plan" => $plan,
+ "coberturas" => $coberturas,
+ "deducciones" => $deducciones,
+ "comision" => $comision,
+ "vigencia" => $vigencia,
+ "prima" => $prima,
+ "centroFacturacion" => $centroFacturacion,
+ "participacion" => $participacion,
+ "totalParticipacion" => $totalParticipacion,
+ "id_tipo_int_asegurado" => $poliza->id_tipo_int_asegurado,
+ "nombre_ramo" => $poliza->ramo, 
+ "tipo_ramo" => $poliza->tipo_ramo,
+ "ramo" => $poliza->ramo,
+ "id_tipo_poliza" => $poliza->tipo_ramo == "colectivo" ? 2 : 1,
+ "desde" => "poliza",
+ "tablaTipo" => "vida",
+ "permiso_editar" => "undefined",
+ "validarenovacion" => $validarenovacion,
+ "id_centroContable" => $id_centroContable,
+ "nombre_centroContable" => $nombre_centroContable,
+ "permiso_comision" => $permiso_comision,
+ "permiso_agente"=>    $permiso_agente,
+ "permiso_participacion" => $permiso_participacion,
+ "cantidadPagos" => $cantidad_pagos,
+ "frecuenciaPagos" => $frecuencia_pagos,
+ "sitioPago" => $sitio_pago,
+ "metodoPago" => $metodo_pago,
+ "centrosFacturacion" =>$centrosFacturacion,
+ "poliza_declarativa" => $poliza->poliza_declarativa,
+ "grupo" => $group,
+ "pagador" => $pagador,
+ "centrosContables" => $centroContable
+ ));
 
 $isRenewal  = array('Expirada','Facturada');
 $opciones   =array(
-   "polizas/bitacora/" . strtoupper(bin2hex($poliza->uuid_polizas)) => "Bitacora",
-   "#subir_documento" => "Subir Documento",
-   "#imprimir_poliza" => "Imprimir",
-   "#exportarPBtn" => "Exportar"
-   );
+ "polizas/bitacora/" . strtoupper(bin2hex($poliza->uuid_polizas)) => "Bitacora",
+ "#subir_documento" => "Subir Documento",
+ "#imprimir_poliza" => "Imprimir",
+ "#exportarPBtn" => "Exportar"
+ );
 
 foreach ($isRenewal as $key => $value) {
     if($estado_pol ==$value){
@@ -1026,21 +1050,26 @@ foreach ($isRenewal as $key => $value) {
     }
 }
 $breadcrumb = array(
-   "titulo" => '<i class="fa fa-book"></i> P&oacute;liza N° ' . $poliza->numero,
-					"filtro" => false, //sin vista grid
-					"menu" => array(
-						'url' => 'javascipt:',
-						'nombre' => "Acción",
-						"opciones" => $opciones,
-						),
-					"historial" => true,
-					);
+ "titulo" => '<i class="fa fa-book"></i> P&oacute;liza N° ' . $poliza->numero,
+ "ruta" => array(
+    0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
+    1 => array("nombre" => '<a href="' . base_url() . 'polizas/listar">Pólizas</a>', "activo" => false),
+    2 => array("nombre" => '<b>P&oacute;liza N° ' . $poliza->numero . '</b>', "activo" => true),
+    ),
+			"filtro" => false, //sin vista grid
+			"menu" => array(
+				'url' => 'javascipt:',
+				'nombre' => "Acción",
+				"opciones" => $opciones,
+             ),
+			"historial" => true,
+          );
 
 
 $data['subpanels'] = [];
 
 $data["data"] = array(
-   "campos" => array(
+ "campos" => array(
     "created_at" => $poliza->created_at,
     "uuid_polizas" => strtoupper(bin2hex($poliza->uuid_polizas)),
     "numero" => $poliza->numero,
@@ -1054,7 +1083,8 @@ $data["data"] = array(
     "politicas_general" => $this->politicas_general,
     "validar_politicas" => $this->politicasgenerales
     )
-   );
+ );
+
 $this->template->agregar_titulo_header('Polizas');
 $this->template->agregar_breadcrumb($breadcrumb);
 $this->template->agregar_contenido($data);
@@ -2945,22 +2975,22 @@ public function getRenovationData() {
         if($data->fecha_renovacion=="0000-00-00"){
           $response->comision = $data->comision;  
       }else{
-         $renewalDate = new Carbon ($data->fecha_renovacion);
-         $createdAt = new carbon ($data->created_at);
-         $comisionPerYear = $createdAt->diffInYears($renewalDate);
-         $response->diferenciaEnAnios= $comisionPerYear;
-         $response->permiso = $this->auth->has_permission('acceso', 'polizas/crear renovación');
-         $comisionesMatriz=PlanesComisiones::where("id_planes",$data->plan_id)
-         ->where("inicio",$comisionPerYear)
-         ->select('inicio','fin','comision')
-         ->first();
-         if(count($comisionesMatriz)){
-             $response->comision = $comisionesMatriz->comision; 
-         }else {
-            $response->comision = $data->comision;
-        }
-
+       $renewalDate = new Carbon ($data->fecha_renovacion);
+       $createdAt = new carbon ($data->created_at);
+       $comisionPerYear = $createdAt->diffInYears($renewalDate);
+       $response->diferenciaEnAnios= $comisionPerYear;
+       $response->permiso = $this->auth->has_permission('acceso', 'polizas/crear renovación');
+       $comisionesMatriz=PlanesComisiones::where("id_planes",$data->plan_id)
+       ->where("inicio",$comisionPerYear)
+       ->select('inicio','fin','comision')
+       ->first();
+       if(count($comisionesMatriz)){
+           $response->comision = $comisionesMatriz->comision; 
+       }else {
+        $response->comision = $data->comision;
     }
+
+}
 
 }
 print json_encode($response);
@@ -2979,74 +3009,74 @@ public function policyRenewal() {
         $required = array("Número de Póliza"=>'numeroPoliza',"Id póliza"=>'idPolicy',"Inicio de vigencia"=>'fechaInicio',"Fin de vigencia"=>'fechaExpiracion',"Guardar"=>'renovarPoliza',"Comision"=>'comision');
         foreach ($required as $key => $field) {
             # code...
-           if (empty($_POST[$field])) {
+         if (empty($_POST[$field])) {
             $error = true;
             $inf['field'] = $key ." es requerido";
             break;
         }
     }
     if(!$error and $permisoRenovar){
-     $motivo = $campos['numeroPoliza'];
-     $solicitud =$campos['idPolicy'];
-     $fechaInicio = new Carbon($this->input->post('fechaInicio'));
-     $fechaExpiracion = new Carbon($this->input->post('fechaExpiracion'));
-     $comision = $campos['comision'];
+       $motivo = $campos['numeroPoliza'];
+       $solicitud =$campos['idPolicy'];
+       $fechaInicio = new Carbon($this->input->post('fechaInicio'));
+       $fechaExpiracion = new Carbon($this->input->post('fechaExpiracion'));
+       $comision = $campos['comision'];
 
 
-     $usuario = $this->usuario_id;
-     $exist = false;
-     $datosSolicitud = $this->polizasModel->where(['numero'=>$motivo])
-     ->groupBy('aseguradora_id')
-     ->select('aseguradora_id','solicitud')
-     ->get();
+       $usuario = $this->usuario_id;
+       $exist = false;
+       $datosSolicitud = $this->polizasModel->where(['numero'=>$motivo])
+       ->groupBy('aseguradora_id')
+       ->select('aseguradora_id','solicitud')
+       ->get();
 
-     if(count($datosSolicitud)){
-         $aseguradora = $this->polizasModel->where('id',$solicitud)
-         ->select('aseguradora_id','solicitud')
-         ->first();
-         foreach ($datosSolicitud as $key => $value) {
+       if(count($datosSolicitud)){
+           $aseguradora = $this->polizasModel->where('id',$solicitud)
+           ->select('aseguradora_id','solicitud')
+           ->first();
+           foreach ($datosSolicitud as $key => $value) {
 
-          if($value->aseguradora_id ==$aseguradora->aseguradora_id ){
-            if($value->solicitud !=$aseguradora->solicitud)
-                $exist =true;
-            $inf['field']= $motivo." ya se encuentra registrada con aseguradora ".$aseguradora->aseguradorafk->nombre;
+              if($value->aseguradora_id ==$aseguradora->aseguradora_id ){
+                if($value->solicitud !=$aseguradora->solicitud)
+                    $exist =true;
+                $inf['field']= $motivo." ya se encuentra registrada con aseguradora ".$aseguradora->aseguradorafk->nombre;
 
-        }
-    }  
-}
+            }
+        }  
+    }
 
-if (!$exist) {
+    if (!$exist) {
 
- $solicitudes = $this->polizasModel->where('id', $solicitud)->first()->toArray();
+       $solicitudes = $this->polizasModel->where('id', $solicitud)->first()->toArray();
 
- $sol = [
- 'numero' => $motivo,
- 'creado_por' => $usuario,
- 'empresa_id' => $this->empresa_id,
- 'cliente' => $solicitudes['cliente'],
- 'ramo_id' => $solicitudes['ramo_id'], 
- 'ramo' => $solicitudes['ramo'],
- 'tipo_ramo' => $solicitudes['tipo_ramo'],
- 'id_tipo_int_asegurado' => $solicitudes['id_tipo_int_asegurado'],
- 'usuario' => $solicitudes['usuario'],
- 'estado' => 'Por Facturar',
- 'inicio_vigencia' => $fechaInicio->format('Y/m/d/'),
- 'fin_vigencia' =>$fechaExpiracion->format('Y/m/d'),
- 'frecuencia_facturacion' => $campos["pagosFrecuencia"],
- 'ultima_factura' => $solicitudes['ultima_factura'],
- 'categoria' => '45',
- 'solicitud' => $solicitudes['solicitud'],
- 'aseguradora_id' => $solicitudes['aseguradora_id'],
- 'plan_id' => $solicitudes['plan_id'],
- 'comision' => $comision,
- 'porcentaje_sobre_comision' => $solicitudes['porcentaje_sobre_comision'],
- 'impuesto' => $solicitudes['impuesto'],
- 'poliza_declarativa' => $solicitudes['poliza_declarativa'],
- 'created_at' => $solicitudes['created_at'],
- 'renovacion_id' => $solicitud ,
- 'centro_contable' => $campos["centroContable"]
+       $sol = [
+       'numero' => $motivo,
+       'creado_por' => $usuario,
+       'empresa_id' => $this->empresa_id,
+       'cliente' => $solicitudes['cliente'],
+       'ramo_id' => $solicitudes['ramo_id'], 
+       'ramo' => $solicitudes['ramo'],
+       'tipo_ramo' => $solicitudes['tipo_ramo'],
+       'id_tipo_int_asegurado' => $solicitudes['id_tipo_int_asegurado'],
+       'usuario' => $solicitudes['usuario'],
+       'estado' => 'Por Facturar',
+       'inicio_vigencia' => $fechaInicio->format('Y/m/d/'),
+       'fin_vigencia' =>$fechaExpiracion->format('Y/m/d'),
+       'frecuencia_facturacion' => $campos["pagosFrecuencia"],
+       'ultima_factura' => $solicitudes['ultima_factura'],
+       'categoria' => '45',
+       'solicitud' => $solicitudes['solicitud'],
+       'aseguradora_id' => $solicitudes['aseguradora_id'],
+       'plan_id' => $solicitudes['plan_id'],
+       'comision' => $comision,
+       'porcentaje_sobre_comision' => $solicitudes['porcentaje_sobre_comision'],
+       'impuesto' => $solicitudes['impuesto'],
+       'poliza_declarativa'=>isset($campos["vigenciaPolizaDeclarativa"])  ? "si" : "no",
+       'created_at' => $solicitudes['created_at'],
+       'renovacion_id' => $solicitud ,
+       'centro_contable' => $campos["centroContable"]
 
- ];
+       ];
          /* $datos['dias_transcurridos'] = ($datosSolicitud->created_at->diff($now)->days < 1) ? '1' : $datosSolicitud->created_at->diff($now)->days;
          $this->polizasModel->where(['numero'=> $solicitud])->update($datos);*/
 
@@ -3080,7 +3110,7 @@ if (!$exist) {
          'suma_asegurada' => $campos["sumaAsegurada"],
          'tipo_pagador' => $campos["vigenciapagador"],
          'pagador' => $campos["vigenciaNombrePagador"],
-         'poliza_declarativa'=>$campos["vigenciaPolizaDeclarativa"] ==true ? "si" : "no",
+         
          ];
          $p3 = $poliza3->create($solvigencia);
 
@@ -3110,39 +3140,39 @@ if (!$exist) {
         //$participacion = PolizasParticipacion::where('id_poliza',$solicitudes['id']);
         $porcentage = $this->input->post('participacion');
         if(!empty($porcentage)){
-         for ($i=0; $i <count($porcentage['nombre']) ; $i++) { 
-             $solParticipacion = [
-             'id_poliza' => $p->id,
-             'agente' => $porcentage['nombre'][$i], 
-             'porcentaje_participacion' => $porcentage['valor'][$i]
-             ];
-             $p6 = $poliza6->create($solParticipacion);       
-         } 
-     }
+           for ($i=0; $i <count($porcentage['nombre']) ; $i++) { 
+               $solParticipacion = [
+               'id_poliza' => $p->id,
+               'agente' => $porcentage['nombre'][$i], 
+               'porcentaje_participacion' => $porcentage['valor'][$i]
+               ];
+               $p6 = $poliza6->create($solParticipacion);       
+           } 
+       }
 
 
-     $poliza7 = new Flexio\Modulo\Polizas\Models\PolizasCliente;
-     $cliente = PolizasCliente::where('id_poliza',$solicitudes['id'])->first();
+       $poliza7 = new Flexio\Modulo\Polizas\Models\PolizasCliente;
+       $cliente = PolizasCliente::where('id_poliza',$solicitudes['id'])->first();
 
-     $solCliente = [
-     'id_poliza' => $p->id,
-     'nombre_cliente' => $cliente->nombre_cliente,
-     'identificacion' => $cliente->identificacion,
-     'n_identificacion' => $cliente->n_identificacion,
-     'grupo' => $campos["clienteGrupo"],
-     'telefono' => $campos["clienteTelefono"],
-     'correo_electronico' => $campos["clienteCorreo"],
-     'direccion' => $campos["clienteDireccion"],
-     'exonerado_impuesto' => $campos["clienteExoneradoImp"]
-     ];
+       $solCliente = [
+       'id_poliza' => $p->id,
+       'nombre_cliente' => $cliente->nombre_cliente,
+       'identificacion' => $cliente->identificacion,
+       'n_identificacion' => $cliente->n_identificacion,
+       'grupo' =>isset( $campos["clienteGrupo"]) ? $campos["clienteGrupo"] :"",
+       'telefono' => $campos["clienteTelefono"],
+       'correo_electronico' => $campos["clienteCorreo"],
+       'direccion' =>isset( $campos["clienteDireccion"]) ?  $campos["clienteDireccion"] :"",
+       'exonerado_impuesto' => $campos["clienteExoneradoImp"]
+       ];
 
-     $p7 = $poliza7->create($solCliente);
+       $p7 = $poliza7->create($solCliente);
 
 
-     $policyType=$solicitudes['id_tipo_int_asegurado'];
-     $clause["interesestable_type"]=$policyType;
-     $clause["empresa_id"] = $this->empresa_id;
-     if($policyType == 1){
+       $policyType=$solicitudes['id_tipo_int_asegurado'];
+       $clause["interesestable_type"]=$policyType;
+       $clause["empresa_id"] = $this->empresa_id;
+       if($policyType == 1){
         $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
         ->where("interesestable_id",$campos["interesId"])
         ->select("numero")
@@ -3176,305 +3206,304 @@ if (!$exist) {
         ];
         PolizasArticulo::create($clause);
         
-    
-}elseif($policyType == 2){
 
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
+    }elseif($policyType == 2){
 
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('CGA', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause =[
-    "empresa_id"=>$this->empresa_id,
-    "id_poliza"=>$p->id,
-    "numero"=>$numero,
-    "detalle"=>$camposInteres["campo[detalle]"],
-    "no_liquidacion"=>$camposInteres["campo[no_liquidacion]"],
-    "fecha_despacho"=>$camposInteres["campo[fecha_despacho]"],
-    "fecha_arribo","valor"=>$camposInteres[""],
-    "tipo_empaque"=>$camposInteres["campo[fecha_arribo]"],
-    "condicion_envio"=>$camposInteres["campo[condicion_envio]"],
-    "medio_transporte"=>$camposInteres["campo[medio_transporte]"],
-    "origen"=>$camposInteres["campo[origen]"],
-    "destino"=>$camposInteres["campo[destino]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "tipo_id"=>$camposInteres["campo[tipo_empaque]"],
-    "tipo_obligacion"=>$camposInteres["campo[tipo_obligacion]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "estado"=>$camposInteres["campo[estado]"],
-    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
-    "tipo_obligacion_opcional"=>$camposInteres["campo[tipo_obligacion_opcional]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
-    ];
-    PolizasCarga::create($clause);
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
 
-}elseif($policyType == 3){
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('CAE', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause =[
-
-    "empresa_id"=>$this->empresa_id,
-    "id_poliza"=>$p->id,
-    "serie"=>$camposInteres["campo[serie]"],
-    "marca"=>$camposInteres["campo[marca_aereo]"],
-    "modelo"=>$camposInteres["campo[modelo_aereo]"],
-    "matricula"=>$camposInteres["campo[matricula_aereo]"],
-    "valor"=>$camposInteres["campo[valor_aereo]"],
-    "pasajeros"=>$camposInteres["campo[pasajeros_aereo]"],
-    "tripulacion"=>$camposInteres["campo[tripulacion_aereo]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "numero"=>$numero,
-    "tipo_id"=>$camposInteres["campo[tipo_id]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
-    "estado"=>$camposInteres["campo[estado]"],
-    ]; 
-
-    PolizasAereo::create($clause);
-}elseif($policyType == 4){
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('CAE', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause= [
-    "uuid_casco_maritimo"=>hex2bin($camposInteres["campo[uuid]"]),
-    "empresa_id"=>$this->empresa_id,
-    "id_poliza"=>$p->id,
-    "numero"=>$numero,
-    "serie"=>$camposInteres["campo[serie]"],
-    "nombre_embarcacion"=>$camposInteres["campo[nombre_embarcacion]"],
-    "tipo"=>$camposInteres["campo[tipo]"],
-    "marca"=>$camposInteres["campo[marca]"],
-    "valor"=>$camposInteres["campo[valor]"],
-    "pasajeros"=>$camposInteres["campo[pasajeros]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "tipo_id"=>$camposInteres["campo[tipo_id]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
-    "estado"=>$camposInteres["campo2[estado]"],
-    ];    
-
-    PolizasMaritimo::create($clause);
-
-
-
-}elseif($policyType == 5){
-
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('PER', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    //$datosPersonas = PolizasPersonas::where(['id_poliza' => $solicitudes['id']])->get();
-    if (!empty($camposInteres['campo[pasaporte]']) || $camposInteres['campo[letra]'] == 'PAS') {
-        $cedula = $camposInteres['campo[pasaporte]'];
-        $camposInteres['ruc'] = $cedula;
-    }if ($camposInteres['campo[identificacion]'] == 'cedula') {
-        $provincia = !isset($camposInteres['campo[provincia]'] ) ? "" : $camposInteres['campo[provincia]'] . '-';
-        $letra = !isset($camposInteres['campo[letra]']) ? "" : $camposInteres['campo[letra]']."-";
-        $cedula = $provincia . $letra . $camposInteres['campo[tomo]'] . "-" . $camposInteres['campo[asiento]'];
-        $camposInteres['ruc'] = $cedula;
-    }
-    $clause =[
-    "id_interes"=>$campos["interesId"],
-    "id_poliza"=>$p->id,
-    "numero"=>$numero,
-    "nombrePersona"=>$camposInteres["campo[nombrePersona]"],
-    "identificacion" =>$camposInteres["ruc"],
-    "fecha_nacimiento"=>$camposInteres["campo[fecha_nacimiento]"],
-    "estado_civil"=>$camposInteres["campo[estado_civil]"],
-    "nacionalidad"=>$camposInteres["campo[nacionalidad]"],
-    "sexo"=>$camposInteres["campo[sexo]"],
-    "estatura"=>$camposInteres["campo[estatura]"],
-    "peso"=>$camposInteres["campo[peso]"],
-    "telefono_residencial"=>$camposInteres["campo[telefono_residencial]"],
-    "telefono_oficina"=>$camposInteres["campo[telefono_oficina]"],
-    "direccion_residencial"=>$camposInteres["campo[direccion_residencial]"],
-    "direccion_laboral"=>$camposInteres["campo[direccion_laboral]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "empresa_id"=>$this->empresa_id,
-    "telefono_principal"=>$camposInteres["campo[telefono]"],
-    "direccion_principal"=>$camposInteres["campo[direccion]"],
-    "detalle_relacion"=>$camposInteres["campodetalle[relacion]"],
-    "detalle_int_asociado"=>$camposInteres["campodetalle[interes_asociado]"],
-    "detalle_certificado"=>$camposInteres[""],
-    "detalle_beneficio"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_monto"=>$camposInteres["campodetalle[monto]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "estado"=>$camposInteres["campo[estado]"],
-    "fecha_inclusion"=>"",
-    "detalle_participacion"=>$camposInteres["campodetalle[participacion]"], 
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "correo" =>$camposInteres["campo[correo]"],
-    "tipo_relacion"=>$camposInteres["campodetalle[tipo_relacion]"]
-    ];
-    PolizasPersonas::create($clause);
-    
-
-}elseif($policyType == 6){
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('PRO', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause =[
-    "uuid_proyecto"=>hex2bin($camposInteres[""]),
-    "id_poliza"=>$p->id,
-    "empresa_id"=>$this->empresa_id,
-    "numero"=>$numero,
-    "nombre_proyecto"=>$camposInteres["campo[nombre_proyecto]"],
-    "no_orden"=>$camposInteres["campo[no_orden]"],
-    "contratista"=>$camposInteres["campo[contratista]"],
-    "representante_legal"=>$camposInteres["campo[representante_legal]"],
-    "duracion"=>$camposInteres["campo[duracion]"],
-    "fecha"=>$camposInteres["campo[fecha]"],
-    "monto"=>$camposInteres["campo[monto]"],
-    "monto_afianzado"=>$camposInteres["campo[monto_afianzado]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "porcentaje_acreedor"=>$camposInteres["campo[monto_afianzado]"],
-    "ubicacion"=>$camposInteres["campo[ubicacion]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "estado"=>$camposInteres["campo2[estado]"],
-    "tipo_id"=>$camposInteres["campo[tipo_id]"],
-    "tipo_propuesta"=>$camposInteres["campo[tipo_propuesta]"],
-    "validez_fianza_pr"=>$camposInteres["campo[validez_fianza_pr]"],
-    "tipo_fianza"=>$camposInteres["campo[tipo_fianza]"],
-    "asignado_acreedor"=>$camposInteres["campo[acreedor]"],
-    "fecha_concurso"=>$camposInteres["campo[fecha_concurso]"],
-    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
-    "validez_fianza_opcional"=>$camposInteres["campo[validez_fianza_opcional]"],
-    "tipo_propuesta_opcional"=>$camposInteres["campo[tipo_propuesta_opcional]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"]
-    ];  
-
-    PolizasProyecto::create($clause);
-
-}elseif($policyType == 7){
-
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('UBI', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause =[
-    "uuid_ubicacion"=>hex2bin($camposInteres["campo[uuid]"]),
-    "empresa_id"=>$this->empresa_id,
-    "id_poliza"=>$p->id,
-    "numero"=>$numero,
-    "nombre"=>$camposInteres["campo[nombre]"],
-    "direccion"=>$camposInteres["campo[direccion]"],
-    "edif_mejoras"=>$camposInteres["campo[edif_mejoras]"],
-    "contenido"=>$camposInteres["campo[contenido]"],
-    "maquinaria"=>$camposInteres["campo[maquinaria]"],
-    "inventario"=>$camposInteres["campo[inventario]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "estado"=>$camposInteres["campo2[estado]"],
-    "tipo_id"=>$camposInteres["campo[id]"],
-    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
-    ]; 
-
-    PolizasUbicacion::create($clause);
-    
-
-
-}elseif($policyType == 8){
-
-     $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('VEH', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-   $clause= [
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('CGA', count($total) + 1);
+        }else{
+            $numero = $result->numero;
+        }
+        $clause =[
+        "empresa_id"=>$this->empresa_id,
         "id_poliza"=>$p->id,
         "numero"=>$numero,
-        "chasis"=>$camposInteres["campo[chasis]"],
-        "uuid_vehiculo"=>hex2bin($camposInteres["campo[uuid]"]),
-        "unidad"=>$camposInteres["campo[unidad]"],
+        "detalle"=>$camposInteres["campo[detalle]"],
+        "no_liquidacion"=>$camposInteres["campo[no_liquidacion]"],
+        "fecha_despacho"=>$camposInteres["campo[fecha_despacho]"],
+        "fecha_arribo"=>$camposInteres["campo[fecha_arribo]"],
+        "condicion_envio"=>$camposInteres["campo[condicion_envio]"],
+        "medio_transporte"=>$camposInteres["campo[medio_transporte]"],
+        "origen"=>$camposInteres["campo[origen]"],
+        "destino"=>$camposInteres["campo[destino]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "tipo_empaque"=>$camposInteres["campo[tipo_empaque]"],
+        "tipo_obligacion"=>$camposInteres["campo[tipo_obligacion]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "estado"=>$camposInteres["campo[estado]"],
+        "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+        "tipo_obligacion_opcional"=>$camposInteres["campo[tipo_obligacion_opcional]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        ];
+        PolizasCarga::create($clause);
+
+    }elseif($policyType == 3){
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
+
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('CAE', count($total) + 1);
+        }else{
+            $numero = $result->numero;
+        }
+        $clause =[
+
+        "empresa_id"=>$this->empresa_id,
+        "id_poliza"=>$p->id,
+        "serie"=>$camposInteres["campo[serie]"],
+        "marca"=>$camposInteres["campo[marca_aereo]"],
+        "modelo"=>$camposInteres["campo[modelo_aereo]"],
+        "matricula"=>$camposInteres["campo[matricula_aereo]"],
+        "valor"=>$camposInteres["campo[valor_aereo]"],
+        "pasajeros"=>$camposInteres["campo[pasajeros_aereo]"],
+        "tripulacion"=>$camposInteres["campo[tripulacion_aereo]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "numero"=>$numero,
+        "tipo_id"=>$camposInteres["campo[tipo_id]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        "estado"=>$camposInteres["campo[estado]"],
+        ]; 
+
+        PolizasAereo::create($clause);
+    }elseif($policyType == 4){
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
+
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('CM', count($total) + 1);
+        }else{
+            $numero = $result->numero;
+        }
+        $clause= [
+        "uuid_casco_maritimo"=>hex2bin($camposInteres["campo[uuid]"]),
+        "empresa_id"=>$this->empresa_id,
+        "id_poliza"=>$p->id,
+        "numero"=>$numero,
+        "serie"=>$camposInteres["campo[serie]"],
+        "nombre_embarcacion"=>$camposInteres["campo[nombre_embarcacion]"],
+        "tipo"=>$camposInteres["campo[tipo]"],
         "marca"=>$camposInteres["campo[marca]"],
-        "modelo"=>$camposInteres["campo[modelo]"],
-        "placa"=>$camposInteres["campo[placa]"],
-        "ano"=>$camposInteres["campo[ano]"],
-        "motor"=>$camposInteres["campo[motor]"],
-        "color"=>$camposInteres["campo[color]"],
-        "capacidad"=>$camposInteres["campo[capacidad]"],
-        "uso"=>$camposInteres["campo[uso]"],
-        "condicion"=>$camposInteres["campo[condicion]"],
-        "operador"=>$camposInteres["campo[operador]"],
-        "extras"=>$camposInteres["campo[extras]"],
-        "valor_extras"=>$camposInteres["campo[valor_extras]"],
+        "valor"=>$camposInteres["campo[valor]"],
+        "pasajeros"=>$camposInteres["campo[pasajeros]"],
         "acreedor"=>$camposInteres["campo[acreedor]"],
         "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
         "observaciones"=>$camposInteres["campo[observaciones]"],
-        "empresa_id"=>$this->empresa_id,
+        "tipo_id"=>$camposInteres["campo[tipo_id]"],
         "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
         "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
         "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
         "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
         "estado"=>$camposInteres["campo2[estado]"],
+        ];    
+
+        PolizasMaritimo::create($clause);
+
+
+
+    }elseif($policyType == 5){
+
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
+
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('PER', count($total) + 1);
+        }else{
+            $numero = $result->numero;
+        }
+    //$datosPersonas = PolizasPersonas::where(['id_poliza' => $solicitudes['id']])->get();
+        if (!empty($camposInteres['campo[pasaporte]']) || $camposInteres['campo[letra]'] == 'PAS') {
+            $cedula = $camposInteres['campo[pasaporte]'];
+            $camposInteres['ruc'] = $cedula;
+        }if ($camposInteres['campo[identificacion]'] == 'cedula') {
+            $provincia = !isset($camposInteres['campo[provincia]'] ) ? "" : $camposInteres['campo[provincia]'] . '-';
+            $letra = !isset($camposInteres['campo[letra]']) ? "" : $camposInteres['campo[letra]']."-";
+            $cedula = $provincia . $letra . $camposInteres['campo[tomo]'] . "-" . $camposInteres['campo[asiento]'];
+            $camposInteres['ruc'] = $cedula;
+        }
+        $clause =[
+        "id_interes"=>$campos["interesId"],
+        "id_poliza"=>$p->id,
+        "numero"=>$numero,
+        "nombrePersona"=>$camposInteres["campo[nombrePersona]"],
+        "identificacion" =>$camposInteres["ruc"],
+        "fecha_nacimiento"=>$camposInteres["campo[fecha_nacimiento]"],
+        "estado_civil"=>$camposInteres["campo[estado_civil]"],
+        "nacionalidad"=>$camposInteres["campo[nacionalidad]"],
+        "sexo"=>$camposInteres["campo[sexo]"],
+        "estatura"=>$camposInteres["campo[estatura]"],
+        "peso"=>$camposInteres["campo[peso]"],
+        "telefono_residencial"=>$camposInteres["campo[telefono_residencial]"],
+        "telefono_oficina"=>$camposInteres["campo[telefono_oficina]"],
+        "direccion_residencial"=>$camposInteres["campo[direccion_residencial]"],
+        "direccion_laboral"=>$camposInteres["campo[direccion_laboral]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "empresa_id"=>$this->empresa_id,
+        "telefono_principal"=>$camposInteres["campo[telefono]"],
+        "direccion_principal"=>$camposInteres["campo[direccion]"],
+        "detalle_relacion"=>$camposInteres["campodetalle[relacion]"],
+        "detalle_int_asociado"=>$camposInteres["campodetalle[interes_asociado]"],
+        "detalle_certificado"=>$camposInteres[""],
+        "detalle_beneficio"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_monto"=>$camposInteres["campodetalle[monto]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "estado"=>$camposInteres["campo[estado]"],
+        "fecha_inclusion"=>"",
+        "detalle_participacion"=>$camposInteres["campodetalle[participacion]"], 
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "correo" =>$camposInteres["campo[correo]"],
+        "tipo_relacion"=>$camposInteres["campodetalle[tipo_relacion]"]
+        ];
+        PolizasPersonas::create($clause);
+
+
+    }elseif($policyType == 6){
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
+
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('PRO', count($total) + 1);
+        }else{
+            $numero = $result->numero;
+        }
+        $clause =[
+        "uuid_proyecto"=>hex2bin($camposInteres["campo[uuid]"]),
+        "id_poliza"=>$p->id,
+        "empresa_id"=>$this->empresa_id,
+        "numero"=>$numero,
+        "nombre_proyecto"=>$camposInteres["campo[nombre_proyecto]"],
+        "no_orden"=>$camposInteres["campo[no_orden]"],
+        "contratista"=>$camposInteres["campo[contratista]"],
+        "representante_legal"=>$camposInteres["campo[representante_legal]"],
+        "duracion"=>$camposInteres["campo[duracion]"],
+        "fecha"=>$camposInteres["campo[fecha]"],
+        "monto"=>$camposInteres["campo[monto]"],
+        "monto_afianzado"=>$camposInteres["campo[monto_afianzado]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "porcentaje_acreedor"=>$camposInteres["campo[monto_afianzado]"],
+        "ubicacion"=>$camposInteres["campo[ubicacion]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+        "tipo_id"=>$camposInteres["campo[tipo_id]"],
+        "tipo_propuesta"=>$camposInteres["campo[tipo_propuesta]"],
+        "validez_fianza_pr"=>$camposInteres["campo[validez_fianza_pr]"],
+        "tipo_fianza"=>$camposInteres["campo[tipo_fianza]"],
+        "asignado_acreedor"=>$camposInteres["campo[acreedor]"],
+        "fecha_concurso"=>$camposInteres["campo[fecha_concurso]"],
+        "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+        "validez_fianza_opcional"=>$camposInteres["campo[validez_fianza_opcional]"],
+        "tipo_propuesta_opcional"=>$camposInteres["campo[tipo_propuesta_opcional]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"]
+        ];  
+
+        PolizasProyecto::create($clause);
+
+    }elseif($policyType == 7){
+
+        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+        ->where("interesestable_id",$campos["interesId"])
+        ->select("numero")
+        ->first();
+
+        if(!count($result)){
+            $total=$this->interesesAseguradosRep->where($clause)->count();
+            $numero= Util::generar_codigo('UBI', count($total) + 1);
+        }else{
+            $numero = $result->numero;
+        }
+        $clause =[
+        "uuid_ubicacion"=>hex2bin($camposInteres["campo[uuid]"]),
+        "empresa_id"=>$this->empresa_id,
+        "id_poliza"=>$p->id,
+        "numero"=>$numero,
+        "nombre"=>$camposInteres["campo[nombre]"],
+        "direccion"=>$camposInteres["campo[direccion]"],
+        "edif_mejoras"=>$camposInteres["campo[edif_mejoras]"],
+        "contenido"=>$camposInteres["campo[contenido]"],
+        "maquinaria"=>$camposInteres["campo[maquinaria]"],
+        "inventario"=>$camposInteres["campo[inventario]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+        "tipo_id"=>$camposInteres["campo[id]"],
+        "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        ]; 
+
+        PolizasUbicacion::create($clause);
+
+
+
+    }elseif($policyType == 8){
+
+       $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+       ->where("interesestable_id",$campos["interesId"])
+       ->select("numero")
+       ->first();
+
+       if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('VEH', count($total) + 1);
+    }else{
+        $numero = $result->numero;
+    }
+    $clause= [
+    "id_poliza"=>$p->id,
+    "numero"=>$numero,
+    "chasis"=>$camposInteres["campo[chasis]"],
+    "uuid_vehiculo"=>hex2bin($camposInteres["campo[uuid]"]),
+    "unidad"=>$camposInteres["campo[unidad]"],
+    "marca"=>$camposInteres["campo[marca]"],
+    "modelo"=>$camposInteres["campo[modelo]"],
+    "placa"=>$camposInteres["campo[placa]"],
+    "ano"=>$camposInteres["campo[ano]"],
+    "motor"=>$camposInteres["campo[motor]"],
+    "color"=>$camposInteres["campo[color]"],
+    "capacidad"=>$camposInteres["campo[capacidad]"],
+    "uso"=>$camposInteres["campo[uso]"],
+    "condicion"=>$camposInteres["campo[condicion]"],
+    "operador"=>$camposInteres["campo[operador]"],
+    "extras"=>$camposInteres["campo[extras]"],
+    "valor_extras"=>$camposInteres["campo[valor_extras]"],
+    "acreedor"=>$camposInteres["campo[acreedor]"],
+    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+    "observaciones"=>$camposInteres["campo[observaciones]"],
+    "empresa_id"=>$this->empresa_id,
+    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+    "estado"=>$camposInteres["campo2[estado]"],
     ];
 
     PolizasVehiculo::create($clause);
@@ -3486,7 +3515,7 @@ if (!$exist) {
 
 $this->polizasModel->where(['id'=> $solicitud])
 ->update(['estado'=>'Renovada','fecha_renovacion' => date("Y/m/d")]);
-$mensaje = array('estado' => 200, 'titulo' => '<b>¡&Eacute;xito!</b>', 'mensaje' => 'Se ha Realizado la renovación <b>N° '.$motivo.'</b>');
+$mensaje = array('estado' => 200, 'titulo' => '<b>¡&Eacute;xito!</b>', 'mensaje' => 'Se ha Realizado la renovación <b>'.$motivo.'</b>');
 $this->session->set_flashdata('mensaje', $mensaje);
 $inf["msg"] = "OK";
 
@@ -3500,7 +3529,6 @@ $inf["msg"] = "OK";
 die(json_encode($inf));
 exit;
 }
-
 public function exportarPoliza($id_poliza = null) {
     $poliza = PolizasModel::where(['id' => $id_poliza])->get();
 
@@ -3620,6 +3648,72 @@ public function exportar_factura($id_poliza = null, $id_factura = null){
     $dompdf->render();
     $dompdf->stream($nombre); //, array("Attachment" => false)
     //exit(0);
+}
+
+function ajax_get_asociados() {
+
+    $poliza = $_POST['idpoliza'];
+
+    $inter = PolizasPersonas::where("id_poliza", $poliza)->where("detalle_relacion", "Principal")->select("detalle_certificado", "id_interes as id", "nombrePersona")->get();
+
+    $response = new stdClass();
+    $response->inter = array();
+    $response->inter = $inter->toArray();
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($response))->_display();
+
+    exit;
+}
+
+function ajax_get_cliente(){
+    $id_poliza = $this->input->post('id_poliza');
+    $cliente_id = PolizasModel::where(['id' => $id_poliza])->select('cliente')->first();
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cliente_id))->_display();
+    exit;
+
+}
+
+function ajax_get_cobro_agendado(){
+
+    $id_poliza = $this->input->post('id_poliza');
+    $modo_agendado = $this->input->post('modo_cobro');
+    $response = new stdClass();
+    $response->datos_cobro = array();
+
+    if($modo_agendado == 'individual'){
+        $id_poliza = $this->input->post('id_poliza');
+        $datosCobros = Cobros_seguros::where(['empezable_id' => $id_poliza, 'estado' => 'agendado'])->first();
+        if(count($datosCobros)){
+            $response->cobro_agendado = "si";
+            $response->datos_cobro = ['numero_cobro' => $datosCobros->codigo, 'fecha_cobro' => date('d-m-Y' ,strtotime($datosCobros->created_at)), 'uuid_cobro' => $datosCobros->uuid_cobro];
+        }else{
+            $response->cobro_agendado = "no";
+        }
+    }elseif($modo_agendado == 'masivo'){
+
+        $id_cliente = $this->input->post('id_cliente');
+        $datosFacturas = FacturaSeguro::whereIn('id_poliza',$id_poliza)->select('id','codigo')->get();
+        $datosCobros = Cobros_seguros::where(['empezable_id' => $id_cliente, 'estado' => 'agendado'])->first();
+        $cont = 0;
+        if(count($datosCobros)){
+            foreach ($datosCobros->cobros_facturas as $key => $cob) {
+                foreach ($datosFacturas as $key => $fac) {
+                    if($fac['id'] == $cob['cobrable_id']){
+                        $cont++;
+                    }            
+                }
+            }
+        }
+        if($cont > 0){
+            $response->cobro_agendado = "si";
+            $response->datos_cobro = ['numero_cobro' => $datosCobros->codigo, 'fecha_cobro' => date('d-m-Y' ,strtotime($datosCobros->created_at)), 'uuid_cobro' => $datosCobros->uuid_cobro];
+        }else{
+            $response->cobro_agendado = "no";
+        }
+    }
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+    exit;
+
 }
 
 }

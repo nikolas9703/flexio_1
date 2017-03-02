@@ -1,8 +1,7 @@
 if(desde=="solicitudes" || desde=="poliza"){
 
-    var counterCoveragePerson = indCoverageArray.length,
-    counterDedutiblePerson = indCoverageArray.length,
-    defaultArray = indCoverageArray; 
+    var counterCoveragePerson = 1,
+    counterDedutiblePerson = 1;
     var tablaSolicitudesProyecto = (function () {
 
       var unico = $("#detalleunico").val();
