@@ -278,6 +278,10 @@ class Cobros_seguros extends CRM_Controller {
 			{
 				$regreso='com';
 			}
+			elseif($_GET['reg']=='fase')
+			{
+				$regreso='fase';
+			}
 			else
 			{
 				$regreso='';
@@ -402,7 +406,11 @@ class Cobros_seguros extends CRM_Controller {
 				$mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error! Su solicitud no fue procesada...</b> ');
 			}
 			$this->session->set_flashdata('mensaje', $mensaje);
-			redirect(base_url('cobros_seguros/listar'));
+			error_log(serialize($_POST));
+			if(!empty($_POST['reg']) && $_POST['reg'] == "fase" )
+				redirect(base_url('facturas_seguros/listar'));
+			else
+				redirect(base_url('cobros_seguros/listar'));
 		}
 
 	}

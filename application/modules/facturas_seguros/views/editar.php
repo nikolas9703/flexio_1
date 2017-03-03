@@ -25,6 +25,8 @@
 
                 <!-- Componentes -->
                 <div class="row">
+                <input type="hidden" name="reg" id="reg" value=" <?php echo !empty($_GET['reg']) ? ($_GET['reg']) : '' ; ?>">
+                <input type="hidden" name="uuid" id="uuid" value=" <?php echo !empty($uuid) ? ($uuid) : '' ; ?>">
                     <filtro_factura v-ref:filtro></filtro_factura>
                     <datos_factura v-ref:datos_factura></datos_factura>
                 </div>

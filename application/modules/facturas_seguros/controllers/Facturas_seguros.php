@@ -414,10 +414,10 @@ function ajax_listar() {
                 if ($row->formulario == 'refactura') {
                     $url = base_url('facturas_seguros/refacturar/' . $row->uuid_factura);
                 }
-                $hidden_options .= '<a href="' . $url . '" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Ver Factura</a>';
+                $hidden_options .= '<a href="' . $url . '/?reg=fase" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Ver Factura</a>';
                 $hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success subirArchivoBtn" data-id="' . $row->id . '" data-codigo="' . $row->codigo. '" >Subir documento</a>';     
 
-                if ($row->estado == 'por_cobrar' || $row->estado == 'cobrado_parcial') $hidden_options .= '<a href="' . base_url('cobros/crear?factura=' . $row->uuid_factura) . '" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Registrar Pago</a>';
+                if ($row->estado == 'por_cobrar' || $row->estado == 'cobrado_parcial') $hidden_options .= '<a href="' . base_url('cobros_seguros/crear?factura=' . $row->uuid_factura) . '&reg=fase" data-id="' . $row->uuid_factura . '" class="btn btn-block btn-outline btn-success">Registrar Pago</a>';
                 $hidden_options .= '<a href="' . base_url('facturas_seguros/imprimir/' . $row->uuid_factura) . '" target="_blank" class="btn btn-block btn-outline btn-success imprimirFacturaBtn" data-id="' . $row->id . '" data-codigo="' . $row->codigo. '" >Imprimir</a>';
                 //$hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success verBitacoraBtn" data-id="' . $row->id . '" data-codigo="' . $row->codigo. '" >Ver Bitacora</a>';
 
@@ -775,6 +775,7 @@ $this->template->visualizar();
 
 function editar($uuid) {
 
+
      $data 			= array();
      $mensaje 		= array();
      $breadcrumb 	= array();
@@ -923,6 +924,8 @@ function editar($uuid) {
 
 function guardar_cambios() {
 
+    $reg = !empty($_POST['reg']) ? $_POST['reg'] : '' ;
+    $uuid = !empty($_POST['uuid']) ? $_POST['uuid'] : '' ;
     $campo = $_POST['campo'];
     $com = array("comentario" => $campo['comentario']);
     $comentario = FacturaSeguro::where("id", $campo['factura_id'])->update($com);
@@ -946,8 +949,10 @@ function guardar_cambios() {
 
     $mensaje = array('tipo' => "success", 'mensaje' => '<b>Exito!</b> Se ha guardado la factura correctamente', 'titulo' => 'Factura '.$fact->codigo);
     $this->session->set_flashdata('mensaje', $mensaje);
-    redirect(base_url('facturas_seguros/listar'));
-
+    if (!empty($reg) && $reg == "fase")// por si en algun momento se necita que valide otra ubicacion
+        redirect(base_url('facturas_seguros/listar'));
+    else
+        redirect(base_url('facturas_seguros/listar'));
 }
 
 private function _setFacturaFromPost($factura, $post) {

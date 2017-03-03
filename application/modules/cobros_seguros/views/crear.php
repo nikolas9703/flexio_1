@@ -25,6 +25,7 @@
                 'class' => 'vue-formulario'
               );
               echo form_open(base_url('cobros_seguros/guardar'), $formAttr);?>
+              <input type="hidden" id="reg" name="reg" value="<?php echo !empty($_GET['reg']) ? $_GET['reg'] : '' ; ?>">
 
   <!--loading-->
   <div class="row" v-if="config.loading"><i class="fa fa-spinner fa-spin fa-2x fa-fw"></i><span>Cargando...</span></div>
