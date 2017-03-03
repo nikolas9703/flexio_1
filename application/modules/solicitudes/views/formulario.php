@@ -259,8 +259,11 @@ $formAttr = array(
         </div>           
         <?php
             $url = 'solicitudes/listar';
-            if(!empty($_GET['reg']) && $_GET['reg'] == "age"){
+            if(!empty($_GET['val']) && $_GET['reg'] == "age"){
                 $url = 'agentes/ver/'.$_GET['val'];
+            }
+            else if(!empty($_GET['val']) && $_GET['reg'] == "aseg"){
+                $url = 'aseguradoras/editar/'.$_GET['val'];
             }
         ?>
         <div class="row"> <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>

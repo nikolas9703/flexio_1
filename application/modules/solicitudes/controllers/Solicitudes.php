@@ -609,8 +609,8 @@ public function ajax_listar($grid = NULL) {
         //$ase = $this->AseguradorasRepository->verAseguradora(hex2bin($uuid));
         $ase = $this->AseguradorasRepository->verAseguradora(hex2bin($uuid));
         $id_aseguradora = $ase->id;
-        if ($id_aseguradora) {
-            $clause['aseguradora_id'] = $id_aseguradora;
+        if ($id_aseguradora!="") {
+            $clause['aseguradora_id1'] = $id_aseguradora;
         }
     } else if ($modulo == "Intereses Asegurados") {
         $intereses_asegurados = $this->interesesAseguradosRep->verInteresAsegurado(hex2bin(strtolower($uuid)));
@@ -710,6 +710,8 @@ public function ajax_listar($grid = NULL) {
             $now = Carbon::now();
             if($rutallamado == "agentes/ver")
                 $url = base_url("solicitudes/editar/$uuid_solicitudes?reg=age&val=".strtoupper($uuid));
+            else if ($rutallamado == "aseguradoras/editar")
+                $url = base_url("solicitudes/editar/$uuid_solicitudes?reg=aseg&val=".strtoupper($uuid));
             else
                 $url = base_url("solicitudes/editar/$uuid_solicitudes");
             $urlbitacora = base_url("solicitudes/bitacora/$uuid_solicitudes");
@@ -2563,6 +2565,8 @@ function ajax_get_comision() {
         $this->session->set_flashdata('mensaje', $mensaje);
         if (!empty($reg) && $reg == "age" ) 
             redirect(base_url('agentes/ver/'.$_POST['val']));
+        else if (!empty($reg) && $reg == "aseg" ) 
+            redirect(base_url('aseguradoras/editar/'.$_POST['val']));
         else
             redirect(base_url('solicitudes/listar'));  
 
@@ -3107,10 +3111,10 @@ function ajax_get_invidualCoverage() {
     ->orderBy("created_at",'asc')
     ->get()
     ->toArray();
-    if(!count($coberturas) &&!count($deducion)){
+   /* if(!count($coberturas) &&!count($deducion)){
       $coberturas = $this->coberturaModel->where($clause2)->get()->toArray();
       $deducion = $this->deduciblesModel->where($clause2)->get()->toArray();  
-  }
+  }*/
 
 
   $response = new stdClass();
