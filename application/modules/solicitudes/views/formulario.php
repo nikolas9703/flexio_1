@@ -226,8 +226,8 @@ $formAttr = array(
                     <input type="hidden"  name="campo[plan_id]" id="planes2">               
 
                     <input type="hidden" name="detalleunico" id="detalleunico" value="<?php echo strtotime('now'); ?>"> 
-                    <input type="hidden" name="reg" id="reg" value="<?php echo $_GET['reg']; ?>"> 
-                    <input type="hidden" name="val" id="val" value="<?php echo $_GET['val']; ?>"> 
+                    <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg']) ? $_GET['reg'] : ''; ?>"> 
+                    <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val']) ? $_GET['val'] : ''; ?>"> 
 
                     <!-- Vigencia y detalle de solicitud -->    
                     <div class="row">
@@ -259,7 +259,7 @@ $formAttr = array(
         </div>           
         <?php
             $url = 'solicitudes/listar';
-            if($_GET['reg'] == "age"){
+            if(!empty($_GET['reg']) && $_GET['reg'] == "age"){
                 $url = 'agentes/ver/'.$_GET['val'];
             }
         ?>

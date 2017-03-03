@@ -697,20 +697,29 @@ public function ajax_listar($grid = NULL) {
     $response->result = array();
     $i = 0;
 
+    $rutaAlmacenamiento = array();
+    $rutaAlmacenamiento = explode("/", $_SERVER['HTTP_REFERER']);
+    $totalRuta = count($rutaAlmacenamiento)-1;
+    $rutallamado = $rutaAlmacenamiento[$totalRuta-2]."/".$rutaAlmacenamiento[$totalRuta-1];
+
     if (!empty($rows)) {
         foreach ($rows AS $i => $row) {
             $uuid_solicitudes = bin2hex($row->uuid_solicitudes);
             $uuid_cliente = $row->cliente->uuid_cliente;
             $uuid_aseguradora = bin2hex($row->aseguradora->uuid_aseguradora);
             $now = Carbon::now();
-            $url = base_url("solicitudes/editar/$uuid_solicitudes");
+
+            if($rutallamado == "agentes/ver")
+                $url = base_url("solicitudes/editar/$uuid_solicitudes?reg=age&val=".$uuid_solicitudes);
+            else
+                $url = base_url("solicitudes/editar/$uuid_solicitudes");
             $urlbitacora = base_url("solicitudes/bitacora/$uuid_solicitudes");
 
                 //$hidden_options = ""; 
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->id . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 //$hidden_options .= '<a href="'. base_url('colaboradores/ver/'. $uuid_colaborador) .'" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
 
-            $hidden_options = '<a href="' . $url . '?reg=age&val='.strtoupper($uuid).'" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarSolicitud" >Ver Solicitud</a>';
+            $hidden_options = '<a href="' . $url . ' " data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarSolicitud" >Ver Solicitud</a>';
                 //$hidden_options .= '<button data-id="' . $row['id'] . '" id="cambio_estado_solicitud" class="btn btn-block btn-outline btn-success " data-type="" data-estado="' . $row->estado . '" >Cambio de Estado</button>';
             $hidden_options .= $row->estado == "Anulada" ? '' : ($row->estado == "Aprobada" ? '' : ($row->estado == "Rechazada" ? '' : '<a href="javascript:" data-id="' . $row['id'] . '" data-solicitud="' . $row->numero . '" data-cliente="' . $row->cliente->nombre . '" class="btn btn-block btn-outline btn-success anular_solicitud" data-type="' . $row['id'] . '" >Anular</a>' ));
             $hidden_options .= '<a href="' . $urlbitacora . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success bitacora_solicitud" data-type="' . $row['id'] . '" >Bitácora</a>';
