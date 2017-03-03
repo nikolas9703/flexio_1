@@ -629,7 +629,7 @@ function guardar() {
         $this->load->view('comentarios', $data);
     }
 
-    function editar($uuid = NULL) {
+    function editar($uuid = NULL, $renovar = NULL) {
         if (!$this->auth->has_permission('acceso', 'polizas/editar') && !$this->auth->has_permission('acceso', 'polizas/ver')) {
             // No, tiene permiso, redireccionarlo.
             $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡Error!</b> Usted no tiene permisos para ver el registro', 'titulo' => 'Polizas ');
@@ -686,22 +686,31 @@ function guardar() {
 
                  $poliza->save();
 
-                 //Crear Acreedores
-                 $fieldsetacre = array();
-                 $campoacreedores = $this->input->post('campoacreedores');
-                 PolizasAcreedores::where("id_poliza", $poliza->id)->delete();
-                 if($campoacreedores!=NULL){                        
+                //Crear Acreedores
+                $fieldsetacre = array();
+                $campoacreedores = $this->input->post('campoacreedores');
+                $ids = array();
+                //PolizasAcreedores::where("id_poliza", $poliza->id)->delete();
+                if($campoacreedores!=NULL){                        
                     $porcentaje_cesion = $this->input->post('campoacreedores_por');
-                    $monto_cesion = $this->input->post('campoacreedores_mon');                    
+                    $monto_cesion = $this->input->post('campoacreedores_mon');
+                    $id_acreedores = $this->input->post('campoacreedores_id');                    
                     foreach ($campoacreedores as $key => $value) {
                         $fieldsetacre['acreedor'] = $value;
                         $fieldsetacre["id_poliza"] = $poliza->id;
                         $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
                         $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
-                        if ($value != "") {
-                            PolizasAcreedores::create($fieldsetacre);    
-                        }                                                       
+                        if ($id_acreedores[$key] != "0") {
+                            PolizasAcreedores::where("id", $id_acreedores[$key])->update($fieldsetacre); 
+                            array_push($ids, $id_acreedores[$key]);
+                        }else{
+                            if ($value != "") {
+                                $acre = PolizasAcreedores::create($fieldsetacre); 
+                                array_push($ids, $acre->id );   
+                            }
+                        }                                                                               
                     }
+                    PolizasAcreedores::whereNotIn("id", $ids)->delete();
                 }
 
                  $factura = FacturaSeguro::where(['id_poliza' => $poliza->id])->count();
@@ -879,7 +888,7 @@ function guardar() {
 if ($response) {
    $campo = $this->input->post("campo");
    $this->session->set_userdata('updatedPoliza', $poliza->id);
-						//var_dump($campo["regreso_valor"]);exit();
+                        //var_dump($campo["regreso_valor"]);exit();
    if ($campo["regreso"] == 'ase')
     redirect(base_url('aseguradoras/editar/' . $campo["regreso_valor"]));
 else if ($campo["regreso"] == 'age')
@@ -887,15 +896,15 @@ else if ($campo["regreso"] == 'age')
 else
     redirect(base_url('polizas/listar'));
 }else {
-						//Establecer el mensaje a mostrar
+                        //Establecer el mensaje a mostrar
    $data["mensaje"]["clase"] = "alert-danger";
    $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
-						//$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
+                        //$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
 }
 }
 
-				//Introducir mensaje de error al arreglo
-				//para mostrarlo en caso de haber error
+                //Introducir mensaje de error al arreglo
+                //para mostrarlo en caso de haber error
 $data["message"] = $mensaje;
 
 $this->_css();
@@ -1045,6 +1054,15 @@ else
 
 //---------------------------------------------------------------
 
+//if ($poliza->renovacion_id != 0 && $poliza->categoria == 45 ) {
+if($renovar == "renovar"){
+    $catego = "renovada";
+}else{
+    $catego = "nueva";
+}
+
+//---------------------------------------------------------------
+
 $this->assets->agregar_var_js(array(
    "vista" => 'editar',
    "agtPrincipal"=>$agenteprincipalnombre,
@@ -1088,7 +1106,9 @@ $this->assets->agregar_var_js(array(
    "centrosContables" => $centroContable,
    "validavida" => $validavida,
      "acreedores" => $acreedores,
-     "contacre" => count($acreedores)
+     "contacre" => count($acreedores),
+     "categoria_poliza" => $catego,
+     "indcolec" => $indcolec
    ));
 
 $isRenewal  = array('Expirada','Facturada');
@@ -1112,13 +1132,13 @@ $breadcrumb = array(
     1 => array("nombre" => '<a href="' . base_url() . 'polizas/listar">Pólizas</a>', "activo" => false),
     2 => array("nombre" => '<b>P&oacute;liza N° ' . $poliza->numero . '</b>', "activo" => true),
     ),
-			"filtro" => false, //sin vista grid
-			"menu" => array(
-				'url' => 'javascipt:',
-				'nombre' => "Acción",
-				"opciones" => $opciones,
+            "filtro" => false, //sin vista grid
+            "menu" => array(
+                'url' => 'javascipt:',
+                'nombre' => "Acción",
+                "opciones" => $opciones,
                ),
-			"historial" => true,
+            "historial" => true,
           );
 
 
@@ -1987,6 +2007,11 @@ function tabladetalles($data = array()) {
         $response->result = array();
         $i = 0;
 
+        $rutaAlmacenamiento = array();
+        $rutaAlmacenamiento = explode("/", $_SERVER['HTTP_REFERER']);
+        $totalRuta = count($rutaAlmacenamiento)-1;
+        $rutallamado = $rutaAlmacenamiento[$totalRuta-2]."/".$rutaAlmacenamiento[$totalRuta-1];
+
         if (!empty($rows)) {
             foreach ($rows AS $i => $row) {
                 $uuid_intereses = bin2hex($row->uuid_intereses);
@@ -1999,7 +2024,13 @@ function tabladetalles($data = array()) {
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $estado = $row->estado === "Activo" ? "Activo" : "Inactivo";
                 $labelClass = $row->estado === "Activo" ? "successful" : "danger";
+
                 $url = base_url("intereses_asegurados/editar/$uuid_intereses");
+
+                if ($rutallamado == "polizas/editar") {
+                    $url .= "?reg=poli&val=".$uuid_poliza;
+                }
+
                 $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarInteres"  target="_blank">Ver interés asegurado</a>';
 
                 $redirect = "<a style='text-decoration: underline' href=" . $url . " target='_blank'>$row->numero</a>";
@@ -3193,15 +3224,33 @@ if (!$exist) {
         //$participacion = PolizasParticipacion::where('id_poliza',$solicitudes['id']);
         $porcentage = $this->input->post('participacion');
         if(!empty($porcentage)){
-         for ($i=0; $i <count($porcentage['nombre']) ; $i++) { 
-             $solParticipacion = [
-             'id_poliza' => $p->id,
-             'agente' => $porcentage['nombre'][$i], 
-             'porcentaje_participacion' => $porcentage['valor'][$i]
-             ];
-             $p6 = $poliza6->create($solParticipacion);       
-         } 
-     }
+            for ($i=0; $i <count($porcentage['nombre']) ; $i++) { 
+               $solParticipacion = [
+               'id_poliza' => $p->id,
+               'agente' => $porcentage['nombre'][$i], 
+               'porcentaje_participacion' => $porcentage['valor'][$i]
+               ];
+               $p6 = $poliza6->create($solParticipacion);       
+            } 
+        }
+
+        //Crear Acreedores
+        $fieldsetacre = array();
+        $campoacreedores = $this->input->post('campoacreedores');
+        $ids = array();
+        //PolizasAcreedores::where("id_poliza", $poliza->id)->delete();
+        if($campoacreedores!=NULL){                        
+            $porcentaje_cesion = $this->input->post('campoacreedores_por');
+            $monto_cesion = $this->input->post('campoacreedores_mon');
+            $id_acreedores = $this->input->post('campoacreedores_id');                    
+            foreach ($campoacreedores as $key => $value) {
+                $fieldsetacre['acreedor'] = $value;
+                $fieldsetacre["id_poliza"] = $p->id;
+                $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                $acre = PolizasAcreedores::create($fieldsetacre);                          
+            }
+        }
 
 
      $poliza7 = new Flexio\Modulo\Polizas\Models\PolizasCliente;

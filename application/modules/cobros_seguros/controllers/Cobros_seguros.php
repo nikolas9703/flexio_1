@@ -229,11 +229,29 @@ class Cobros_seguros extends CRM_Controller {
 			'public/resources/compile/modulos/cobros_seguros/formulario.js',
 		));
 
+		if(isset($_GET['mod']) && $_GET['mod'] == 'poliza'){
+			$aplica_cobro = 'polizas';
+			$id_cliente = $_GET['idPoliza'];
+			$ids_polizas = '';
+		}elseif(isset($_GET['mod']) && $_GET['mod'] == 'polizas'){
+			$aplica_cobro = 'cliente';
+			$id_cliente = $_GET['idPoliza'];
+			$ids_polizas = str_replace(",", "_", $_GET['ids']);
+		}else{
+			$aplica_cobro = '';
+			$id_cliente = '';
+			$ids_polizas = '';
+		}
+
 		$this->assets->agregar_var_js(array(
 			"vista" => 'crear',
 			"acceso" => $acceso == 0? $acceso : $acceso,
-			"regreso" =>''
+			"regreso" => isset($_GET['mod']) ? $_GET['mod'] : '',
+			"aplica_cobro" => $aplica_cobro,
+			"id_cliente" => $id_cliente,
+			"ids_polizas" => $ids_polizas,
 		));
+
 		$this->desde_empezables();
 		$data['mensaje'] = $mensaje;
 		$breadcrumb = array(
@@ -272,20 +290,23 @@ class Cobros_seguros extends CRM_Controller {
 		
 		$regreso='';
 		
-		if(isset($_GET['reg']))
-		{
-			if($_GET['reg']=='com')
-			{
+		if(isset($_GET['reg'])){
+
+			if($_GET['reg']=='com'){
 				$regreso='com';
-			}
-			elseif($_GET['reg']=='fase')
-			{
-				$regreso='fase';
-			}
-			else
-			{
+			}else{
 				$regreso='';
 			}	
+		}elseif (isset($_GET['mod'])) {
+			if($_GET['mod']=='polizas'){
+				$regreso = 'polizas';
+			}else{
+				$regreso='';
+			}
+		}
+		elseif($_GET['reg']=='fase')
+		{
+			$regreso='fase';
 		}
 
 		$this->_Css();
@@ -310,9 +331,10 @@ class Cobros_seguros extends CRM_Controller {
 			"vista"     => 'ver',
 			"acceso"    => $acceso == 0? $acceso : $acceso,
 			"hex_cobro" => $cobro->uuid_cobro,
-			"regreso" =>$regreso
+			"regreso" =>$regreso,
+			'ids_polizas' => '',
 		));
-		$this->desde_empezables();
+		//$this->desde_empezables();
 		$data['mensaje'] = $mensaje;
 		$breadcrumb = array(
 			"titulo" => '<i class="fa fa-line-chart"></i> Cobro: '.$cobro->codigo,
@@ -405,12 +427,17 @@ class Cobros_seguros extends CRM_Controller {
 				log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
 				$mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error! Su solicitud no fue procesada...</b> ');
 			}
-			$this->session->set_flashdata('mensaje', $mensaje);
-			error_log(serialize($_POST));
-			if(!empty($_POST['reg']) && $_POST['reg'] == "fase" )
-				redirect(base_url('facturas_seguros/listar'));
-			else
+			
+			
+			if( isset($_POST['mod']) && $_POST['mod'] == 'polizas'  ){
+				$this->session->set_flashdata('mensaje', $mensaje);
+				redirect(base_url('polizas/listar'));
+			}else{
+				$this->session->set_flashdata('mensaje', $mensaje);
 				redirect(base_url('cobros_seguros/listar'));
+			}
+			
+			
 		}
 
 	}
@@ -453,13 +480,12 @@ class Cobros_seguros extends CRM_Controller {
 		$uuid = $this->input->post('uuid');
 		//$cobro = $this->cobroRepository->select("cob_corbos.")->findByUuid($uuid);
 		$cobro = $this->cobroRepository->findByUuid($uuid);
-		$cobro->load('metodo_cobro','cliente','cobros_facturas','empezable','landing_comments');
 		
+		//$cobro->load('metodo_cobro','cliente','cobros_facturas','empezable','landing_comments');
+		$cobro->load('metodo_cobro','cliente','cobros_facturas','landing_comments');
 		$cobro->load(['factura_cobros.cobros'=>function($cob){
-			$cob->where('estado','aplicado');
+			$cob->where('cob_cobros.estado','aplicado');
 		}]);
-		
-		//var_dump($cobro->cliente);
 		
 		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output($cobro)->_display();
 		exit;
@@ -551,7 +577,7 @@ class Cobros_seguros extends CRM_Controller {
 		exit();
 	}
 
-	function catalogo_clientes_activo(){
+	function catalogo_clientes_activo($ids_polizas = null){
 		if(!$this->input->is_ajax_request()){
 			return false;
 		}
@@ -560,36 +586,50 @@ class Cobros_seguros extends CRM_Controller {
 		$clientesObj = new Flexio\Modulo\Cliente\Repository\ClienteRepositorio;
 		$id = $this->input->post('id');
 		if(empty($id)){
-			$clientes = $clientesObj->getClientes($this->empresa_id)->activos()->conFacturas()->paraCrearCobros()->fetch();
+			$clientes = $clientesObj->getClientes($this->empresa_id)->activos()->conFacturas()->paraCrearCobros()->fetch();			
 		}else{
+
 			$clientes = $clientesObj->getClientes($this->empresa_id)->conId($id)->fetch();
 		}
 		$clientes->load('anticipo_cliente','anticipos');
 
-		$clientes = $clientes->map(function($cliente){
-			return collect([
-				'id'=> $cliente->id,
-				'nombre' => $cliente->codigo . ' - '.$cliente->nombre,
-				'saldo_pendiente' => $cliente->saldo_pendiente,
-				'anticipos' => $cliente->anticipos,
-				'anticipos_cliente' => $cliente->anticipo_cliente,
-				'credito_favor' => $cliente->credito_favor,
-				'facturas'=> $this->loadFacturaInfo($cliente)
-			]);
-		});
+		if(!empty($ids_polizas)){
+			$ids_polizas = explode("_", $ids_polizas);
+		}else{
+			$ids_polizas = '';
+		}
+
+		//$clientes = $clientes->map(function($cliente){
+			foreach ($clientes as $key => $cliente) {
+				$clientes[$key] = collect([
+					'id'=> $cliente->id,
+					'nombre' => $cliente->codigo . ' - '.$cliente->nombre,
+					'saldo_pendiente' => $cliente->saldo_pendiente,
+					'anticipos' => $cliente->anticipos,
+					'anticipos_cliente' => $cliente->anticipo_cliente,
+					'credito_favor' => $cliente->credito_favor,
+					'facturas'=> $this->loadFacturaInfo($cliente,$ids_polizas)
+				]);
+			}
+		//});
 
 		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output($clientes)->_display();
 		exit;
 	}
 	
-	protected function loadFacturaInfo($cliente){
+	protected function loadFacturaInfo($cliente,$ids_polizas){
 		
 		$facturasObj = new Flexio\Modulo\FacturasSeguros\Repository\FacturaSeguroRepositorio;
 		$id = $cliente->id;
 		if(empty($id)){
 			$faturas = $facturasObj->getFacturasCliente($this->empresa_id)->fetch();
 		}else{
-			$faturas = $facturasObj->getFacturasCliente($this->empresa_id,$id)->fetch();
+			if($ids_polizas != ''){
+				$faturas = $facturasObj->getFacturasCliente($this->empresa_id,$id,$ids_polizas)->fetch();
+			}else{
+				$faturas = $facturasObj->getFacturasCliente($this->empresa_id,$id)->fetch();
+			}
+			
 		}
 		
 		$response =  $faturas->map(function($fac){

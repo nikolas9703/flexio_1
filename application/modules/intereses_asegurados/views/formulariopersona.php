@@ -15,6 +15,8 @@
                         print $campos['id'];
                     }
                     ?>" id="idPersona">
+                    <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val'])? $_GET['val'] : '' ; ?>" >
+                    <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg'])? $_GET['reg'] : '' ; ?>" >
                     <input type="hidden" name="campo[validar_editar]" id="validar_editar" value="">
                     <div class="ibox">
                         <div class="ibox-content m-b-sm" style="display: block; border:0px">
@@ -470,8 +472,15 @@
 
                     <div class="row botones">
                         <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
-                        <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2" ><a
-                            href="<?php echo base_url('intereses_asegurados/listar'); ?>" class="btn btn-default btn-block"
+                        <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2" >
+                        <?php 
+                            $url = 'intereses_asegurados/listar';
+                            if (!empty($_GET['reg']) && $_GET['reg'] == "poli" ){
+                                $url = "polizas/editar/".$_GET['val'];
+                            }
+                        ?>
+                        <a
+                            href="<?php echo base_url($url); ?>" class="btn btn-default btn-block"
                             id="cancelar">Cancelar </a></div>
                             <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
                                 <input type="submit" name="campo[guardar]" value="Guardar "

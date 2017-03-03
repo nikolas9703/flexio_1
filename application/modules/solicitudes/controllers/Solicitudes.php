@@ -708,9 +708,8 @@ public function ajax_listar($grid = NULL) {
             $uuid_cliente = $row->cliente->uuid_cliente;
             $uuid_aseguradora = bin2hex($row->aseguradora->uuid_aseguradora);
             $now = Carbon::now();
-
             if($rutallamado == "agentes/ver")
-                $url = base_url("solicitudes/editar/$uuid_solicitudes?reg=age&val=".$uuid_solicitudes);
+                $url = base_url("solicitudes/editar/$uuid_solicitudes?reg=age&val=".strtoupper($uuid));
             else
                 $url = base_url("solicitudes/editar/$uuid_solicitudes");
             $urlbitacora = base_url("solicitudes/bitacora/$uuid_solicitudes");
@@ -719,7 +718,7 @@ public function ajax_listar($grid = NULL) {
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->id . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 //$hidden_options .= '<a href="'. base_url('colaboradores/ver/'. $uuid_colaborador) .'" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
 
-            $hidden_options = '<a href="' . $url . ' " data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarSolicitud" >Ver Solicitud</a>';
+            $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarSolicitud" >Ver Solicitud</a>';
                 //$hidden_options .= '<button data-id="' . $row['id'] . '" id="cambio_estado_solicitud" class="btn btn-block btn-outline btn-success " data-type="" data-estado="' . $row->estado . '" >Cambio de Estado</button>';
             $hidden_options .= $row->estado == "Anulada" ? '' : ($row->estado == "Aprobada" ? '' : ($row->estado == "Rechazada" ? '' : '<a href="javascript:" data-id="' . $row['id'] . '" data-solicitud="' . $row->numero . '" data-cliente="' . $row->cliente->nombre . '" class="btn btn-block btn-outline btn-success anular_solicitud" data-type="' . $row['id'] . '" >Anular</a>' ));
             $hidden_options .= '<a href="' . $urlbitacora . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success bitacora_solicitud" data-type="' . $row['id'] . '" >Bitácora</a>';
@@ -844,7 +843,7 @@ public function ajax_listar($grid = NULL) {
             $response->rows[$i]["id"] = $row->id;
             $response->rows[$i]["cell"] = array(
                 $row->id,
-                '<a href="' . base_url('solicitudes/editar/' . $uuid_solicitudes) . '" style="color:blue;">' . Util::verificar_valor($row->numero) . '</a>',
+                '<a href="' . $url . '" style="color:blue;">' . Util::verificar_valor($row->numero) . '</a>',
                 '<a href="' . base_url('clientes/ver/' . $uuid_cliente) . '" style="color:blue;">' . Util::verificar_valor($row->cliente->nombre) . '</a>',
                 '<a href="' . base_url('aseguradoras/editar/' . $uuid_aseguradora) . '" style="color:blue;">' . Util::verificar_valor($row->aseguradora->nombre) . '</a>',
                 Util::verificar_valor($row->ramorelacion->nombre),
@@ -2221,7 +2220,7 @@ function ajax_get_comision() {
                     $campoprima['id_solicitudes'] = $solicitudes->id;
                     $solicitudesprima = $this->solicitudesPrimaModel->create($campoprima);
                     //guardar tabla distribucion
-                    $cantidad = $campoparticipacion['cantidad'];
+                    $cantidad = isset($campoparticipacion['cantidad']) ? $campoparticipacion['cantidad'] : 0;
 
                     $int_ase = array();
                     $int_ase['id_solicitudes'] = $solicitudes->id;
@@ -2264,9 +2263,11 @@ function ajax_get_comision() {
                       }
                   } */
 
+                  $agts = isset($campoparticipacion['id_agente']) ? $campoparticipacion['id_agente'] : "";
+                  $pct = isset($campoparticipacion['porcentajes']) ? $campoparticipacion['porcentajes'] : "";
 
-                  $arreglo_agentes = explode(",", $campoparticipacion['id_agente']);
-                  $arreglo_porcentajes = explode(",", $campoparticipacion['porcentajes']);
+                  $arreglo_agentes = explode(",", $agts);
+                  $arreglo_porcentajes = explode(",", $pct);
 
                     $totalparotrosagentes=0;
                     for ($i = 0; $i <= $cantidad; $i++) {
@@ -2402,7 +2403,9 @@ function ajax_get_comision() {
                     //Crear Acreedores
                     $fieldsetacre = array();
                     $campoacreedores = $this->input->post('campoacreedores');
-                    SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
+                    $ids = array();
+                    //SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
+                    $id_acreedores = $this->input->post('campoacreedores_id');
                     if($campoacreedores!=NULL){                        
                         $porcentaje_cesion = $this->input->post('campoacreedores_por');
                         $monto_cesion = $this->input->post('campoacreedores_mon'); 
@@ -2415,8 +2418,14 @@ function ajax_get_comision() {
                             $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
                             $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
                             $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
-                            if ($value != "") {
-                                SolicitudesAcreedores::create($fieldsetacre);    
+                            if ($id_acreedores[$key] != "0") {
+                                SolicitudesAcreedores::where("id", $id_acreedores[$key])->update($fieldsetacre); 
+                                array_push($ids, $id_acreedores[$key]);
+                            }else{
+                                if ($value != "") {
+                                    $acre = SolicitudesAcreedores::create($fieldsetacre); 
+                                    array_push($ids, $acre->id );   
+                                }
                             }                                                       
                         }
                     }
