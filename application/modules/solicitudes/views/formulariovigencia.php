@@ -161,6 +161,7 @@
                     <button type="button" style="float: left; width: 40px; margin-top:0px!important; display: block !important" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaacreedor({{$index+2}})"><i class="fa fa-trash"></i>
                     </button>
                 </div>
+                <input type="hidden" name="campoacreedores_id[]" value="{{find.id}}">
             </div>
 
             <div class="file_tools_acreedores_adicionales row" id="a1">
@@ -197,6 +198,7 @@
                     <button type="button" style="float: left; width: 40px; margin-top:0px!important;" id="del_acre" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i>
                     </button>
                 </div>
+                <input type="hidden" name="campoacreedores_id[]" value="0">
             </div>
 
             <div id="agrega_acre"></div> 

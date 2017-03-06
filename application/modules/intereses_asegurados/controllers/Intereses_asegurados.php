@@ -4107,7 +4107,9 @@ class Intereses_asegurados extends CRM_Controller {
         }
 
         $this->session->set_flashdata('mensaje', $mensaje);
-        if ($campodesde['desde'] != "solicitudes") {
+        if (!empty($_POST['reg']) && $_POST['reg'] == "poli") {
+            redirect(base_url('polizas/editar/'.$_POST['val']));
+        } else if ($campodesde['desde'] != "solicitudes") {
             redirect(base_url('intereses_asegurados/listar'));
         } else if ($campodesde['desde'] == "solicitudes") {
             print_r($uuid . "&" . $codigo . "&" . $individual);

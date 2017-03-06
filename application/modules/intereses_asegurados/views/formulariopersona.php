@@ -15,6 +15,8 @@
                         print $campos['id'];
                     }
                     ?>" id="idPersona">
+                    <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val'])? $_GET['val'] : '' ; ?>" >
+                    <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg'])? $_GET['reg'] : '' ; ?>" >
                     <input type="hidden" name="campo[validar_editar]" id="validar_editar" value="">
                     <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val'])? $_GET['val'] : '' ; ?>" >
                     <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg'])? $_GET['reg'] : '' ; ?>" >

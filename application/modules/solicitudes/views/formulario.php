@@ -262,6 +262,9 @@ $formAttr = array(
             if(!empty($_GET['val']) && $_GET['reg'] == "age"){
                 $url = 'agentes/ver/'.$_GET['val'];
             }
+            else if(!empty($_GET['val']) && $_GET['reg'] == "aseg"){
+                $url = 'aseguradoras/editar/'.$_GET['val'];
+            }
         ?>
         <div class="row"> <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
             <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2"><a href="<?php echo base_url($url); ?>" class="btn btn-default btn-block" id="cancelar">Cancelar </a> </div>
