@@ -6,7 +6,6 @@
     ?>
 
     <div id="page-wrapper" class="gray-bg row">
-
         <?php Template::cargar_vista('navbar'); ?>
         <div class="row border-bottom"></div>
         <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>

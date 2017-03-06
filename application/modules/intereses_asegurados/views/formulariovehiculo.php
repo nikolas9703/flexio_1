@@ -239,7 +239,7 @@
                                         <a href="<?php echo base_url('intereses_asegurados/listar'); ?>" class="btn btn-default btn-block" id="cancelar">Cancelar </a>
                                     </div>
                                     <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
-                                        <input type="submit" name="campo[guardar]" value="Guardar " class="btn btn-primary btn-block guardarVehiculo" id="campo[guardar]" />
+                                        <input type="submit" name="campo[guardar]" value="Guardar " class="btn btn-primary btn-block guardarVehiculo guardarInteresSolicitud" id="campo[guardar]" />
                                     </div>
                                 </div>
 

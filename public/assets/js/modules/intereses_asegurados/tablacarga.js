@@ -1,6 +1,5 @@
 if(desde=="solicitudes" || desde=="poliza"){
-    var counterCoverageCarga = 1,
-    counterDedutibleCarga =    1;
+    
     var tablaSolicitudesCarga = (function () {
 
         var unico = $("#detalleunico").val();
@@ -150,7 +149,7 @@ if(desde=="solicitudes" || desde=="poliza"){
             e.returnValue = false;
             e.stopPropagation();
             var id = $(this).attr("data-id");
-            //console.log(id);
+            console.log(id);
             var rowINFO = $.extend({}, gridObj.getRowData(id));
             var options = rowINFO.link;
             var numero_interes = rowINFO.numero;
@@ -298,114 +297,57 @@ if(desde=="solicitudes" || desde=="poliza"){
             var idFromTable = $(this).attr("data-id");
             var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
             var options = rowINFO.link;
-            var numero_interes =""; 
-            numero_interes = rowINFO.numero;
-            console.log(numero_interes);
+            var numeroArticulo =rowINFO.numero;
             //Init Modal data-int-gr 
-            var btnDismiss ='<button type="button" class="close" data-dismiss="modal">&times;</button>';      
-            var pantalla = $('.individual');
-            var modalContainer = $("#IndCoberturas");
-            var botones_coberturas = $('.btnIndidualCoverage');
             $(opcionesModal).modal("hide");
-            
-            pantalla.css('display', 'block');
-            botones_coberturas.css('display', 'block');
-            modalContainer.find('.modal-header').empty().append(btnDismiss+"<h4 style='text-align:center'>Coberturas Interés: "+numero_interes+"</h4>");
-            modalContainer.find('.modal-body').empty().append(pantalla);
-            modalContainer.find('.modal-footer').empty().append(botones_coberturas);
-            $(modalContainer).modal({
-                backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
-                show: false
-            });
-            modalContainer.modal("show");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  solicitud :solicitud,
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+              },
+              url: phost() + 'solicitudes/ajax_get_invidualCoverage',
+              success: function(data)
+              {    
+                if ($.isEmptyObject(data.session) == false) {
+                    window.location = phost() + "login?expired";
+                }else{  
 
-            var wrapper = $("#indCoveragefields");
-            var btnAdd  = $("#btnAddCoverage");
-            $(btnAdd).click(function(e){
-                e.preventDefault();
-                var text = '<div class="resetModal" id="cobertura_'+ counterDedutibleCarga+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="coverageValue[]" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapper).append(text);
-                counterDedutibleCarga++;  
-            });
+                  var temporalArrayArt = [];
+                  temporalArrayArt.coberturas=constructJSONArray("nombre","cobertura_monetario",getValuesFromArrayInput("coberturasNombre"),getValuesFromArrayInput("coberturasValor"));
+                  temporalArrayArt.deducion  =constructJSONArray("nombre","deducible_monetario",getValuesFromArrayInput("deduciblesNombre"),getValuesFromArrayInput("deduciblesValor"));    
+                  $(".coverage").remove();
+                  $(".deductible").remove();
+                  if(data.coberturas.length || data.deducion.length){
+                     temporalArrayArt.coberturas = data.coberturas;
+                     temporalArrayArt.deducion = data.deducion;
+                 }
+                 populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
+                 populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
 
-    $(wrapper).on("click",".del_row", function(e){ //user click on remove text
-        e.preventDefault();  
-        counterDedutibleCarga--;      
-        $('#cobertura_'+ counterDedutibleCarga).remove();
-    });
+                 $(".moneda").inputmask('currency',{
+                  prefix: "",
+                  autoUnmask : true,
+                  removeMaskOnSubmit: true
+              });  
 
-    var wrapperDeductibles = $("#indDeductiblefields");
-    var btnAddDeductibles  = $("#btnAddDeductible");
-    $(btnAddDeductibles).click(function(e){
-        e.preventDefault();
-        var text = '<div class="resetModal"  id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="deductibleValue[]"  class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-        $(wrapperDeductibles).append(text);
-        counterDedutibleArt++;     
-    });
+             }
+         }
+     });  
 
-    $(wrapperDeductibles).on("click",".remove_deductible", function(e){ //user click on remove text
-        e.preventDefault();  
-        counterDedutibleArt--;      
-        $('#deductible_'+ counterDedutibleArt).remove();
-        
-    });
-    
-    $.ajax({
-        type: "POST",
-        data: {
-          detalle_unico: unico,
-          id_interes :id,
-          solicitud : solicitud,
-           planId : $(planes).val(),
-          erptkn: tkn
-      },
-      url: phost() + 'solicitudes/ajax_get_invidualCoverage',
-      success: function(data)
-      {    
-        if ($.isEmptyObject(data.session) == false) {
-            window.location = phost() + "login?expired";
+            $("#saveIndividualCoveragebtn").click(function(){
+
+              saveInvidualCoverage(id,numeroArticulo);  
+          });  
         }else{
-
-           var  temporalArrayCarga = [];
-           $(".resetModal").remove();
-           if(data.coberturas.length){
-               temporalArrayCarga.coberturas = data.coberturas;
-               for (var j =  temporalArrayCarga.coberturas.length - 1; j >= 0; j--) {
-                var value = temporalArrayCarga.coberturas[j];
-                var text = '<div class="resetModal"  id="cobertura_'+ counterDedutibleCarga+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="coverageValue[]" value="'+value.cobertura_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapper).append(text);
-                counterDedutibleCarga++;
-            }
+            $(this).text("Seleccione un plan");
         }
-        if(data.deducion.length){
-           temporalArrayCarga.deducion = data.deducion;
+    });
 
-           for (var i =  temporalArrayCarga.deducion.length - 1; i >= 0; i--) {
-            var value = temporalArrayCarga.deducion[i];
-            var text = '<div class="resetModal" id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="deductibleValue[]"  value="'+value.deducible_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-            $(wrapperDeductibles).append(text);
-            counterDedutibleArt++;
-        } 
-    }
-
-    $(".moneda").inputmask('currency',{
-      prefix: "",
-      autoUnmask : true,
-      removeMaskOnSubmit: true
-  });  
-
-}
-}
-});  
-    
-    $("#saveIndividualCoveragebtn").click(function(){
-
-      saveInvidualCoverage(id,numero_interes);  
-  });  
-}else{
-    $(this).text("Seleccione un plan");
-}
-});
 
 	//Fin funciones para botones del grid de maritimo
 

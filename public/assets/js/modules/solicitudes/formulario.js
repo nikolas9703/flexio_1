@@ -100,7 +100,7 @@ if ($().chosen) {
         });
     }
 }
-$("#verCoberturas").on('click', '.addCobertura', function(){
+$("#verCoberturas,#IndCoberturas").on('click', '.addCobertura', function(){
    $(".moneda").inputmask('currency',{
       prefix: "",
       autoUnmask : true,
@@ -158,17 +158,33 @@ function modalEstados(form){
                         var inputs = $('#formClienteCrear :input');
                         var values = {};
                         inputs.each(function () {
-                            values[this.name] = $(this).val();
+                            if(this.name == "campovigencia[poliza_declarativa]"){
+                                if ($(this).prop("checked") == true) {
+                                    values[this.name] = "on";
+                                }else{
+                                    values[this.name] = "off";
+                                }
+                            }else if(this.name == "campoacreedores[]" || this.name == "campoacreedores_por[]" || this.name == "campoacreedores_mon[]" || this.name == "campoacreedores_ini[]" || this.name == "campoacreedores_fin[]"){
+                                var con = 0 ;
+                                var nom = this.name;
+                                $('input[name="'+this.name+'"]').each(function () {
+                                    var x = $(this).val();
+                                    var n = nom.split("[]");
+                                    values[n[0]+"["+con+"]"] = x ;
+                                    con++;              
+                                });
+                            }else{
+                                values[this.name] = $(this).val();
+                            }                            
                         });
                         tkn = values.erptkn;
-                        console.log(values);
-                       /* var guardarsolicitud = moduloSolicitudes.ajaxguardarsolicitud(values);
-
+                        
+                        var guardarsolicitud = moduloSolicitudes.ajaxguardarsolicitud(values);
+                        
                         guardarsolicitud.success (function(){
                             var datosbitacora = {campo: {estado: estado, estado_anterior: estado_anterior, tipo: 'Solicitud_aprobada', motivo: motivo, solicitud: solicitud, id: ids}};
                             var cambiobitacora = moduloSolicitudesBitacora.cambiarEstadoSolicitudesBitacora(datosbitacora);
                             cambiobitacora.done(function (response) {
-                                console.log(response);
                                 toastr.success('Se ha Aprobado la solicitud correctamente.');
                                 var inf = $.parseJSON(response);
                                 if (inf.msg == "Ok") {
@@ -176,7 +192,7 @@ function modalEstados(form){
                                     location.href = phost() + 'polizas/editar/' + inf.uuid;
                                 }
                             });
-                        });*/
+                        });
                         
                     } else {
                         toastr.error('Este Numero de Poliza ya existe en el Sistema. Ingrese otro.');
@@ -223,11 +239,9 @@ function modalEstados(form){
 
             var motivo = $('#RechazarSolicitud').find('#motivorechazar').val();
             var nsolicitud = $('#RechazarSolicitud').find('input[name="nsolicitud"]').val();
-            console.log(nsolicitud);
             if (motivo != "") {
                 var estado = $(this).attr("data-estado");
                 var estado_anterior = $(this).attr("data-estado-anterior");
-                console.log(estado_anterior);
                 var id_solicitud = $('#RechazarSolicitud').find('input[name="id_solicitud"]').val();
                 $('#RechazarSolicitud').modal('hide');
                 toastr.success('Se ha Rechazado la solicitud correctamente.');
@@ -293,8 +307,7 @@ function OnloadFunction(valid, tablaTipo) {
 
         $("#fecha_primer_pago").val(vig);
         $("#fecha_primerPago").val(vig);
-        console.log($("#fecha_primer_pago").val());
-        console.log($("#fecha_primerPago").val());
+        
     });
 
     $("#vigencia_hasta").change(function () {
@@ -313,7 +326,6 @@ function OnloadFunction(valid, tablaTipo) {
 
         var vig = $("#fecha_primer_pago").val();
         $("#fecha_primerPago").val(vig);
-        console.log($("#fecha_primerPago").val());
     }); 
 
 
@@ -343,106 +355,34 @@ function OnloadFunction(valid, tablaTipo) {
         },
         submitHandler: function (form) {
 
-            if (id_tipo_poliza == 1 ) {
-                if (id_tipo_int_asegurado == 1) {
-                    if ($('#articulo').validate().form() == true) {
-                        console.log("ingreso al articulo");
-                        var inputs = $('#articulo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        console.log(values);
-                        var tipo = "articulo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 2) {
-                    if ($('#formCarga').validate().form() == true) {
-                        var inputs = $('#formCarga :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        console.log(values);
-                        var tipo = "carga";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 3) {
-                    if ($('#formcasco_aereo').validate().form() == true) {
-                        var inputs = $('#formcasco_aereo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "aereo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 4) {
-                    if ($('#formCasco_maritimo').validate().form() == true) {
-                        var inputs = $('#formCasco_maritimo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "maritimo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 5) {
-                    if ($('#persona').validate().form() == true || ContVidaInd > 0) {
-                        if(ContVidaInd == 0){
-                            var inputs = $('#persona :input');
-                            var values = {};
+            var porcen = 0 ;
+            var monto = 0;
+            $('input[name="campoacreedores_por[]"]').each(function () {
+                var x = $(this).val();
+                if (x != "") {
+                    porcen = parseFloat(porcen) + parseFloat(x) ;
+                }                
+            });
+            $('input[name="campoacreedores_mon[]"]').each(function () {
+                var x = $(this).val();
+                if (x != "") {
+                    monto = parseFloat(monto) + parseFloat(x) ;
+                }                
+            });
+            var suma = $('input[name="campovigencia[suma_asegurada]"]').val();
+            suma = parseFloat(suma);
 
+            if (porcen <= 100 && monto <= suma ) {
+                if (id_tipo_poliza == 1 ) {
+                    if (id_tipo_int_asegurado == 1) {
+                        if ($('#articulo').validate().form() == true) {
+                            var inputs = $('#articulo :input');
+                            var values = {};
                             inputs.each(function () {
                                 values[this.name] = $(this).val();
                             });
-                            console.log(values);
-                            //tkn = values.erptkn;
-                            var tipo = "persona";
+                            tkn = values.erptkn;
+                            var tipo = "articulo";
                             var guardar = Intereses.interes(values, tipo);
                             guardar.done(function (response) {
                                 modalEstados(form);
@@ -451,86 +391,174 @@ function OnloadFunction(valid, tablaTipo) {
                             guardar.fail(function () {
                                 toastr.error('Ha ocurrido un Error.');
                             });
-                        }else{
-                            modalEstados(form);
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
                         }
-                    } else {
-                        window.location.href = "#divintereses";
-                    }
+                    } else if (id_tipo_int_asegurado == 2) {
+                        if ($('#formCarga').validate().form() == true) {
+                            var inputs = $('#formCarga :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "carga";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 3) {
+                        if ($('#formcasco_aereo').validate().form() == true) {
+                            var inputs = $('#formcasco_aereo :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "aereo";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 4) {
+                        if ($('#formCasco_maritimo').validate().form() == true) {
+                            var inputs = $('#formCasco_maritimo :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "maritimo";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 5) {
+                        if ($('#persona').validate().form() == true || ContVidaInd > 0) {
+                            if(ContVidaInd == 0){
+                                var inputs = $('#persona :input');
+                                var values = {};
+
+                                inputs.each(function () {
+                                    values[this.name] = $(this).val();
+                                });
+                                //tkn = values.erptkn;
+                                var tipo = "persona";
+                                var guardar = Intereses.interes(values, tipo);
+                                guardar.done(function (response) {
+                                    modalEstados(form);
+                                    //form.submit();
+                                });
+                                guardar.fail(function () {
+                                    toastr.error('Ha ocurrido un Error.');
+                                });
+                            }else{
+                                modalEstados(form);
+                            }
+                        } else {
+                            window.location.href = "#divintereses";
+                        }
 
 
-                } else if (id_tipo_int_asegurado == 6) {
-                    if ($('#formProyecto_actividad').validate().form() == true) {
-                        var inputs = $('#formProyecto_actividad :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "proyecto";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
+                    } else if (id_tipo_int_asegurado == 6) {
+                        if ($('#formProyecto_actividad').validate().form() == true) {
+                            var inputs = $('#formProyecto_actividad :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "proyecto";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 7) {
+                        if ($('#formUbicacion').validate().form() == true) {
+                            var inputs = $('#formUbicacion :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "ubicacion";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 8) {
+                        if ($('#vehiculo').validate().form() == true) {
+                            var inputs = $('#vehiculo :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "vehiculo";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
                     }
-                } else if (id_tipo_int_asegurado == 7) {
-                    if ($('#formUbicacion').validate().form() == true) {
-                        var inputs = $('#formUbicacion :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "ubicacion";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 8) {
-                    if ($('#vehiculo').validate().form() == true) {
-                        var inputs = $('#vehiculo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        console.log(values);
-                        var tipo = "vehiculo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            //console.log("Submit");
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
+                } else if(vista == "editar"){
+                    modalEstados(form);
+                }else{
+                    form.submit();
                 }
-            } else if(vista == "editar"){
-                modalEstados(form);
+                //
             }else{
-                form.submit();
+                toastr.error("Acreedores: La sumatoria de porcentajes de cesión y/o el monto son mayores a la suma asegurada.");
             }
-            //
+            
         }
 
     });
@@ -609,7 +637,6 @@ function OnloadFunction(valid, tablaTipo) {
             var obtenerint = InteresesAct.obtenerInteres(val2);
 
             obtenerint.done(function (response) {
-                console.log(response);
                 if(response != null){
                     $("#selInteres").val(response.interesestable_id);
                     $("#selInteres").trigger('change');
@@ -767,9 +794,7 @@ function OnloadFunction(valid, tablaTipo) {
 
         if ($('#guardarDocumentoIntereses').validate().form() == true) {
             var documentos = $('#guardarDocumentoIntereses :input');
-            console.log(documentos);
         } else {
-            console.log("No hay formulario");
         }
     });
 
@@ -830,7 +855,6 @@ function OnloadFunction(valid, tablaTipo) {
                 values[this.name] = $(this).val();
             });
             tkn = values.erptkn;
-            console.log(values);
             var tipo = "articulo";
             var guardar = Intereses.interes(values, tipo);
             guardar.done(function (response) {
@@ -878,8 +902,6 @@ function OnloadFunction(valid, tablaTipo) {
             inputs.each(function () {
                 values[this.name] = $(this).val();
             });
-            console.log($("#tripulacion_a").val());
-            console.log(values);
             tkn = values.erptkn;
             var tipo = "aereo";
             var guardar = Intereses.interes(values, tipo);
@@ -980,7 +1002,6 @@ function OnloadFunction(valid, tablaTipo) {
             inputs.each(function () {
                 values[this.name] = $(this).val();
             });
-            console.log(values);
             var tipo = "persona";
 
             var guardar = Intereses.interes(values, tipo);
@@ -1135,7 +1156,6 @@ function OnloadFunction(valid, tablaTipo) {
                 values[this.name] = $(this).val();
             });
             tkn = values.erptkn;
-            console.log(values);
             var tipo = "vehiculo";
             var guardar = Intereses.interes(values, tipo);
             guardar.done(function (response) {
@@ -1258,7 +1278,6 @@ function OnloadFunction(valid, tablaTipo) {
 
 
 }
-console.log(estado);
 if(estado !='Pendiente' && estado !='En Trámite' && estado != "undefined"){
 	$(".guardarsolicitud").hide();
 }

@@ -134,7 +134,7 @@
 
         </div>
         <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddCoverage">
-            <button class="btn btn-default btn-block addCobertura"><i class="fa fa-plus"></i></button>
+        <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indCoveragefields','btnAddCoverage','coverage','removecoverage')"><i class="fa fa-plus"></i></button>
         </div>
     </div>
     <div class="row">
@@ -149,7 +149,7 @@
 
         </div>
         <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddDeductible">
-            <button class="btn btn-default btn-block addCobertura"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indDeductiblefields','btnAddDeductible','deductible','removeDeductible')"><i class="fa fa-plus"></i></button>
         </div>
 
     </div>

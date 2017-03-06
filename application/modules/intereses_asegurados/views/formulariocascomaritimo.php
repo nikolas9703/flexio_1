@@ -248,7 +248,7 @@ $formAttr = array(
                                         id="cancelar">Cancelar </a></div>
                                 <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
                                     <input type="submit" name="campo[guardar]" value="Guardar "
-                                           class="btn btn-primary btn-block guardarMaritimo" id="campo[guardar]">
+                                           class="btn btn-primary btn-block guardarMaritimo guardarInteresSolicitud" id="campo[guardar]">
                                 </div>
                             </div>
 

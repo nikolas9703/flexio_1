@@ -49,6 +49,7 @@ use Flexio\Modulo\Cliente\Models\Cliente as ClienteModel;
 use Flexio\Modulo\Cliente\Models\Correos as correosClienteModel;
 use Flexio\Modulo\Cliente\Models\Telefonos as telefonosClienteModel;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable as CentroFacturable;
+use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores_detalles;
 
 class Intereses_asegurados extends CRM_Controller {
 
@@ -76,11 +77,11 @@ class Intereses_asegurados extends CRM_Controller {
     protected $PoliticasRepository;
     protected $ramoRepository;
     private $bitacoraModel;
-	private $ClienteModel;
-	private $correosClienteModel;
-	private $telefonosClienteModel;
-	private $CentroFacturable;
-	private $superuser;
+    private $ClienteModel;
+    private $correosClienteModel;
+    private $telefonosClienteModel;
+    private $CentroFacturable;
+    private $superuser;
     //flexio
     protected $upload_folder = './public/uploads/';
 
@@ -133,21 +134,21 @@ class Intereses_asegurados extends CRM_Controller {
         $this->PolizasModel = new PolizasModel();
         $this->ramoRepository = new RamoRepository();
         $this->bitacoraModel = new bitacoraModel();
-		$this->ClienteModel=new ClienteModel();
-		$this->correosClienteModel=new correosClienteModel();
-		$this->telefonosClienteModel=new telefonosClienteModel();
-		$this->CentroFacturable=new CentroFacturable();
+        $this->ClienteModel=new ClienteModel();
+        $this->correosClienteModel=new correosClienteModel();
+        $this->telefonosClienteModel=new telefonosClienteModel();
+        $this->CentroFacturable=new CentroFacturable();
 
-		
-		//saber si el usuario es superusuario
-		$admin=$this->PoliticasRepository->usuarioEsAdmin($this->roles);
-		
-		$this->superuser=0;
-		if($admin>0)
-		{
-			$this->superuser=1;
-		}
-		
+        
+        //saber si el usuario es superusuario
+        $admin=$this->PoliticasRepository->usuarioEsAdmin($this->roles);
+        
+        $this->superuser=0;
+        if($admin>0)
+        {
+            $this->superuser=1;
+        }
+        
         $politicas_transaccion = $this->PoliticasRepository->getAllPoliticasRoles($clause);
 
         $politicas_transaccion_general = count($this->PoliticasRepository->getAllPoliticasRolesModulo($clause));
@@ -288,45 +289,45 @@ class Intereses_asegurados extends CRM_Controller {
                 $uuid_intereses = bin2hex($row->uuid_intereses);
                 $now = Carbon::now();
                 $btnClass = $row->estado !== "Activo" ? "successful" : "danger";
-				$otraclase=$row->estado!=="Activo" ? "style='color:#5cb85c; border-color: #5cb85c !important;'":'';
+                $otraclase=$row->estado!=="Activo" ? "style='color:#5cb85c; border-color: #5cb85c !important;'":'';
                 $negativeState = $row->estado != "Activo" ? "Activar" : "Desactivar";
                 $politicas = $this->politicas;
                 $politicas_generales = $this->politicas_generales;
-				
-				if($this->superuser==0)
-				{
-				   if ($this->politicas_general > 0) {
-					   if(count($politicas)>0)
-					   {
-						   if (((in_array(19, $politicas) === true) && (in_array(19, $politicas_generales) === true)) || ((in_array(19, $politicas_generales) === false)) ) {
-								if ($row->estado === "Activo") {
-									$modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-' . $btnClass . ' massive">' . $negativeState . '</a>';
-								} 
-								else 
-								{
-									$modalstate = '<button data-id="alert" id="alert"  style="border: red 1px solid; color: red;">Usted no tiene permisos para cambiar este estado</button>';
-								}
-							} else if (((in_array(20, $politicas) === true) && (in_array(20, $politicas_generales) === true)) || ((in_array(20, $politicas_generales) === false)) ) {
-								if ($row->estado !== "Activo") {
-									$modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-' . $btnClass . ' massive" '.$otraclase.'>' . $negativeState . '</a>';
-								} else {
-									$modalstate = '<button data-id="alert" id="alert"  style="border: red 1px solid; color: red;">Usted no tiene permisos para cambiar este estado</button>';
-								}
-							}
-					   }
-					   else
-					   {
-						   $modalstate = '<button data-id="alert" id="alert"  style="border: red 1px solid; color: red;">Usted no tiene permisos para cambiar este estado</button>';
-					   }
-						
-					} else {
-						$modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-'.$btnClass.' massive" '.$otraclase.'>' . $negativeState . '</a>';
-					}
-				}
-				else
-				{
-					$modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-'.$btnClass.' massive" '.$otraclase.'>' . $negativeState . '</a>';
-				}
+                
+                if($this->superuser==0)
+                {
+                   if ($this->politicas_general > 0) {
+                       if(count($politicas)>0)
+                       {
+                           if (((in_array(19, $politicas) === true) && (in_array(19, $politicas_generales) === true)) || ((in_array(19, $politicas_generales) === false)) ) {
+                                if ($row->estado === "Activo") {
+                                    $modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-' . $btnClass . ' massive">' . $negativeState . '</a>';
+                                } 
+                                else 
+                                {
+                                    $modalstate = '<button data-id="alert" id="alert"  style="border: red 1px solid; color: red;">Usted no tiene permisos para cambiar este estado</button>';
+                                }
+                            } else if (((in_array(20, $politicas) === true) && (in_array(20, $politicas_generales) === true)) || ((in_array(20, $politicas_generales) === false)) ) {
+                                if ($row->estado !== "Activo") {
+                                    $modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-' . $btnClass . ' massive" '.$otraclase.'>' . $negativeState . '</a>';
+                                } else {
+                                    $modalstate = '<button data-id="alert" id="alert"  style="border: red 1px solid; color: red;">Usted no tiene permisos para cambiar este estado</button>';
+                                }
+                            }
+                       }
+                       else
+                       {
+                           $modalstate = '<button data-id="alert" id="alert"  style="border: red 1px solid; color: red;">Usted no tiene permisos para cambiar este estado</button>';
+                       }
+                        
+                    } else {
+                        $modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-'.$btnClass.' massive" '.$otraclase.'>' . $negativeState . '</a>';
+                    }
+                }
+                else
+                {
+                    $modalstate = '<a href="javascript:" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-'.$btnClass.' massive" '.$otraclase.'>' . $negativeState . '</a>';
+                }
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $estado = $row->estado === "Activo" ? "Activo" : "Inactivo";
                 $labelClass = $row->estado === "Activo" ? "successful" : "danger";
@@ -334,14 +335,14 @@ class Intereses_asegurados extends CRM_Controller {
                 $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarInteres" >Ver interés asegurado</a>';
                 $hidden_options .= '<a href="javascript:" data-id="' . $row['interesestable_id'] . '" class="btn btn-block btn-outline btn-success subir_archivo_intereses" data-type="' . $row->interesestable_type . '" >Subir Archivo</a>';
                 $hidden_options .= '<a href="javascript:" data-id="' . $row['interesestable_id'] . '" class="btn btn-block btn-outline btn-success eliminar_interes" data-type="' . $row->interesestable_type . '" >Eliminar</a>';
-				
-				if($row->interesestable_type==5)
-				{
-					if ($this->auth->has_permission('listar__convertirCliente', 'intereses_asegurados/listar') == true) 
-					{
-						$hidden_options .= '<a href="'.base_url('clientes/crear?datint=' . $uuid_intereses) .'" data-id="' . $uuid_intereses . '" class="convertirCliente btn btn-block btn-outline btn-success">Convertir a cliente</a>';
-					}
-				}
+                
+                if($row->interesestable_type==5)
+                {
+                    if ($this->auth->has_permission('listar__convertirCliente', 'intereses_asegurados/listar') == true) 
+                    {
+                        $hidden_options .= '<a href="'.base_url('clientes/crear?datint=' . $uuid_intereses) .'" data-id="' . $uuid_intereses . '" class="convertirCliente btn btn-block btn-outline btn-success">Convertir a cliente</a>';
+                    }
+                }
                 $redirect = "<a style='text-decoration: underline' href=" . $url . ">$row->numero</a>";
                 $id = $row->id;
                 $response->rows[$i]["cell"] = array(
@@ -466,111 +467,111 @@ class Intereses_asegurados extends CRM_Controller {
             "permiso_editar" => 1
         ));
         $data = array();
-		
-		if(isset($_GET['datcli']))
-		{
-			$datos_cliente=$this->ClienteModel->where('uuid_cliente',hex2bin($_GET['datcli']))->first();
-			
-			$telefono_clientetotalresidencial=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','residencial')->count();
-			
-			if($telefono_clientetotalresidencial>0)
-				$telefono_cliente_residencial=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','residencial')->first()->telefono;
-			else
-				$telefono_cliente_residencial='';
-			
-			$telefono_clientetotaloficina=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','trabajo')->count();
-			
-			if($telefono_clientetotaloficina>0)
-				$telefono_cliente_oficina=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','trabajo')->first()->telefono;
-			else
-				$telefono_cliente_oficina='';
-			
-			$todos_telefonos=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->count();
-			
-			if($todos_telefonos>0)
-			{
-				$todos_telefonos=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('telefono','!=',$telefono_cliente_residencial)->where('telefono','!=',$telefono_cliente_oficina)->get();
-					
-				foreach($todos_telefonos as $telefono){
-					if($telefono_cliente_residencial=='')
-					{
-						$telefono_cliente_residencial= $telefono->telefono;
-					}
-					else if($telefono_cliente_oficina=='')
-					{
-						$telefono_cliente_oficina=$telefono->telefono;
-					}
-				}
-			}
-			
-			$correos_clientetotal=$this->correosClienteModel->where('cliente_id',$datos_cliente->id)->count();
-			
-			if($correos_clientetotal>0)
-				$correo_cliente=$this->correosClienteModel->where('cliente_id',$datos_cliente->id)->first()->correo;
-			else
-				$correo_cliente='';
-			
-			$direcciones=$this->CentroFacturable->where('cliente_id',$datos_cliente->id)->get();
-			
-			$direccion_residencial='';
-			$direccion_laboral='';
-			
-			$a=0;
-			foreach($direcciones as $direccion)
-			{
-				if($a==0)
-				{
-					$dir='';
-					if($direccion->provincia_id!=0)
-						$dir.=','.$direccion->provincia->nombre;
-				
-					if($direccion->distrito_id!=0)
-						$dir.=', '.$direccion->distrito->nombre;
-					
-					if($direccion->corregimiento_id!=0)
-						$dir.=', '.$direccion->corregimiento->nombre;
-						
-					$direccion_residencial=$direccion->nombre.''.$dir.', '.$direccion->direccion;
-				}
-				else if($a==1)
-				{
-					$dir='';
-					if($direccion->provincia_id!=0)
-						$dir.=', '.$direccion->provincia->nombre;
-				
-					if($direccion->distrito_id!=0)
-						$dir.=', '.$direccion->distrito->nombre;
-					
-					if($direccion->corregimiento_id!=0)
-						$dir.=', '.$direccion->corregimiento->nombre;
-						
-					$direccion_laboral=$direccion->nombre.' '.$dir.', '.$direccion->direccion;
-				}
-				$a++;
-			}
-			
-			$this->assets->agregar_var_js(array(
+        
+        if(isset($_GET['datcli']))
+        {
+            $datos_cliente=$this->ClienteModel->where('uuid_cliente',hex2bin($_GET['datcli']))->first();
+            
+            $telefono_clientetotalresidencial=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','residencial')->count();
+            
+            if($telefono_clientetotalresidencial>0)
+                $telefono_cliente_residencial=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','residencial')->first()->telefono;
+            else
+                $telefono_cliente_residencial='';
+            
+            $telefono_clientetotaloficina=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','trabajo')->count();
+            
+            if($telefono_clientetotaloficina>0)
+                $telefono_cliente_oficina=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('tipo','trabajo')->first()->telefono;
+            else
+                $telefono_cliente_oficina='';
+            
+            $todos_telefonos=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->count();
+            
+            if($todos_telefonos>0)
+            {
+                $todos_telefonos=$this->telefonosClienteModel->where('cliente_id',$datos_cliente->id)->where('telefono','!=',$telefono_cliente_residencial)->where('telefono','!=',$telefono_cliente_oficina)->get();
+                    
+                foreach($todos_telefonos as $telefono){
+                    if($telefono_cliente_residencial=='')
+                    {
+                        $telefono_cliente_residencial= $telefono->telefono;
+                    }
+                    else if($telefono_cliente_oficina=='')
+                    {
+                        $telefono_cliente_oficina=$telefono->telefono;
+                    }
+                }
+            }
+            
+            $correos_clientetotal=$this->correosClienteModel->where('cliente_id',$datos_cliente->id)->count();
+            
+            if($correos_clientetotal>0)
+                $correo_cliente=$this->correosClienteModel->where('cliente_id',$datos_cliente->id)->first()->correo;
+            else
+                $correo_cliente='';
+            
+            $direcciones=$this->CentroFacturable->where('cliente_id',$datos_cliente->id)->get();
+            
+            $direccion_residencial='';
+            $direccion_laboral='';
+            
+            $a=0;
+            foreach($direcciones as $direccion)
+            {
+                if($a==0)
+                {
+                    $dir='';
+                    if($direccion->provincia_id!=0)
+                        $dir.=','.$direccion->provincia->nombre;
+                
+                    if($direccion->distrito_id!=0)
+                        $dir.=', '.$direccion->distrito->nombre;
+                    
+                    if($direccion->corregimiento_id!=0)
+                        $dir.=', '.$direccion->corregimiento->nombre;
+                        
+                    $direccion_residencial=$direccion->nombre.''.$dir.', '.$direccion->direccion;
+                }
+                else if($a==1)
+                {
+                    $dir='';
+                    if($direccion->provincia_id!=0)
+                        $dir.=', '.$direccion->provincia->nombre;
+                
+                    if($direccion->distrito_id!=0)
+                        $dir.=', '.$direccion->distrito->nombre;
+                    
+                    if($direccion->corregimiento_id!=0)
+                        $dir.=', '.$direccion->corregimiento->nombre;
+                        
+                    $direccion_laboral=$direccion->nombre.' '.$dir.', '.$direccion->direccion;
+                }
+                $a++;
+            }
+            
+            $this->assets->agregar_var_js(array(
                 "vista" => "crear",
                 "permiso_cambio_estado" => $cestado,
                 "desde" => "intereses_asegurados",
-				"indcolec"=>'',
-				"datos_cliente"=>$datos_cliente,
-				"cliente"=>'si',
-				"correo_cliente"=>$correo_cliente,
-				"telefono_cliente_residencial"=>$telefono_cliente_residencial,
-				"telefono_cliente_oficina"=>$telefono_cliente_oficina,
-				"direccion_residencial_cliente"=>$direccion_residencial,
-				"direccion_laboral_cliente"=>$direccion_laboral
+                "indcolec"=>'',
+                "datos_cliente"=>$datos_cliente,
+                "cliente"=>'si',
+                "correo_cliente"=>$correo_cliente,
+                "telefono_cliente_residencial"=>$telefono_cliente_residencial,
+                "telefono_cliente_oficina"=>$telefono_cliente_oficina,
+                "direccion_residencial_cliente"=>$direccion_residencial,
+                "direccion_laboral_cliente"=>$direccion_laboral
             ));
-			
-		}
-		else
-		{
-			$this->assets->agregar_var_js(array(
-				"datos_cliente"=>'',
-				"cliente"=>'no',
+            
+        }
+        else
+        {
+            $this->assets->agregar_var_js(array(
+                "datos_cliente"=>'',
+                "cliente"=>'no',
             ));
-		}
+        }
 
         if ($formulario != NULL) {
             $this->assets->agregar_var_js(array(
@@ -578,14 +579,14 @@ class Intereses_asegurados extends CRM_Controller {
                 "vista" => "crear",
                 "permiso_cambio_estado" => $cestado,
                 "desde" => "intereses_asegurados",
-				"indcolec"=>'',
+                "indcolec"=>'',
             ));
         } else {
             $this->assets->agregar_var_js(array(
                 "vista" => "crear",
                 "permiso_cambio_estado" => $cestado,
                 "desde" => "intereses_asegurados",
-				"indcolec"=>'',
+                "indcolec"=>'',
             ));
         }
 
@@ -607,7 +608,7 @@ class Intereses_asegurados extends CRM_Controller {
                 "politicas" => $this->politicas,
                 "politicas_general" => $this->politicas_general,
                 "politicas_generales" => $this->politicas_generales,
-				"superadmin"=>$this->superadmin
+                "superadmin"=>$this->superuser
             ),
             "cambio_estado" => $cestado,
         );
@@ -767,12 +768,12 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                             }
                             if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                             if ($det->detalle_deducible != "") {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                             }
@@ -939,12 +940,12 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
@@ -995,6 +996,7 @@ class Intereses_asegurados extends CRM_Controller {
         } else {
             $mensaje = array('class' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
         }
+        echo serialize($_POST);
 
         $this->session->set_flashdata('mensaje', $mensaje);
         if ($campodesde['desde'] != "solicitudes") {
@@ -1002,6 +1004,8 @@ class Intereses_asegurados extends CRM_Controller {
         } else if ($campodesde['desde'] == "solicitudes") {
             print_r($uuid . "&" . $codigo);
             exit;
+        } else if (!empty($_POST['reg']) && $_POST['reg'] == "poli") {
+            redirect(base_url('polizas/editar/'.$_POST['val']));
         }
     }
 
@@ -1203,11 +1207,11 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                             }
                             if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                    }
+                                }
                             if ($det->detalle_deducible != "") {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                             }
@@ -1376,14 +1380,14 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($individual != 1) {
-										if ($num1->detalle_prima != $detalle['detalle_prima']) {
-											$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
-											$cambio = 'si';
-										}
-									}
-								}
+                                {
+                                    if ($individual != 1) {
+                                        if ($num1->detalle_prima != $detalle['detalle_prima']) {
+                                            $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
+                                            $cambio = 'si';
+                                        }
+                                    }
+                                }
                                 if ($num1->detalle_deducible != $detalle['detalle_deducible']) {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
@@ -1399,35 +1403,35 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
                                 }
                             }
-							
-							 $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                            
+                             $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-							$comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $$usuario_registro->apellido;
+                            $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $$usuario_registro->apellido;
 
-							$comentario2 = "<b>Interés Carga</b><br>N. Liquidación: " . $cargaObj->no_liquidacion . "<br><br>";
-							$fieldset["comentario"] = $comentario2 . "" . $comentario;
-							$fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
-							if ($num1->id_solicitudes == '') {
-								$solicitud = $_POST['detalleunico'];
-							} else
-								$solicitud = $num1->id_solicitudes;
-							$fieldset["comentable_id"] = $solicitud;
-							$fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
-							$fieldset["empresa_id"] = $this->empresa_id;
+                            $comentario2 = "<b>Interés Carga</b><br>N. Liquidación: " . $cargaObj->no_liquidacion . "<br><br>";
+                            $fieldset["comentario"] = $comentario2 . "" . $comentario;
+                            $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
+                            if ($num1->id_solicitudes == '') {
+                                $solicitud = $_POST['detalleunico'];
+                            } else
+                                $solicitud = $num1->id_solicitudes;
+                            $fieldset["comentable_id"] = $solicitud;
+                            $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
+                            $fieldset["empresa_id"] = $this->empresa_id;
 
-							if ($cambio == 'si')
-								$interesase = $this->bitacoraModel->create($fieldset);
+                            if ($cambio == 'si')
+                                $interesase = $this->bitacoraModel->create($fieldset);
                         }
 
                         //Subir documentos
@@ -1522,8 +1526,8 @@ class Intereses_asegurados extends CRM_Controller {
                         $total = $this->interesesAseguradosRep->listar_intereses_asegurados($clause);
                         $codigo = Util::generar_codigo('PRO', count($total) + 1);
                         $campo["numero"] = $codigo;
-						$campo['tipo_propuesta_opcional']=$campo['tipo_propuesta_opcional'];
-						$campo['validez_fianza_opcional']= $campo['validez_fianza_opcional'];
+                        $campo['tipo_propuesta_opcional']=$campo['tipo_propuesta_opcional'];
+                        $campo['validez_fianza_opcional']= $campo['validez_fianza_opcional'];
 
                         $proyecto_actividad = $this->ProyectoModel->create($campo);
 
@@ -1556,7 +1560,7 @@ class Intereses_asegurados extends CRM_Controller {
                                 $propuesta = $proyecto_actividad->tipodePropuesta->etiqueta;
                             $comentario .= "<b>Campo: Tipo de propuesta</b><br>Valor: " . $propuesta . "<br><br>";
                         }
-						if ($proyecto_actividad->tipo_propuesta_opcional != '') {
+                        if ($proyecto_actividad->tipo_propuesta_opcional != '') {
                             $comentario .= "<b>Campo: Tipo de propuesta</b><br>Valor: " . $proyecto_actividad->tipo_propuesta_opcional . "<br><br>";
                         }
                         if ($proyecto_actividad->ubicacion != '')
@@ -1638,12 +1642,12 @@ class Intereses_asegurados extends CRM_Controller {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                                 }
@@ -1685,12 +1689,12 @@ class Intereses_asegurados extends CRM_Controller {
                         $tipo_fianza = isset($campo['tipo_fianza']) ? $campo['tipo_fianza'] : '';
                         $acreedor_pro = isset($campo['acreedor']) ? $campo['acreedor'] : '';
                         $tipo_prop = isset($campo['tipo_propuesta']) ? $campo['tipo_propuesta'] : '';
-						
-						if($campo['tipo_propuesta_opcional']!="")
-							$campo['tipo_propuesta_opcional']=$campo['tipo_propuesta_opcional'];
-						
-						if($campo['validez_fianza_opcional']!="")
-							$campo['validez_fianza_opcional']=$campo['validez_fianza_opcional'];
+                        
+                        if($campo['tipo_propuesta_opcional']!="")
+                            $campo['tipo_propuesta_opcional']=$campo['tipo_propuesta_opcional'];
+                        
+                        if($campo['validez_fianza_opcional']!="")
+                            $campo['validez_fianza_opcional']=$campo['validez_fianza_opcional'];
                        /* if ($tipo_fianza == "propuesta") {
                             if ($tipo_prop == "otro") {
                                 $campo['tipo_propuesta_opcional'] = $campo['tipo_propuesta_opcional'];
@@ -1799,7 +1803,7 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                             }
-							if (isset($campo['tipo_propuesta_opcional'])) {
+                            if (isset($campo['tipo_propuesta_opcional'])) {
                                 if ($proyectoObj->tipo_propuesta_opcional != $campo['tipo_propuesta_opcional']) {
                                     $comentario .= "<b>Campo: Tipo de Propuesta</b><br>Valor Actual:" . $campo['tipo_propuesta_opcional'] . "<br>Valor Anterior:" . $proyectoObj->tipo_propuesta_opcional . "<br><br>";
                                     $cambio = 'si';
@@ -1910,14 +1914,14 @@ class Intereses_asegurados extends CRM_Controller {
                                         $cambio = 'si';
                                     }
                                     if($campodesde['indcolec']==2)
-									{
-										if ($individual != 1) {
-											if ($num1->detalle_prima != $detalle['detalle_prima']) {
-												$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
-												$cambio = 'si';
-											}
-										}
-									}
+                                    {
+                                        if ($individual != 1) {
+                                            if ($num1->detalle_prima != $detalle['detalle_prima']) {
+                                                $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
+                                                $cambio = 'si';
+                                            }
+                                        }
+                                    }
                                     if ($num1->detalle_deducible != $detalle['detalle_deducible']) {
                                         $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                         $cambio = 'si';
@@ -1934,35 +1938,35 @@ class Intereses_asegurados extends CRM_Controller {
                                         $cambio = 'si';
                                     }
                                     if($campodesde['indcolec']==2)
-									{
-										if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-											$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-											$cambio = 'si';
-										}
-									}
+                                    {
+                                        if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                            $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                            $cambio = 'si';
+                                        }
+                                    }
                                     if ($det->detalle_deducible != "") {
                                         $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
                                         $cambio = 'si';
                                     }
                                 }
-								
-								 $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                                
+                                 $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-								$comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
+                                $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
-								$comentario2 = "<b>Interés Proyecto/Actividad</b><br>Nombre: " . $proyectoObj->nombre_proyecto . "<br><br>";
-								$fieldset["comentario"] = $comentario2 . "" . $comentario;
-								$fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
-								if ($num1->id_solicitudes == '') {
-									$solicitud = $_POST['detalleunico'];
-								} else
-									$solicitud = $num1->id_solicitudes;
-								$fieldset["comentable_id"] = $solicitud;
-								$fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
-								$fieldset["empresa_id"] = $this->empresa_id;
+                                $comentario2 = "<b>Interés Proyecto/Actividad</b><br>Nombre: " . $proyectoObj->nombre_proyecto . "<br><br>";
+                                $fieldset["comentario"] = $comentario2 . "" . $comentario;
+                                $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
+                                if ($num1->id_solicitudes == '') {
+                                    $solicitud = $_POST['detalleunico'];
+                                } else
+                                    $solicitud = $num1->id_solicitudes;
+                                $fieldset["comentable_id"] = $solicitud;
+                                $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
+                                $fieldset["empresa_id"] = $this->empresa_id;
 
-								if ($cambio == 'si')
-									$interesase = $this->bitacoraModel->create($fieldset);
+                                if ($cambio == 'si')
+                                    $interesase = $this->bitacoraModel->create($fieldset);
 
                             }
                             //Subir documentos
@@ -2119,12 +2123,12 @@ class Intereses_asegurados extends CRM_Controller {
             "intereses_asegurados_id_" . $intereses_asegurados->tipo->valor => $intereses_data->id,
             "permiso_editar" => $ceditar,
             "desde" => "intereses_asegurados",
-			"indcolec"=>'',
+            "indcolec"=>'',
             "permiso_cambio_estado" => $cestado,
             "vista" => 'editar',
             "data" => json_encode($intereses_data),
-			"datos_cliente"=>'',
-			"cliente"=>'no',
+            "datos_cliente"=>'',
+            "cliente"=>'no',
         ));
 
         if ($this->auth->has_permission('acceso', 'intereses_asegurados/editar/(:any)')) {
@@ -2159,7 +2163,7 @@ class Intereses_asegurados extends CRM_Controller {
                 "politicas_generales" => $this->politicas_generales,
                 "ramos" => $ramos,
                 "menu_crear" => $menu_crear,
-				"superadmin"=>$this->superuser
+                "superadmin"=>$this->superuser
             ),
         );
 
@@ -2384,11 +2388,11 @@ class Intereses_asegurados extends CRM_Controller {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                    }
+                                }
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                                 }
@@ -2518,14 +2522,14 @@ class Intereses_asegurados extends CRM_Controller {
                                         $cambio = 'si';
                                     }
                                     if($campodesde['indcolec']==2)
-									{
-										if ($individual != 1) {
-											if ($num1->detalle_prima != $detalle['detalle_prima']) {
-												$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
-												$cambio = 'si';
-											}
-										}
-									}
+                                    {
+                                        if ($individual != 1) {
+                                            if ($num1->detalle_prima != $detalle['detalle_prima']) {
+                                                $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
+                                                $cambio = 'si';
+                                            }
+                                        }
+                                    }
                                     if ($num1->detalle_deducible != $detalle['detalle_deducible']) {
                                         $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                         $cambio = 'si';
@@ -2542,34 +2546,34 @@ class Intereses_asegurados extends CRM_Controller {
                                         $cambio = 'si';
                                     }
                                     if($campodesde['indcolec']==2)
-									{
-										if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-											$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-											$cambio = 'si';
-										}
-									}
+                                    {
+                                        if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                            $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                            $cambio = 'si';
+                                        }
+                                    }
                                     if ($det->detalle_deducible != "") {
                                         $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
                                         $cambio = 'si';
                                     }
                                 }
-								$usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                                $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-								$comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
+                                $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
-								$comentario2 = "<b>Interés Casco Marítimo</b><br>Chasis: " . $maritimoObj->serie . "<br><br>";
-								$fieldset["comentario"] = $comentario2 . "" . $comentario;
-								$fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
-								if ($num1->id_solicitudes == '') {
-									$solicitud = $_POST['detalleunico'];
-								} else
-									$solicitud = $num1->id_solicitudes;
-								$fieldset["comentable_id"] = $solicitud;
-								$fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
-								$fieldset["empresa_id"] = $this->empresa_id;
+                                $comentario2 = "<b>Interés Casco Marítimo</b><br>Chasis: " . $maritimoObj->serie . "<br><br>";
+                                $fieldset["comentario"] = $comentario2 . "" . $comentario;
+                                $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
+                                if ($num1->id_solicitudes == '') {
+                                    $solicitud = $_POST['detalleunico'];
+                                } else
+                                    $solicitud = $num1->id_solicitudes;
+                                $fieldset["comentable_id"] = $solicitud;
+                                $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
+                                $fieldset["empresa_id"] = $this->empresa_id;
 
-								if ($cambio == 'si')
-									$interesase = $this->bitacoraModel->create($fieldset);
+                                if ($cambio == 'si')
+                                    $interesase = $this->bitacoraModel->create($fieldset);
                             }
 
                             //Subir documentos
@@ -2734,11 +2738,11 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                             }
                             if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                    }
+                                }
                             if ($det->detalle_deducible != "") {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                             }
@@ -2856,14 +2860,14 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($individual != 1) {
-										if ($num1->detalle_prima != $detalle['detalle_prima']) {
-											$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
-											$cambio = 'si';
-										}
-									}
-								}
+                                {
+                                    if ($individual != 1) {
+                                        if ($num1->detalle_prima != $detalle['detalle_prima']) {
+                                            $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
+                                            $cambio = 'si';
+                                        }
+                                    }
+                                }
                                 if ($num1->detalle_deducible != $detalle['detalle_deducible']) {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
@@ -2878,13 +2882,13 @@ class Intereses_asegurados extends CRM_Controller {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor Actual:" . $det->detalle_suma_asegurada . "<br><br>";
                                     $cambio = 'si';
                                 }
-								if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                if($campodesde['indcolec']==2)
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                                 
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
@@ -2983,8 +2987,8 @@ class Intereses_asegurados extends CRM_Controller {
                         $codigo = Util::generar_codigo('UBI', count($total) + 1);
                         $campo["numero"] = $codigo;
                         $ubicacion = $this->UbicacionModel->create($campo);
-						
-						 $comentario = "<b>Interés Ubicación</b><br><br>";
+                        
+                         $comentario = "<b>Interés Ubicación</b><br><br>";
 
                         if ($ubicacion->nombre != '')
                             $comentario .= "<b>Campo: Nombre de la ubicación </b><br>Valor: " . $ubicacion->nombre . "<br><br>";
@@ -3005,7 +3009,7 @@ class Intereses_asegurados extends CRM_Controller {
                                 $acree = $ubicacion->datosAcreedor->nombre;
                             $comentario .= "<b>Campo: Acreedor</b><br>Valor: " . $acree . "<br><br>";
                         }
-						if ($ubicacion->acreedor_opcional != '')
+                        if ($ubicacion->acreedor_opcional != '')
                             $comentario .= "<b>Campo: Otro Acreedor</b><br>Valor: " . $ubicacion->acreedor_opcional . "<br><br>";
                         if ($ubicacion->porcentaje_acreedor != '')
                             $comentario .= "<b>Campo: % Asigando al acreedor</b><br>Valor: " . $ubicacion->porcentaje_acreedor . "<br><br>";
@@ -3045,7 +3049,7 @@ class Intereses_asegurados extends CRM_Controller {
                             $num = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->count();
                             if ($num > 0) {
                                 $det = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->update($detalle);
-								if ($det->detalle_certificado != $detalle['detalle_certificado']) {
+                                if ($det->detalle_certificado != $detalle['detalle_certificado']) {
                                     $comentario .= "<b>Campo: No. Certificado</b><br>Valor Actual:" . $det->detalle_certificado . "<br>Valor Anterior: " . $detalle['detalle_certificado'] . "<br><br>";
                                 }
                                 if ($det->detalle_suma_asegurada != $detalle['detalle_suma_asegurada']) {
@@ -3057,28 +3061,28 @@ class Intereses_asegurados extends CRM_Controller {
                                 if ($det->detalle_deducible != $detalle['detalle_deducible']) {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br>Valor Anterior: " . $detalle['detalle_deducible'] . "<br><br>";
                                 }
-							} else {
+                            } else {
                                 $det = InteresesAsegurados_detalles::create($detalle);
-								
-								if ($det->detalle_certificado != "") {
+                                
+                                if ($det->detalle_certificado != "") {
                                     $comentario .= "<b>Campo: No. Certificado</b><br>Valor: " . $det->detalle_certificado . "<br><br>";
                                 }
                                 if ($det->detalle_suma_asegurada != "") {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                                 }
                             }
-							
-							$usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                            
+                            $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
                             $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
                             $fieldset["comentario"] = $comentario;
@@ -3107,7 +3111,7 @@ class Intereses_asegurados extends CRM_Controller {
                         redirect(base_url('intereses_asegurados/listar'));
                     }
                 } else {
-					$comentario = "";
+                    $comentario = "";
                     if ($this->auth->has_permission('acceso', 'intereses_asegurados/editar/(:any)')) {
                         $duplicado_u2 = $campo2['direccionr'];
                         $duplicado_u = $campo['direccion'];
@@ -3118,7 +3122,7 @@ class Intereses_asegurados extends CRM_Controller {
                         } else {
                             $verificar_ubicacion = 0;
                         }
-						
+                        
                         if ($verificar_ubicacion == 0) {
                             $intereses_asegurados = $this->interesesAseguradosRep->verInteresAsegurado(hex2bin(strtolower($campo['uuid'])));
 
@@ -3126,7 +3130,7 @@ class Intereses_asegurados extends CRM_Controller {
                             $ubicacionObj = $this->UbicacionModel->find($intereses_asegurados->ubicacion->id);
                             $campo['acreedor'] = isset($campo['acreedor']) ? $campo['acreedor'] : '0';
                             
-							$cambio = 'no';
+                            $cambio = 'no';
                             if ($ubicacionObj->nombre != $campo['nombre']) {
                                 $comentario .= "<b>Campo: Nombre de la ubicación</b><br>Valor Actual: " . $campo['nombre'] . "<br>Valor Anterior:" . $ubicacionObj->nombre . "<br><br>";
                                 $cambio = 'si';
@@ -3162,7 +3166,8 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                             }
-							if (isset($campo['acreedor'])) {
+                            
+                            if (isset($campo['acreedor'])) {
                                 if ($ubicacionObj->acreedor != $campo['acreedor']) {
                                     if ($ubicacionObj->acreedor == 'otro')
                                         $acreedor_viejo = 'Otro';
@@ -3178,7 +3183,7 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                             }
-							if (isset($campo['acreedor_opcional'])) {
+                            if (isset($campo['acreedor_opcional'])) {
                                 if ($ubicacionObj->acreedor_opcional != $campo['acreedor_opcional']) {
                                     $comentario .= "<b>Campo: Otro Acreedor</b><br>Valor Actual:" . $campo['acreedor_opcional'] . "<br>Valor Anterior:" . $ubicacionObj->acreedor_opcional . "<br><br>";
                                     $cambio = 'si';
@@ -3196,11 +3201,11 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                             }
-							
-							$ubicacionObj->update($campo);
+                            
+                            $ubicacionObj->update($campo);
 
                             $intereses_asegurados->identificacion = $ubicacionObj->direccion;
-							if (isset($campo2['estado'])) {
+                            if (isset($campo2['estado'])) {
                                 if ($intereses_asegurados->estado != $campo2['estado']) {
                                     $comentario .= "<b>Campo: Estado</b><br>Valor Actual:" . $campo2['estado'] . "<br>Valor Anterior:" . $intereses_asegurados->estado . "<br><br>";
                                     $cambio = 'si';
@@ -3226,11 +3231,11 @@ class Intereses_asegurados extends CRM_Controller {
                                 $detalle['detalle_unico'] = $_POST['detalleunico'];
 
                                 $num = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->count();
-								
+                                
                                 if ($num > 0) {
                                     $num1 = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->first();
                                     $det = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->update($detalle);
-									
+                                    
                                     $ramo_id = Solicitudes::find($num1->id_solicitudes)->ramo_id;
 
                                     $individual = Ramos::find($ramo_id)->id_tipo_poliza;
@@ -3244,21 +3249,21 @@ class Intereses_asegurados extends CRM_Controller {
                                         $cambio = 'si';
                                     }
                                     if($campodesde['indcolec']==2)
-									{
-										if ($individual != 1) {
-											if ($num1->detalle_prima != $detalle['detalle_prima']) {
-												$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
-												$cambio = 'si';
-											}
-										}
-									}
+                                    {
+                                        if ($individual != 1) {
+                                            if ($num1->detalle_prima != $detalle['detalle_prima']) {
+                                                $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
+                                                $cambio = 'si';
+                                            }
+                                        }
+                                    }
                                     if ($num1->detalle_deducible != $detalle['detalle_deducible']) {
                                         $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                         $cambio = 'si';
                                     }
-								} else {
+                                } else {
                                     $det = InteresesAsegurados_detalles::create($detalle);
-									if ($det->detalle_certificado != "") {
+                                    if ($det->detalle_certificado != "") {
                                         $comentario .= "<b>Campo: No. Certificado</b><br>Valor Actual:" . $det->detalle_certificado . "<br><br>";
                                         $cambio = 'si';
                                     }
@@ -3267,36 +3272,36 @@ class Intereses_asegurados extends CRM_Controller {
                                         $cambio = 'si';
                                     }
                                     if($campodesde['indcolec']==2)
-									{
-										if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-											$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-											$cambio = 'si';
-										}
-									}
+                                    {
+                                        if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                            $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                            $cambio = 'si';
+                                        }
+                                    }
                                     if ($det->detalle_deducible != "") {
                                         $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
                                         $cambio = 'si';
                                     }
                                 }
-								
-								$usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                                
+                                $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-								$comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
+                                $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
-								$comentario2 = "<b>Interés Ubicación</b><br>Nombre: " . $ubicacionObj->nombre . "<br><br>";
-								$fieldset["comentario"] = $comentario2 . "" . $comentario;
-								$fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
-								if ($num1->id_solicitudes == '') {
-									$solicitud = $_POST['detalleunico'];
-								} else
-									$solicitud = $num1->id_solicitudes;
-								
-								$fieldset["comentable_id"] = $solicitud;
-								$fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
-								$fieldset["empresa_id"] = $this->empresa_id;
+                                $comentario2 = "<b>Interés Ubicación</b><br>Nombre: " . $ubicacionObj->nombre . "<br><br>";
+                                $fieldset["comentario"] = $comentario2 . "" . $comentario;
+                                $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
+                                if ($num1->id_solicitudes == '') {
+                                    $solicitud = $_POST['detalleunico'];
+                                } else
+                                    $solicitud = $num1->id_solicitudes;
+                                
+                                $fieldset["comentable_id"] = $solicitud;
+                                $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
+                                $fieldset["empresa_id"] = $this->empresa_id;
 
-								if ($cambio == 'si')
-									$interesase = $this->bitacoraModel->create($fieldset);
+                                if ($cambio == 'si')
+                                    $interesase = $this->bitacoraModel->create($fieldset);
                             }
 
                             //Subir documentos
@@ -3697,6 +3702,42 @@ class Intereses_asegurados extends CRM_Controller {
                             if ($det->detalle_deducible != $detalle['detalle_deducible']) {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br>Valor Anterior: " . $detalle['detalle_deducible'] . "<br><br>";
                             }
+
+
+                            //Actualiza Detalle Acreedores
+                                //Crear Acreedores
+                                $fieldsetacre = array();
+                                $campoacreedores = $this->input->post('campoacreedores');
+                                $ids = array();
+                                //SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
+                                $id_acreedores = $this->input->post('campoacreedores_id');
+                                if($campoacreedores!=NULL){                        
+                                    $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                    $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                    $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                    $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                    foreach ($campoacreedores as $key => $value) {
+                                        $fieldsetacre['acreedor'] = $value;
+                                        $fieldsetacre["id_solicitud"] = $id_solicitud;
+                                        $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                        $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                        $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                        $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                        $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                        $fieldsetacre["idinteres_detalle"] = $det->id;
+                                        if ($id_acreedores[$key] != "0") {
+                                            SolicitudesAcreedores_detalles::where("id", $id_acreedores[$key])->update($fieldsetacre); 
+                                            array_push($ids, $id_acreedores[$key]);
+                                        }else{
+                                            if ($value != "") {
+                                                $acre = SolicitudesAcreedores_detalles::create($fieldsetacre); 
+                                                array_push($ids, $acre->id );   
+                                            }
+                                        }                                                       
+                                    }
+                                }
+                                //fin
+                            
                         } else if (($individual == 0 || $detalle['detalle_relacion'] == 'Dependiente' || $individual == 'colectivo') && $num <= 0) {
 
                             $det = InteresesAsegurados_detalles::create($detalle);
@@ -3717,15 +3758,41 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                             }
                             if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                             if ($det->detalle_deducible != "") {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                             }
+
+
+                            //Agrega Acreedores a tabla temporal con Id de la tabla detalles
+                            $fieldsetacre = array();
+                            $campoacreedores = $this->input->post('campoacreedores');
+                            if($campoacreedores!=NULL){
+                                $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                foreach ($campoacreedores as $key => $value) {
+                                    $fieldsetacre['acreedor'] = $value;
+                                    $fieldsetacre["id_solicitud"] = $solicitudes->id;
+                                    $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                    $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                    $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                    $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                    $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                    $fieldsetacre["idinteres_detalle"] = $det->id;
+                                    if ($value != "") {
+                                        SolicitudesAcreedores_detalles::create($fieldsetacre);    
+                                    }                                                       
+                                }
+                            }
+                            //Fin---------------------- 
+
                         }
                         $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
                         $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
@@ -3862,7 +3929,7 @@ class Intereses_asegurados extends CRM_Controller {
                                 if ($num1->detalle_relacion != $detalle['detalle_relacion']) {
                                     $comentario .= "<b>Campo: Relación</b><br>Valor Actual:" . $detalle['detalle_relacion'] . "<br>Valor Anterior: " . $num1->detalle_relacion . "<br><br>";
                                 }
-								if ($individual == 1 || $individual == 'colectivo') {
+                                if ($individual == 1 || $individual == 'colectivo') {
                                     unset($detalle['detalle_int_asociado']);
                                     unset($detalle['detalle_relacion']);
                                 }
@@ -3889,48 +3956,113 @@ class Intereses_asegurados extends CRM_Controller {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
                                 }
+
+
+                                //Actualiza Detalle Acreedores
+                                //Crear Acreedores
+                                $fieldsetacre = array();
+                                $campoacreedores = $this->input->post('campoacreedores');
+                                $ids = array();
+                                //SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
+                                $id_acreedores = $this->input->post('campoacreedores_id');
+                                if($campoacreedores!=NULL){                        
+                                    $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                    $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                    $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                    $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                    foreach ($campoacreedores as $key => $value) {
+                                        $fieldsetacre['acreedor'] = $value;
+                                        $fieldsetacre["id_solicitud"] = $id_solicitud;
+                                        $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                        $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                        $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                        $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                        $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                        $fieldsetacre["idinteres_detalle"] = $det->id;
+                                        if ($id_acreedores[$key] != "0") {
+                                            SolicitudesAcreedores_detalles::where("id", $id_acreedores[$key])->update($fieldsetacre); 
+                                            array_push($ids, $id_acreedores[$key]);
+                                        }else{
+                                            if ($value != "") {
+                                                $acre = SolicitudesAcreedores_detalles::create($fieldsetacre); 
+                                                array_push($ids, $acre->id );   
+                                            }
+                                        }                                                       
+                                    }
+                                }
+                                //fin
+
+
                             } else if (($individual == 0 || $detalle['detalle_relacion'] == 'Dependiente' || $detalle['detalle_relacion'] == 'Beneficiario' || $individual == 'colectivo') && $num <= 0) {
 
+                                $num1 = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->first();
+                                
                                 $det = InteresesAsegurados_detalles::create($detalle);
 
-                                if ($det->detalle_relacion != $detalle['detalle_relacion']) {
-                                    $comentario .= "<b>Campo: Relación</b><br>Valor: " . $det->detalle_relacion . "<br><br>";
+                                if ($num1->detalle_relacion != $detalle['detalle_relacion']) {
+                                    $comentario .= "<b>Campo: Relación</b><br>Valor: " . $num1->detalle_relacion . "<br><br>";
                                 }
-                                if ($det->detalle_int_asociado != $detalle['detalle_int_asociado']) {
+                                if ($num1->detalle_int_asociado != $detalle['detalle_int_asociado']) {
                                     //$interes=$this->AseguradosModel->find();
-                                    $comentario .= "<b>Campo: Interes asegurado asociado</b><br>Valor: " . $det->detalle_int_asociado . "<br><br>";
+                                    $comentario .= "<b>Campo: Interes asegurado asociado</b><br>Valor: " . $num1->detalle_int_asociado . "<br><br>";
                                 }
-                                if ($det->detalle_participacion != $detalle['detalle_participacion']) {
-                                    $comentario .= "<b>Campo: Participación</b><br>Valor: " . $det->detalle_participacion . "<br><br>";
+                                if ($num1->detalle_participacion != $detalle['detalle_participacion']) {
+                                    $comentario .= "<b>Campo: Participación</b><br>Valor: " . $num1->detalle_participacion . "<br><br>";
                                 }
-                                if ($det->detalle_certificado != "") {
-                                    $comentario .= "<b>Campo: No. Certificado</b><br>Valor Actual:" . $det->detalle_certificado . "<br><br>";
+                                if ($num1->detalle_certificado != "") {
+                                    $comentario .= "<b>Campo: No. Certificado</b><br>Valor Actual:" . $num1->detalle_certificado . "<br><br>";
                                     $cambio = 'si';
                                 }
-                                if ($det->detalle_suma_asegurada != "") {
-                                    $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor Actual:" . $det->detalle_suma_asegurada . "<br><br>";
+                                if ($num1->detalle_suma_asegurada != "") {
+                                    $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor Actual:" . $num1->detalle_suma_asegurada . "<br><br>";
                                     $cambio = 'si';
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
-                                if ($det->detalle_deducible != "") {
-                                    $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
+                                {
+                                    if ($num1->detalle_prima != "" || $num1->detalle_prima != "0.00" || $num1->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $num1->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
+                                if ($num1->detalle_deducible != "") {
+                                    $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $num1->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
                                 }
+
+
+                                //Agrega Acreedores a tabla temporal con Id de la tabla detalles
+                                $fieldsetacre = array();
+                                $campoacreedores = $this->input->post('campoacreedores');
+                                if($campoacreedores!=NULL){
+                                    $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                    $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                    $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                    $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                    foreach ($campoacreedores as $key => $value) {
+                                        $fieldsetacre['acreedor'] = $value;
+                                        $fieldsetacre["id_solicitud"] = $solicitudes->id;
+                                        $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                        $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                        $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                        $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                        $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                        $fieldsetacre["idinteres_detalle"] = $det->id;
+                                        if ($value != "") {
+                                            SolicitudesAcreedores_Detalles::create($fieldsetacre);    
+                                        }                                                       
+                                    }
+                                }
+                                //Fin---------------------- 
+
                             }
-							
-							$usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                            
+                            $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-							$comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
+                            $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
-							$comentario2 = "<b>Interés Persona</b><br>Nombre: " . $personaObj->nombrePersona . "<br><br>";
-							$fieldset["comentario"] = $comentario2 . "" . $comentario;
-							$fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
+                            $comentario2 = "<b>Interés Persona</b><br>Nombre: " . $personaObj->nombrePersona . "<br><br>";
+                            $fieldset["comentario"] = $comentario2 . "" . $comentario;
+                            $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
                             //if(count($num1)){
 
                                 if ($num1->id_solicitudes == '') {
@@ -3938,14 +4070,14 @@ class Intereses_asegurados extends CRM_Controller {
                                 } else
                                     $solicitud = $num1->id_solicitudes;
                             //}
-							
-							$fieldset["comentable_id"] = $solicitud;
-							$fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
-							$fieldset["empresa_id"] = $this->empresa_id;
+                            
+                            $fieldset["comentable_id"] = $solicitud;
+                            $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
+                            $fieldset["empresa_id"] = $this->empresa_id;
 
-							if ($cambio == 'si')
-								$interesase = $this->bitacoraModel->create($fieldset);
-							
+                            if ($cambio == 'si')
+                                $interesase = $this->bitacoraModel->create($fieldset);
+                            
                         }
 
                         //Subir documentos
@@ -4155,12 +4287,12 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                             }
                             if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                             if ($det->detalle_deducible != "") {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                             }
@@ -4290,15 +4422,15 @@ class Intereses_asegurados extends CRM_Controller {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor Actual:" . $detalle['detalle_suma_asegurada'] . "<br>Valor Anterior: " . $num1->detalle_suma_asegurada . "<br><br>";
                                     $cambio = 'si';
                                 }
-								if($campodesde['indcolec']==2)
-								{
-									if ($individual != 1) {
-										if ($num1->detalle_prima != $detalle['detalle_prima']) {
-											$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
-											$cambio = 'si';
-										}
-									}
-								}
+                                if($campodesde['indcolec']==2)
+                                {
+                                    if ($individual != 1) {
+                                        if ($num1->detalle_prima != $detalle['detalle_prima']) {
+                                            $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $detalle['detalle_prima'] . "<br>Valor Anterior: " . $num1->detalle_prima . "<br><br>";
+                                            $cambio = 'si';
+                                        }
+                                    }
+                                }
                                 if ($num1->detalle_deducible != $detalle['detalle_deducible']) {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $detalle['detalle_deducible'] . "<br>Valor Anterior: " . $num1->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
@@ -4314,35 +4446,35 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
                                 if($campodesde['indcolec']==2)
-								{
-									if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
-										$comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
-										$cambio = 'si';
-									}
-								}
+                                {
+                                    if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
+                                        $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
+                                        $cambio = 'si';
+                                    }
+                                }
                                 if ($det->detalle_deducible != "") {
                                     $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br><br>";
                                     $cambio = 'si';
                                 }
                             }
-							
-							 $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
+                            
+                             $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-							$comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
+                            $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
-							$comentario2 = "<b>Interés Casco Aéreo</b><br>Chasis: " . $aereoObj->serie . "<br><br>";
-							$fieldset["comentario"] = $comentario2 . "" . $comentario;
-							$fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
-							if ($num1->id_solicitudes == '') {
-								$solicitud = $_POST['detalleunico'];
-							} else
-								$solicitud = $num1->id_solicitudes;
-							$fieldset["comentable_id"] = $solicitud;
-							$fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
-							$fieldset["empresa_id"] = $this->empresa_id;
+                            $comentario2 = "<b>Interés Casco Aéreo</b><br>Chasis: " . $aereoObj->serie . "<br><br>";
+                            $fieldset["comentario"] = $comentario2 . "" . $comentario;
+                            $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
+                            if ($num1->id_solicitudes == '') {
+                                $solicitud = $_POST['detalleunico'];
+                            } else
+                                $solicitud = $num1->id_solicitudes;
+                            $fieldset["comentable_id"] = $solicitud;
+                            $fieldset["usuario_id"] = $this->session->userdata['id_usuario'];
+                            $fieldset["empresa_id"] = $this->empresa_id;
 
-							if ($cambio == 'si')
-								$interesase = $this->bitacoraModel->create($fieldset);
+                            if ($cambio == 'si')
+                                $interesase = $this->bitacoraModel->create($fieldset);
 
                         }
 
@@ -4581,6 +4713,7 @@ class Intereses_asegurados extends CRM_Controller {
                     $spanStyle = 'label label-warning';
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoAereo' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageAereo' data-int-gr='" . $row['id_intereses'] . "' data-id='" . $row['id'] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "' data-tipo-interes='casco_aereo' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
@@ -4649,6 +4782,7 @@ class Intereses_asegurados extends CRM_Controller {
                     $spanStyle = 'label label-warning';
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoMaritimo' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageMar' data-int-gr='" . $row['id_intereses'] . "' data-id='" . $row['id_det'] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "' data-tipo-interes='casco_maritimo' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitaInteresBtn' data-int-gr='" . $row['id_intereses'] . "'  data-id='" . $row['id_det'] . "' >Quitar Inter&eacute;s</a>";
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id_det'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
@@ -4712,8 +4846,9 @@ class Intereses_asegurados extends CRM_Controller {
                     $spanStyle = 'label label-warning';
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoProyecto' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageProc' data-int-gr='" . $row['id_intereses'] . "'data-id='" . $row["id"] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "' data-tipo-interes='proyecto' >Subir Documento</a>";
-                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageProc' data-int-gr='" . $row['id_intereses'] . "'>Coberturas</a>";
+               
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
@@ -4788,6 +4923,7 @@ class Intereses_asegurados extends CRM_Controller {
                 }
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoUbicacion' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageUbc' data-int-gr='" . $row['id_intereses'] . "'data-id='" . $row['id'] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "'  data-tipo-interes='ubicacion' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
@@ -4860,6 +4996,7 @@ class Intereses_asegurados extends CRM_Controller {
                     $spanStyle = 'label label-warning';
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoVehiculo' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageVeh' data-int-gr='" . $row['id_intereses'] . "' data-id='" . $row['id'] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "'  data-tipo-interes='vehiculo' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
@@ -4941,7 +5078,7 @@ class Intereses_asegurados extends CRM_Controller {
 
             foreach ($parents as $key => $row) {
 
-                # code...	
+                # code...   
                 if ($row['estado'] == 'Inactivo')
                     $spanStyle = 'label label-danger';
                 else if ($row['estado'] == 'Activo')
@@ -4950,6 +5087,7 @@ class Intereses_asegurados extends CRM_Controller {
                     $spanStyle = 'label label-warning';
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoveragePer' data-int-gr='" . $row['id_intereses'] . "' data-id='" . $row["id_intereses"] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "' data-tipo-interes='persona' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
 

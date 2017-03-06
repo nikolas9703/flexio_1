@@ -267,31 +267,72 @@ var tablaSolicitudesAereo = (function () {
         
         
     });
-	//Funciones para botones del grid de maritimo
-	
-	/*$("#"+gridId).on("click", ".linkCargaInfo", function(e){
+    
+
+       $(opcionesModal).on("click", ".setIndividualCoverageAereo", function (e) {
+
         e.preventDefault();
         e.returnValue=false;
         e.stopPropagation();
-        
-        var selInteres = $(this).attr("data-int-id");
-        $("#selInteres").val(selInteres);
-        $("#selInteres").trigger('change'); 
-        
+        var solicitud = vista==="crear"?vista:solicitud_id;
+        var planes = $("#planes");
+        if($(planes).val()!==""){
+            var id = $(this).attr("data-int-gr");
+            var idFromTable = $(this).attr("data-id");
+            var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
+            var options = rowINFO.link;
+            var numeroArticulo =rowINFO.numero;
+            //Init Modal data-int-gr 
+            $(opcionesModal).modal("hide");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  solicitud :solicitud,
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+              },
+              url: phost() + 'solicitudes/ajax_get_invidualCoverage',
+              success: function(data)
+              {    
+                if ($.isEmptyObject(data.session) == false) {
+                    window.location = phost() + "login?expired";
+                }else{  
 
-        var intgr = $(this).attr("data-int-gr");
-        var unico = $("#detalleunico").val();
-        var datos = {campo: {id_intereses: intgr, detalle_unico: unico}};
-        var obtener = modIntereses.obtenerDetalleAsociado(datos);
-        obtener.done(function (response) {
-            formularioCrear.getIntereses();
-            $("#certificadodetalle_aereo").val(response.detalle_certificado);
-            $("#sumaaseguradadetalle_aereo").val(response.detalle_suma_asegurada);
-            $("#primadetalle_aereo").val(response.detalle_prima);
-            $("#deducibledetalle_aereo").val(response.detalle_deducible);
-        }); 
+                  var temporalArrayArt = [];
+                  temporalArrayArt.coberturas=constructJSONArray("nombre","cobertura_monetario",getValuesFromArrayInput("coberturasNombre"),getValuesFromArrayInput("coberturasValor"));
+                  temporalArrayArt.deducion  =constructJSONArray("nombre","deducible_monetario",getValuesFromArrayInput("deduciblesNombre"),getValuesFromArrayInput("deduciblesValor"));    
+                  $(".coverage").remove();
+                  $(".deductible").remove();
+                  if(data.coberturas.length || data.deducion.length){
+                     temporalArrayArt.coberturas = data.coberturas;
+                     temporalArrayArt.deducion = data.deducion;
+                 }
+                 populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
+                 populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
 
-    });*/
+                 $(".moneda").inputmask('currency',{
+                  prefix: "",
+                  autoUnmask : true,
+                  removeMaskOnSubmit: true
+              });  
+
+             }
+         }
+     });  
+
+            $("#saveIndividualCoveragebtn").click(function(){
+
+              saveInvidualCoverage(id,numeroArticulo);  
+          });  
+        }else{
+            $(this).text("Seleccione un plan");
+        }
+    });
+	
+	
 	//Fin funciones para botones del grid de maritimo
 
 

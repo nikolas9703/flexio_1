@@ -1,41 +1,41 @@
 if(desde=="solicitudes" || desde=="poliza"){
 
-var tablaSolicitudesMaritimo = (function () {
+    var tablaSolicitudesMaritimo = (function () {
 
-    var unico = $("#detalleunico").val();
-    if(desde == "poliza"){
-        var id_poliza = $("#idPoliza").val();
-        console.log(id_poliza);
-        var tablaUrl = phost() + 'polizas/ajax_listar_maritimo';
-    }else{
-        var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_maritimo';
-    }
-    
-    var gridId = "tablaSolicitudesMaritimo";
-    var gridObj = $("#tablaSolicitudesMaritimo");
-    var opcionesModal = $('#opcionesModalIntereses');
-    var formularioBuscar = '';
-    var documentosModal = $('#documentosModal');
-    var grid_obj = $("#tablaSolicitudesMaritimo");
+        var unico = $("#detalleunico").val();
+        if(desde == "poliza"){
+            var id_poliza = $("#idPoliza").val();
+            console.log(id_poliza);
+            var tablaUrl = phost() + 'polizas/ajax_listar_maritimo';
+        }else{
+            var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_maritimo';
+        }
+        
+        var gridId = "tablaSolicitudesMaritimo";
+        var gridObj = $("#tablaSolicitudesMaritimo");
+        var opcionesModal = $('#opcionesModalIntereses');
+        var formularioBuscar = '';
+        var documentosModal = $('#documentosModal');
+        var grid_obj = $("#tablaSolicitudesMaritimo");
 
 
 
-    var botones = {
-        opciones: ".viewOptions",
-        subir_archivo: ".subir_documento_solicitudes_intereses",
-        quitar_interes: ".quitarInteres",
-        ver_interes: ".linkCargaInfo"
-    };
+        var botones = {
+            opciones: ".viewOptions",
+            subir_archivo: ".subir_documento_solicitudes_intereses",
+            quitar_interes: ".quitarInteres",
+            ver_interes: ".linkCargaInfo"
+        };
 
-    var tabla = function () {
-		
-        gridObj.jqGrid({
-            url: tablaUrl,
-            mtype: "POST",
-            datatype: "json",
-            colNames: ['No. Interés', 'Serie', 'Nombre embarcación','Tipo','Marca','Valor','Acreedor','Fecha de inclusión','Fecha de exclusión','Estado','',''],
-            colModel: desde == "poliza" ?
-            [
+        var tabla = function () {
+          
+            gridObj.jqGrid({
+                url: tablaUrl,
+                mtype: "POST",
+                datatype: "json",
+                colNames: ['No. Interés', 'Serie', 'Nombre embarcación','Tipo','Marca','Valor','Acreedor','Fecha de inclusión','Fecha de exclusión','Estado','',''],
+                colModel: desde == "poliza" ?
+                [
                 {name:'numero', index:'numero', width:30},
                 {name:'serie', index:'serie', width:40},
                 {name:'nombre_embarcacion', index:'nombre_embarcacion', width:40},
@@ -51,9 +51,9 @@ var tablaSolicitudesMaritimo = (function () {
                 {name:'link', index:'link', hidedlg:true, hidden: true}
 
 
-            ]
-            :
-            [
+                ]
+                :
+                [
                 {name:'numero', index:'int_intereses_asegurados.numero', width:30},
                 {name:'serie', index:'int_casco_maritimo.serie', width:40},
                 {name:'nombre_embarcacion', index:'int_casco_maritimo.nombre_embarcacion', width:40},
@@ -69,27 +69,27 @@ var tablaSolicitudesMaritimo = (function () {
                 {name:'link', index:'link', hidedlg:true, hidden: true}
 
 
-            ],
-            postData: {
-                detalle_unico: unico,
-                desde: vista,
-                erptkn: tkn,
-                id_poliza: id_poliza,
-            },
-            height: "auto",
-            autowidth: true,
-            rowList: [10, 20, 50, 100],
-            rowNum: 10,
-            page: 1,
-            pager: "#" + gridId + "Pager",
-            loadtext: '<p>Cargando...</p>',
-            hoverrows: false,
-            viewrecords: true,
-            refresh: true,
-            gridview: true,
-            sortname: desde == "poliza" ? "pol_poliza_maritimo.estado" : "int_intereses_asegurados.estado",
-            sortorder: "ASC",
-            beforeProcessing: function (data, status, xhr) {
+                ],
+                postData: {
+                    detalle_unico: unico,
+                    desde: vista,
+                    erptkn: tkn,
+                    id_poliza: id_poliza,
+                },
+                height: "auto",
+                autowidth: true,
+                rowList: [10, 20, 50, 100],
+                rowNum: 10,
+                page: 1,
+                pager: "#" + gridId + "Pager",
+                loadtext: '<p>Cargando...</p>',
+                hoverrows: false,
+                viewrecords: true,
+                refresh: true,
+                gridview: true,
+                sortname: desde == "poliza" ? "pol_poliza_maritimo.estado" : "int_intereses_asegurados.estado",
+                sortorder: "ASC",
+                beforeProcessing: function (data, status, xhr) {
                 //Check Session
                 if ($.isEmptyObject(data.session) == false) {
                     window.location = phost() + "login?expired";
@@ -109,7 +109,7 @@ var tablaSolicitudesMaritimo = (function () {
                     $('#gbox_' + gridId).show();
                     $('#' + gridId + 'NoRecords').empty();
                 }*/
-				var DataGrid = gridObj;
+                var DataGrid = gridObj;
 
                  //sets the grid size initially
 				//DataGrid.jqGrid('setGridWidth', parseInt(grid_obj) - 20);
@@ -207,24 +207,24 @@ var tablaSolicitudesMaritimo = (function () {
             }, 1000);
         }
 
-              
+        
 
 
         
     });
-	
+    
 	 //Documentos Modal
-        $(opcionesModal).on("click", botones.subir_archivo, function (e){
-            e.preventDefault();
-            e.returnValue = false;
-            e.stopPropagation();
-            var id_interes = $(this).attr("data-int-id");
-            var tipo_interes = $(this).attr("data-tipo-interes");
+     $(opcionesModal).on("click", botones.subir_archivo, function (e){
+        e.preventDefault();
+        e.returnValue = false;
+        e.stopPropagation();
+        var id_interes = $(this).attr("data-int-id");
+        var tipo_interes = $(this).attr("data-tipo-interes");
             //Inicializar opciones del Modal
             documentosModal.modal({
                     backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
                     show: false
-            });
+                });
             $('#opcionesModalIntereses').modal('hide');
             documentosModal.modal('show');
             var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
@@ -235,7 +235,7 @@ var tablaSolicitudesMaritimo = (function () {
             });
             documentosModal.modal('show');
         });
-	
+     
 	//Funciones para botones del grid de maritimo
 	/*$("#"+gridId).on("click", ".linkCargaInfo", function(e){
 		e.preventDefault();
@@ -258,41 +258,105 @@ var tablaSolicitudesMaritimo = (function () {
             $("#primadetalle_maritimo").val(response.detalle_prima);
             $("#deducibledetalle_maritimo").val(response.detalle_deducible);
         }); 
-	});*/
-	
-	$("#opcionesModalIntereses").on("click", ".quitaInteresBtn", function(e){
-		e.preventDefault();
-		e.returnValue=false;
-		e.stopPropagation();
-		
-		var id_det = $(this).attr("data-id");
-		
-		$.ajax({
-			url: phost() + "/intereses_asegurados/ajax_quitar_maritimo",
-			type:"post",
-			data:{ erptkn:tkn, id_det: id_det },
-			async:false,
-			success:function(response){
-				var res = $.parseJSON(response);
-				if(res.msg=="Ok"){
-                    $("#selInteres").val("");
-                    $("#selInteres").trigger('change');
-					$('#opcionesModalIntereses').modal('hide');
-                    $("#certificadodetalle_maritimo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #deducibledetalle_maritimo").val("");
-					toastr.success('Registro eliminado');
-					recargar();
+    });*/
+    
+    $("#opcionesModalIntereses").on("click", ".quitaInteresBtn", function(e){
+      e.preventDefault();
+      e.returnValue=false;
+      e.stopPropagation();
+      
+      var id_det = $(this).attr("data-id");
+      
+      $.ajax({
+         url: phost() + "/intereses_asegurados/ajax_quitar_maritimo",
+         type:"post",
+         data:{ erptkn:tkn, id_det: id_det },
+         async:false,
+         success:function(response){
+            var res = $.parseJSON(response);
+            if(res.msg=="Ok"){
+                $("#selInteres").val("");
+                $("#selInteres").trigger('change');
+                $('#opcionesModalIntereses').modal('hide');
+                $("#certificadodetalle_maritimo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #deducibledetalle_maritimo").val("");
+                toastr.success('Registro eliminado');
+                recargar();
 
-                    var unico = $("#detalleunico").val();
-                    var camposi = {campo:unico};
-                    var obtener = modIntereses.prima(camposi);
-                    obtener.done(function (resp) {
-                        formularioCrear.getPrimaAnual(resp);
-                    });
-				}
-			}
-		});
-		
-	});
+                var unico = $("#detalleunico").val();
+                var camposi = {campo:unico};
+                var obtener = modIntereses.prima(camposi);
+                obtener.done(function (resp) {
+                    formularioCrear.getPrimaAnual(resp);
+                });
+            }
+        }
+    });
+      
+  });
+    
+    $(opcionesModal).on("click", ".setIndividualCoverageMar", function (e) {
+
+        e.preventDefault();
+        e.returnValue=false;
+        e.stopPropagation();
+        var solicitud = vista==="crear"?vista:solicitud_id;
+        var planes = $("#planes");
+        if($(planes).val()!==""){
+            var id = $(this).attr("data-int-gr");
+            var idFromTable = $(this).attr("data-id");
+            var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
+            var options = rowINFO.link;
+            var numeroArticulo =rowINFO.numero;
+            //Init Modal data-int-gr 
+            $(opcionesModal).modal("hide");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  solicitud :solicitud,
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+              },
+              url: phost() + 'solicitudes/ajax_get_invidualCoverage',
+              success: function(data)
+              {    
+                if ($.isEmptyObject(data.session) == false) {
+                    window.location = phost() + "login?expired";
+                }else{  
+
+                  var temporalArrayArt = [];
+                  temporalArrayArt.coberturas=constructJSONArray("nombre","cobertura_monetario",getValuesFromArrayInput("coberturasNombre"),getValuesFromArrayInput("coberturasValor"));
+                  temporalArrayArt.deducion  =constructJSONArray("nombre","deducible_monetario",getValuesFromArrayInput("deduciblesNombre"),getValuesFromArrayInput("deduciblesValor"));    
+                  $(".coverage").remove();
+                  $(".deductible").remove();
+                  if(data.coberturas.length || data.deducion.length){
+                     temporalArrayArt.coberturas = data.coberturas;
+                     temporalArrayArt.deducion = data.deducion;
+                 }
+                 populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
+                 populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
+                 
+                 $(".moneda").inputmask('currency',{
+                  prefix: "",
+                  autoUnmask : true,
+                  removeMaskOnSubmit: true
+              });  
+
+             }
+         }
+     });  
+
+            $("#saveIndividualCoveragebtn").click(function(){
+
+              saveInvidualCoverage(id,numeroArticulo);  
+          });  
+        }else{
+            $(this).text("Seleccione un plan");
+        }
+    });
+
 	//Fin funciones para botones del grid de maritimo
 
 

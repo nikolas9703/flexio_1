@@ -133,7 +133,7 @@
     </div>
 </div>
 <div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12 individual"  style="display:none;" id="indCoverageCtrl">
-<div class="row">
+    <div class="row">
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <label>Coberturas</label>    
         </div>
@@ -145,7 +145,7 @@
 
         </div>
         <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddCoverage">
-            <button class="btn btn-default btn-block addCobertura"><i class="fa fa-plus"></i></button>
+        <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indCoveragefields','btnAddCoverage','coverage','removecoverage')"><i class="fa fa-plus"></i></button>
         </div>
     </div>
     <div class="row">
@@ -160,7 +160,7 @@
 
         </div>
         <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1" id="btnAddDeductible">
-            <button class="btn btn-default btn-block addCobertura"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indDeductiblefields','btnAddDeductible','deductible','removeDeductible')"><i class="fa fa-plus"></i></button>
         </div>
 
     </div>

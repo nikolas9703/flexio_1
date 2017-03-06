@@ -1,7 +1,5 @@
 Vue.http.options.emulateJSON = true;
 var conta = 0;
-var hasInteres;
-var indCoverageArray=[];
 var planesCoberturasDeducibles = [];
 var arrayauxiliar=[];
 for (var i =0; i< documentacionesgbd.length; i++) {
@@ -99,7 +97,6 @@ var formularioCrear = new Vue({
                 }
                 if (!_.isEmpty(response.data)) {
 
-                    console.log(response);
                     self.tablaError = "";
 
                     self.$set('clientes', response.data);
@@ -355,20 +352,18 @@ var formularioCrear = new Vue({
                         }
                         if (!_.isEmpty(response.data)) {
 
-                        //console.log(response.data.inter);
-                        if (interes == 1) {
-                        } else if (interes == 2) {
-                        } else if (interes == 3) {
-                        } else if (interes == 4) {
-                        } else if (interes == 5) {
-                        } else if (interes == 6) {
-                        } else if (interes == 7) {
-                        } else if (interes == 8) {
+                            if (interes == 1) {
+                            } else if (interes == 2) {
+                            } else if (interes == 3) {
+                            } else if (interes == 4) {
+                            } else if (interes == 5) {
+                            } else if (interes == 6) {
+                            } else if (interes == 7) {
+                            } else if (interes == 8) {
+                            }
+                            self.$set('sIntereses', response.data.inter);
                         }
-                        console.log(response.data.inter);
-                        self.$set('sIntereses', response.data.inter);
-                    }
-                });
+                    });
                 }
 
             },
@@ -383,7 +378,6 @@ var formularioCrear = new Vue({
                 interes = $("#selInteres2").val();
             }
 
-            console.log(interes);
             var tipointeres = $('#formulario').val();
             if (interes != "") {
                 hasInteres = true;
@@ -397,7 +391,6 @@ var formularioCrear = new Vue({
                         window.location.assign(phost());
                     }
                     if (!_.isEmpty(response.data)) {
-                        //console.log(response.data.inter);
                         var tipoint = response.data.inter.tipointeres;
                         localStorage.setItem("id_intereses", response.data.inter.id);
                         if (tipoint == 1) {
@@ -463,7 +456,6 @@ var formularioCrear = new Vue({
                              $(".estado_carga option[value='" + response.data.inter.estado + "']").attr("selected", "selected");*/
 
                          } else if (tipoint == 3) {
-                            console.log("tres");
                             $(".uuid_aereo, #serie_aereo, #marca_aereo, #modelo_aereo, #matricula_aereo, #valor_aereo, #pasajeros_aereo, #tripulacion_a, #observaciones_aereo").val("");
                             $(".uuid_aereo").val(response.data.inter.uuid_intereses);
                             $("#serie_aereo").val(response.data.inter.serie);
@@ -519,7 +511,7 @@ var formularioCrear = new Vue({
                                     $("#asiento").val(splitIden[3]);
                                     $("#provincia").prop("disabled", false);
                                     $('#id_letras').val(splitIden[1]);
-                                   
+
                                 } else if(splitIden.length == 3) {
                                     if(isNaN(splitIden[0])){
 
@@ -529,7 +521,7 @@ var formularioCrear = new Vue({
                                         $("#tomo").val(splitIden[1]);
                                         $("#asiento").val(splitIden[2]);
                                     }else{
-                                        
+
                                         $("#provincia").prop("disabled", false);
                                         $("#provincia").val(splitIden[0]);   
                                         $("#letra").val("0");
@@ -537,7 +529,7 @@ var formularioCrear = new Vue({
                                         $("#asiento").val(splitIden[2]);
                                     }
                                 }
-                                 $('#id_letras').val(splitIden[0]);
+                                $('#id_letras').val(splitIden[0]);
 
                             } else {
                                 $("#identificacion").val("pasaporte");
@@ -622,7 +614,6 @@ var formularioCrear = new Vue({
                             //$(".estado_proyecto").trigger("change");
 
                             $(".estado_proyecto").val(response.data.inter.estado);
-                            console.log(response.data.inter);
 
                             //$(".estado_proyecto option[value='" + response.data.inter.estado + "']").attr("selected", "selected");
 
@@ -773,7 +764,6 @@ getAsociado: function () {
     if(tablaTipo == undefined){
         tablaTipo = 0;
     }
-    console.log(tablaTipo);
     this.$http.post({
         url: phost() + 'solicitudes/ajax_get_asociados',
         method: 'POST',
@@ -1047,96 +1037,92 @@ if (vista === 'crear') {
 sumatotal: function () {
     var divList = $("div > #total_agentes_participantes");
     var total = divList.length;
-            //    console.log(divList);
-            //     console.log(total);
-            //    var total=($("div > #total_agentes_participantes").length);
 
-            var suma = 0;
-            var agente = "";
-            var porcentaje = "";
-            var cantidad = $('#cantidad').val();
+    var suma = 0;
+    var agente = "";
+    var porcentaje = "";
+    var cantidad = $('#cantidad').val();
 
 
-            for (var i = 0; i < cantidad; i++) {
-                suma = parseFloat(suma) + parseFloat($('#agentes_participacion_' + i).val());
-                if (i === 0) {
-                    agente = $('#agentes_' + i).val();
-                    porcentaje = $('#agentes_participacion_' + i).val();
-                } else {
-                    agente = agente + "," + $('#agentes_' + i).val();
-                    porcentaje = porcentaje + "," + $('#agentes_participacion_' + i).val();
-                }
-            }
-			
-			if(agtPrincipal!="")
-			{
-				$('#participacionTotal').val(parseFloat(100));
-			}
-			else
-			{
-				$('#participacionTotal').val(parseFloat(suma));
-			}
-			
-            $('#agente').val(agente);
-            $('#porcentaje').val(porcentaje);
-			
-			
-			if(isNaN(suma))
-					$('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
-			else
-				$('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(suma)).toFixed(2));	
-			
-        },
-        limpiarDetalle: function () {
-            $(" #sumaaseguradadetalle_articulo, #primadetalle_articulo, #certificadodetalle_articulo, #deducibledetalle_articulo, #sumaaseguradadetalle_carga, #primadetalle_carga, #certificadodetalle_carga, #deducibledetalle_carga, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #certificadodetalle_aereo, #deducibledetalle_aereo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #certificadodetalle_maritimo, #deducibledetalle_maritimo, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #certificadodetalle_proyecto, #deducibledetalle_proyecto, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #certificadodetalle_ubicacion, #deducibledetalle_ubicacion, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #certificadodetalle_vehiculo, #deducibledetalle_vehiculo").val("");
-        },
-        setPrimaNeta: function () {
-            if (id_tipo_int_asegurado == 1) {
-                this.getPrimaNeta("primadetalle_articulo");
-            } else if (id_tipo_int_asegurado == 2) {
-                this.getPrimaNeta("primadetalle_carga");
-            } else if (id_tipo_int_asegurado == 3) {
-                this.getPrimaNeta("primadetalle_aereo");
-            } else if (id_tipo_int_asegurado == 4) {
-                this.getPrimaNeta("primadetalle_maritimo");
-            } else if (id_tipo_int_asegurado == 5) {
-                this.getPrimaNeta("primadetalle_persona");
-            } else if (id_tipo_int_asegurado == 6) {
-                this.getPrimaNeta("primadetalle_proyecto");
-            } else if (id_tipo_int_asegurado == 7) {
-                this.getPrimaNeta("primadetalle_ubicacion");
-            } else if (id_tipo_int_asegurado == 8) {
-                this.getPrimaNeta("primadetalle_vehiculo");
-            }
+    for (var i = 0; i < cantidad; i++) {
+        suma = parseFloat(suma) + parseFloat($('#agentes_participacion_' + i).val());
+        if (i === 0) {
+            agente = $('#agentes_' + i).val();
+            porcentaje = $('#agentes_participacion_' + i).val();
+        } else {
+            agente = agente + "," + $('#agentes_' + i).val();
+            porcentaje = porcentaje + "," + $('#agentes_participacion_' + i).val();
         }
+    }
 
-    },
-    computed: {
+    if(agtPrincipal!="")
+    {
+        $('#participacionTotal').val(parseFloat(100));
+    }
+    else
+    {
+        $('#participacionTotal').val(parseFloat(suma));
+    }
 
-        impuestoMonto: function () {
+    $('#agente').val(agente);
+    $('#porcentaje').val(porcentaje);
+
+
+    if(isNaN(suma))
+       $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
+   else
+    $('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(suma)).toFixed(2));	
+
+},
+limpiarDetalle: function () {
+    $(" #sumaaseguradadetalle_articulo, #primadetalle_articulo, #certificadodetalle_articulo, #deducibledetalle_articulo, #sumaaseguradadetalle_carga, #primadetalle_carga, #certificadodetalle_carga, #deducibledetalle_carga, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #certificadodetalle_aereo, #deducibledetalle_aereo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #certificadodetalle_maritimo, #deducibledetalle_maritimo, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #certificadodetalle_proyecto, #deducibledetalle_proyecto, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #certificadodetalle_ubicacion, #deducibledetalle_ubicacion, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #certificadodetalle_vehiculo, #deducibledetalle_vehiculo").val("");
+},
+setPrimaNeta: function () {
+    if (id_tipo_int_asegurado == 1) {
+        this.getPrimaNeta("primadetalle_articulo");
+    } else if (id_tipo_int_asegurado == 2) {
+        this.getPrimaNeta("primadetalle_carga");
+    } else if (id_tipo_int_asegurado == 3) {
+        this.getPrimaNeta("primadetalle_aereo");
+    } else if (id_tipo_int_asegurado == 4) {
+        this.getPrimaNeta("primadetalle_maritimo");
+    } else if (id_tipo_int_asegurado == 5) {
+        this.getPrimaNeta("primadetalle_persona");
+    } else if (id_tipo_int_asegurado == 6) {
+        this.getPrimaNeta("primadetalle_proyecto");
+    } else if (id_tipo_int_asegurado == 7) {
+        this.getPrimaNeta("primadetalle_ubicacion");
+    } else if (id_tipo_int_asegurado == 8) {
+        this.getPrimaNeta("primadetalle_vehiculo");
+    }
+}
+
+},
+computed: {
+
+    impuestoMonto: function () {
             //var imp = this.exoneradoImpuestos == false ? this.impuestoPlan : 0; 
             /*var cadena = $("#ramoscadena").val();
              var imp = 7;
              if ((cadena.indexOf("Auto Individual") > -1) || (cadena.indexOf("Auto Colectivo/Flota") > -1)) {
              imp = 6;
-             }*/
-             console.log(this.impuestoPlan);
-             if (this.exoneradoImpuestos == null || this.exoneradoImpuestos == "" || this.exoneradoImpuestos == false) {
-                this.exoneradoImpuestos = false;
-            }
-            var impuesto = this.exoneradoImpuestos == false ? this.impuestoPlan : 0;
-            var impuesto_monto = (parseFloat(this.primaAnual) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima)) * (impuesto / 100);
+         }*/
+         if (this.exoneradoImpuestos == null || this.exoneradoImpuestos == "" || this.exoneradoImpuestos == false) {
+            this.exoneradoImpuestos = false;
+        }
+        var impuesto = this.exoneradoImpuestos == false ? this.impuestoPlan : 0;
+        var impuesto_monto = (parseFloat(this.primaAnual) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima)) * (impuesto / 100);
 
-            return parseFloat(impuesto_monto);
-        },
-        totalPrima: function () {
-            this.primaAnual = this.primaAnual == '' ? '0.00' : this.primaAnual;
-            this.otrosPrima = this.otrosPrima == '' ? '0.00' : this.otrosPrima;
-            this.descuentosPrima = this.descuentosPrima == '' ? '0.00' : this.descuentosPrima;
-            var impuesto_monto = this.impuestoMonto;
-            var total = parseFloat(this.primaAnual) + parseFloat(impuesto_monto) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima);
-            return parseFloat(total);
-        },
+        return parseFloat(impuesto_monto);
+    },
+    totalPrima: function () {
+        this.primaAnual = this.primaAnual == '' ? '0.00' : this.primaAnual;
+        this.otrosPrima = this.otrosPrima == '' ? '0.00' : this.otrosPrima;
+        this.descuentosPrima = this.descuentosPrima == '' ? '0.00' : this.descuentosPrima;
+        var impuesto_monto = this.impuestoMonto;
+        var total = parseFloat(this.primaAnual) + parseFloat(impuesto_monto) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima);
+        return parseFloat(total);
+    },
 
 }
 
@@ -1187,7 +1173,7 @@ var coberturasForm = new Vue({
                     'coberturas': {nombre: $("input[name='coberturasNombre[]']").map(function () {
                         return $(this).val();
                     }).get(),
-                    valor: $("input[name='coberturasValor[]']").map(function () {
+                    valor: $("input[name='coberturasNombre[]']").map(function () {
                         return $(this).val();
                     }).get()
                 },
@@ -1252,7 +1238,6 @@ if (vista == "crear") {
     var counter_acre2 = 2;
     $('.del_file_acreedores_adicionales').hide();
 }else if (vista == "editar") {
-    console.log(contacre);
     var counter_acre = contacre+2;
     var counter_acre2 = contacre+2;
     $('#del_acre').hide();
@@ -1269,10 +1254,10 @@ $(document).ready(function () {
         $('#cantidad_check').val(documentaciones.length);
 
         $("#campos_vida_acreedor_crear").remove();
-		
-		if(agtPrincipal!="")
-		{
-			$('.agentePrincipal').show();
+
+        if(agtPrincipal!="")
+        {
+         $('.agentePrincipal').show();
 			//$('#nombreAgentePrincipal').val(agtPrincipal);
 			$('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
 			$('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
@@ -1286,7 +1271,7 @@ $(document).ready(function () {
         $("span.switchery-default").remove();
         var elem = document.querySelector('#polizaDeclarativa');
         var init = new Switchery(elem); 
-		
+
     } else {
         $("#documentos_editar").hide();
         $('#docentregados_crear').show();
@@ -1294,38 +1279,38 @@ $(document).ready(function () {
         $("#nombre_doc_titulo_editar").hide();
 
         $("#campos_vida_acreedor_editar").remove();
-		
-		
-		if(agtPrincipal!="")
-		{
-			$('.agentePrincipal').show();
-			$('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
-			$('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
-		}
-		else
-		{
-			$('.agentePrincipal').hide();
-		}
-    }
-    var counter = 2;
-    $('#del_file_solicitudes_adicionales').hide();
-    $('#add_file_solicitudes_adicionales').click(function () {
 
-        $('#file_tools_solicitudes_adicionales').before('<div class="file_upload_solicitudes_adicionales" id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
-        $('#del_file_solicitudes_adicionales').fadeIn(0);
-        counter++;
-    });
-    $('#del_file_solicitudes_adicionales').click(function () {
-        if (counter == 3) {
-            $('#del_file_solicitudes_adicionales').hide();
-        }
-        counter--;
-        $('#h' + counter).remove();
-    });
 
-    if (editar_asignado != 1) {
-        $("#usuario_id").attr("disabled", "disabled");
+        if(agtPrincipal!="")
+        {
+         $('.agentePrincipal').show();
+         $('#nombreAgentePrincipal').append('<option value="" selected="selected">'+agtPrincipal+'</option>');
+         $('#porcAgentePrincipal').val(parseFloat(agtPrincipalporcentaje).toFixed(2));
+     }
+     else
+     {
+         $('.agentePrincipal').hide();
+     }
+ }
+ var counter = 2;
+ $('#del_file_solicitudes_adicionales').hide();
+ $('#add_file_solicitudes_adicionales').click(function () {
+
+    $('#file_tools_solicitudes_adicionales').before('<div class="file_upload_solicitudes_adicionales" id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><br><br></div>');
+    $('#del_file_solicitudes_adicionales').fadeIn(0);
+    counter++;
+});
+ $('#del_file_solicitudes_adicionales').click(function () {
+    if (counter == 3) {
+        $('#del_file_solicitudes_adicionales').hide();
     }
+    counter--;
+    $('#h' + counter).remove();
+});
+
+ if (editar_asignado != 1) {
+    $("#usuario_id").attr("disabled", "disabled");
+}
     //----------------------------------------------------------------------
     //Inicializa Parametros para acreedores
     //----------------------------------------------------------------------
@@ -1344,11 +1329,11 @@ $(document).ready(function () {
             f = "";
         }
         $(this).daterangepicker({ //
-           locale: { format: 'YYYY-MM-DD' },
-           showDropdowns: true,
-           defaultDate: '',
-           singleDatePicker: true
-        }).val(f);
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val(f);
     });
     $('.fechas_acreedores_fin').each(function () {
         var f = $(this).val();
@@ -1356,11 +1341,11 @@ $(document).ready(function () {
             f = "";
         }
         $(this).daterangepicker({ //
-           locale: { format: 'YYYY-MM-DD' },
-           showDropdowns: true,
-           defaultDate: '',
-           singleDatePicker: true
-        }).val(f);
+         locale: { format: 'YYYY-MM-DD' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val(f);
     });
 
     
@@ -1378,13 +1363,13 @@ $(document).ready(function () {
          singleDatePicker: true
      }).val('');*/
     $('#fechafin_1').daterangepicker({ //
-         locale: { format: 'YYYY-MM-DD' },
-         showDropdowns: true,
-         defaultDate: '',
-         singleDatePicker: true
-     }).val('');
+       locale: { format: 'YYYY-MM-DD' },
+       showDropdowns: true,
+       defaultDate: '',
+       singleDatePicker: true
+   }).val('');
 
-     $(".fechas_acreedores_inicio").change(function () {
+    $(".fechas_acreedores_inicio").change(function () {
         var vigini = $("#vigencia_desde").val();
         var vigfin = $("#vigencia_hasta").val();
         var actual = $(this).val();
@@ -1469,7 +1454,6 @@ $(document).ready(function () {
         if (sumaasegurada == "") { sumaasegurada = 0;}
         var porcentaje = (monto * 100 )/(sumaasegurada);
         if (porcentaje > 100) { porcentaje = 100;}
-        console.log(porcentaje);
         $("#porcentajecesion_"+x[1]).val(porcentaje);
     });
 
@@ -1480,7 +1464,6 @@ $(document).ready(function () {
         if (porcentaje == "") { porcentaje = 0;}
         var sumaasegurada = $("#suma_asegurada").val();
         var monto = (porcentaje * sumaasegurada )/(100);
-        console.log(monto);
         if (porcentaje>100) {
             $("#montocesion_"+x[1]).val(sumaasegurada);
         }else{
@@ -1498,10 +1481,10 @@ $(document).ready(function () {
             var y = id.split('_');
             var x = $(this).val();
             if (x != "") {
-               var monto = (parseFloat(total) * parseFloat(x))/100 ;
-               $("#montocesion_"+y[1]).val(monto);
-            }                
-        });
+             var monto = (parseFloat(total) * parseFloat(x))/100 ;
+             $("#montocesion_"+y[1]).val(monto);
+         }                
+     });
     });
 
     //Agregar Acreedores a la Vigencia    
@@ -1642,7 +1625,7 @@ $(document).ready(function () {
     });*/
     // Fin Acreedores
     
-   
+
 
     if (validavida == 1) {
         if (id_tipo_poliza == 1) {
@@ -1658,8 +1641,8 @@ $(document).ready(function () {
         //-------------------------------------------------------------------------------
 
 
-});
- 
+    });
+
 
 function agregaracre(){
     $(".add_file_acreedores_adicionales").hide();
@@ -1675,17 +1658,17 @@ function agregaracre(){
         $(".porcentaje_cesion_acreedor").inputmask('Regex', { regex: "^[1-9][0-9][.][0-9][0-9]?$|^100[.]00?$|^[0-9][.][0-9][0-9]$" });
         //$(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
         $('#fechainicio_'+counter_acre2+'').daterangepicker({ //
-         locale: { format: 'YYYY-MM-DD' },
-         showDropdowns: true,
-         defaultDate: '',
-         singleDatePicker: true
-     }).val('');
+           locale: { format: 'YYYY-MM-DD' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+       }).val('');
         $('#fechafin_'+counter_acre2+'').daterangepicker({ //
-         locale: { format: 'YYYY-MM-DD' },
-         showDropdowns: true,
-         defaultDate: '',
-         singleDatePicker: true
-     }).val('');
+           locale: { format: 'YYYY-MM-DD' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+       }).val('');
 
         $(".fechas_acreedores_inicio").change(function () {
             var vigini = $("#vigencia_desde").val();
@@ -1770,7 +1753,6 @@ function agregaracre(){
             if (sumaasegurada == "") { sumaasegurada = 0;}
             var porcentaje = (monto * 100 )/(sumaasegurada);
             if (porcentaje > 100) { porcentaje = 100;}
-            console.log(porcentaje);
             $("#porcentajecesion_"+x[1]).val(porcentaje);
         });
 
@@ -1781,7 +1763,6 @@ function agregaracre(){
             if (porcentaje == "") { porcentaje = 0;}
             var sumaasegurada = $("#suma_asegurada").val();
             var monto = (porcentaje * sumaasegurada )/(100);
-            console.log(monto);
             if (porcentaje>100) {
                 $("#montocesion_"+x[1]).val(sumaasegurada);
             }else{
@@ -1790,77 +1771,77 @@ function agregaracre(){
         });
         counter_acre++;
 
-    counter_acre2++;
-}
+        counter_acre2++;
+    }
 
-function eliminaracre(d){
-    $('#a' + d +'').remove(); 
-}
+    function eliminaracre(d){
+        $('#a' + d +'').remove(); 
+    }
 
-function customModalValidation(type) {
+    function customModalValidation(type) {
 
 
-    var mensaje = "",
-    msgErrors = [],
-    errType = 0,
-    isValid = true,
-    error = "";
+        var mensaje = "",
+        msgErrors = [],
+        errType = 0,
+        isValid = true,
+        error = "";
 
-    for (var i = 0; i < type.length; i++) {
+        for (var i = 0; i < type.length; i++) {
 
-        $(type[i].field.input).each(function () {
-            var element = $(this).val(),
-            error = "";
-            elementType = type[i].field.type,
-            id = elementType + "-" + errType++;
+            $(type[i].field.input).each(function () {
+                var element = $(this).val(),
+                error = "";
+                elementType = type[i].field.type,
+                id = elementType + "-" + errType++;
 
-            $(this).attr('id', "");
-            if ($.trim(element).length <= 0) {
-                mensaje = "Campo obligatorio";
-                error = "<label class='error'>" + mensaje + "</label>";
-
-            }
-            if (type[i].field.valiation == "numeric" && ($.trim(element).length !== 0)) {
-                if (!validateNumbers(element)) {
-
-                    mensaje = "Campo númerico";
+                $(this).attr('id', "");
+                if ($.trim(element).length <= 0) {
+                    mensaje = "Campo obligatorio";
                     error = "<label class='error'>" + mensaje + "</label>";
 
                 }
-            }
+                if (type[i].field.valiation == "numeric" && ($.trim(element).length !== 0)) {
+                    if (!validateNumbers(element)) {
 
-            if (type[i].field.valiation == "alfanúmerico") {
+                        mensaje = "Campo númerico";
+                        error = "<label class='error'>" + mensaje + "</label>";
 
-                if (!validateAlphaNumeric(element) && ($.trim(element).length !== 0)) {
-
-                    mensaje = "Campo alfanúmerico";
-                    error = "<label class='error'>" + mensaje + "</label>";
-
+                    }
                 }
-            }
-            $(".error").remove();
 
-            $(this).attr('id', id);
-            msgErrors.push({pair: {id: id, error: error}});
-            isValid = addMessages(msgErrors);
+                if (type[i].field.valiation == "alfanúmerico") {
+
+                    if (!validateAlphaNumeric(element) && ($.trim(element).length !== 0)) {
+
+                        mensaje = "Campo alfanúmerico";
+                        error = "<label class='error'>" + mensaje + "</label>";
+
+                    }
+                }
+                $(".error").remove();
+
+                $(this).attr('id', id);
+                msgErrors.push({pair: {id: id, error: error}});
+                isValid = addMessages(msgErrors);
 
 
-        }).get();
+            }).get();
 
+
+        }
+        return isValid;
+    }
+
+    function validateAlphaNumeric(text) {
+
+        var exp = new RegExp(/^[A-Za-z\d\s]+$/);
+
+        return  exp.test(text);
 
     }
-    return isValid;
-}
 
-function validateAlphaNumeric(text) {
-
-    var exp = new RegExp(/^[A-Za-z\d\s]+$/);
-
-    return  exp.test(text);
-
-}
-
-function validateNumbers(text) {
+    function validateNumbers(text) {
 
     //var exp = new RegExp(/^[0-9]$/);
     var exp = new RegExp(/^[0-9]+([.][0-9]+)?$/);
@@ -1954,7 +1935,6 @@ $(document).ajaxStop(function () {
             $(".estado_aereo").attr('disabled', true);
         } else if (selInteres != '' && id_tipo_int_asegurado == 4) {
 
-            console.log(selInteres);
             $("#selInteres").val(selInteres).trigger('change');
 
             $("#selInteres").attr('disabled', true);
@@ -1971,7 +1951,6 @@ $(document).ajaxStop(function () {
             $(".estado_casco").attr('disabled', true);
         } else if (selInteres != '' && id_tipo_int_asegurado == 5) {
 
-            console.log(selInteres);
             $("#selInteres").val(selInteres).trigger('change');
 
             $("#selInteres").attr('disabled', true);
@@ -2009,7 +1988,6 @@ $(document).ajaxStop(function () {
 
         } else if (selInteres != '' && id_tipo_int_asegurado == 6) {
 
-            console.log(selInteres);
             $("#selInteres").val(selInteres).trigger('change');
 
             $("#selInteres").attr('disabled', true);
@@ -2037,7 +2015,6 @@ $(document).ajaxStop(function () {
 
         } else if (selInteres != '' && id_tipo_int_asegurado == 7) {
 
-            console.log(selInteres);
             $("#selInteres").val(selInteres).trigger('change');
 
             $("#selInteres").attr('disabled', true);
@@ -2055,7 +2032,6 @@ $(document).ajaxStop(function () {
             $('.estado_ubicacion').attr('disabled', true);
         } else if (selInteres != '' && id_tipo_int_asegurado == 8) {
 
-            console.log(selInteres);
             $("#selInteres").val(selInteres).trigger('change');
 
             $("#selInteres").attr('disabled', true);
@@ -2142,16 +2118,105 @@ function saveInvidualCoverage(interesId,interesNumero){
           {    
 
             if ($.isEmptyObject(data.session) == false) {
-                    window.location = phost() + "login?expired";
-                }
-                else if(data==="success"){
-                  $("#IndCoberturas").modal("hide");  
-                  toastr.success('Se han Guardado los cambios correctamente para Interés <b>'+interesNumero);
-              }else{
-                toastr.error('Ocurrio un error al Guardar las coberturas para Interés <b>'+interesNumero);
-              }                 
-               
-          }
-      });   
+                window.location = phost() + "login?expired";
+            }
+            else if(data==="success"){
+              $("#IndCoberturas").modal("hide");  
+              toastr.success('Se han Guardado los cambios correctamente para Interés <b>'+interesNumero);
+          }else{
+            toastr.error('Ocurrio un error al Guardar las coberturas para Interés <b>'+interesNumero);
+        }                 
+
     }
+});   
+    }
+}
+
+function getValuesFromArrayInput(inputsName){
+
+    return $("input[name='"+inputsName+"[]']").map(function () {
+        return $(this).val();
+    }).get();
+
+}
+
+
+function constructJSONArray(jsonName1,jsonName2,namesArray,valuesArray){
+    var json =[];
+    for (var i = namesArray.length - 1; i >= 0; i--) {
+        nombre= namesArray[i];
+        valor = valuesArray[i];
+        json.push( {[jsonName1] : nombre,
+           [jsonName2] :valor});
+    }
+    return json;
+}
+
+
+function drawInputsInCoverageInModal(id,btnAdd,stringId,del_row){
+ var wrapper = $("#"+id); 
+ var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+ $("#"+btnAdd).unbind().click(function(e){
+    e.preventDefault();
+    appendHtmlTag(wrapper,parameters,stringId,del_row,undefined);
+    $(".moneda").inputmask('currency',{
+      prefix: "",
+      autoUnmask : true,
+      removeMaskOnSubmit: true
+  }); 
+});
+}
+
+function deleteFieldsInCoverageModal(id,del_row,idToRemove){
+    var wrapper = $("#"+id);
+    var removeStringClass = '.'+del_row+'';
+    $(wrapper).unbind().on("click",removeStringClass, function(e){ //user click on remove text
+        e.preventDefault();
+        var unicNumber=$(this).data("id"); 
+        var stringId = "#"+ idToRemove+'_'+ unicNumber;    
+        $(stringId).remove();
+    }); 
+}
+
+function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
+  var counterCoverage= new Date().valueOf(),value={},enabled;
+  var URL =window.location.href.split("/");
+  var urlLastSegment= URL.pop();
+  value.nombre = inputValue === undefined ? "" : inputValue.nombre;
+  value.monetario = inputValue === undefined ? "" : inputValue.monetario;
+  enabled = urlLastSegment == "renovar" ? "" : "";
+  var text = '<div class="'+stringId+'" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" '+enabled+' name="'+stringId+'Name[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input '+enabled+' type="text" name="'+stringId+'Value[]" value="'+value.monetario+'" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 renewal '+del_row+'" data-id="'+counterCoverage+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
+  $(wrapper).append(text);   
+}
+function  populateStoredCovergeData(id,stringId,del_row,coverage,nombre,monetario){
+   wrapper = $("#"+id); 
+   parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+   for (var i = coverage.length - 1; i >= 0; i--) {
+    var value = coverage[i];
+    var attribute={
+        nombre: value[nombre],
+        monetario:value[monetario]
+    };
+    appendHtmlTag(wrapper,parameters,stringId,del_row,attribute);
+}
+}
+
+function showIndividualCoverageModal(serialName){
+
+    var btnDismiss ='<button type="button" class="close" data-dismiss="modal">&times;</button>';      
+    var pantalla = $('.individual');
+    var modalContainer = $("#IndCoberturas");
+    var botones_coberturas = $('.btnIndidualCoverage');
+    
+
+    pantalla.css('display', 'block');
+    botones_coberturas.css('display', 'block');
+    modalContainer.find('.modal-header').empty().append(btnDismiss+"<h4 style='text-align:center'>Coberturas Interés: "+serialName+"</h4>");
+    modalContainer.find('.modal-body').empty().append(pantalla);
+    modalContainer.find('.modal-footer').empty().append(botones_coberturas);
+    $(modalContainer).modal({
+                backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
+                show: false
+            });
+    modalContainer.modal("show");
 }

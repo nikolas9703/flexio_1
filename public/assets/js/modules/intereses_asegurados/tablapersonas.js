@@ -146,7 +146,7 @@ if(desde=="solicitudes" || desde == "poliza"){
                     $('#' + gridId + 'NoRecords').empty();
                     $("#relaciondetalle_persona option").each(function () {
 
-                        if ($(this).val() == "Principal" && id_tipo_poliza==1) {
+                        if ($(this).val() == "Principal" && id_tipo_poliza==1 && desde == "solicitudes") {
                             $(this).prop("disabled", true);
 
                         }
@@ -189,7 +189,7 @@ if(desde=="solicitudes" || desde == "poliza"){
             console.log(id);
             var rowINFO = $.extend({}, gridObj.getRowData(id));
             var options = rowINFO.link;
-            console.log(rowINFO.nombrePersona);
+            console.log(rowINFO);
             var numero_interes = rowINFO.numero;
             //Init Modal
             
@@ -289,7 +289,7 @@ if(desde=="solicitudes" || desde == "poliza"){
             setTimeout(function() {
                 var obtener = modIntereses.obtenerDetalleAsociado(datos);
                 obtener.done(function (response) {
-                    
+
                     //detalle_relacion
                     /*
                     detalle_beneficio
@@ -309,7 +309,7 @@ if(desde=="solicitudes" || desde == "poliza"){
                     //$("#certificadoPersona, #primadetalle_persona, #montodetalle_persona,#participacion_persona,#suma_asegurada_persona").val("");
                     //
 
-                
+
                     //$(".relaciondetalle_persona").empty();
                     $('#validar_editar').val(2);
 
@@ -324,27 +324,27 @@ if(desde=="solicitudes" || desde == "poliza"){
                     if(response.detalle_relacion=="Principal"){
                         $('#asociadodetalle_persona').rules(
                             "add",{ required: false, 
-                        });
+                            });
                         $('#relaciondetalle_persona').rules(
                             "add",{ required: false,
-                        });
+                            });
                         $('#participacion_persona').rules(
                             "add",{ required: false, 
-                        });
+                            });
                         $('#suma_asegurada_persona').rules(
                             "add",{ required: true, 
-                        });
+                            });
                         $('#tipo_relacion_persona').rules(
                             "add",{ required: false, 
-                        });
+                            });
                         if(tablaTipo=="vida"||tablaTipo=="accidentes"){
                             $('#primadetalle_persona').rules(
                                 "add",{ required: true,
-                            });
+                                });
                         }else{
                             $('#primadetalle_persona').rules(
                                 "add",{ required: false, 
-                            });
+                                });
                         }
 
                     }else{
@@ -352,84 +352,119 @@ if(desde=="solicitudes" || desde == "poliza"){
                         $("#asociadodetalle_persona").attr('disabled',false);
                         $('#suma_asegurada_persona').rules(
                             "add",{ required: false, 
-                        });
+                            });
                         $('#participacion_persona').rules(
                             "add",{ required: true, 
-                        });
+                            });
 
                         if(jQuery.isEmptyObject(response.Principal)){
                             $('#asociadodetalle_persona').rules(
                                 "add",{ required: true, 
-                            });
+                                });
                         }else{
                             $('#asociadodetalle_persona').rules(
                                 "add",{ required: false,
-                            }); 
+                                }); 
                         }
                         $('#primadetalle_persona').rules(
                             "add",{ required: false, 
-                        });
+                            });
                         $('#relaciondetalle_persona').rules(
                             "add",{ required: true, 
                             });
                         if(tablaTipo=="salud"){
                             $('#primadetalle_persona').rules(
                                 "add",{ required: false, 
-                            });
+                                });
                         }else{
                             $('#primadetalle_persona').rules(
                                 "add",{ required: false, 
-                            });
+                                });
                         }
 
                     }
 
-                     response.detalle_int_asociado!==0 ? $('#asociadodetalle_persona').val(response.Principal.interesestable_id).trigger("change"):$('#asociadodetalle_persona').val("").trigger("change");
-                     $("#certificadoPersona").val(response.detalle_certificado);
-                     $("#tipo_relacion_persona").val(response.tipo_relacion);
+                    response.detalle_int_asociado!==0 ? $('#asociadodetalle_persona').val(response.Principal.interesestable_id).trigger("change"):$('#asociadodetalle_persona').val("").trigger("change");
+                    $("#certificadoPersona").val(response.detalle_certificado);
+                    $("#tipo_relacion_persona").val(response.tipo_relacion);
 
-                     $("#beneficiodetalle_persona").val(response.detalle_beneficio).trigger("change");
-                     $('#suma_asegurada_persona').val(response.detalle_suma_asegurada);
-                     $('#participacion_persona').val(response.detalle_participacion);
-                     if(response.detalle_relacion == "Principal"){
+                    $("#beneficiodetalle_persona").val(response.detalle_beneficio).trigger("change");
+                    $('#suma_asegurada_persona').val(response.detalle_suma_asegurada);
+                    $('#participacion_persona').val(response.detalle_participacion);
+                    if(response.detalle_relacion == "Principal"){
                         $('#participacion_persona').attr('disabled',true);
-                     }
-                     $("#montodetalle_persona").val(response.detalle_monto);
-                     $("#primadetalle_persona").val(response.detalle_prima);
-                     $("#opcionesModalIntereses").modal("hide");
+                    }
+                    $("#montodetalle_persona").val(response.detalle_monto);
+                    $("#primadetalle_persona").val(response.detalle_prima);
+                    $("#opcionesModalIntereses").modal("hide");
                 });
-            }, 1000);
+}, 1000);
+}
+});
+$(opcionesModal).on("click", ".setIndividualCoveragePer", function (e) {
+
+    e.preventDefault();
+    e.returnValue=false;
+    e.stopPropagation();
+    var solicitud = vista==="crear"?vista:solicitud_id;
+    var planes = $("#planes");
+    if($(planes).val()!==""){
+        var id = $(this).attr("data-int-gr");
+        var idFromTable = $(this).attr("data-id");
+        var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
+        var options = rowINFO.link;
+        var numeroArticulo =$(rowINFO.numero).text();
+            //Init Modal data-int-gr 
+            $(opcionesModal).modal("hide");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  solicitud :solicitud,
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+              },
+              url: phost() + 'solicitudes/ajax_get_invidualCoverage',
+              success: function(data)
+              {    
+                if ($.isEmptyObject(data.session) == false) {
+                    window.location = phost() + "login?expired";
+                }else{  
+
+                  var temporalArrayArt = [];
+                  temporalArrayArt.coberturas=constructJSONArray("nombre","cobertura_monetario",getValuesFromArrayInput("coberturasNombre"),getValuesFromArrayInput("coberturasValor"));
+                  temporalArrayArt.deducion  =constructJSONArray("nombre","deducible_monetario",getValuesFromArrayInput("deduciblesNombre"),getValuesFromArrayInput("deduciblesValor"));    
+                  $(".coverage").remove();
+                  $(".deductible").remove();
+                  if(data.coberturas.length || data.deducion.length){
+                   temporalArrayArt.coberturas = data.coberturas;
+                   temporalArrayArt.deducion = data.deducion;
+               }
+               populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
+               populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
+
+               $(".moneda").inputmask('currency',{
+                  prefix: "",
+                  autoUnmask : true,
+                  removeMaskOnSubmit: true
+              });  
+
+           }
+       }
+   });  
+
+            $("#saveIndividualCoveragebtn").click(function(){
+
+              saveInvidualCoverage(id,numeroArticulo);  
+          });  
+        }else{
+            $(this).text("Seleccione un plan");
         }
     });
 
-    /*$("#"+gridId).on("click", ".linkCargaInfo", function(e){
-        e.preventDefault();
-        e.returnValue=false;
-        e.stopPropagation();
-        
-        var selInteres = $(this).attr("data-int-id");
-        $("#selInteres").val(selInteres);
-        $("#selInteres").trigger('change'); 
-        formularioCrear.getIntereses();
-
-        var intgr = $(this).attr("data-int-gr");
-        var unico = $("#detalleunico").val();
-        var datos = {campo: {id_intereses: intgr, detalle_unico: unico}};
-        var obtener = modIntereses.obtenerDetalleAsociado(datos);
-        obtener.done(function (response) {
-            console.log(response);
-            console.log(response.detalle_certificado);
-            $("#certificadodetalle_personas").val(response.detalle_certificado);
-            $("#sumaaseguradadetalle_personas").val(response.detalle_suma_asegurada);
-            $("#primadetalle_personas").val(response.detalle_prima);
-            $("#deducibledetalle_personas").val(response.detalle_deducible);
-        }); 
-
-    });*/
-
-
-
-    var recargar = function () {
+var recargar = function () {
 
         //Reload Grid
         gridObj.setGridParam({

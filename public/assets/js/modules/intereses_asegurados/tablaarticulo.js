@@ -1,13 +1,11 @@
 if(desde=="solicitudes" || desde == "poliza"){
-    var counterCoverageArt = 1,
-    counterDedutibleArt = 1;
     var tablaSolicitudesArticulo = (function () {
 
         var unico = $("#detalleunico").val();
 
         if(desde == "poliza"){
             var id_poliza = $("#idPoliza").val();
-            
+
             var tablaUrl = phost() + 'polizas/ajax_listar_articulo';
         }else{
             var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_articulo';
@@ -180,12 +178,12 @@ if(desde=="solicitudes" || desde == "poliza"){
         });
 
         gridObj.on("click", botones.quitar_interes, function (e) {
-         
+
             e.preventDefault();
             e.returnValue = false;
             e.stopPropagation();
             var intgr = $(this).attr("data-int-gr");
-            
+
         });
 
     };
@@ -227,7 +225,7 @@ if(desde=="solicitudes" || desde == "poliza"){
         if(desde == "poliza"){
 
             var selInteres = $(this).attr("data-int-id");
-            
+
             $("#selInteres").val(selInteres);
             $("#selInteres").trigger('change'); 
             formularioCrear.getInteres();       
@@ -250,7 +248,7 @@ if(desde=="solicitudes" || desde == "poliza"){
             setTimeout(function() {
                 var obtener = modIntereses.obtenerDetalleAsociado(datos);
                 obtener.done(function (response) {
-                    
+
                     $("#certificadodetalle_articulo").val(response.detalle_certificado);
                     $("#sumaaseguradadetalle_articulo").val(response.detalle_suma_asegurada);
                     $("#primadetalle_articulo").val(response.detalle_prima);
@@ -276,142 +274,55 @@ if(desde=="solicitudes" || desde == "poliza"){
             var options = rowINFO.link;
             var numeroArticulo =rowINFO.numero;
             //Init Modal data-int-gr 
-            var btnDismiss ='<button type="button" class="close" data-dismiss="modal">&times;</button>';      
-            var pantalla = $('.individual');
-            var modalContainer = $("#IndCoberturas");
-            var botones_coberturas = $('.btnIndidualCoverage');
             $(opcionesModal).modal("hide");
-            
-            pantalla.css('display', 'block');
-            botones_coberturas.css('display', 'block');
-            modalContainer.find('.modal-header').empty().append(btnDismiss+"<h4 style='text-align:center'>Coberturas Interés: "+numeroArticulo+"</h4>");
-            modalContainer.find('.modal-body').empty().append(pantalla);
-            modalContainer.find('.modal-footer').empty().append(botones_coberturas);
-            $(modalContainer).modal({
-                backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
-                show: false
-            });
-            modalContainer.modal("show");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  solicitud :solicitud,
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+              },
+              url: phost() + 'solicitudes/ajax_get_invidualCoverage',
+              success: function(data)
+              {    
+                if ($.isEmptyObject(data.session) == false) {
+                    window.location = phost() + "login?expired";
+                }else{	
 
-            var wrapper = $("#indCoveragefields");
-            var btnAdd  = $("#btnAddCoverage");
-            $(btnAdd).click(function(e){
-                e.preventDefault();
-                var text = '<div class="resetModal" id="cobertura_'+counterCoverageArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="coverageValue[]" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapper).append(text);
-                counterCoverageArt++;  
-            });
+                  var temporalArrayArt = [];
+                  temporalArrayArt.coberturas=constructJSONArray("nombre","cobertura_monetario",getValuesFromArrayInput("coberturasNombre"),getValuesFromArrayInput("coberturasValor"));
+                  temporalArrayArt.deducion  =constructJSONArray("nombre","deducible_monetario",getValuesFromArrayInput("deduciblesNombre"),getValuesFromArrayInput("deduciblesValor"));    
+                  $(".coverage").remove();
+                  $(".deductible").remove();
+                  if(data.coberturas.length || data.deducion.length){
+                   temporalArrayArt.coberturas = data.coberturas;
+                   temporalArrayArt.deducion = data.deducion;
+               }
+               populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
+               populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
+               
+               $(".moneda").inputmask('currency',{
+                  prefix: "",
+                  autoUnmask : true,
+                  removeMaskOnSubmit: true
+              });  
 
-    $(wrapper).on("click",".del_row", function(e){ //user click on remove text
-        e.preventDefault();  
-        counterCoverageArt--;      
-        $('#cobertura_'+counterCoverageArt).remove();
-    });
+           }
+       }
+   });  
 
-    var wrapperDeductibles = $("#indDeductiblefields");
-    var btnAddDeductibles  = $("#btnAddDeductible");
-    $(btnAddDeductibles).click(function(e){
-        e.preventDefault();
-        var text = '<div class="resetModal"  id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text" name="deductibleValue[]"  class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-        $(wrapperDeductibles).append(text);
-        counterDedutibleArt++;     
-    });
+            $("#saveIndividualCoveragebtn").click(function(){
 
-    $(wrapperDeductibles).on("click",".remove_deductible", function(e){ //user click on remove text
-        e.preventDefault();  
-        counterDedutibleArt--;      
-        $('#deductible_'+ counterDedutibleArt).remove();
-        
-    });
-    
-    $.ajax({
-        type: "POST",
-        data: {
-          detalle_unico: unico,
-          id_interes :id,
-          solicitud :solicitud,
-          planId : $(planes).val(), 
-          erptkn: tkn
-      },
-      url: phost() + 'solicitudes/ajax_get_invidualCoverage',
-      success: function(data)
-      {    
-        if ($.isEmptyObject(data.session) == false) {
-            window.location = phost() + "login?expired";
+              saveInvidualCoverage(id,numeroArticulo);  
+          });  
         }else{
-
-         var temporalArrayArt = [];
-         $(".resetModal").remove();
-         if(data.coberturas.length){
-            temporalArrayArt.coberturas = data.coberturas;
-            for (var j = temporalArrayArt.coberturas.length - 1; j >= 0; j--) {
-                var value =temporalArrayArt.coberturas[j];
-                var text = '<div class="resetModal"  id="cobertura_'+counterCoverageArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="coverageName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="coverageValue[]" value="'+value.cobertura_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 del_row"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapper).append(text);
-                counterCoverageArt++;
-            }
+            $(this).text("Seleccione un plan");
         }
-        if(data.deducion.length){
-            temporalArrayArt.deducion = data.deducion;
-            
-            for (var i = temporalArrayArt.deducion.length - 1; i >= 0; i--) {
-                var value =temporalArrayArt.deducion[i];
-                var text = '<div class="resetModal" id="deductible_'+ counterDedutibleArt+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" name="deductibleName[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input type="text"  class="form-control moneda" name="deductibleValue[]"  value="'+value.deducible_monetario+'"></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 remove_deductible"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
-                $(wrapperDeductibles).append(text);
-                counterDedutibleArt++;
-            } 
-        }
-        
-        
-        
-        
-        
-        
-        
-        $(".moneda").inputmask('currency',{
-          prefix: "",
-          autoUnmask : true,
-          removeMaskOnSubmit: true
-      });  
+    });
 
-    }
-}
-});  
-    
-    $("#saveIndividualCoveragebtn").click(function(){
-
-      saveInvidualCoverage(id,numeroArticulo);  
-  });  
-}else{
-    $(this).text("Seleccione un plan");
-}
-});
-	//Funciones para botones del grid de maritimo
-	
-	/*$("#"+gridId).on("click", ".linkCargaInfo", function(e){
-        e.preventDefault();
-        e.returnValue=false;
-        e.stopPropagation();
-        
-        var selInteres = $(this).attr("data-int-id");
-        $("#selInteres").val(selInteres);
-        $("#selInteres").trigger('change'); 
-        formularioCrear.getIntereses();
-
-        var intgr = $(this).attr("data-int-gr");
-        var unico = $("#detalleunico").val();
-        var datos = {campo: {id_intereses: intgr, detalle_unico: unico}};
-        var obtener = modIntereses.obtenerDetalleAsociado(datos);
-        obtener.done(function (response) {
-            console.log(response);
-            console.log(response.detalle_certificado);
-            $("#certificadodetalle_articulo").val(response.detalle_certificado);
-            $("#sumaaseguradadetalle_articulo").val(response.detalle_suma_asegurada);
-            $("#primadetalle_articulo").val(response.detalle_prima);
-            $("#deducibledetalle_articulo").val(response.detalle_deducible);
-        }); 
-
-    });*/
 	//Fin funciones para botones del grid de maritimo
 
 

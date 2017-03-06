@@ -3,8 +3,7 @@ $(function(){
          //Init Bootstrap Calendar Plugin
          //*********************************
          if(vigencia != '' && vigencia != 'undefined'  && prima != 'undefined' && prima != ''){
-            console.log('ingreso');
-            console.log(vigencia.vigencia_desde);
+            
             $('#vigencia_desde').daterangepicker({
                format: 'DD/MM/YYYY',
                showDropdowns: true,
@@ -27,7 +26,7 @@ $(function(){
             }).val(prima.fecha_primer_pago);
             $("#fecha_primerPago").val(prima.fecha_primer_pago);
          }else{
-          console.log('no ingreso');
+         
             $('#vigencia_desde,#vigencia_hasta,#fecha_primer_pago').daterangepicker({ //
                format: 'YYYY-MM-DD',
                showDropdowns: true,

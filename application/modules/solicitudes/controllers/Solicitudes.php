@@ -3089,11 +3089,11 @@ function ajax_get_invidualCoverage() {
     ->orderBy("created_at",'asc')
     ->get()
     ->toArray();
-    if(!count($coberturas) &&!count($deducion)){
+    /*if(!count($coberturas) &&!count($deducion)){
       $coberturas = $this->coberturaModel->where($clause2)->get()->toArray();
       $deducion = $this->deduciblesModel->where($clause2)->get()->toArray();  
   }
-
+*/
 
   $response = new stdClass();
   $response->coberturas = $coberturas;
