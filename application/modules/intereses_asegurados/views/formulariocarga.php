@@ -8,7 +8,7 @@ $formAttr = array(
 
 <div class="row" style="margin-right:0px!important;">
     <div class="ibox-title border-bottom">
-        <h5>Datos de la carga</h5>
+        <h5 class="col-xs-12 col-sm-12 col-md-12 col-lg-12">Datos de la carga</h5>
         <hr style="margin-top:30px!important;">
         <div id="vistaCarga">
             <div class="tab-content">

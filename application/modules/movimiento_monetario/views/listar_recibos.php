@@ -45,11 +45,11 @@ echo '<h2>Consultando Antes ROWS:</h2><pre>';
 							        	<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	<label for="Cliente">Cliente/Proveedor</label>
 							            	<select name="cliente" class="form-control chosen-select" id="cliente">
-                                                                        <option value="">Seleccione</option>
-                                                                        <?php foreach($cliente_proveedor as $row) {?>
-                                                                        <option value="<?php echo $row['id_cat']; ?>"><?php echo $row['etiqueta']; ?></option>
-                                                                        <?php }?>
-                                                                        </select>
+	                                            <option value="">Seleccione</option>
+	                                            <?php foreach($cliente_proveedor as $row) {?>
+	                                            <option value="<?php echo $row['id_cat']; ?>"><?php echo $row['etiqueta']; ?></option>
+	                                            <?php }?>
+	                                       	</select>
 								</div>
                                                                     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
 							            	<label for="Nombre">Nombre</label>

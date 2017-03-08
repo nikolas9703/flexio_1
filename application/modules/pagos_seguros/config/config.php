@@ -10,14 +10,14 @@ $config['modulo_config'] = array(
     'grupo'         => 'Pagos',
     'agrupador'     => array(
         'Seguros' => array(
-            "grupo_orden" => 4
+            "grupo_orden" => 6
         ),
     ),
     'prefijo'       => 'pag',
     'menu' => array(
         'nombre' =>'Pagos' ,
         'url' => 'pagos/listar/',
-        'orden'=> 7
+        'orden'=> 1
     ),
         'permisos'      => array(
         'acceso' => 'Acceso'

@@ -35,7 +35,7 @@ class OrdenCompraPresenter extends Presenter{
         return '';
     }
     $color = $this->labelEstado[$this->ordenCompra->id_estado];
-    return '<label class="label '.$color.'">'.$this->ordenCompra->estado->etiqueta.'</label>';
+    return '<label data-id="'.$this->ordenCompra->id.'" data-uuid="'.$this->ordenCompra->uuid_orden.'" class="label change-state-btn '.$color.'">'.$this->ordenCompra->estado->etiqueta.'</label>';
   }
 
   function monto() {

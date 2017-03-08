@@ -236,10 +236,8 @@ class Conciliaciones extends CRM_Controller
             'public/assets/js/default/vue/filters/numeros.js',
             'public/assets/js/default/vue/directives/inputs.js',
             'public/assets/js/default/vue/directives/icheck.js',
-            'public/assets/js/modules/conciliaciones/formulario_crear.js',
-            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
-            'public/assets/js/plugins/bootstrap/select2/es.js',
             'public/assets/js/default/vue/directives/select2.js',
+            'public/assets/js/modules/conciliaciones/formulario_crear.js',
         ));
         $this->assets->agregar_var_js(array(
             "vista"     => 'crear',
@@ -361,6 +359,7 @@ class Conciliaciones extends CRM_Controller
             'public/assets/js/default/vue/filters/numeros.js',
             'public/assets/js/default/vue/directives/inputs.js',
             //'public/assets/js/default/vue/directives/icheck.js',
+            'public/assets/js/default/vue/directives/select2.js',
             'public/assets/js/modules/conciliaciones/formulario_crear.js',
         ));
 

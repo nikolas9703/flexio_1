@@ -19,8 +19,8 @@ class FacturaComprasObserver
     public function created($facturaCompra = null)
     {
 
-        $cambio = $facturaCompra->getDirty(); 
-            /*if(isset($cambio['estado_id'])){               
+        $cambio = $facturaCompra->getDirty();
+            /*if(isset($cambio['estado_id'])){
                 $facturaCompra->sendNotify($cambio['estado_id']);
             }*/
 
@@ -37,9 +37,9 @@ class FacturaComprasObserver
 
     public function updating($facturaCompra = null){
 
-        $creado_por = FlexioSession::now();        
-        $cambio = $facturaCompra->getDirty();       
-            /*if(isset($cambio['estado_id'])){                              
+        $creado_por = FlexioSession::now();
+        $cambio = $facturaCompra->getDirty();
+            /*if(isset($cambio['estado_id'])){
                 $facturaCompra->sendNotify($cambio['estado_id']);
             }*/
 
@@ -69,7 +69,7 @@ class FacturaComprasObserver
         $original = $facturaCompra->getOriginal();
         $facturaCompraCatalogo = new FacturaCompraCatalogo();
         $estado_1 = $facturaCompraCatalogo->estado($original['estado_id']);
-        $estado_2 = $facturaCompraCatalogo->estado($cambio['estado_id']);
+        $estado_2 = $facturaCompraCatalogo->estado((!empty($cambio['estado_id']) ? $cambio['estado_id'] : ""));
         $descripcion = "<b style='color:#0080FF; font-size:15px;'>Cambio de estado</b></br></br>";
         $descripcion .= "Estado actual: ".$estado_2[0]->valor.'</br></br>';
         $descripcion .= "Estado anterior: ".$estado_1[0]->valor;

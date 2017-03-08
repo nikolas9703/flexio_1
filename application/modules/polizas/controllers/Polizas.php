@@ -167,6 +167,7 @@ class Polizas extends CRM_Controller {
             "flexio_mensaje" => collect($mensaje),
             "estado_solicitud" => 0,
             "estado_pol" => 0,
+            "validavida" => 0
             ));
 
 
@@ -888,7 +889,7 @@ function guardar() {
 if ($response) {
    $campo = $this->input->post("campo");
    $this->session->set_userdata('updatedPoliza', $poliza->id);
-                        //var_dump($campo["regreso_valor"]);exit();
+						//var_dump($campo["regreso_valor"]);exit();
    if ($campo["regreso"] == 'ase')
     redirect(base_url('aseguradoras/editar/' . $campo["regreso_valor"]));
 else if ($campo["regreso"] == 'age')
@@ -896,15 +897,15 @@ else if ($campo["regreso"] == 'age')
 else
     redirect(base_url('polizas/listar'));
 }else {
-                        //Establecer el mensaje a mostrar
+						//Establecer el mensaje a mostrar
    $data["mensaje"]["clase"] = "alert-danger";
    $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
-                        //$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
+						//$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
 }
 }
 
-                //Introducir mensaje de error al arreglo
-                //para mostrarlo en caso de haber error
+				//Introducir mensaje de error al arreglo
+				//para mostrarlo en caso de haber error
 $data["message"] = $mensaje;
 
 $this->_css();
@@ -1132,13 +1133,13 @@ $breadcrumb = array(
     1 => array("nombre" => '<a href="' . base_url() . 'polizas/listar">Pólizas</a>', "activo" => false),
     2 => array("nombre" => '<b>P&oacute;liza N° ' . $poliza->numero . '</b>', "activo" => true),
     ),
-            "filtro" => false, //sin vista grid
-            "menu" => array(
-                'url' => 'javascipt:',
-                'nombre' => "Acción",
-                "opciones" => $opciones,
+			"filtro" => false, //sin vista grid
+			"menu" => array(
+				'url' => 'javascipt:',
+				'nombre' => "Acción",
+				"opciones" => $opciones,
                ),
-            "historial" => true,
+			"historial" => true,
           );
 
 
@@ -2997,7 +2998,7 @@ public function ajax_listar_personas($grid = NULL) {
             else
                 $spanStyle = 'label label-warning';
 
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "' data-idint-det='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
 
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id_interes'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
             $age = $row['fecha_nacimiento'];
@@ -3248,7 +3249,9 @@ if (!$exist) {
                 $fieldsetacre["id_poliza"] = $p->id;
                 $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
                 $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
-                $acre = PolizasAcreedores::create($fieldsetacre);                          
+                if ($value != "") {
+                    $acre = PolizasAcreedores::create($fieldsetacre); 
+                }                                         
             }
         }
 
@@ -3870,6 +3873,23 @@ function ajax_get_cobro_agendado(){
     exit;
 
 }
+
+
+    function ajax_carga_acreedores_vida_colectivo(){
+        $acreedores = $this->PolizasRepository->verAcreedoresDetalle($_POST['idinteres_detalle']);
+        if (count($acreedores) == 0) {
+            $acreedores = [];
+        } 
+
+        //$acreedores = $acreedores->toArray();    
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($acreedores))->_display();
+
+        exit;
+
+
+    }
 
 }
 //*************************************************************************************************

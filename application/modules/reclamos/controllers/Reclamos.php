@@ -75,6 +75,7 @@ use Flexio\Modulo\Polizas\Models\PolizasPersonas;
 use Flexio\Modulo\Polizas\Models\PolizasProyecto;
 use Flexio\Modulo\Polizas\Models\PolizasUbicacion;
 use Flexio\Modulo\Polizas\Models\PolizasVehiculo;
+use Flexio\Modulo\Polizas\Models\PolizasSalud;
 use Flexio\Modulo\Reclamos\Models\ReclamosArticulo;
 use Flexio\Modulo\Reclamos\Models\ReclamosCarga;
 use Flexio\Modulo\Reclamos\Models\ReclamosAereo;
@@ -83,6 +84,7 @@ use Flexio\Modulo\Reclamos\Models\ReclamosPersonas;
 use Flexio\Modulo\Reclamos\Models\ReclamosProyecto;
 use Flexio\Modulo\Reclamos\Models\ReclamosUbicacion;
 use Flexio\Modulo\Reclamos\Models\ReclamosVehiculo;
+use Flexio\Modulo\Reclamos\Models\ReclamosDetalleSalud;
 use Flexio\Modulo\Catalogos\Models\RamosDocumentos as RamosDocumentos;
 use Flexio\Modulo\Proveedores\Models\Proveedores;
 use Flexio\Modulo\Acreedores\Repository\AcreedoresRepository as AcreedoresRep;
@@ -394,6 +396,12 @@ class Reclamos extends CRM_Controller {
         $ram1 = Ramos::where('id', $id_ramo)->first();
         $nombrepadre = $ram1->nombre;
 
+        if (strpos($ramocadena, "Salud")) {
+            $salud = 1;
+        }else{
+            $salud = 0;
+        }
+
         if (!$this->auth->has_permission('acceso')) {
             // No, tiene permiso, redireccionarlo.
             $acceso = 0;
@@ -412,6 +420,8 @@ class Reclamos extends CRM_Controller {
         $causa = $this->SegCatalogoRepository->listar_catalogo('causa_reclamo', 'orden');
         //Accidente Opciones
         $accidente = $this->SegCatalogoRepository->listar_catalogo('accidente_reclamo', 'orden');
+        //Tipo Salud Opciones
+        $tiposalud = $this->SegCatalogoRepository->listar_catalogo('tipo_salud_reclamo', 'orden');
         //Ajustadores
         $ajustadoreslista = AjustadoresModel::where("empresa_id", $this->empresa_id)->where("estado", "Activo")->select("id", "nombre", "ruc", "identificacion")->get();
 
@@ -459,6 +469,7 @@ class Reclamos extends CRM_Controller {
             "id_tipo_poliza" => $tipo_poliza,
             "causa" => $causa,
             "accidente" => $accidente,
+            "tiposalud" => $tiposalud,
             "codigo_ramo" => $codigo_ramo,
             "nombre_padre" => $nombrepadre,
             "estado_reclamos" => $estado,
@@ -494,6 +505,7 @@ class Reclamos extends CRM_Controller {
             "permiso_asignar" => 1,
             "permiso_editar" => 1,
             "documentacionesgbd" => "",
+            "validasalud" => $salud
         ));
 
 
@@ -601,6 +613,29 @@ class Reclamos extends CRM_Controller {
         $tipo_poliza = $reclamos_titulo->id_tipo_poliza;
         $tipo_interes_asegurado = $reclamos->tipo_interes;
 
+        $id_ramo = $reclamos_titulo->id;
+        $idpadre = $reclamos_titulo->padre_id;
+
+        //-----------------------------------------
+        //Ramo
+        $ramocadena = $ramo;
+        while ($idpadre != 0) {
+            $ram = Ramos::where('id', $idpadre)->first();
+            $id_ramo = $ram->id;
+            $idpadre = $ram->padre_id;
+            $ramocadena = $ram->nombre . "/" . $ramocadena;
+        }
+        $ram1 = Ramos::where('id', $id_ramo)->first();
+        $nombrepadre = $ram1->nombre;
+
+        if (strpos($ramocadena, "Salud")) {
+            $salud = 1;
+        }else{
+            $salud = 0;
+        }
+        //-------------------------------------------
+
+
         
         //Catalogos
         $catalogo_clientes = $this->SegInteresesAseguradosRepository->listar_catalogo('Identificacion', 'orden');
@@ -613,6 +648,8 @@ class Reclamos extends CRM_Controller {
         $causa = $this->SegCatalogoRepository->listar_catalogo('causa_reclamo', 'orden');
         //Accidente Opciones
         $accidente = $this->SegCatalogoRepository->listar_catalogo('accidente_reclamo', 'orden');
+        //Tipo Salud Opciones
+        $tiposalud = $this->SegCatalogoRepository->listar_catalogo('tipo_salud_reclamo', 'orden');
         //Ajustadores
         $ajustadoreslista = AjustadoresModel::where("empresa_id", $this->empresa_id)->where("estado", "Activo")->select("id", "nombre", "ruc", "identificacion")->get();
 
@@ -749,6 +786,7 @@ class Reclamos extends CRM_Controller {
             "id_tipo_poliza" => $tipo_poliza,
             "causa" => $causa,
             "accidente" => $accidente,
+            "tiposalud" => $tiposalud,
             "estado_reclamos" => $estado,
             "id_tipo_int_asegurado" => $tipo_interes_asegurado,
             "uuid_reclamos" => $reclamoInfo->uuid_reclamos,
@@ -776,7 +814,8 @@ class Reclamos extends CRM_Controller {
             "permiso_editar" => $permiso_editar,
             "permiso_asignar" => $permiso_asignar,
             "documentaciones" => $documentaciones,
-            "documentacionesgbd" => $documentacionesgbd != "" ? $documentacionesgbd : ""      
+            "documentacionesgbd" => $documentacionesgbd != "" ? $documentacionesgbd : "",
+            "validasalud" => $salud
         ));
 
         $titulo = $reclamos->numero;
@@ -790,7 +829,7 @@ class Reclamos extends CRM_Controller {
             ),
             "filtro" => false,
             "menu" => array(
-                'url' => 'javascipt:',
+                'url' => 'javascript:',
                 'nombre' => "Acción",
                 "opciones" => array(
                     //"reclamos/bitacora/" . strtoupper(bin2hex($uuid_reclamos)) => "Bitacora",
@@ -902,6 +941,9 @@ class Reclamos extends CRM_Controller {
                             $accidente = ReclamosAccidentes::create($acc);
                         }
                     } 
+
+                    $camposalud = array("id_reclamo" => $reclamos->id);
+                    ReclamosDetalleSalud::where("detalle_unico",$_POST['camporeclamo_salud']['detalle_unico'])->update($camposalud);
 
                     //guardar tabla documentacion
                     if (isset($campodocumentacion['opcion']) && $campodocumentacion['opcion'] != "") {
@@ -2482,17 +2524,14 @@ public function ajax_listar_personas($grid = NULL) {
         foreach ($rows->toArray() AS $i => $row) {
             array_push($parents, $row);
             $clause = array('id_interes' => $row['id_interes']);
-
             $child = PolizasPersonas::listar_personas_provicional($clause, NULL, NULL, NULL, NULL, $id_poliza);
 
             if (count($child)) {
                 foreach ($child->toArray() as $key => $value) {
-                        # code...
                     array_push($parents, $value);
                 }
             }
         }
-
 
 
         foreach ($parents as $key => $row) {
@@ -3118,6 +3157,100 @@ public function ajax_listar_personas($grid = NULL) {
                 "class" => "form-control",
                 "readonly" => "readonly",
         ));
+    }
+
+    public function agregar_detalle_salud() {
+
+        $campos = $_POST['campos'];
+
+        try {
+            $unico = array();
+            $unico['detalle_unico'] = $campos['detalle_unico'];
+            $unico['tipo_salud'] = $campos['tipo_salud'];
+            $unico['hospital'] = $campos['hospital'];
+            $unico['especialidad_salud'] = $campos['especialidad_salud'];
+            $unico['doctor'] = $campos['doctor'];
+            $unico['detalle_salud'] = $campos['detalle_salud'];
+            $unico['fecha_salud'] = $campos['fecha_salud'];
+            $unico['monto_salud'] = $campos['monto_salud'];            
+
+            $detalle = ReclamosDetalleSalud::create($unico);
+        } catch (\Exception $e) {
+            $detalle = log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode($detalle))->_display();
+        exit;
+    }
+
+    public function ocultotablasalud($data = array()) {
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/reclamos/tablasalud.js'
+        ));
+
+        $this->load->view('tablasalud');
+    }
+
+    public function ajax_listar_salud($grid = NULL) {
+
+
+        $id_interes = $this->input->post('id_interes', true);
+
+        $clause = array(
+            "detalle_unico" => $this->input->post('detalle_unico', true),
+            "id_interes" => $this->input->post('id_interes', true),
+            "numero" => $this->input->post('numero', true),
+            "no_liquidacion" => $this->input->post('no_liquidacion', true),
+            "fecha_despacho" => $this->input->post('fecha_despacho', true),
+            "fecha_arribo" => $this->input->post('fecha_arribo', true),
+            "medio_transporte" => $this->input->post('medio_transporte', true),
+            "valor" => $this->input->post('valor', true),
+            "origen" => $this->input->post('origen', true),
+            "destino" => $this->input->post('destino', true),
+            "fecha_inclusion" => $this->input->post('fecha_inclusion', true),
+            );
+
+
+        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+        $count = ReclamosDetalleSalud::listar_salud_provicional($clause, NULL, NULL, NULL, NULL, $id_interes)->count();
+        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+        $rows = ReclamosDetalleSalud::listar_salud_provicional($clause, $sidx, $sord, $limit, $start, $id_interes);
+
+            //Constructing a JSON
+        $response = new stdClass();
+        $response->page = $page;
+        $response->total = $total_pages;
+        $response->records = $count;
+        $i = 0;
+
+        if (!empty($rows->toArray())) {
+            foreach ($rows->toArray() AS $i => $row) {
+
+                $link_option = '<button class="vermodalSalud btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+
+                $response->rows[$i]["id"] = $row['id'];
+                $response->rows[$i]["cell"] = array(
+                    '',
+                    '',
+                    '',
+                    $row["tipo_salud"],
+                    $row['hospital'],
+                    $row['especialidad_salud'],
+                    $row['doctor'],
+                    $row['detalle_salud'],
+                    $row['fecha_salud'],
+                    $row['monto_salud'],
+                    '',
+                    $link_option,
+                    ''
+                    
+                );
+                $i++;
+            }
+        }
+        print_r(json_encode($response));
+        exit;
     }
 
 }

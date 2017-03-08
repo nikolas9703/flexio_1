@@ -62,7 +62,9 @@ class CentrosContables extends Model
         $queryFilter = new \Flexio\Modulo\CentrosContables\Service\CentroContableFilters;
         return $queryFilter->apply($query, $campo);
     }
-
+     public function cuentas(){
+         return $this->belongsToMany('Flexio\Modulo\Contabilidad\Models\Cuentas', 'contab_cuentas_centros', 'centro_id', 'cuenta_id');
+     }
 
 
 

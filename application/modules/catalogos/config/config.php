@@ -11,7 +11,7 @@ $config['modulo_config'] = array(
     'grupo'         => 'Configuración',
     'agrupador'     => array(
         'Seguros' => array(
-            "grupo_orden" => 9
+            "grupo_orden" => 10
         ),
     ),
     'prefijo'       => 'pla',

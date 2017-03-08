@@ -51,7 +51,14 @@ class FormGuardar{
 		//$year = Carbon::now()->format('y');
 		//$cobro['codigo'] = 'PAY'.$year.str_pad($this->getLastCodigo(),6,"0",STR_PAD_LEFT);
 		$cobro['codigo'] = $this->getLastCodigo();
-		$cobro['estado'] = 'aplicado';
+		if(isset($cobro['validacion_estado'])){
+			if($cobro['validacion_estado'] == "individual" || $cobro['validacion_estado'] == "masivio"){
+				$cobro['estado'] = 'agendado';
+			}
+		}else{
+			$cobro['estado'] = 'aplicado';	
+		}
+		
 		$cobro['formulario'] = 'seguros';
 		//estado
 	
@@ -59,7 +66,6 @@ class FormGuardar{
 		
 		//print_r('convertir a ids');
 		//print_r($facturas);
-
 		return $this->crear($cobro, $facturas, $metodo_cobros);
     }
 
@@ -70,6 +76,7 @@ class FormGuardar{
 			//1. se crea el cobros
 			$cobro->save();
 			//se obtiene los ids de las facturas para cambiarle el estado
+
 			$factura_ids = $facturas->map(function($item){
 				return $item['cobrable_id'];
 			});
@@ -93,6 +100,7 @@ class FormGuardar{
 			$transaccion->hacerTransaccion($cobro, new TransaccionCobro);
 			
 			if($cobro->cliente_id > 0){
+
 				$datFac = (array)$facturas;
 				
 				$clauseR = ['empresa_id' => $this->session->empresaId()];
@@ -100,42 +108,48 @@ class FormGuardar{
 				$cobroRes = Cobro::where($clauseR)->get()->last();
 				$cobro->codigo = $cobroRes->codigo;
 				
+
 				$arrFacs = array();
 				foreach($datFac as $dFac){
 					for($i=0;$i<count($dFac);$i++){
 						$idFac = $dFac[$i]["cobrable_id"];
 						
-						$facturasObj = facturaSeg::where(["id"=>$idFac]);
-						if($facturasObj->count()==0){
-							$facturasObj = facturaSeg::where(["id_poliza"=>$idFac]);
+						$facturasObj = facturaSeg::where(["id"=>$idFac])->get();
+						if(count($facturasObj) == 0){
+							$facturasObj = facturaSeg::where(["id_poliza"=>$idFac])->get();
 						}
-						$facturasObj->get()->toArray();
-						
-						
-						
-						foreach($facturasObj as $facInfo){
+						$facturasObj->toArray();
+
+						foreach($facturasObj as $facInfo){ // este no tiene datos
 							
 							$id_fac_final = $facInfo["id"];
 							$id_poliza = $facInfo["id_poliza"];
-							
+
 							$factUpdate = CobroFactura::where(array("cobrable_id" => $id_poliza, "cobro_id" => $cobro->id));
 							$factUpdate->update(array("cobrable_id" => $id_fac_final));
-							
-							
-							$bus = Polizas::find($id_poliza);
-							if($bus->count()!=0){
-								$tipo = "Cobro_seguros";
-								$fecha_creado = date('Y-m-d H:i:s');
-								$Bitacora = new PolizasBitacora;
-								$comentario = "Cobro realizado: ".$cobro->codigo."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".$facInfo["total"]."<br>";
-								$comment = ['comentario'=>$comentario,'usuario_id'=>$this->session->usuarioId(), 'comentable_id' =>$id_poliza, 'comentable_type'=>$tipo, 'created_at'=>$fecha_creado, 'empresa_id'=>$this->session->empresaId() ];
-								$msg = $Bitacora->create($comment);
-								
-								$cobFacs = CobroFactura::where(array("cobrable_id" => $id_fac_final, "cobro_id" => $cobro->id));
-								
-								$cobFacs->update(array("id_ramo" => $bus->ramo_id));
+
+							$datosCobros = Cobro::where(['id' => $cobro->id])->first();
+							foreach ($datosCobros->cobros_facturas as $key => $cobFact) {
+								if($cobFact['cobrable_id'] == $facInfo["id"]){
+									$bus = Polizas::find($id_poliza);
+									if($bus->count()!=0){
+										$tipo = "Cobro_seguros";
+										if($cobro->estado == "agendado" || $cobro->estado == "por_aplicar" ){
+
+											$comentario = "Cobro agendado: ".$datosCobros->codigo."<br>Fecha de cobro: ".date('d/m/Y', strtotime($datosCobros->fecha_pago))."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".$facInfo["total"]."<br>";
+										}else{
+											$comentario = "Cobro realizado: ".$cobro->codigo."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".$facInfo["total"]."<br>";	
+										}
+										$fecha_creado = date('Y-m-d H:i:s');
+										$Bitacora = new PolizasBitacora;
+										$comment = ['comentario'=>$comentario,'usuario_id'=>$this->session->usuarioId(), 'comentable_id' =>$id_poliza, 'comentable_type'=>$tipo, 'created_at'=>$fecha_creado, 'empresa_id'=>$this->session->empresaId() ];
+										$msg = $Bitacora->create($comment);
+										$cobFacs = CobroFactura::where(array("cobrable_id" => $id_fac_final, "cobro_id" => $cobro->id));
+										$cobFacs->update(array("id_ramo" => $bus->ramo_id));
+									}
+								}
 							}
-							
+
 						}
 					}
 				}

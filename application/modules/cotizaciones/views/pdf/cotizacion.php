@@ -261,3 +261,10 @@ $table[$i] .= $tableitems."</table>"
 
     ?>
 </div>
+
+<?php
+
+    $terminos_condiciones = new Flexio\Modulo\ConfiguracionCompras\Library\PDFPrint;
+    echo $terminos_condiciones->setModule('cotizaciones')->html();
+
+?>

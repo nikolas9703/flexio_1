@@ -115,6 +115,13 @@ class Proveedores extends Model
                 });
     }
 
+    public function facturasContable(){
+        return $this->hasMany('Flexio\Modulo\FacturasCompras\Models\FacturaCompra', 'proveedor_id')
+                ->where(function($q){
+                    $q->whereIn('estado_id',[14, 15, 16]);
+                });
+    }
+
     public function categorias()
     {
         return $this->belongsToMany('Flexio\Modulo\Proveedores\Models\ProveedoresCategorias', 'pro_proveedor_categoria', 'id_proveedor', 'id_categoria');

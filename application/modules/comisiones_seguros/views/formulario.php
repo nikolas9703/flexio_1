@@ -32,7 +32,7 @@
 					<div class="row">
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2  ">
 							<label>N. Recibo</label>
-							<input type="text" name="campo[no_comision]" class="form-control nombre" id="campo[no_comision]" data-rule-required="true" value="<?php echo $campos['no_comision']?>" disabled />
+							<input type="text" name="campo[no_recibo]" class="form-control nombre" id="campo[no_recibo]" data-rule-required="true" value="<?php echo $campos['no_recibo']?>" disabled />
 						</div>
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
 							<label>Fecha </label>
@@ -90,6 +90,37 @@
 							</div>
 						</div>
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
+							<label>Comisión a recibir</label>
+							<div class="input-group">
+								<span class="input-group-addon" style='background-color: #eeeeee;'>$</span>
+								<input type="input-left-addon" name="campo[comision_recibir]" class="form-control" id="campo[comision_recibir]" value="<?php echo $campos['comision_recibir']?>" disabled />
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
+							<label>Comisión descontada</label>
+							<div class="input-group">
+								<span class="input-group-addon" style='background-color: #eeeeee;'>$</span>
+								<input type="input-left-addon" name="campo[comision_descontada]" class="form-control" id="campo[comision_descontada]" value="<?php echo $campos['comision_descontada']?>" disabled />
+							</div>
+						</div>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" >
+							<label>N. Remesa entrante</label>
+							<input type="text" name="campo[no_remesa]" class="form-control" id="campo[no_remesa]" value="<?php echo $campos['no_remesa']?>" disabled />
+						</div>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
+							<label>Fecha liquidación remesa</label>
+							<input type="text" name="campo[fecha_liquidacion]" class="form-control" id="campo[fecha_liquidacion]" value="<?php if($campos['fecha_liquidacion']!="") echo date_format(date_create($campos['fecha_liquidacion']),'Y-m-d') ?> " disabled />
+						</div>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" >
+							<label>Comisión pagada</label>
+							<div class="input-group">
+								<span class="input-group-addon" style='background-color: #eeeeee;'>$</span>
+								<input type="input-left-addon" name="campo[comision_pagada]" class="form-control" id="campo[comision_pagada]" value="<?php echo $campos['comision_pagada']?>" disabled />
+							</div>
+						</div>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
 							<label>Comisión pendiente</label>
 							<div class="input-group">
 								<span class="input-group-addon" style='background-color: #eeeeee;'>$</span>
@@ -97,15 +128,60 @@
 							</div>
 						</div>
 					</div>
+					
+				</div>
+				<?php
+				if(count($campos['participacioncomision']) >0)
+				{
+				?>
+				
+				<?php
+				}
+				?>
+				
+				<div class="ibox-title">
+                        <h5>Detalle de la participación</h5>
+                </div>
+				
+				<div class="ibox-content " style="display: block;" id="datosGenerales2" >
 					<div class="row">
+					<?php
+					foreach($campos['participacioncomision'] as $participacion)
+					{
+					?>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-4" >
+							<label>Agente</label>
+							<input type="text" name="campo[agente]" class="form-control" id="campo[agente]" value="<?php echo $participacion->datosAgente->nombre?>" disabled />
+						</div>
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
-							<label>N. Remesa entrante</label>
-							<input type="text" name="campo[no_remesa]" class="form-control" id="campo[no_remesa]" value="<?php echo $campos['no_remesa']?>" disabled />
+							<label>% Participación</label>
+							<div class="input-group">
+								<input type="input-left-addon" name="campo[porcentaje]" class="form-control" id="campo[porcentaje]" value="<?php echo $participacion->porcentaje?>" disabled />
+								<span class="input-group-addon" style='background-color: #eeeeee;'>%</span>
+							</div>
 						</div>
-						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3" >
-							<label>Lugar de pago</label>
-							<input type="text" name="campo[lugar_pago]" class="form-control" id="campo[lugar_pago]" value="<?php echo $campos['lugar_pago']?>" disabled />
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
+							<label>Monto</label>
+							<div class="input-group">
+								<span class="input-group-addon" style='background-color: #eeeeee;'>$</span>
+								<input type="input-left-addon" name="campo[monto]" class="form-control" id="campo[monto]" value="<?php echo number_format($participacion->monto,2)?>" disabled />
+							</div>
 						</div>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
+							<label>N. Recibo de pago</label>
+							<input type="text" name="campo[recibo]" class="form-control" id="campo[recibo]" value="<?php echo $participacion->no_recibo?>" disabled />
+						</div>
+						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
+							<label>Fecha de pago</label>
+							<input type="text" name="campo[created_at]" class="form-control" id="campo[created_at]" value="<?php if($participacion->fecha_pago!="") echo date_format(date_create($participacion->fecha_pago),'Y-m-d') ?>" disabled />
+						</div>
+					<?php
+					}
+					?>
+					</div>
+				</div>
+				<div class="ibox-content " style="display: block; border-style: none none none !important;" id="datosGenerales3" >
+					<div class="row">
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
 							<label>Estado</label>
 							<input type="input-left-addon" name="campo[estado]" class="form-control" id="campo[estado]" value="<?php echo $campos['estado']?>" disabled />

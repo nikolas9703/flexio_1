@@ -122,7 +122,7 @@ class OrdenesCompra extends Model
 
     public function getUuidPedidoAttribute($value)
     {
-        return strtoupper(bin2hex($value));
+        return !empty($value) && (int)bin2hex($value) != 0 ? strtoupper(bin2hex($value)) : "";
     }
 
     public function getUuidLugarAttribute($value)
@@ -303,6 +303,13 @@ class OrdenesCompra extends Model
         //return $this->morphMany("Facturas_compras_orm", "operacion");
     }
 
+    /**
+    * Varias ordenes relacionadas a la factura
+    */
+    public function facturas_compras() {
+        return $this->morphedByMany('Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra', 'facturable', 'faccom_facturables', 'facturable_id');
+    }
+
     public function proveedor() {
 
         return $this->belongsTo('Flexio\Modulo\Proveedores\Models\Proveedores', "uuid_proveedor_bin", "uuid_proveedor");
@@ -373,6 +380,13 @@ class OrdenesCompra extends Model
     public function lines_items()
     {
         return $this->morphMany('Flexio\Modulo\Inventarios\Models\LinesItems', 'tipoable');
+    }
+
+    /**
+    * Varios pedidos relacionado a la orden
+    */
+    public function pedidos() {
+        return $this->morphedByMany('Flexio\Modulo\Pedidos\Models\Pedidos', 'ordenable', 'ordenables', 'orden_id', 'ordenable_id');
     }
 
     public function pedido(){

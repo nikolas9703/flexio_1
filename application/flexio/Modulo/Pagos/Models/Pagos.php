@@ -92,6 +92,11 @@ class Pagos extends Model
         return Carbon::createFromFormat('Y-m-d H:i:s', $value)->format('d/m/Y');
     }
 
+    public function getFechaPagoDataBaseAttribute(){
+
+        return Carbon::createFromFormat('d/m/Y', $this->fecha_pago);
+    } 
+
     public function getDepositableTypeAttribute($value)
     {
         return array_search($value, $this->depositables);
@@ -277,6 +282,13 @@ class Pagos extends Model
     public function historial(){
         return $this->morphMany(Historial::class,'historiable');
     }
+
+    public function getNombreProveedorAttribute(){
+        if(is_null($this->proveedor)){
+            return "";
+        }
+    return $this->proveedor->nombre;
+  }
    /* public function getCodigoAttribute(){
         return $this->codigo;
     }*/

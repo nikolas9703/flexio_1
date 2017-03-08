@@ -17,7 +17,7 @@ $config['modulo_config'] = array(
 	'menu' => array(
 		'nombre' =>'Comisiones' ,
 		'url' => 'comisiones_seguros/listar',
-		'orden'=> 7
+		'orden'=> 1
 	),
     'permisos'		=> array(
 		'acceso' => 'Acceso',

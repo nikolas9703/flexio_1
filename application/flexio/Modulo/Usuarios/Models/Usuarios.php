@@ -70,7 +70,14 @@ class Usuarios extends Model {
         ->whereNotIn('role_id',[2,3])->withPivot('empresa_id');
     }
 
-    public function getNombreCompletoAttribute() {
+    public function roles_admin(){
+        return $this->belongsToMany('Flexio\Modulo\Roles\Models\Roles','usuarios_has_roles','usuario_id','role_id')
+        ->whereIn('role_id',[1,2])->withPivot('empresa_id');
+    }
+
+    public function getNombreCompletoAttribute(){
+
+        return $this->nombre.' '.$this->apellido;
 
         return $this->nombre . ' ' . $this->apellido;
     }

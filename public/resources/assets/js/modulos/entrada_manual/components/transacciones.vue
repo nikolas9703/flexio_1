@@ -8,8 +8,8 @@
                     <th>Descripci&oacute;n</th>
                     <th>Cuenta</th>
                     <th>Centro contable</th>
-                    <th>D&eacute;bito</th>
-                    <th>Cr&eacute;dito</th>
+                    <th v-show="!isMovimientoMonetario() || config.modulo == 'retiro_dinero'">D&eacute;bito</th>
+                    <th v-show="!isMovimientoMonetario() || config.modulo == 'recibo_dinero'">Cr&eacute;dito</th>
                     <th width="1%">
                         <button type="button" class="btn btn-default btn-block-sm" @click="addRow()" :disabled="config.disableDetalle"><i class="fa fa-plus"></i></button>
                     </th>
@@ -22,13 +22,13 @@
 
                 <tr>
                     <td colspan="3"></td>
-                    <td>
+                    <td v-show="!isMovimientoMonetario() || config.modulo == 'retiro_dinero'">
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-dollar"></i></span>
                             <input type="input-left-addon" class="form-control" disabled="" :value="getTotalDebito | currency ''">
                         </div>
                     </td>
-                    <td>
+                    <td v-show="!isMovimientoMonetario() || config.modulo == 'recibo_dinero'">
                         <div class="input-group">
                             <span class="input-group-addon"><i class="fa fa-dollar"></i></span>
                             <input type="input-left-addon" class="form-control" disabled="" :value="getTotalCredito | currency ''">
@@ -67,6 +67,11 @@ export default {
     },
 
     methods:{
+        isMovimientoMonetario: function(){
+            var context = this;
+            var movimientos_monetarios = ['recibo_dinero', 'retiro_dinero'];
+            return movimientos_monetarios.indexOf(context.config.modulo) != -1;
+        },
         addRow: function(){
             this.detalle.transacciones.push({
                 id: '',

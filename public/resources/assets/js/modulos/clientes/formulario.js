@@ -54,7 +54,7 @@ var form_crear_cliente = new Vue({
             lista_precio_venta_id:'',
             lista_precio_alquiler_id:'',
             termino_pago:'',
-            asignados:[{usuario_id:'', linea_negocio:'', id:''}],
+            agentesCliente:[{usuario_id:'', linea_negocio:'', id:''}],
             centros_facturacion:[{direccion:'', nombre:'', provincia_id: '', distrito_id: '', corregimiento_id: '', id:''}]
         },
 
@@ -204,9 +204,10 @@ var form_crear_cliente = new Vue({
 
         'datos-cliente': require('./components/datos-cliente.vue'),
         'informacion-pago': require('./components/informacion-pago.vue'),
-        'asignados': require('./components/asignados.vue'),
+        'asignados': require('./components/agentes-asignados.vue'),
         'centros-facturacion': require('./components/centros-facturacion.vue'),
         'formulario-contacto': require('./components/formulario-contacto.vue'),
+        'agentesCliente': require('./components/agentes-asignados.vue'),
         'vista_comments': require('./../../vue/components/comentario.vue')
 
     },

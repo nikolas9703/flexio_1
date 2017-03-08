@@ -46,6 +46,8 @@ $route['polizas/ajax-listar-ramos-tree'] = 'polizas/ajax_listar_ramos_tree';
 $route['polizas/ajax-cambiar-estado-ramo'] = 'polizas/ajax_cambiar_estado_ramo';
 $route['polizas/ajax-guardar-ramos'] = 'polizas/ajax_guardar_ramos';
 $route['polizas/ajax-buscar-ramo'] = 'polizas/ajax_buscar_ramo';
+$route['polizas/ajax-get-cliente'] = 'polizas/ajax_get_cliente';
+$route['polizas/ajax-get-cobro-agendado']   = 'polizas/ajax_get_cobro_agendado';
 $route['polizas/crear'] 			= 'polizas/crear';
 $route['polizas/editar'] 			= 'polizas/editar';
 $route['polizas/ver'] 				= 'polizas/ver';
@@ -53,6 +55,7 @@ $route['polizas/crear renovación']  = 'polizas/crear_renovacion';
 $route['polizas/editar comisión plan']  = 'polizas/editar_comision_plan';
 $route['polizas/editar agentes']  = 'polizas/editar_agentes';
 $route['polizas/editar participación']   = 'polizas/editar_participacion';
+
 
 
 

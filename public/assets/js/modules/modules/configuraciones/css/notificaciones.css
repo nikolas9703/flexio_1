@@ -1,0 +1,21 @@
+table#tablanotificaciones{
+  width: 100%;
+  height: auto;
+  border-collapse: collapse;
+}
+thead tr th{
+  background-color: #000000;
+  color: #FFFFFF;
+  height: 40px;
+  padding-left:15px;
+  border-left: 1px solid #CCCCCC;
+}
+input[type="checkbox"].notificaciones-checkbox{
+  width: 20px;
+  height: 20px;
+}
+table#notificacionesTable tbody tr{
+  background-color: #FFF;
+}
+//*table#notificacionesTable tbody tr:nth-child(even) {background:#E6E7E8}
+table#notificacionesTable tbody tr:nth-child(odd) {background: #FFFFFF}*/

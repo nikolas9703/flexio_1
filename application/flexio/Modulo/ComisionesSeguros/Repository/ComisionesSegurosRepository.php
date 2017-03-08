@@ -2,6 +2,7 @@
 namespace Flexio\Modulo\ComisionesSeguros\Repository;
 
 use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
+use Flexio\Modulo\ComisionesSeguros\Models\SegComisionesParticipacion;
 
 class ComisionesSegurosRepository {
 	
@@ -148,6 +149,42 @@ class ComisionesSegurosRepository {
 		$comisiones->where('id_remesa',$remesa);
 		
 		return $comisiones;
+	}
+	
+	public function getComisionesAgentes($id_agente,$empresa)
+	{
+		$comisiones=SegComisionesParticipacion::where('seg_comisiones.id_empresa',$empresa)->where('seg_comisiones_participacion.agente_id',$id_agente)
+		->join("seg_comisiones", "seg_comisiones.id", "=", "seg_comisiones_participacion.comision_id");
+		
+		return $comisiones->get();
+	}
+	
+	public function getComisiones($clause)
+	{
+		$comisiones=ComisionesSeguros::where('id_empresa',$clause['empresa_id']);
+		
+		unset($clause["empresa_id"]);
+		
+		if($clause!=NULL && !empty($clause) && is_array($clause))
+        {
+                foreach($clause AS $field => $value)
+                {  
+                        //verificar si valor es array
+                        if(is_array($value)){
+                                $comisiones->where($field, $value[0], $value[1]);
+                        }else{
+							if($field=='id')
+							{
+								$comisiones->whereIn('id', $value);
+							}
+							else{
+								$comisiones->where($field, '=', $value);
+							}
+                        }
+                }
+        }
+		
+		return $comisiones->get();
 	}
 	
 }

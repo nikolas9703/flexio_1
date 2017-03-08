@@ -338,9 +338,9 @@ class Pedidos extends CRM_Controller
          'busquedable_type' =>  $this->FlexioSession->uri()->segment(1)
       ]);
       //politicas para cambio de estado en modal
-      $politicas = PoliticasCatalogo::where('tipo', 'pedido')->pluck('estado2')->toArray();      
+      $politicas = PoliticasCatalogo::where('tipo', 'pedido')->pluck('estado2')->toArray();
       $estados = Pedidos_estados_orm::whereIn('id_cat', $politicas)->orderBy("id_cat", "ASC")->get();
-      $labelEstado = $estados[0]->labelEstado;      
+      $labelEstado = $estados[0]->labelEstado;
       $this->assets->agregar_var_js(array(
         "estados" => $estados,
         "label_estados" => json_encode($labelEstado),
@@ -513,6 +513,7 @@ class Pedidos extends CRM_Controller
             $orden_compra_id    = $this->input->post('orden_compra_id', true);
             $factura_compra_id  = $this->input->post('factura_compra_id', true);
             $item_id    = $this->input->post('item_id', true);
+            $orden_pedidos_multiple = $this->input->post('orden_pedidos_multiple', true);
 
             //filtros de centros contables del usuario
             $centros = $this->FlexioSession->usuarioCentrosContablesHex();
@@ -523,13 +524,26 @@ class Pedidos extends CRM_Controller
             }
 
             if(!empty($orden_compra_id)){
-                $registros          = $registros->deOrdenDeCompra($orden_compra_id);
-                $registros_count    = $registros_count->deOrdenDeCompra($orden_compra_id);
+              if(!empty($orden_pedidos_multiple)){
+                //relacion multiples pedidos relacionados a una orden de compra
+                $registros = $registros->deMultipleOrdenDeCompra($orden_compra_id);
+                $registros_count = $registros_count->deMultipleOrdenDeCompra($orden_compra_id);
+              }else {
+                $registros = $registros->deOrdenDeCompra($orden_compra_id);
+                $registros_count = $registros_count->deOrdenDeCompra($orden_compra_id);
+              }
             }
 
             if(!empty($factura_compra_id)){
+              if(!empty($orden_pedidos_multiple)){
+                //relacion multiples pedidos relacionados a una orden de compra
+                //multiples ordenes relacionadas a una factura
+                $registros          = $registros->deMultipleFacturaDeCompra($factura_compra_id);
+                $registros_count    = $registros_count->deMultipleFacturaDeCompra($factura_compra_id);
+              }else{
                 $registros          = $registros->deFacturaDeCompra($factura_compra_id);
                 $registros_count    = $registros_count->deFacturaDeCompra($factura_compra_id);
+              }
             }
             if(!empty($item_id)){
                 $registros          = $registros->deItem($item_id);
@@ -670,10 +684,11 @@ class Pedidos extends CRM_Controller
                     $validado = $row->validado == 'si'?'  <span class="btn btn-info btn-circle"><i class="fa fa-check"></i></span>':'';
 
                     if( $row->validado == 'no' )
-                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success validarPedido" >Validar</a>';                        
+                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success validarPedido" >Validar</a>';
                     if($this->auth->has_permission('acceso', 'pedidos/ver/(:any)')){
-                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success cambiarEstado" >Cambiar estado</a>';    
+                        $hidden_options .= '<a href="#" data-id="' . $row->id . '" data-pedido-id="' . $row->id . '"  class="btn btn-block btn-outline btn-success cambiarEstado" >Cambiar estado</a>';
                     }
+                    $hidden_options .= '<button  data-id="'.$row->id.'" class="btn btn-block btn-outline btn-success imprimir-pedido">Imprimir pedido</button>';
                     //Si no tiene acceso a ninguna opcion
                     //ocultarle el boton de opciones
                     if($hidden_options == ""){
@@ -690,7 +705,10 @@ class Pedidos extends CRM_Controller
                         $link_option,
                         $hidden_options,
                         count($row->centro) ? $row->centro->id : '',
-                        count($row->bodega) ? $row->bodega->id : ''
+                        count($row->centro) ? $row->centro->uuid_centro : '',
+                        count($row->bodega) ? $row->bodega->id : '',
+                        count($row->bodega) ? $row->bodega->uuid_bodega : '',
+                        $row->id,
                     );
                     $i++;
                 }
@@ -1096,7 +1114,9 @@ class Pedidos extends CRM_Controller
 
         $this->_css();
         $this->_js();
-
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/pedidos/exportar_pedidos.js'
+        ));
         $pedido = $this->PedidoRepository->findByUuid($uuid);
 
         $ordenes = $this->OrdenesCompraRepo->getOrdenesPedidoWithItems($uuid);
@@ -1136,6 +1156,7 @@ class Pedidos extends CRM_Controller
       );
 
         $breadcrumb["menu"]["opciones"]["pedidos/historial/" . $pedido->uuid_pedido] = "Ver bit&aacute;cora";
+        $breadcrumb['menu']['opciones']['#exportar-pedido'] ='Imprimir pedido';
         //Importante -> para subpanel -> cambiar por id...
         $data["pedido_id"] = $pedido->id;
         $data["pedido_obj"] = $pedido;
@@ -1220,17 +1241,17 @@ class Pedidos extends CRM_Controller
         if(empty($_POST)){
             return false;
         }
-          
-        $id = $this->input->post('pedido_id', true);        
-        $estado_id = $this->input->post('estado_id', true);  
+
+        $id = $this->input->post('pedido_id', true);
+        $estado_id = $this->input->post('estado_id', true);
         $empresa_id = $this->id_empresa;
         $id = explode(',', $id);
         if (count($id) > 1){
         foreach ($id as &$row)
         {
             $row = hex2bin(strtolower($row));
-        }             
-        $id  = Pedidos_orm::whereIn("uuid_pedido", $id)->get()->pluck('id')->toArray(); 
+        }
+        $id  = Pedidos_orm::whereIn("uuid_pedido", $id)->get()->pluck('id')->toArray();
         foreach($id as $id_pedido){
 	                try {
 	                    $pedido = $this->PedidoRepository->guardarEstado($id_pedido, $estado_id, $empresa_id);
@@ -1240,12 +1261,12 @@ class Pedidos extends CRM_Controller
                 'mensaje' => $e->getMessage(),
             ));
             exit;
-	                }   
-        }                
+	                }
+        }
         }else{
-        $id = $id[0];    
-        
-        try { 
+        $id = $id[0];
+
+        try {
         $pedido = $this->PedidoRepository->guardarEstado($id, $estado_id, $empresa_id);
         } catch (\Exception $e) {
             echo json_encode(array(
@@ -1259,7 +1280,7 @@ class Pedidos extends CRM_Controller
             'response' => true,
             'mensaje' => 'Se actualiz&oacute; el estado correctamente.',
         ));
-        exit;       
+        exit;
 
     }
 
@@ -1278,5 +1299,40 @@ class Pedidos extends CRM_Controller
 
       $pedido = $this->PedidoRepository->convetir_a_orden($pedidos);
     }
+
+    public function ocultoimprimirpedido(){
+        $this->load->view('formulario_imprimir');
+    }
+
+    public function imprimir_pedido(){
+        if (empty($_POST)) {
+            exit();
+        }
+
+
+        $id = $this->input->post('pedido', true);
+
+        if (empty($id)) {
+            exit();
+        }
+
+        $modeloInstancia =  $this->PedidoRepository->find($id);
+
+
+        try{
+          $excell = new Flexio\Modulo\Pedidos\Exportar\Excell\ImprimirPedido();
+          $formulario = $excell->generarExcell($modeloInstancia);
+          $file_name ="pedido-".$modeloInstancia->numero.".xlsx";
+          header('Content-Type: application/vnd.openxmlformatsofficedocument.spreadsheetml.sheet');
+          header('Content-Disposition: attachment;filename="'.$file_name.'"'); //tell browser what's the file name
+          header('Cache-Control: max-age=0'); //no cache
+          $objWriter = \PHPExcel_IOFactory::createWriter($formulario, 'Excel2007');
+          $objWriter->save('php://output');
+        }catch(\Exception $e) {
+          log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+       }
+       die;
+    }
+
 
 }

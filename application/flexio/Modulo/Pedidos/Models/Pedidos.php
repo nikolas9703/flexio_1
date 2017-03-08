@@ -86,6 +86,24 @@ class Pedidos extends Model
         return strtoupper(bin2hex($value));
     }
 
+    /**
+     * hack para obterner la relacion por uuid con centro contable
+     */
+
+    public function getUuidCentroBinAttribute($value)
+    {
+        return hex2bin($this->uuid_centro);
+    }
+
+
+    /**
+     * hack para obterner la relacion por uuid con bodega
+     */
+
+    public function getUuidLugarBinAttribute($value){
+        return hex2bin($this->uuid_lugar);
+    }
+
     public function getUuidLugarAttribute($value)
     {
         return strtoupper(bin2hex($value));
@@ -129,19 +147,19 @@ class Pedidos extends Model
 
     public function setFechaCreacionAttribute($date){
 
-        return  $this->attributes['fecha_creacion'] = Carbon::createFromFormat('d/m/Y', $date, 'America/Panama');
+        $this->attributes['fecha_creacion'] = Carbon::createFromFormat('d/m/Y', $date, 'America/Panama');
 
     }
 
     public function setUuidCentroAttribute($value){
 
-        return  $this->attributes['uuid_centro'] = hex2bin($value);
+        $this->attributes['uuid_centro'] = hex2bin($value);
 
     }
 
     public function setUuidLugarAttribute($value){
 
-        return  $this->attributes['uuid_lugar'] = hex2bin($value);
+        $this->attributes['uuid_lugar'] = hex2bin($value);
 
     }
 
@@ -229,12 +247,22 @@ class Pedidos extends Model
 
     public function centro_contable(){
 
-        return $this->belongsTo('Flexio\Modulo\CentrosContables\Models\CentrosContables', 'uuid_centro', 'uuid_centro');
+        return $this->belongsTo('Flexio\Modulo\CentrosContables\Models\CentrosContables', 'uuid_centro_bin', 'uuid_centro');
 
     }
 
     public function bodega(){
-        return $this->belongsTo('Flexio\Modulo\Bodegas\Models\Bodegas', 'uuid_lugar', 'uuid_bodega');
+        return $this->belongsTo('Flexio\Modulo\Bodegas\Models\Bodegas', 'uuid_lugar_bin', 'uuid_bodega');
+    }
+
+    public function empresa()
+    { 
+
+        return $this->belongsTo('Flexio\Modulo\Empresa\Models\Empresa','id_empresa');
+    }
+
+    public function vendedor(){
+        return $this->belongsTo('Flexio\Modulo\Usuarios\Models\Usuarios','creado_por');
     }
 
 

@@ -221,10 +221,24 @@ class Pedidos_orm extends Model
         return $this->hasMany("Ordenes_orm", "uuid_pedido", "uuid_pedido");
     }
 
+    /**
+    * Varios pedidos relacionado a la orden
+    */
+    public function ocompras() {
+        return $this->morphedByMany('Flexio\Modulo\Pedidos\Models\Pedidos', 'ordenable', 'ordenables', 'ordenable_id');
+    }
+
     public function scopeDeOrdenDeCompra($query, $orden_compra_id)
     {
         return $query->whereHas("ordenes_compras", function($q) use ($orden_compra_id){
             $q->where("id", $orden_compra_id);
+        });
+    }
+
+    public function scopeDeMultipleOrdenDeCompra($query, $orden_compra_id)
+    {
+        return $query->whereHas("ocompras", function($q) use ($orden_compra_id){
+            $q->where("ordenables.orden_id", $orden_compra_id);
         });
     }
 
@@ -233,6 +247,15 @@ class Pedidos_orm extends Model
         return $query->whereHas("ordenes_compras", function($orden_compra) use ($factura_compra_id){
             $orden_compra->whereHas("facturas", function($facturas) use($factura_compra_id){
                 $facturas->where("id", $factura_compra_id);
+            });
+        });
+    }
+
+    public function scopeDeMultipleFacturaDeCompra($query, $factura_compra_id)
+    {
+        return $query->whereHas("ocompras", function($orden_compra) use ($factura_compra_id){
+            $orden_compra->whereHas("facturas_compras", function($facturas) use($factura_compra_id){
+                $facturas->where("faccom_facturables.factura_id", $factura_compra_id);
             });
         });
     }

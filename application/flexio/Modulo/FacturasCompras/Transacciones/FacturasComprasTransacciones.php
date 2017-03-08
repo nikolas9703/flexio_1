@@ -143,8 +143,9 @@ class FacturasComprasTransacciones {
                 $asientos[] = new AsientoContable([
                     'codigo'        => $factura_compra->codigo,
                     'nombre'        => $factura_compra->codigo. ' - '.$factura_compra->proveedor->nombre,
-                    'credito'        => $credito_retenido,
+                    'credito'        => round_up($credito_retenido),
                     'cuenta_id'     => $cuenta_retenido->cuenta_retenida_id,
+                    'centro_id'     => $factura_compra->centro_contable_id,
                     'empresa_id'    => $factura_compra->empresa_id,
                     'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
                 ]);
@@ -178,6 +179,7 @@ class FacturasComprasTransacciones {
             'codigo'        => $factura_compra->codigo,
             'nombre'        => $factura_compra->codigo. " - " .$factura_compra->proveedor->nombre,
             'credito'       => $factura_compra->total,
+            'centro_id'     => $factura_compra->centro_contable_id,
             'cuenta_id'     => $cuenta->cuenta_id,
             'empresa_id'    => $factura_compra->empresa_id,
             'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
@@ -188,8 +190,9 @@ class FacturasComprasTransacciones {
             $asientos[] = new AsientoContable([
                 'codigo'        => $factura_compra->codigo,
                 'nombre'        => $factura_compra->codigo. " - " .$factura_compra->proveedor->nombre,
-                'debito'       => $total_retenido,
+                'debito'       => round_up($total_retenido),
                 'cuenta_id'     => $cuenta->cuenta_id,
+                'centro_id'     => $factura_compra->centro_contable_id,
                 'empresa_id'    => $factura_compra->empresa_id,
                 'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
             ]);
@@ -203,6 +206,7 @@ class FacturasComprasTransacciones {
               'nombre'        => $factura_compra->codigo. " - " .$factura_compra->proveedor->nombre,
               'credito'       => $factura_compra->retencion,
               'cuenta_id'     => $subcontrato->cuenta_id,
+              'centro_id'     => $factura_compra->centro_contable_id,
               'empresa_id'    => $factura_compra->empresa_id,
               'created_at'    => date('Y-m-d H:i:s', strtotime($factura_compra->fecha_desde))
           ]);

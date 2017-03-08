@@ -15,7 +15,7 @@ $info = !empty($info) ? $info : array();
             <div class="ibox-content" style="display:block;">
                 <div v-if="acceso">
                     <div class="form-group has-success" style="margin-top: 20px;margin-bottom: 20px !important;">
-                        <input type="text" name="campo[balance_banco]" class="form-control" placeholder="0.00" v-model="balances.balance_banco.monto | redondeo"  style="border: 2px solid #27AAE1;color:#27AAE1;font-weight:bold;text-align:center;" :disabled="!visible">
+                        <input type="text" name="campo[balance_banco]" class="form-control" placeholder="0.00" v-model="balances.balance_banco.monto | redondeo | signoDollar"  style="border: 2px solid #27AAE1;color:#27AAE1;font-weight:bold;text-align:center;" :disabled="!visible">
                     </div>
                     <p style="font-size: 10px;text-align:center;">(Haga clic para agregar el balance en banco desde {{campo.fecha_inicio}})</p>
                 </div>
@@ -36,7 +36,7 @@ $info = !empty($info) ? $info : array();
              <div class="ibox-content" style="display:block;">
                 <div v-if="acceso">
                     <div class="form-group has-success" style="margin-top: 20px;margin-bottom: 20px !important;">
-                        <input readonly="" type="text" name="campo[balance_flexio]" class="form-control" value="{{balance_verificado_flexio | redondeo}}" placeholder="0.00"  style="border: 2px solid #5BB85C;color:#5BB85C;font-weight:bold;text-align:center;">
+                        <input readonly="" type="text" name="campo[balance_flexio]" class="form-control" value="{{balance_verificado_flexio | redondeo | signoDollar}}" placeholder="0.00"  style="border: 2px solid #5BB85C;color:#5BB85C;font-weight:bold;text-align:center;">
                     </div>
                     <p style="font-size: 10px;text-align:center;">(Última transacción en Flexio fue el {{campo.fecha_fin}})</p>
                 </div>
@@ -81,7 +81,7 @@ $info = !empty($info) ? $info : array();
             <div class="ibox-content" style="display:block;min-height: 134px;">
                 <div v-if="acceso">
                     <div class="form-group has-danger" style="margin-top: 20px;margin-bottom: 20px !important;">
-                        <input readonly="" type="text" name="campo[diferencia]" class="form-control" placeholder="0.00" value="{{diferencia | redondeo}}"  style="border: 2px solid #D9534E;color:#D9534E;font-weight:bold;text-align:center;">
+                        <input readonly="" type="text" name="campo[diferencia]" class="form-control" placeholder="0.00" value="{{diferencia | redondeo | signoDollar}}"  style="border: 2px solid #D9534E;color:#D9534E;font-weight:bold;text-align:center;">
                     </div>
                     <p style="font-size: 10px;text-align:center;">{{balances.diferencia.texto}}</p>
                 </div>

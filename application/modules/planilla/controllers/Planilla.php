@@ -1592,6 +1592,12 @@ use Dompdf\Dompdf;
      					$row['beneficio']['nombre'],
      					$cuenta_gasto_nombre
         			);
+     			$response->rows[$i]['ids']=[
+     			    'beneficio_id'=>$row['beneficio_id'],
+     			    'cuenta_costo_id'=>$row['cuenta_costo_id'],
+     			    'cuenta_gasto_id'=>$row['cuenta_gasto_id'],
+     			    'recargo_id'=>$row['recargo_id'],
+                ];
       			foreach ($period as $day) {
 
      				$dia_formato_corto = date("d", strtotime($day->format('Y-m-d')));

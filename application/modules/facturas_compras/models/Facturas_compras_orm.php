@@ -278,6 +278,7 @@ class Facturas_compras_orm extends Model
 
     public function scopeDeFechaCreacionMayorIgual($query, $fecha)
     {
+
         return $query->whereDate("fecha_desde", ">=", $fecha);
     }
 
@@ -320,6 +321,13 @@ class Facturas_compras_orm extends Model
     {
         return $this->belongsTo("Ordenes_orm", "operacion_id", "id")
             ->where("operacion_type", "Ordenes_orm");
+    }
+
+    /**
+    * Varias ordenes relacionadas a la factura
+    */
+    public function ordenes() {
+        return $this->morphedByMany('Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra', 'facturable', 'faccom_facturables', 'factura_id', 'facturable_id');
     }
 
     public function subcontrato()

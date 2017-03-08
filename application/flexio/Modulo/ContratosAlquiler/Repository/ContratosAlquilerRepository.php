@@ -180,7 +180,7 @@ class ContratosAlquilerRepository
         return [
             $contrato_alquiler->uuid_contrato_alqquiler,
             $contrato_alquiler->numero_documento_enlace,
-            $contrato_alquiler->cliente->nombre_completo_enlace,
+            !empty($contrato_alquiler) && !empty($contrato_alquiler->cliente) ? $contrato_alquiler->cliente->nombre_completo_enlace : "",
             count($contrato_alquiler->centro_facturacion) ? $contrato_alquiler->centro_facturacion->nombre : '',
             $contrato_alquiler->fecha_inicio->format('d/m/Y'),
             ($contrato_alquiler->fecha_fin != "") ? $contrato_alquiler->fecha_fin->format('d/m/Y') : "",

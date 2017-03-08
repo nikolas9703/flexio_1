@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model as Model;
 class CreditoAplicado extends Model
 {
     protected $table = 'cre_creditos_aplicados';
-    protected $fillable = ['acreditable_type', 'acreditable_id', 'empresa_id', 'total'];
+    protected $fillable = ['acreditable_type', 'acreditable_id', 'empresa_id', 'total', 'aplicable_type', 'aplicable_id'];
     protected $guarded = ['id'];
     protected $casts = [
         'total' => 'real',

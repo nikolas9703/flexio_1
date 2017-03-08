@@ -12,6 +12,7 @@ if (!defined('BASEPATH'))
  * @link       http://www.pensanomica.com
  * @copyright  01/15/2016
  */
+use Flexio\Modulo\Cotizaciones\Models\Cotizacion;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon as Carbon;
 use Flexio\Modulo\Cotizaciones\Repository\CotizacionRepository as CotizacionRepository;
@@ -219,7 +220,7 @@ class Ordenes_ventas extends CRM_Controller {
         //add temporal solution for more that 150
         //cotizaciones in state aprobado.
         //Desing Departament have a notifications of this temporal solution
-        ini_set('memory_limit','256M');
+        ini_set('memory_limit','512M');
 
         $this->assets->agregar_js(array(
             'public/assets/js/plugins/ckeditor/ckeditor.js',
@@ -235,7 +236,13 @@ class Ordenes_ventas extends CRM_Controller {
 
         //catalogos
         $clause = ['empresa_id' => $this->empresa_id, 'transaccionales' => true, 'conItems' => true, 'vendedor' => true, 'tipo_precio' => 'venta'];
-        $cotizaciones = $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause));
+
+        if(empty($cotizacion))
+            $cotizaciones = $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause), false);
+        else
+            $cotizaciones = $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde ( Cotizacion::where(function($query) use ($cotizacion) {
+                $query->where('id',$cotizacion['id']);
+            })->get(), false);
 
         $this->assets->agregar_var_js(array(
             'bodegas' => $this->BodegasRepository->getCollectionBodegas($this->BodegasRepository->get($clause)),
@@ -326,6 +333,17 @@ class Ordenes_ventas extends CRM_Controller {
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar();
+    }
+    public function ajax_get_items(){
+
+        $cotizaciones = $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde ( Cotizacion::where(function($query) {
+            $query->where('id',$this->input->post("id"));
+          ;
+        })->get(), true);
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(count($cotizaciones)>0?$cotizaciones[0]:[]))->_display();
+        exit;
     }
 
     public function ver($uuid = NULL) {

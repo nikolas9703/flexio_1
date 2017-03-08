@@ -333,9 +333,12 @@ class Ordenes extends CRM_Controller
             $breadcrumb["menu"]["url"] = "ordenes/crear";
         }
 
+        $breadcrumb["menu"]["opciones"]["#convertirAFacturaBtn"] = "Convertir a factura de compra";
+
         //Verificar si tiene permiso de Exportar
         if ($this->auth->has_permission('listar__exportarOrdenes', 'ordenes/listar')){
             $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
+            $breadcrumb['menu']['opciones']['#change-state-multiple-btn'] = 'Cambiar estado';
         }
 
         //Agregra variables PHP como variables JS
@@ -634,11 +637,17 @@ class Ordenes extends CRM_Controller
 
             //subpanels
             $factura_compra_id = $this->input->post('factura_compra_id', true);
+            $factura_ordenes_multiple = $this->input->post('factura_ordenes_multiple', true); //Para identificar relacion -> multiples ordenes relacionada a una factura
 
             if(!empty($factura_compra_id)){
-                $registros          = $registros->deFacturaDeCompra($factura_compra_id);
 
-                $registros_count    = $registros_count->deFacturaDeCompra($factura_compra_id);
+                if(!empty($factura_ordenes_multiple)){
+                  $registros       = $registros->deMultipleFacturaDeCompra($factura_compra_id);
+                  $registros_count = $registros_count->deMultipleFacturaDeCompra($factura_compra_id);
+                }else{
+                  $registros       = $registros->deFacturaDeCompra($factura_compra_id);
+                  $registros_count = $registros_count->deFacturaDeCompra($factura_compra_id);
+                }
             }
 
             if(!empty($pedido_id)){
@@ -775,7 +784,10 @@ class Ordenes extends CRM_Controller
             // typical case is that the user type 0 for the requested page
             if($start < 0) $start = 0;
 
-
+/*echo "<pre>";
+print_r($registros->getBindings());
+echo "</pre>";
+dd($registros->toSql());*/
             $registros = $registros->orderBy($sidx, $sord)
                     ->skip($start)
                     ->take($limit)
@@ -830,6 +842,9 @@ class Ordenes extends CRM_Controller
 
                     $hidden_options .= '<a  href="'. base_url('ordenes/imprimir/'.$row->uuid_orden) .'" class="btn btn-block btn-outline btn-success" data-dismiss="modal" >Imprimir</a>';
 //dd($row);
+                    if($this->auth->has_permission('acceso', 'ordenes/ver/(:any)')){
+                    $hidden_options .= '<a href="#" data-id="'.$row->id.'" data-uuid="'.$row->uuid_orden.'" class="btn btn-block btn-outline btn-success change-state-btn">Cambiar estado</a>';
+                    }
                     //Si no tiene acceso a ninguna opcion
                     //ocultarle el boton de opciones
                     if($hidden_options == ""){
@@ -847,6 +862,12 @@ class Ordenes extends CRM_Controller
                         $row->present()->estado_label,
                         $link_option,
                         $hidden_options,
+                        count($row->proveedor) ? $row->proveedor->id : '',
+                        count($row->centro) ? $row->centro->id : '',
+                        count($row->centro) ? $row->centro->uuid_centro : '',
+                        count($row->bodega) ? $row->bodega->id : '',
+                        count($row->bodega) ? $row->bodega->uuid_bodega : '',
+                        count($row->bodega) ? $row->bodega->nombre : '',
                     );
                     $i++;
                 }
@@ -1093,7 +1114,8 @@ class Ordenes extends CRM_Controller
     	//If ajax request
     	$this->assets->agregar_js(array(
         'public/assets/js/modules/ordenes/funtions.js',
-    		'public/assets/js/modules/ordenes/tabla.js'
+    		'public/assets/js/modules/ordenes/tabla.js',
+        'public/assets/js/modules/ordenes/cambiar_estado.js',
     	));
 
     	$this->load->view('tabla');
@@ -1189,6 +1211,30 @@ class Ordenes extends CRM_Controller
     	exit;
     }
 
+    /**
+     * Consultar los pedidos y retornar un array
+     * con todos los items.
+     *
+     * @return [type] [description]
+     */
+    public function ajax_get_pedidos_items(){
+
+      if(!$this->input->is_ajax_request()){
+        return false;
+      }
+
+      $pedidos_id = $this->input->post("pedidos_id");
+      $pedidos = $this->PedidosRepository->findIn($pedidos_id);
+
+      if(empty($pedidos->toArray())){
+        return [];
+      }
+
+      $response = $this->PedidosRepository->getPedidoItems($pedidos);
+      $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    	->set_output(Collect($response))->_display();
+    	exit;
+    }
 
     public function ocultotablaFacturasCompras($factura_compra_id = NULL)
     {
@@ -1349,7 +1395,6 @@ class Ordenes extends CRM_Controller
 
      public function guardar()
     {
-
          $post = $this->input->post();
          if (!empty($post)) {
 
@@ -1376,9 +1421,26 @@ class Ordenes extends CRM_Controller
                 }
 
                 if (isset($campo['estado']) && $campo['estado'] == 2) {
-                    $pedido = $this->PedidosRepository->find($orden_compra->pedido->id); //Version en DESARROLLO
-                    if (count($pedido)) {
-                        $this->PedidosRepository->actualizarEstadoPedido($pedido, $orden_compra, $orden_original);//ACTUALIZO EL ESTADO DEL PEDIDO
+                    //----------------------------------------------------
+                    // Verificar si el uuid del pedido es vacio
+                    // si es vacio se trata de una orden relacionada
+                    // a varios pedidos.
+                    //----------------------------------------------------
+                    if(empty($orden_original->uuid_pedido)){
+                      $pedidos = $orden_original->pedidos()->get();
+                      if(!empty($pedidos) && !empty($pedidos->toArray())){
+                        foreach ($pedidos AS $pedido) {
+                          $this->PedidosRepository->actualizarEstadoPedido($pedido, $orden_compra, $orden_original);//ACTUALIZO EL ESTADO DEL PEDIDO
+                        }
+                      }
+                    }else{
+                      //----------------------------------------------------
+                      // Solo un pedido relacionado a la orden
+                      //----------------------------------------------------
+                      $pedido = $this->PedidosRepository->find($orden_compra->pedido->id); //Version en DESARROLLO
+                      if (count($pedido)) {
+                          $this->PedidosRepository->actualizarEstadoPedido($pedido, $orden_compra, $orden_original);//ACTUALIZO EL ESTADO DEL PEDIDO
+                      }
                     }
                 }
 
@@ -1432,23 +1494,33 @@ class Ordenes extends CRM_Controller
 
     public function crear($uuid_pedido = NULL)
     {
-
-        if(preg_match('/proveedor/', $uuid_pedido))
-        {
+        //De proveedor
+        if(preg_match('/proveedor/', $uuid_pedido)){
             $uuid_proveedor = str_replace('proveedor', '', $uuid_pedido);
             $uuid_pedido    = NULL;
+        }else if(preg_match('/pedidos/', $uuid_pedido)){
+            $pedidos_id = $this->input->post("pedidos_id", true);
+            $centro_uuid = $this->input->post("centro_uuid", true);
+            $bodega_uuid = $this->input->post("bodega_uuid", true);
+            $uuid_pedido = NULL;
+
+            $this->assets->agregar_var_js(array(
+                'pedido_multiple' => true,
+                'centro_uuid' => $centro_uuid,
+                'bodega_uuid' => $bodega_uuid,
+                'pedidos_id' => collect($pedidos_id)
+            ));
         }
 
         $data = $mensaje = [];
-
         $data["message"] = $mensaje;
 
         $this->_css();
         $this->_js();
 
-    	$breadcrumb = array(
+      	$breadcrumb = array(
             "titulo" => '<i class="fa fa-shopping-cart"></i> Crear orden de compra'
-    	);
+      	);
 
         $pedido = $uuid_pedido ? $this->PedidosRepository->findByUuid($uuid_pedido) : [];
         $empezable = collect([
@@ -1464,7 +1536,7 @@ class Ordenes extends CRM_Controller
             'politica_transaccion' => collect([])
          ));
 
-        $this->template->agregar_titulo_header('Ordenes');
+      $this->template->agregar_titulo_header('Ordenes');
     	$this->template->agregar_breadcrumb($breadcrumb);
     	$this->template->agregar_contenido($data);
     	$this->template->visualizar();
@@ -1597,6 +1669,13 @@ class Ordenes extends CRM_Controller
               'politica_transaccion' => $orden->politica()
               //'politica_transaccion' => $this->ordenesCompraRep->gePoliticasTransaccciones($this->_buscar_rol_usuario($rolesUsuario))
           ));
+
+          //Verificar si se trata de una factura creada con varias ordenes de compra
+          if(empty($orden->uuid_pedido) && !empty($orden->pedidos()->get()->toArray())){
+            $this->assets->agregar_var_js(array(
+                'pedidos_multiple' => 1,
+            ));
+          }
 
 
           $this->template->agregar_titulo_header('Ordenes');
@@ -1747,5 +1826,44 @@ class Ordenes extends CRM_Controller
       $this->template->agregar_contenido($data);
       $this->template->visualizar();
   }
+  public function ajax_get_states_segment()
+    {
+        $orden_id = $this->input->post('orden_id');
+        $data = ['orden_id' => is_array($orden_id) ? implode(',',$orden_id) : $orden_id];
+        $response = ['html' => $this->load->view('segments/states', $data, true)];
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function ajax_update_state()
+    {
+        $aux = explode(",",$this->input->post('id'));
+        $errors = "";
+        if(count($aux) == 1 && is_numeric($aux[0])){
+            try {
+                $GuardarOrdenCompra = new \Flexio\Modulo\OrdenesCompra\FormRequest\GuardarOrdenCompra();
+                $orden = $GuardarOrdenCompra->guardar();
+            } catch (\Exception $e) {
+                $errors .= $e->getMessage()."<br>";
+            }
+        }else if(count($aux) > 1){
+            foreach($aux as $uuid_orden){
+                try {
+                    $orden = OrdenesModel::where('id', $uuid_orden)->first();
+                    $GuardarOrdenCompra = new \Flexio\Modulo\OrdenesCompra\FormRequest\GuardarOrdenCompra();
+                    $GuardarOrdenCompra->guardar(['estado_id' => $this->input->post('estado_id'), 'id' => $orden->id]);
+                } catch (\Exception $e) {
+                    $errors .= $e->getMessage()."<br>";
+                }
+            }
+        }
+        echo json_encode(array(
+            'response' => strlen($errors) ? false : true,
+            'mensaje' => strlen($errors) ? $errors : 'Se actualiz&oacute; el estado correctamente.',
+            'aplicar_credito' => ''
+        ));
+        exit;
+    }
 
 }

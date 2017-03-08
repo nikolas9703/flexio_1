@@ -126,7 +126,8 @@ export default {
 
 			if (context.empezable.id != '' && !(context.config.vista == 'ver' && window.nota_debito.estado == 'aprobado')) {
 
-				if (parseFloat(this.total).toFixed(2) > parseFloat(context.detalle.monto_factura) || parseFloat(this.total).toFixed(2) > context.detalle.saldo_factura) {
+				var total_nota_debito = parseFloat(this.total).toFixed(2) - parseFloat(context.retenido).toFixed(2);
+				if (total_nota_debito > parseFloat(context.detalle.monto_factura) || total_nota_debito > context.detalle.saldo_factura) {
                     this.boton = true;
 					this.error = "El total no puede ser mayor al saldo de la factura";
 				} else if (parseFloat(monto) > parseFloat(this.rows[index].precio_total)) {

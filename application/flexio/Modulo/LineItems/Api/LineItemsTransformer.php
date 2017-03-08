@@ -10,8 +10,8 @@ class LineItemsTransformer extends TransformerObject{
         return [
             'id'=> $item->id,
             'categoria_id'=> $item->categoria_id,
-            'item_id'=> $item->item_id,
-            'nombre' => $item->item->nombre,
+            'item_id'=> !empty($item->item) ? $item->item_id : '',
+            'nombre' => !empty($item->item) ? $item->item->nombre : '',
             'cantidad' => (float)$item->cantidad,
             'unidad_id' =>  $item->unidad_id,
             'precio_unidad'=> (float)$item->precio_unidad,
@@ -24,23 +24,23 @@ class LineItemsTransformer extends TransformerObject{
             'comentario' => $item->comentario,
             'atributo_id' => $item->atributo_id,
             'atributo_text' => $item->atributo_text,
-            'atributos' => $item->item->atributos,
-            'impuesto'=> $item->impuesto->impuesto,
-            'unidades'=> $item->item->unidades->map(function($unidad){
+            'atributos' => !empty($item->item) ? $item->item->atributos : '',
+            'impuesto'=> !empty($item->impuesto) ? $item->impuesto->impuesto : '',
+            'unidades'=> !empty($item->item) ? $item->item->unidades->map(function($unidad){
                     return [
                         'id'=> $unidad->id,
                         'nombre' => $unidad->nombre,
                         'base'=> $unidad->pivot->base,
                         'factor_conversion'=> $unidad->pivot->factor_conversion
                     ];
-            }),
-            "precios" => $item->item->precios->map(function($precio){
+            }) : '',
+            "precios" => !empty($item->item) ? $item->item->precios->map(function($precio){
                     return[
                         'id' => $precio->id,
                         'nombre' => $precio->nombre,
                         'precio' => $precio->pivot->precio
                     ];
-                })
+                }) : ''
         ];
     }
 

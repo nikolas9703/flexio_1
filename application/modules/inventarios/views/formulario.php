@@ -20,6 +20,8 @@
 
     <detalle :config.sync="config" :detalle.sync="detalle" :catalogos="catalogos"></detalle>
 
+    <dato-adicional></dato-adicional>
+
 
     <div class="ibox-title border-bottom" id="atributos">
         <h5>Atributos</h5>

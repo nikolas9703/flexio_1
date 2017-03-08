@@ -7,6 +7,16 @@ Vue.filter('redondeo', {
     }
 });
 
+Vue.filter('signoDollar', {
+    read: function(val) {
+        return _.isNaN(val) ? 0 : accounting.formatMoney(val);
+    },
+    write: function(val, oldVal) {
+        var number = +val.replace(/[^\d.]/g, '');
+        return isNaN(number) ? 0 :  accounting.unformat(number);
+    }
+});
+
 
 Vue.filter('moneda', function(val) {
     return _.isNaN(val) ? 0 : accounting.formatMoney(val);

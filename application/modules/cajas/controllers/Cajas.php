@@ -420,6 +420,7 @@ class Cajas extends CRM_Controller {
                 'public/assets/css/modules/stylesheets/cobros.css',
                 'public/assets/css/modules/stylesheets/animacion.css',
                 'public/assets/css/plugins/jquery/toastr.min.css',
+				
             ));
             $this->assets->agregar_js(array(
                 'public/assets/js/default/jquery-ui.min.js',
@@ -427,7 +428,8 @@ class Cajas extends CRM_Controller {
                 'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
                 'public/assets/js/plugins/jquery/jquery.sticky.js',
                 'public/assets/js/default/jquery.inputmask.bundle.min.js',
-                'public/assets/js/default/toast.controller.js'
+                'public/assets/js/default/toast.controller.js',
+				
             ));
 
             $this->assets->agregar_var_js(array(
@@ -493,6 +495,7 @@ class Cajas extends CRM_Controller {
         $this->assets->agregar_css(array(
             'public/assets/css/plugins/jquery/chosen/chosen.min.css',
             'public/assets/css/modules/stylesheets/facturas_compras.css',
+			
         ));
 
         $this->assets->agregar_js(array(
@@ -501,7 +504,8 @@ class Cajas extends CRM_Controller {
             'public/assets/js/default/jquery.inputmask.bundle.min.js',
             'public/assets/js/plugins/jquery/chosen.jquery.min.js',
             'public/assets/js/modules/cajas/formulario.controller.js',
-            'public/assets/js/default/toast.controller.js'
+            'public/assets/js/default/toast.controller.js',
+			'public/assets/js/modules/cajas/plugins.js',
         ));
 
         $this->template->agregar_titulo_header('Cajas');

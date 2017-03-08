@@ -537,8 +537,9 @@ class Agentes extends CRM_Controller
                     $campo['identificacion'] = $cedula;
                 }else if($campo['letra'] == 'E' || $campo['letra'] == 'N' || $campo['letra'] == 'PE' || $campo['letra'] == 'PI' || $campo['letra'] == 'PAS'){
                 //buscar la letra
-                    $cedula = $campo['letra']."-".$campo['tomo']."-".$campo['asiento'];
-                    if($campo['letra'] == 'PI') $cedula =  $campo['provincia'].$campo['letra']."-".$campo['tomo']."-".$campo['asiento'];
+                    //$cedula = $campo['letra']."-".$campo['tomo']."-".$campo['asiento'];
+                   $cedula =  $campo['provincia'].$campo['letra']."-".$campo['tomo']."-".$campo['asiento'];
+//				   if($campo['letra'] == 'PI') $cedula =  $campo['provincia'].$campo['letra']."-".$campo['tomo']."-".$campo['asiento'];
                 //$natural = array_merge($natural, array('identificacion'=>array('letra'=>$natural['letra'],'cedula'=> $cedula)));
                     $campo['identificacion'] = $cedula;
                 }
@@ -825,13 +826,33 @@ class Agentes extends CRM_Controller
                         $data['info']['agente']['tomo'] = $tomo;
                         $data['info']['agente']['asiento'] = $asiento;
                         $data['info']['agente']['tipo_identificacion'] = "natural";
-                    }elseif($agente['letra'] == 'N' || $agente['letra'] == 'PE' || $agente['letra'] == 'E'){
-                        list($letra, $tomo, $asiento) =  explode("-", $identificacion);
-                        $data['info']['agente']['letra'] = $letra;
+                    }elseif($agente['letra'] == 'N'){
+                        list($provincia, $tomo, $asiento) =  explode("-", $identificacion);
+                        $provincia = str_replace("N","",$provincia);
+                        $data['info']['agente']['provincia'] = $provincia;
+						$data['info']['agente']['letra'] = 'N';
                         $data['info']['agente']['tomo'] = $tomo;
                         $data['info']['agente']['asiento'] = $asiento;
                         $data['info']['agente']['tipo_identificacion'] = "natural";
-                    }elseif($agente['letra'] == 'PI'){
+                    }elseif($agente['letra'] == 'PE'){
+                       list($provincia, $tomo, $asiento) =  explode("-", $identificacion);
+                        $provincia = str_replace("PE","",$provincia);
+                        $data['info']['agente']['provincia'] = $provincia;
+                        $data['info']['agente']['letra'] = 'PE';
+                        $data['info']['agente']['tomo'] = $tomo;
+                        $data['info']['agente']['asiento'] = $asiento;
+                        $data['info']['agente']['tipo_identificacion'] = "natural";
+                    }
+					elseif($agente['letra'] == 'E'){
+                       list($provincia, $tomo, $asiento) =  explode("-", $identificacion);
+                        $provincia = str_replace("E","",$provincia);
+                        $data['info']['agente']['provincia'] = $provincia;
+                        $data['info']['agente']['letra'] = 'E';
+                        $data['info']['agente']['tomo'] = $tomo;
+                        $data['info']['agente']['asiento'] = $asiento;
+                        $data['info']['agente']['tipo_identificacion'] = "natural";
+                    }
+					elseif($agente['letra'] == 'PI'){
                         list($provincia, $tomo, $asiento) =  explode("-", $identificacion);
                         $provincia = str_replace("PI","",$provincia);
                         $data['info']['agente']['provincia'] = $provincia;

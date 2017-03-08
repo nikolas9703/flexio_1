@@ -8,6 +8,7 @@ export default {
         var self = this;
         var config = {'minimumInputLength':0, 'width':'100%'};
         var ajax = {
+            delay: 700,
             dataType:'json',
             processResults: function (data) {
                 return {

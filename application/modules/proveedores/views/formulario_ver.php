@@ -123,7 +123,7 @@ $formAttr = array(
                             </select>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row hide campos_metodo_ach">
                         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
                             <label>Banco </label>
                             <select name="campo[banco]" class="chosen" id="banco" style="display: none;">

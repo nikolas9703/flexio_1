@@ -73,7 +73,7 @@ class EstadoCuentaProveedor
     $this->excellObj->getActiveSheet()->setCellValue('A9', 'SubTotal:');
     $this->excellObj->getActiveSheet()->setCellValue('B9', '=(B7 + B8)');
     $this->excellObj->getActiveSheet()->setCellValue('A10', 'ITBMS:');
-    $this->excellObj->getActiveSheet()->setCellValue('B10',$datos->facturas_habilitadas()->sum('impuestos'));
+    $this->excellObj->getActiveSheet()->setCellValue('B10', (float)$datos->facturas_habilitadas()->sum('impuestos'));
     $this->excellObj->getActiveSheet()->setCellValue('A11', 'Total:');
     $this->excellObj->getActiveSheet()->setCellValue('B11','=(B9 + B10)');
 
@@ -87,7 +87,7 @@ class EstadoCuentaProveedor
  }
  protected function indicadores_contrato_cuadro2($datos){
     $this->excellObj->getActiveSheet()->setCellValue('D7', 'Avances facturado:');
-    $this->excellObj->getActiveSheet()->setCellValue('E7', $datos->facturado());
+    $this->excellObj->getActiveSheet()->setCellValue('E7', (float)$datos->facturado());
     $this->excellObj->getActiveSheet()->getStyle('E7')->getNumberFormat()->setFormatCode('"$"#,##0.00_-');
     $this->excellObj->getActiveSheet()->setCellValue('D8', 'Restante por facturar:');
     $this->excellObj->getActiveSheet()->setCellValue('E8', $datos->por_facturar());
@@ -174,8 +174,8 @@ class EstadoCuentaProveedor
  protected function rubros_contrato($datos){
    //codigo| nombre| descripcion| monto original | monto adendas | monto total sin itbms| facturado | res por facturar
    $datos->load('subcontrato_montos.cuenta','adenda.adenda_montos');
-
-   $rubos =  $datos->subcontrato_montos->map(function($contratados) use($datos){
+   $sub_items = [];
+   $rubos =  $datos->subcontrato_montos->each(function($contratados) use($datos, &$sub_items){
    $cuenta_id = $contratados->cuenta->id;
 
 
@@ -194,12 +194,13 @@ class EstadoCuentaProveedor
             'facturado' =>$facturado,
             'restante_por_facturar' => 0 //formula
           ];
+
      if(!in_array($cuenta_id,$cuentaInAdenda->all())){
         $montosAdenda = $datos->adenda_cuenta;
         foreach ($montosAdenda as $enAdenda){
            $facturado = (float)$datos->facturas_habilitadas()
           ->join('faccom_facturas_items','faccom_facturas.id', '=', 'faccom_facturas_items.factura_id')->where('faccom_facturas_items.cuenta_id','=',$enAdenda->cuenta_id)->sum('faccom_facturas_items.subtotal');
-           $sub_items[] = [
+            $sub_items[] = [
              'codigo'=> $enAdenda->cuenta->codigo,
              'cuenta'=> $enAdenda->cuenta->nombre,
              'descripcion' => $enAdenda->descripcion,
@@ -209,6 +210,7 @@ class EstadoCuentaProveedor
              'facturado' =>$facturado,
              'restante_por_facturar' => 0 //formula
            ];
+
         }
      }
      return $sub_items;
@@ -216,8 +218,8 @@ class EstadoCuentaProveedor
 
    $stylebasic = [ 'font' => ['size' => 10]];
    $j = 16;
-   $rubos = $rubos->all();
-   foreach($rubos[0] as $data){
+   
+   foreach($sub_items as $data){
      $this->excellObj->getActiveSheet()->setCellValue('A'.$j, $data['codigo']);
      $this->excellObj->getActiveSheet()->mergeCells('B'.$j.':C'.$j);
      $this->excellObj->getActiveSheet()->setCellValue('B'.$j, $data['cuenta']);

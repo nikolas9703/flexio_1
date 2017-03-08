@@ -1,8 +1,9 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 
-$route['catalogos_inventario/listar']           = 'catalogos_inventario/listar';
-$route['catalogos_inventario/ocultotabla']      = 'catalogos_inventario/ocultotabla';
+$route['catalogos_inventario/listar'] = 'catalogos_inventario/listar';
+$route['catalogos_inventario/ocultotabla'] = 'catalogos_inventario/ocultotabla';
+$route['catalogos_inventario/datos_adicionales/(:any)'] = 'catalogos_inventario/datos_adicionales/$1';
 
 //Ajax
 $route['catalogos_inventario/ajax-exportar']                    = 'catalogos_inventario/ajax_exportar';
@@ -23,3 +24,4 @@ $route['catalogos_inventario/ajax-get-precio']                  = 'catalogos_inv
 $route['catalogos_inventario/ajax-get-unidad']                  = 'catalogos_inventario/ajax_get_unidad';
 $route['catalogos_inventario/ajax-get-razon']                   = 'catalogos_inventario/ajax_get_razon';
 $route['catalogos_inventario/ajax-select-precio']               = 'catalogos_inventario/ajax_select_precio';
+$route['catalogos_inventario/ajax-listar-datos-adicionales'] = 'catalogos_inventario/ajax_listar_datos_adicionales';

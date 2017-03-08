@@ -20,6 +20,7 @@ use Flexio\Modulo\Politicas\Repository\PoliticasRepository;
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra as OrdenesCompra;
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesHistorial;
 use Flexio\Modulo\OrdenesCompra\Models\OrdenesCompraCat;
+use Flexio\Modulo\OrdenesCompra\Transform\PedidosTransformer;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 
 use Flexio\Library\Util\FlexioSession;
@@ -54,6 +55,10 @@ class OrdenesCompraRepository{
 
     public function find($orden_compra_id) {
         return OrdenesCompra::find($orden_compra_id);
+    }
+
+    function findIn($id){
+      return OrdenesCompra::whereIn("id", $id)->get();
     }
 
     public function findByUuid($uuid) {
@@ -141,6 +146,29 @@ class OrdenesCompraRepository{
 
     }
 
+    /**
+     * Retornar los items de las ordenes
+     * seleccionados.
+     *
+     * @param  ordenes collection
+     * @return array
+     */
+    public function getOrdenesItems($ordenes){
+        $scope = $this;
+        $articulos=array();
+        $j=0;
+        foreach ($ordenes AS $orden_compra) {
+          $articulo = new \Flexio\Library\Articulos\OrdenCompraArticulo;
+          if(empty($orden_compra->items)){ continue; }
+          $items = $articulo->get($orden_compra->items, $orden_compra);
+          foreach ($items AS $item) {
+            $articulos[$j] = $item;
+            $j++;
+          }
+        }
+        return ['articulos' => $articulos];
+    }
+
     public function formatProveedor($proveedor){
 
         return [
@@ -222,8 +250,15 @@ class OrdenesCompraRepository{
         $this->_save($orden, $post);
         $this->_syncItems($orden, $post["items"]);
 
-        return $orden;
+        //Verificar si en el post existe el array de pedidos
+        //esto viene cuando se convierte varios pedidos a orden.
+        if(!empty($post['pedidos'])){
+          $instaciaPedidos = new PedidosTransformer;
+          $pedidos = $instaciaPedidos->crearInstancia($post['pedidos']);
+          $orden->pedidos()->saveMany($pedidos);
+        }
 
+        return $orden;
     }
 
     private function _save($orden, $post){
@@ -258,7 +293,7 @@ class OrdenesCompraRepository{
 
     }
 
-    private function _createEntrada($orden, $post)
+    public function _createEntrada($orden, $post)
     {
         $campo = $post["campo"];
         if($orden->id_estado == "2")//Orden de Compra -> Por Facturar || Este estado no puede ser modificado despues de ser asignado

@@ -24,7 +24,7 @@ use Flexio\Modulo\Pagos\Repository\PagosRepository as pagosRep;
 use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository as proveedoresRep;
 
 use Flexio\Modulo\Agentes\Repository\AgentesRepository as agentesRep;
-use Flexio\Modulo\aseguradoras\Repository\AseguradorasRepository as aseguradorasRep;  
+use Flexio\Modulo\aseguradoras\Repository\AseguradorasRepository as aseguradorasRep;
 
 use Flexio\Modulo\SubContratos\Repository\SubContratoRepository as subcontratosRep;
 use Flexio\Modulo\Cobros\Repository\CatalogoCobroRepository as CatalogoCobroRepository;
@@ -205,9 +205,9 @@ class Pagos extends CRM_Controller {
         $data['formas_pago'] = Pago_catalogos_orm::where('tipo', 'pago')->get(array('id', 'etiqueta', 'valor'));
         $data['bancos'] = Bancos_orm::get(array('id', 'nombre'));
 
-        $breadcrumb["menu"]["opciones"]["#exportarListaPagos"] = "Exportar";
-        $breadcrumb["menu"]["opciones"]["#generarMultiplesACH"] = "Generar ACH";
-        $breadcrumb["menu"]["opciones"]["#generarAplicadoMultiple"] = "Aplicar pago";
+        $breadcrumb['menu']['opciones']['#exportarListaPagos'] = 'Exportar';
+        $breadcrumb['menu']['opciones']['#generarMultiplesACH'] = 'Generar ACH';
+        $breadcrumb['menu']['opciones']['#change-state-multiple-btn'] = 'Cambiar estado';
         //$breadcrumb["menu"]["opciones"]["#pagarMultiplesColaboradores"] = "Pagar colaborares";
 
         $this->template->agregar_titulo_header('Listado de Pagos');
@@ -291,6 +291,17 @@ class Pagos extends CRM_Controller {
         $count = $pagos->count();
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
 
+        if($sidx == 'no_documento'){
+            $pagos->groupBy('pag_pagos.id');
+            $pagos->selectRaw('pag_pagos.*, GROUP_CONCAT(faccom_facturas.factura_proveedor) AS no_documento');
+            $pagos->leftJoin('pag_pagos_pagables', function($join){
+                $join->on('pag_pagos_pagables.pago_id', "=", 'pag_pagos.id');
+                $join->where('pag_pagos_pagables.pagable_type', '=', 'Flexio\Modulo\FacturasCompras\Models\FacturaCompra');
+            });
+            $pagos->join('faccom_facturas', function($join){
+                $join->on('pag_pagos_pagables.pagable_id', "=", 'faccom_facturas.id');
+            });
+        }
         $pagos->orderBy($sidx, $sord)->skip($start)->take($limit);
 
 
@@ -299,82 +310,53 @@ class Pagos extends CRM_Controller {
         $response->total = $total_pages;
         $response->records = $count;
 
+        $hidden_options = '';
+        $link_option = '';
 
         if ($count) {
 
             foreach ($pagos->get() as $i => $row) {
 
-              $link_planilla="";
-              if($row->formulario == 'planilla'){
+                if($this->auth->has_permission('acceso', 'pagos/ver/(:any)')){
+                    $hidden_options .= '<a href="#" data-id="'.$row->id.'" data-uuid="'.$row->uuid_pago.'" class="btn btn-block btn-outline btn-success change-state-btn">Cambiar estado</a>';
+                }
 
-                  $planilla = $row->planillas->first();
-                  $codido_planilla = $planilla->codigo;
-                  $uuid_colaborador = !empty($row->colaborador) && !empty($row->colaborador->uuid_colaborador) ? $row->colaborador->uuid_colaborador : "";
-                  $nombre = !empty($row->colaborador) && !empty($row->colaborador->nombre) ? $row->colaborador->nombre : "";
-                  $apellido = !empty($row->colaborador) && !empty($row->colaborador->apellido) ? $row->colaborador->apellido : "";
+                  /*  if ($row->estado == 'por_aprobar') {
+                        $hidden_options .= '<a href="#" data-id="'.$row->uuid_pago.'" data-pagoid="'.$row->id.'"  class="btn btn-block btn-outline btn-success aprobarPago" >Aprobar pago</a>';
+                    } elseif ($row->estado == 'por_aplicar' && trim($this->listaPago->metodo_pago($row->metodo_pago)) != 'Cheque') {
+                        $hidden_options .= '<a href="#" data-id="'.$row->uuid_pago.'" data-pagoid="'.$row->id.'" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
+                    } elseif ($row->estado == 'por_aplicar' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque') {
+                        $hidden_options .= '<a href="'.base_url('cheques/crear/pago'.$row->uuid_pago).'" class="btn btn-block btn-outline btn-success">Imprimir Cheque</a>';
+                    } elseif ($row->estado == 'cheque_en_transito' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque') {
+                        $hidden_options .= '<a href="#" data-id="'.$row->uuid_pago.'" data-pagoid="'.$row->id.'" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
+                    } */ /* NOTA: Estas opciones de estado se deshabilitaron por sugerencia de Roberto ya que se deben validar con los disponibles en POLITICAS DE TRANSACCIONES card #205 */
 
-                  $link_planilla = '<a href="'.base_url('planilla/ver/' . $planilla->uuid_planilla).'" class="link">'.$codido_planilla.'</a>';
-                  $link_colaborador = '<a href="'.base_url('colaboradores/ver/' . $uuid_colaborador).'" class="link">'.$nombre.' '.$apellido.'</a>';
-               }
-              else if( $row->formulario == 'pago_extraordinario' ){
-
-                  $extraordinario = $row->pagos_extraordinarios->first();
-                  $uuid_colaborador = !empty($row->colaborador) && !empty($row->colaborador->uuid_colaborador) ? $row->colaborador->uuid_colaborador : "";
-                  $nombre = !empty($row->colaborador) && !empty($row->colaborador->nombre) ? $row->colaborador->nombre : "";
-                  $apellido = !empty($row->colaborador) && !empty($row->colaborador->apellido) ? $row->colaborador->apellido : "";
-                  $codido_pago_extraordinario = $extraordinario->numero;
-
-                  $link_planilla = '<a href="'.base_url('comisiones/ver/' . $extraordinario->uuid_comision).'" class="link">'.$codido_pago_extraordinario.'</a>';
-                  $link_colaborador = '<a href="'.base_url('colaboradores/ver/' . $uuid_colaborador).'" class="link">'.$nombre.' '.$apellido.'</a>';
-              }
-
-              else if($row->formulario == 'transferencia'){
-                  $transferencia = $row->transferencias->first();
-                  $codigo = $transferencia->numero;
-                  $link_planilla = '<a href="'.base_url('cajas/transferir_detalle/' . $transferencia->caja->uuid_caja.'/'.$transferencia->id).'" class="link">'.$codigo.'</a>';
-                  $link_colaborador = $transferencia->caja->responsable->nombre.' '.$transferencia->caja->responsable->apellido;
-               }
-
-              else if( $row->empezable_type == 'Flexio\Modulo\Anticipos\Models\Anticipo'){
-                  $link_planilla = '<a href="'.$row->empezable->enlace.'" class="link">'.$row->empezable->codigo.'</a>';
-              }
-              else if( $row->formulario == 'movimiento_monetario' ){
-                $retiro = $row->retiros->first();
-                $link_planilla = '<a href="'.base_url('movimiento_monetario/ver_retiros/' . bin2hex($retiro->uuid_retiro_dinero)).'" class="link">'.$retiro->codigo.'</a>';
-              }
-                $hidden_options = "";
-                $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row->uuid_pago . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
-              if($row->formulario != 'planilla' && $row->formulario != 'pago_extraordinario' /*&& $row->formulario != 'movimiento_monetario'*/){
-                   if($row->formulario != 'transferencia' && $row->formulario != 'movimiento_monetario'){
-                     $hidden_options .= '<a href="' . base_url('pagos/ver/' . $row->uuid_pago) . '" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success">Ver Detalle</a>';
-                    }
-
-                    if ($row->estado == 'por_aprobar'){
-                        $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '"  class="btn btn-block btn-outline btn-success aprobarPago" >Aprobar pago</a>';
-
-                    }
-                    else if ($row->estado == 'por_aplicar' && trim($this->listaPago->metodo_pago($row->metodo_pago)) != 'Cheque'){
-                           $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
-                    }
-                    else if ($row->estado == 'por_aplicar' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque'){
-                        $hidden_options .= '<a href="' . base_url('cheques/crear/pago' . $row->uuid_pago) . '" class="btn btn-block btn-outline btn-success">Imprimir Cheque</a>';
-                    }
-                    else if ($row->estado == 'cheque_en_transito' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque'){
+                   /* if ($row->estado != 'anulado') {
+                        $hidden_options .= '<a href="#" data-id="'.$row->uuid_pago.'" data-pagoid="'.$row->id.'" class="btn btn-block btn-outline btn-success anularPago" id="#anularPago">Anular pago</a>';
+                    }*/
+                //else {
+                    if ($row->estado == 'por_aplicar') {
+                        $hidden_options .= '<a href="#" data-tipo="'.$row->formulario.'" data-id="'.$row->uuid_pago.'" class="btn btn-block btn-outline btn-success pagarColaborador" id="#pagarColaborador">Aplicar</a>';
+                        $hidden_options .= '<a href="#" data-tipo="'.$row->formulario.'" data-id="'.$row->uuid_pago.'" class="btn btn-block btn-outline btn-success anularColaborador" id="#anularColaborador">Anular</a>';
+                    }else if ($row->estado == 'cheque_en_transito' and trim($this->listaPago->metodo_pago($row->metodo_pago)) == 'Cheque'){
                       $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '" class="btn btn-block btn-outline btn-success aplicarPago" id="#aplicarPago">Aplicar pago</a>';
+                    }else {
+                        $hidden_options .= 'Este pago ya esta concluido.';
                     }
-
+                    
                     if($row->estado != 'anulado'){
                       $hidden_options .= '<a href="#" data-id="' . $row->uuid_pago . '" data-pagoid="' . $row->id . '" class="btn btn-block btn-outline btn-success anularPago" id="#anularPago">Anular pago</a>';
                     }
-              }else{
 
-                if ($row->estado == 'por_aplicar'){
-                    $hidden_options .= '<a href="#" data-tipo="'.$row->formulario.'" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success pagarColaborador" id="#pagarColaborador">Aplicar</a>';
-                    $hidden_options .= '<a href="#" data-tipo="'.$row->formulario.'" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success anularColaborador" id="#anularColaborador">Anular</a>';
-                }else{
-                  $hidden_options .= "Este pago ya esta concluido.";
+                else{
+
+                    if ($row->estado == 'por_aplicar'){
+                        $hidden_options .= '<a href="#" data-tipo="'.$row->formulario.'" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success pagarColaborador" id="#pagarColaborador">Aplicar</a>';
+                        $hidden_options .= '<a href="#" data-tipo="'.$row->formulario.'" data-id="' . $row->uuid_pago . '" class="btn btn-block btn-outline btn-success anularColaborador" id="#anularColaborador">Anular</a>';
+                    }else{
+                      $hidden_options .= "Este pago ya esta concluido.";
+                    }
                 }
-              }
                 if($row->formulario != 'transferencia' && $row->formulario != 'movimiento_monetario'){
                   $hidden_options .= '<a  href="'.base_url('pagos/historial/'. $row->uuid_pago).'"   data-id="'.$row->id.'" class="btn btn-block btn-outline btn-success">Ver bit&aacute;cora</a>';
                 }
@@ -388,7 +370,7 @@ class Pagos extends CRM_Controller {
                   });
                   $no_documento = $facturas->implode("codigo_enlace_v2", ", ");
                 }else{
-                  $no_documento = $link_planilla;
+                  $no_documento = 0;//$link_planilla;
                 }
 
                 $response->rows[$i]["id"] = $row->uuid_pago;
@@ -403,7 +385,7 @@ class Pagos extends CRM_Controller {
                     $no_documento,
                     $this->listaPago->metodo_pago($row->metodo_pago),
                     //$this->listaPago->banco($row->metodo_pago),
-                    $this->listaPago->color_estado($etapa->etiqueta, $etapa->valor),
+                    $this->listaPago->color_estado($etapa->etiqueta, $etapa->valor, $row->uuid_pago, $row->id),
                     $etapa->etiqueta,
                     $link_option,
                     $hidden_options
@@ -418,7 +400,9 @@ class Pagos extends CRM_Controller {
 
     function ocultotabla($uuid_orden_venta = null) {
         $this->assets->agregar_js(array(
-            'public/assets/js/modules/pagos/tabla.js'
+            'public/assets/js/modules/pagos/funtions.js',
+            'public/assets/js/modules/pagos/tabla.js',
+            'public/assets/js/modules/pagos/cambiar_estado.js'
         ));
         if (!empty($uuid_orden_venta)) {
             if (preg_match("/pedidos/i", $this->router->fetch_class())) {
@@ -755,6 +739,70 @@ class Pagos extends CRM_Controller {
         $this->template->visualizar();
     }
 
+    public function ajax_get_empezables()
+    {
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $response = [];
+        $request = array_merge($this->input->post(), $this->input->get(), ['empresa' => $this->empresa_id]);
+        if(isset($request['campo']) && !empty($request['campo'])){$request = array_merge($request, $request['campo']);}
+
+        if(!empty($request['empezable_type'])){
+            $method = (isset($request['id']) && !empty($request['id'])) ? 'find' : 'get';
+            if($request['empezable_type'] == 'factura'){
+                $result = \Flexio\Modulo\FacturasCompras\Models\FacturaCompra::where(function($query) use ($request){
+                    $query->deFiltro($request);
+                })->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+            }elseif ($request['empezable_type'] == 'proveedor') {
+                $result = \Flexio\Modulo\Proveedores\Models\Proveedores::where(function($query) use ($request){
+                    $query->deFiltro($request);
+                })
+                ->select('pro_proveedores.*')
+                ->join("faccom_facturas", function ($join) {
+                    $join->on("faccom_facturas.proveedor_id", "=", "pro_proveedores.id");
+                    $join->whereIn("faccom_facturas.estado_id", [14, 15]);
+                })
+                ->groupBy('pro_proveedores.id')
+                ->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+            }elseif ($request['empezable_type'] == 'subcontrato') {
+                $result = \Flexio\Modulo\SubContratos\Models\SubContrato::where(function($query) use ($request){
+                    $query->deFiltro($request);
+                })->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+            }elseif ($request['empezable_type'] == 'anticipo') {
+                $result = \Flexio\Modulo\Anticipos\Models\Anticipo::where(function($query) use ($request){
+                    $query->deFiltro($request);
+                })->take(10)->$method($method == 'find' ? $request['id'] : ['*']);
+            }
+
+            if($request['empezable_type'] == 'proveedor'){
+                $response = $method == 'find' ? ['id' => $result->id, 'nombre' => $result->nombre] : $result->map(function($row){
+                    return ['id' => $row->id, 'text' => $row->nombre];
+                });
+            }else{
+                $aux = $method == 'find' && count($result->proveedor) ? $result->proveedor->nombre : '';
+                $response = $method == 'find' ? ['id' => $result->id, 'nombre' => $result->codigo.' '.$aux] : $result->map(function($row){
+                    $aux = count($row->proveedor) ? $row->proveedor->nombre : '';
+                    return ['id' => $row->id, 'text' => $row->codigo.' '.$aux];
+                });
+            }
+
+        }
+
+        echo json_encode($response);
+        exit;
+    }
+
+    public function ajax_get_empezable()
+    {
+        if(!$this->input->is_ajax_request()){
+            return false;
+        }
+
+        $response = [];
+        $request = $this->input->post();
+    }
 
 
     public function ocultoformulario()
@@ -834,7 +882,24 @@ class Pagos extends CRM_Controller {
         $formGuardar = new  Flexio\Modulo\Pagos\FormRequest\GuardarPagos;
         try {
             $post = $this->input->post();
-            $pago = $formGuardar->save($post);
+            $aux = explode(",",$post['campo']['id']);
+            $post['campo']['empresa_id'] = $this->empresa_id;
+             if(!empty($post['pago']) && isset($post['multiple'])){
+                  foreach($post['pago'] as $valores){
+                    $campos["campo"] = $valores;
+                    $pago = $formGuardar->save($campos);
+                 }
+            }else if(count($aux) > 1){
+                 foreach($aux as $uuid_pago){
+                    $pago = \Flexio\Modulo\Pagos\Models\Pagos::where('uuid_pago', hex2bin($uuid_pago))->first();
+                    $GuardarPago = new Flexio\Modulo\Pagos\FormRequest\GuardarPagos();
+                    $campos["campo"] = ['estado' => $post['campo']['estado'], 'id' => $pago->id];
+                    $campos['campo']['empresa_id'] = $this->empresa_id;
+                    $GuardarPago->save($campos);
+            }
+            }else{
+              $pago = $formGuardar->save($post);
+            }
         } catch (\Exception $e) {
             log_message('error', " __METHOD__  ->  , Linea:  __LINE__  --> " . $e->getMessage() . "\r\n");
             echo json_encode(array(
@@ -1363,18 +1428,18 @@ function ajax_pagar_colaborador() {
             $agentes = new Agentes_orm;
             $aseguradoras = new Aseguradoras_orm;//empresa_id
 
-            $proveedor = 
+            $proveedor =
             $proveedor->where("id_empresa","=",$this->empresa_id);
-            $aseguradoras = 
+            $aseguradoras =
             $aseguradoras->where("empresa_id","=",$this->empresa_id);
 
             if (!empty($this->input->get("q",true))) {
                 $nombreBuscar = $this->input->get("q",true);
-                $proveedor = 
+                $proveedor =
                 $proveedor->where("nombre","like","%".$nombreBuscar."%");
-                $agentes = 
+                $agentes =
                 $agentes->where("nombre","like","%".$nombreBuscar."%");
-                $aseguradoras = 
+                $aseguradoras =
                 $aseguradoras->where("nombre","like","%".$nombreBuscar."%");
 
             }
@@ -1382,15 +1447,15 @@ function ajax_pagar_colaborador() {
             $parametrosRestriccion = array("estado", "LIKE","activo");
             $camposConsulta = array("nombre","id as proveedor_id");
 
-            $proveedor = 
+            $proveedor =
             $proveedor->where($parametrosRestriccion[0],$parametrosRestriccion[1],$parametrosRestriccion[2])
             ->get($camposConsulta);
 
-            $agentes = 
+            $agentes =
             $agentes->where($parametrosRestriccion[0],$parametrosRestriccion[1],$parametrosRestriccion[2])
             ->get($camposConsulta);
 
-            $aseguradoras = 
+            $aseguradoras =
             $aseguradoras->where($parametrosRestriccion[0],$parametrosRestriccion[1],$parametrosRestriccion[2])
             ->get($camposConsulta);
 
@@ -1582,6 +1647,40 @@ function ajax_pagar_colaborador() {
         ));
     }
 
+    public function ajax_get_states_segment()
+    {
+        $id = $this->input->post('id');
+        $pago = \Flexio\Modulo\Pagos\Models\Pagos::find($id);
+        $data = ['pago' => $pago, 'id' => $id];
+        $response = ['data' => $this->load->view('segments/states', $data, true)];
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
 
+    public function ajax_update_state()
+    {
+        $id = $this->input->post('id');
+        $ids = is_array($id) ? $id : [$id];
+        $errors = "";
 
+        foreach($ids as $dato_id){
+            try {
+                $GuardarPago = new \Flexio\Modulo\Pagos\FormRequest\GuardarPagos();
+                if(!is_numeric($dato_id)){
+                    $aux = \Flexio\Modulo\Pagos\Models\Pagos::where('uuid_pago', hex2bin($dato_id))->first();
+                    $dato_id = $aux->id;
+                }
+                $params = ['campo' => ['estado' => $this->input->post('estado'), 'id' => $dato_id]];
+                $GuardarPago->save($params);
+            } catch (\Exception $e) {
+                $errors .= $e->getMessage()."<br>";
+            }
+        }
+        echo json_encode(array(
+            'response' => strlen($errors) ? false : true,
+            'mensaje' => strlen($errors) ? $errors : 'Se actualiz&oacute; el estado correctamente.'
+        ));
+        exit;
+    }
 }

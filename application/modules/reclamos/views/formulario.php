@@ -13,11 +13,11 @@ if (!isset($campo)) {
 <style type="text/css">
     .sticky{ position: fixed !important; top: 0px; z-index: 100; background: #e7eaec;}
 </style>
-<div id="vistaCliente" class="" >
+<div id="" class="" >
 
     <div class="tab-content" >
         <!-- AQUI VA EL FORM CON EL ACTION -->
-        <div id="datosdelcliente-5" class="tab-pane active col-lg-12 col-md-12">
+        <div id="" class="tab-pane active col-lg-12 col-md-12">
 
             <div class="ibox" >                    
                 <div class="tabs-container">
@@ -59,25 +59,25 @@ if (!isset($campo)) {
                     <input type="hidden" name="detalleunico" id="detalleunico" value="<?php echo strtotime('now'); ?>">
                     <!-- Fin Variables Ocultas -->
 
-                    <div class="row">
+                    <div class="row" id="formulariodatosreclamo">
                         <?php echo modules::run('reclamos/formulariodatosreclamo', $tipo_interes); ?>                
                     </div> 
                     <!-- Intereses de solicitud -->    
-                    <div class="row">
+                    <div class="row" id="formulariointereses" style="margin-top: 20px">
                         <?php echo str_replace("</form>", "", modules::run('reclamos/formulariointereses', $tipo_interes)) ; ?>                       
                     </div> 
                     <!-- Detale Reclamo -->
-                    <div class="row" style="margin-top: -111px">
+                    <div class="row" style="margin-top: -111px" id="formulariodetallereclamo">
                         <?php echo modules::run('reclamos/formulariodetallereclamo', $campo); ?>                       
                     </div> 
                     <!-- Documentos -->
-                    <div class="row" style="margin-top: 80px">
+                    <div class="row" style="margin-top: 20px" id="formulariodocumentos">
                         <?php echo modules::run('reclamos/formulariodocumentos', $id_ramo); ?>
                         <div id="infopagoreclamo"></div>
                     </div> 
 
                     <!-- Pago -->
-                    <div class="row" style="margin-top: 50px">
+                    <div class="row" id="formulariopago">
                         <?php echo modules::run('reclamos/formulariopago', $campo); ?>
                     </div> 
 

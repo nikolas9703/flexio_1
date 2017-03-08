@@ -269,7 +269,6 @@ export default {
 	},
 
 	ready: function () {
-
 		var context = this;
 		var ejm = context.precioVenta();
 		Vue.nextTick(function () {
@@ -850,9 +849,14 @@ export default {
 						context.row.items = JSON.parse(JSON.stringify(response.data.items)); //inmutable
 						context.disabledArticulo = false;
 						if (context.config.modulo != 'ordenes') {
-							$('#proveedor_id').attr('disabled', 'disabled');
+							//$('#proveedor_id').attr('disabled', 'disabled');
 						}
-						context.config.disableEmpezarDesde = false;
+
+            // verificar que no exista esta variable que proviene de convertir
+            // ordenes compras a facturas compras ---> condicion agregada por: @josecoder
+            if(typeof window.orden_multiple == 'undefined'){
+						      context.config.disableEmpezarDesde = false;
+            }
 						context.$broadcast('fill-typeahead', response.data.items);
 
 						// context.$broadcast('fill-typeahead',response.data.items);

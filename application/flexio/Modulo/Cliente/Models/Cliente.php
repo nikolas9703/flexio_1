@@ -181,7 +181,6 @@ class Cliente extends Model {
     public function anticipo_cliente(){
         return $this->morphMany('Flexio\Modulo\Anticipos\Models\Anticipo', 'anticipable')->where('estado','aprobado')->has('orden_venta','<',1)->has('contrato','<',1);
     }
-
     //cambiar a relacion morph
     public function cobros_cliente() {
         return $this->hasMany(Cobro::class, 'cliente_id');

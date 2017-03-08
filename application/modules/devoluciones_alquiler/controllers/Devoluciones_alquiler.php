@@ -322,7 +322,7 @@ function crear() {
 
 
               $categorias = $this->ItemsCategoriasRepository->get(['empresa_id'=>$this->empresa_id,'conItems'=>true]);
-              $categorias->load('items_contratos_alquiler');
+           //   $categorias->load('items_contratos_alquiler');
 
                 //---------------------
                 //Listado de Bodegas
