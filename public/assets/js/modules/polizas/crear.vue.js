@@ -90,7 +90,7 @@ getOpcionPagador: function () {
         $("#selpagadornombre").removeAttr("data-rule-required");
     }
 },
- coberturasModal: function (e) {
+coberturasModal: function (e) {
             //Inicializar opciones del Modal
             $('#verCoberturas').modal({
                 backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
@@ -144,6 +144,9 @@ getOpcionPagador: function () {
                 $(".detail").remove();
                 $(".detail_endoso").remove();
                 $("#renovar").prop("hidden",false);
+                $("#articulo, #formCarga, #formcasco_aereo, #formCasco_maritimo, #persona, #formProyecto_actividad, #formUbicacion, #vehiculo").attr('action', '' + window.location.href + '');
+                $(".guardarVehiculo, .guardarArticulo, .guardarCarga, .guardarAereo, .guardarMaritimo, .guardarPersona, .guardarProyecto, .guardarUbicacion").attr("type", "button").val("Agregar");
+                $("#articulo #cancelar, #formCarga #cancelar, #formcasco_aereo #cancelar, #formCasco_maritimo #cancelar, #persona #cancelar, #formProyecto_actividad #cancelar, #formUbicacion #cancelar, #vehiculo #cancelar").hide();
                 
                 
             }           
@@ -264,10 +267,13 @@ getOpcionPagador: function () {
 
         getIntereses: function () {
             //polula el segundo select del header
-            var self = this;
-            var interes = $('#formulario').val();
-            var id_poliza = $('#idPoliza').val();
-
+            var self      = this;
+            var interes    = $('#formulario').val();
+            var id_poliza  = $('#idPoliza').val();
+            var URL =window.location.href.split("/");
+            var urlLastSegment= URL.pop();
+            var getInteresUrl = urlLastSegment==="renovar" ? 'solicitudes/ajax_get_tipointereses' : 'polizas/ajax_get_tipointereses';
+            var unico = $("input[name='detalleunico']").val();
             if (id_tipo_int_asegurado != "") {
                 interes = id_tipo_int_asegurado;
                 if (interes == 1) {
@@ -302,9 +308,9 @@ getOpcionPagador: function () {
 
                 if (interes != "") {
                     this.$http.post({
-                        url: phost() + 'polizas/ajax_get_tipointereses',
+                        url: phost() + getInteresUrl,
                         method: 'POST',
-                        data: {interes: interes, id_poliza : id_poliza ,erptkn: tkn}
+                        data: {interes: interes, id_poliza : id_poliza ,unico:unico ,erptkn: tkn}
                     }).then(function (response) {
                         if (_.has(response.data, 'session')) {
                             window.location.assign(phost());
@@ -407,12 +413,12 @@ getOpcionPagador: function () {
             var tipointeres = $('#formulario').val();
             var URL =window.location.href.split("/");
             var urlLastSegment= URL.pop();
-
+            var getInteresUrl = urlLastSegment == 'renovar' ? 'solicitudes/ajax_get_intereses':'polizas/ajax_get_intereses';
             
 
             if (interes != "") {
                 this.$http.post({
-                    url: phost() + 'polizas/ajax_get_intereses',
+                    url: phost() + getInteresUrl,
                     async: false,
                     method: 'POST',
                     data: {interes: interes, tipointeres: tipointeres, erptkn: tkn}
@@ -1168,8 +1174,9 @@ $(document).ready(function () {
     }
 
 }else{
-    $(".renewal").remove();
-    $('.detail_endoso').remove();
+   $(".botones").remove();
+   $(".renewal").remove();
+   $('.detail_endoso').remove();
 }
 if (estado_pol=="Por Facturar"){
     var estado=$("#estado_poliza").val();
@@ -1246,7 +1253,6 @@ if( tablaTipo2 == 'vida' || tablaTipo2 == "accidentes" || tablaTipo2 == "acciden
     }
 
     $(".campodesde").val(desde);
-    $(".botones").remove();
     $(".documentos_entregados").remove();
     //$("#articulo, #formCarga, #formcasco_aereo, #formCasco_maritimo, #persona, #formProyecto_actividad, #formUbicacion, #vehiculo").attr('action', ''+window.location.href+'');
     if(tipo_ramo == "individual"){
@@ -1257,7 +1263,7 @@ if( tablaTipo2 == 'vida' || tablaTipo2 == "accidentes" || tablaTipo2 == "acciden
             $(".detalleinteres_persona").show();
             $(".tabladetalle_personas").show();   
         }
-
+        $(".botones").remove();
 
 
     }else if(tipo_ramo == "colectivo"){
