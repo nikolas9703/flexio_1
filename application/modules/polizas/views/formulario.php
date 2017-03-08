@@ -40,63 +40,67 @@ echo $campos['creado_por'];
         <h5>Datos de Poliza</h5>
         <div class="ibox-content" style="display: block;" >
             <div class="row renewal">
-             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                 <label>N° Póliza</label>
-                 <input type="text" class="form-control" name="numeroPoliza" v-model="numeroPoliza">
-             </div>
-         </div>
-         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3"><label>Nombre del cliente <span required="" aria-required="true">*</span></label>
-            <input type="text" name="poliza_cliente_nombre" value="{{polizaCliente.nombre_cliente}}" class="form-control ncli" id="poliza_cliente_nombre" disabled />
-        </div>
-        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3"><label>Identificación  </label>
-            <input type="text" name="poliza_cliente_tipo_identificacion" class="form-control" id="poliza_cliente_tipo_identificacion" value="{{polizaCliente.identificacion}}" disabled />
-        </div>
-        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>N° Identificación <span required="" aria-required="true">*</span></label>
-            <input type="text" id="numeroIdentificacion" value="{{polizaCliente.n_identificacion}}" id="poliza_cliente_n_identificacion" class="form-control" disabled />
+               <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 renewal">
+                   <label>N° Póliza</label>
+                   <input type="text" class="form-control" name="numeroPoliza" v-model="numeroPoliza">
+               </div>
+           </div>
+           <div class="row">
+               <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3"><label>Nombre del cliente <span required="" aria-required="true">*</span></label>
+                <input type="text" name="poliza_cliente_nombre" value="{{polizaCliente.nombre_cliente}}" class="form-control ncli" id="poliza_cliente_nombre" disabled />
+            </div>
+            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3"><label>Identificación  </label>
+                <input type="text" name="poliza_cliente_tipo_identificacion" class="form-control" id="poliza_cliente_tipo_identificacion" value="{{polizaCliente.identificacion}}" disabled />
+            </div>
+            <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                <label>N° Identificación <span required="" aria-required="true">*</span></label>
+                <input type="text" id="numeroIdentificacion" value="{{polizaCliente.n_identificacion}}" id="poliza_cliente_n_identificacion" class="form-control" disabled />
+            </div> 
+            <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
+                <label>Grupo <span required="" aria-required="true">*</span></label>
+                <select name="natural[grupo]" data-rule-required="true" class="form-control grupo_sel" id="grupo_nombre" :disabled="disabledfechaInicio" v-model="clienteGrupo">
+                    <option>Seleccione</option>
+                    <option v-for="grupo in polizaGrupo"  v-bind:value="grupo.nombre"  selected="{{grupo.nombre == polizaCliente.grupo}}" >
+                        {{grupo.nombre}}
+                    </option>
+                </select>
+            </div>
         </div> 
-        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
-            <label>Grupo <span required="" aria-required="true">*</span></label>
-            <select name="natural[grupo]" data-rule-required="true" class="form-control grupo_sel" id="grupo_nombre" :disabled="disabledfechaInicio" v-model="clienteGrupo">
-                <option>Seleccione</option>
-                <option v-for="grupo in polizaGrupo"  v-bind:value="grupo.nombre"  selected="{{grupo.nombre == polizaCliente.grupo}}" >
-                    {{grupo.nombre}}
-                </option>
-            </select>
-        </div>
-        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
-            <label>Teléfono </label>
-            <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                <input type="text" value="{{polizaCliente.telefono}}" name="poliza_cliente_telefono"  class="form-control" id="poliza_cliente_telefono" :disabled="disabledfechaInicio" v-model="clienteTelefono"  />
+        <div class="row">
+            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
+                <label>Teléfono </label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-phone"></i></span>
+                    <input type="text" value="{{polizaCliente.telefono}}" name="poliza_cliente_telefono"  class="form-control" id="poliza_cliente_telefono" :disabled="disabledfechaInicio" v-model="clienteTelefono"  />
+                </div>
             </div>
-        </div>
-        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
-            <label>Correo electrónico <span required="" aria-required="true">*</span></label>
+            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
+                <label>Correo electrónico <span required="" aria-required="true">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-addon">@</span>
+                    <input type="input-left-addon" value="{{polizaCliente.correo_electronico}}" name="poliza_cliente_correo" class="form-control debito"  id="poliza_cliente_correo" :disabled="disabledfechaInicio" v-model="clienteCorreo" />
+                </div>
+            </div>
+
+            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 Dirección" >
+                <label>Dirección</label>
+                <!-- <input type="text" name="campo[direccion]" v-model="clienteInfo.direccion" class="form-control" id="campo[direccion]" disabled> -->
+                <select class="form-control" name="natural[direccion]" class="form-control grupo_sel" id="direccion_nombre"  :disabled="disabledfechaInicio" v-model="clienteDireccion">
+                 <option value="">Seleccione</option>
+                 <option v-for="centroFac in catalogoCentroFacturacion" v-bind:value="centroFac.direccion" :selected="centroFac.direccion == polizaCliente.direccion">{{{centroFac.direccion}}}</option>
+             </select>
+         </div>
+         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
+            <label>Exonerado de impuesto</label>
+            <br/>
             <div class="input-group">
-                <span class="input-group-addon">@</span>
-                <input type="input-left-addon" value="{{polizaCliente.correo_electronico}}" name="poliza_cliente_correo" class="form-control debito"  id="poliza_cliente_correo" :disabled="disabledfechaInicio" v-model="clienteCorreo" />
+                <span class="input-group-addon"><input type="checkbox"  name="impuesto_checkbox" id="impuesto_checkbox" :checked="polizaCliente.exonerado_impuesto != '' " :disabled="disabledfechaInicio" / v-model="checkExonerado"></span>
+                <input type="text" placeholder="Exonerado de impuesto" class="form-control" v-model="polizaCliente.exonerado_impuesto" v-bind:value="checkExonerado==false ? '' : valorExonerado " :disabled="!checkExonerado || disabledfechaInicio"
+                /><div id="divplan"></div>
             </div>
         </div>
 
-        <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 Dirección" >
-            <label>Dirección</label>
-            <!-- <input type="text" name="campo[direccion]" v-model="clienteInfo.direccion" class="form-control" id="campo[direccion]" disabled> -->
-            <select class="form-control" name="natural[direccion]" class="form-control grupo_sel" id="direccion_nombre"  :disabled="disabledfechaInicio" v-model="clienteDireccion">
-             <option value="">Seleccione</option>
-             <option v-for="centroFac in catalogoCentroFacturacion" v-bind:value="centroFac.direccion" :selected="centroFac.direccion == polizaCliente.direccion">{{{centroFac.direccion}}}</option>
-         </select>
-     </div>
-     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 ">
-        <label>Exonerado de impuesto</label>
-        <br/>
-        <div class="input-group">
-            <span class="input-group-addon"><input type="checkbox"  name="impuesto_checkbox" id="impuesto_checkbox" :checked="polizaCliente.exonerado_impuesto != '' " :disabled="disabledfechaInicio" / v-model="checkExonerado"></span>
-            <input type="text" placeholder="Exonerado de impuesto" class="form-control" v-model="polizaCliente.exonerado_impuesto" v-bind:value="checkExonerado==false ? '' : valorExonerado " :disabled="!checkExonerado || disabledfechaInicio"
-            /><div id="divplan"></div>
-        </div>
     </div>
-
 
 </div> 
 
@@ -135,21 +139,7 @@ if (!isset($campo)) {
 ?>
 
 <?php echo modules::run('polizas/formulariointereses', $campos); ?>  
-<?php
 
-if (empty($campos))
-    $campos = "";
-$formAttr = array(
-    'method' => 'POST',
-    'id' => 'formPolizasCrear',
-    'autocomplete' => 'off'
-    );
-if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
-    echo form_open(base_url('polizas/editar/' . $campos['uuid_polizas']), $formAttr);
-} else {
-    echo form_open(base_url('polizas/guardar'), $formAttr);
-}
-?>
 
 <h5>Vigencia y detalle de solicitud</h5>
 <div class="ibox-content" style="display: block;">
@@ -160,7 +150,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
                 <span class="input-group-addon"><i class="fa fa-calendar"></i></span>    
                 <input type="input-left-addon" id="poliza_vigencia_desde" name="poliza_vigencia_desde" class="form-control datepicker" value="{{polizaVigencia.vigencia_desde}}" :disabled="disabledfechaInicio"  v-model="fechaInicio" required />
                 <span class="input-group-addon">a</span>
-                <input type="input-left-addon" id="poliza_vigencia_hasta" name="poliza_vigencia_hasta" class="form-control datepicker2" value="{{polizaVigencia.vigencia_hasta}}" :disabled="disabledfechaExpiracion" v-model="fechaExpiracion" required />
+                <input type="input-left-addon" id="poliza_vigencia_hasta" name="poliza_vigencia_hasta" class="form-control datepicker2" value="{{polizaVigencia.vigencia_hasta}}" :disabled="disabledfechaExpiracion" v-model="fechaExpiracion" required @blur="renovationModal('11e7003e4d83e371b29dbc764e11d717')"  />
             </div>
         </div>
 
@@ -179,6 +169,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
                 <option v-for="pag in pagador" v-bind:value="pag.valor" :selected="pag.valor == polizaVigencia.tipo_pagador">{{pag.etiqueta}}</option>
             </select>
         </div>
+
         <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2 plan" id="divpagadornombre" >
             <label>Nombre  <span required="" aria-required="true">*</span></label>
             <div id="divpgnombre"><input type="text" name="campovigencia[pagadornombre]" id="campopagador"  v-model="polizaVigencia.pagador" class="form-control" :disabled="disabledfechaInicio">
@@ -195,8 +186,8 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     </div>
 </div>   
 </div>
-
 <?php
+            //print_r($campos);
 if (empty($campos))
     $campos = "";
 $formAttr = array(
@@ -211,6 +202,110 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 }
 ?>
 
+<div class="row ibox-content" id="vigencia_vida_individual" style="display: none"> 
+    <div id="campos_vida_acreedor_editar">
+        <div class="row" id="divacreedores">
+            <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
+                <label class="nombre_doc_titulo" id="nombre_acre_titulo">Acreedor</label>
+            </div>    
+            <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                <label class="nombre_doc_titulo" id="nombre_acre_cesion">% Cesión</label>
+            </div> 
+            <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                <label class="nombre_doc_titulo" id="nombre_acre_monto">Monto</label>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                <label class="nombre_doc_titulo" id="nombre_acre_inicio">Fecha Inicio</label>
+            </div> 
+            <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                <label class="nombre_doc_titulo" id="nombre_acre_fin">Fecha Fin</label>
+            </div> 
+            <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                <label class="nombre_doc_titulo" ></label>
+            </div>        
+        </div>
+
+        <div style="margin-bottom: 25px;" class="">
+            <div class="file_tools_acreedores_adicionales row" v-for="find in acreedores" track-by="$index" id="a{{$index + 2}}">
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
+                    <input type="text" name="campoacreedores[]" id="acreedor_{{$index + 2}}" class="form-control" value="{{find.acreedor}}" :disabled="categoria_poliza == 'nueva'">
+                </div>    
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">%</span> 
+                        <input type="text" name="campoacreedores_por[]" id="porcentajecesion_{{$index + 2}}" class="form-control porcentaje_cesion_acreedor" value="{{find.porcentaje_cesion}}" :disabled="categoria_poliza == 'nueva'">
+                    </div>
+                </div> 
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span> 
+                        <input type="text" name="campoacreedores_mon[]" id="montocesion_{{$index + 2}}" class="form-control monto_cesion_acreedor" value="{{find.monto_cesion}}" :disabled="categoria_poliza == 'nueva'">
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                        <input type="text" name="campoacreedores_ini[]" id="fechainicio_{{$index + 2}}" class="form-control fechas_acreedores_inicio" value="{{find.fecha_inicio}}">
+                    </div>
+                </div> 
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                        <input type="text" name="campoacreedores_fin[]" id="fechafin_{{$index + 2}}" class="form-control fechas_acreedores_fin" value="{{find.fecha_fin}}">
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                        <!--<button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i>
+                    </button>-->
+                    <button type="button" style="float: left; width: 40px; margin-top:0px!important; display: block !important" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaacreedor({{$index+2}})"><i class="fa fa-trash"></i>
+                    </button>
+                </div>
+                <input type="hidden" name="campoacreedores_id[]" value="{{find.id}}">
+            </div>
+
+            <div class="file_tools_acreedores_adicionales row" id="a1">
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
+                    <input type="text" name="campoacreedores[]" id="acreedor_1" class="form-control">
+                </div>    
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">%</span> 
+                        <input type="text" name="campoacreedores_por[]" id="porcentajecesion_1" class="form-control porcentaje_cesion_acreedor" value="0">
+                    </div>
+                </div> 
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span> 
+                        <input type="text" name="campoacreedores_mon[]" id="montocesion_1" class="form-control monto_cesion_acreedor" value="0">
+                    </div>
+                </div> 
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                        <input type="text" name="campoacreedores_ini[]" id="fechainicio_1" class="form-control fechas_acreedores_inicio">
+                    </div>
+                </div> 
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                        <input type="text" name="campoacreedores_fin[]" id="fechafin_1" class="form-control fechas_acreedores_fin">
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                    <button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" onclick="agregaracre()" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i>
+                    </button>
+                    <button type="button" style="float: left; width: 40px; margin-top:0px!important;" id="del_acre" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i>
+                    </button>
+                </div>
+                <input type="hidden" name="campoacreedores_id[]" value="0">
+            </div>
+
+            <div id="agrega_acre"></div> 
+        </div>
+
+    </div>   
+</div>
+
 <h5>Prima e informaci&oacute;n de cobros</h5>
 <div class="ibox-content" style="display: block;" >
     <div class="row">
@@ -218,7 +313,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Prima Anual <span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_prima_anual" class="form-control"  id="poliza_prima_anual" value="{{polizaPrima.prima_anual}}" :disabled="cambiarOpcionesPago" v-model="primaAnual" />
+                <input type="input-left-addon" name="campoprima[poliza_prima_anual]" class="form-control"  id="poliza_prima_anual" value="{{polizaPrima.prima_anual}}" :disabled="cambiarOpcionesPago" v-model="primaAnual" />
             </div>                          
         </div>
         <div class="form-group col-xs-6 col-sm-3 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -228,7 +323,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Descuentos </label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_descuentos" class="form-control"  id="poliza_descuentos" value="{{polizaPrima.descuentos}}" :disabled="cambiarOpcionesPago" v-model="primaDescuentos" />
+                <input type="input-left-addon" name="campoprima[poliza_descuentos]" class="form-control"  id="poliza_descuentos" value="{{polizaPrima.descuentos}}" :disabled="cambiarOpcionesPago" v-model="primaDescuentos"/>
             </div>                                
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -238,7 +333,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Otros </label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_otros" class="form-control" id="poliza_otros" value="{{polizaPrima.otros}}" :disabled="cambiarOpcionesPago" v-model="primaOtros"/>
+                <input type="input-left-addon" name="campoprima[poliza_otros]" class="form-control" id="poliza_otros" value="{{polizaPrima.otros}}" :disabled="cambiarOpcionesPago" v-model="primaOtros" />
             </div>                                
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -248,7 +343,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Impuesto <span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_impuesto" class="form-control" id="poliza_impuesto" value="{{polizaPrima.impuesto}}" :disabled="cambiarOpcionesPago" v-model="primaImpuesto" />
+                <input type="input-left-addon" name="campoprima[poliza_impuesto]" class="form-control" id="poliza_impuesto" value="{{polizaPrima.impuesto}}" :disabled="cambiarOpcionesPago" v-model="primaImpuesto" />
             </div>                                
         </div>
         <div class="form-group col-xs-12 col-sm-6 col-md-1 col-lg-1 " style="text-align: center; margin-top: 12px; width: 20px;">
@@ -258,16 +353,15 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
             <label>Total </label>
             <div class="input-group">
                 <span class="input-group-addon">$</span>
-                <input type="input-left-addon" name="poliza_total" class="form-control"  id="poliza_total" value="{{polizaPrima.total}}" :disabled="cambiarOpcionesPago" v-model="primaTotal" />
+                <input type="input-left-addon" name="campoprima[poliza_total]" class="form-control"  id="poliza_total" value="{{polizaPrima.total}}" :disabled="cambiarOpcionesPago" v-model="primaTotal" />
             </div>                                
         </div>
     </div> 
-
+    
     <div class="row">
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
             <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago"
-            v-model="pagosFrecuencia">
+            <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosFrecuencia">
                 <option value="">Seleccione</option>
                 <option v-for="frecuencia in catalogoFrecuenciaPagos" v-bind:value="frecuencia.valor" :selected="frecuencia.valor == polizaPrima.frecuencia_pago">{{frecuencia.etiqueta}}</option>
             </select>
@@ -346,35 +440,35 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
                 </div>
                 <br>
                 <div class="row agentePrincipal ">
-                   <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6">
-                      <div class="input-group">	
-                         <span class="input-group-addon"><i class="fa fa-pie-chart"></i></span>
-                         <select id='nombreAgentePrincipal' class="form-control" disabled>
-                         </select>
-                     </div>
-                 </div>
                  <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6">
-                     <input type="form-control moneda" class="form-control" id="porcAgentePrincipal" disabled style="text-align: right;">  
-                 </div><br>
-             </div>
-             <br>
-             <div class="row">
-                <div class="col-xs-12 col-sm-3 col-md-3 col-lg-6">
-                    <label>Totales</label>    
-                </div>
-                <div class="col-xs-12 col-sm-3 col-md-6 col-lg-6">
-                    <input type="text" class="form-control moneda" id="poliza_participacion_total" value="{{polizaTotalParticipacion}}"
-                    v-model="polizaTotalParticipacion" disabled/>
-                </div>
-            </div>
-
+                  <div class="input-group">	
+                   <span class="input-group-addon"><i class="fa fa-pie-chart"></i></span>
+                   <select id='nombreAgentePrincipal' class="form-control" disabled>
+                   </select>
+               </div>
+           </div>
+           <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6">
+               <input type="form-control moneda" class="form-control" id="porcAgentePrincipal" disabled style="text-align: right;">  
+           </div><br>
+       </div>
+       <br>
+       <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-6">
+            <label>Totales</label>    
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-6 col-lg-6">
+            <input type="text" class="form-control moneda" id="poliza_participacion_total" value="{{polizaTotalParticipacion}}"
+            v-model="polizaTotalParticipacion" disabled/>
         </div>
     </div>
+
+</div>
+</div>
 </div>
 
 
 <div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-3 ">
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-3">
         <label class="detail">Estado</label>
         <div class="input-group detail">            
             <select  name="campo[estado]" class="form-control" id="estado_poliza" :disabled="disabledEstadoPoliza">
@@ -415,7 +509,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-2" style="margin-left: -20px;">
             <label>Centro Contable</label>
-            <select type="text" name="nombre_centroContable" id="centro_contable" class="form-control"  :disabled="disabledfechaInicio" v-model="centroContable">
+            <select type="text" name="nombre_centroContable" data-rule-required="true" id="centro_contable" class="form-control"  :disabled="disabledfechaInicio" v-model="centroContable">
                 <option value="">Seleccione</option>
                 <option v-for="centro in centrosContables" v-bind:value="centro.id" :selected="centro.nombre==nombre_centroContable">{{centro.nombre}}</option>
             </select>

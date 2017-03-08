@@ -107,17 +107,68 @@ coberturasModal: function (e) {
             opcionesModal.find('.modal-footer').empty().append(botones_coberturas);
             opcionesModal.modal('show');
         },
-        renovationModal: function (idPolicy) {
+        selectFormToSend:function(){
+           var formIdArray=[ 
 
+           { id:1 ,formIdName:"articulo"},
+           { id:2 ,formIdName:"formCarga"},
+           { id:3 ,formIdName:"formcasco_aereo"},
+           { id:4 ,formIdName:"formCasco_maritimo"},
+           { id:5 ,formIdName:"persona"},
+           { id:6 ,formIdName:"formProyecto_actividad"},
+           { id:7 ,formIdName:"formUbicacion"},
+           { id:8 ,formIdName:"vehiculo"}] ,values = {}; 
+
+           for (var i =formIdArray.length - 1; i >= 0; i--) {
+            var value= formIdArray[i],stringId;
+            if (id_tipo_int_asegurado == value.id) {
+                stringId= '#' +value.formIdName;
+                if ($(stringId).validate().form()) {
+                    var inputs = $(stringId+' :input');
+
+                    inputs.each(function () {
+
+                        values[this.name] =$(this).val();
+                    });
+                }else{
+                    values = false;
+                }
+            }
+        }
+        return values;
+    },
+    individualInterest:function(){
+        var values = this.selectFormToSend() ,polizaId =$("input[name='campo[id]']").val();
+        var unico = $("input[name='detalleunico']").val();
+
+        if(values){
             this.$http.post({
-                url: phost() + 'polizas/getRenovationData',
+                url: phost() + 'Polizas/ajax_save_individual_interest',
                 method:'POST',
-                data:{idPoliza:idPolicy,erptkn: tkn}
+                data:{
+                    camposInteres: JSON.stringify(values),
+                    interestType:window.id_tipo_int_asegurado,
+                    detalleUnico:unico,
+                    polizaId: polizaId,
+                    erptkn: tkn}
             }).then(function(response){
-                if(_.has(response.data, 'session')){
-                    window.location.assign(phost());
-                }     
-                if(!_.isEmpty(response.data)){ 
+
+                tablaSolicitudesPersonas.recargar();
+            });
+        }
+        return values;
+    },
+    renovationModal: function (idPolicy) {
+
+        this.$http.post({
+            url: phost() + 'polizas/getRenovationData',
+            method:'POST',
+            data:{idPoliza:idPolicy,erptkn: tkn}
+        }).then(function(response){
+            if(_.has(response.data, 'session')){
+                window.location.assign(phost());
+            }     
+            if(!_.isEmpty(response.data)){ 
 
                  // this.$set('PolicyData',response.data);
                 // this.$set('numero',response.data.numero);
@@ -152,120 +203,91 @@ coberturasModal: function (e) {
             }           
 
         });
-            
-
-        },
-        sendRenewalData: function(e)
-        {   
-            var formIdArray=[ 
-
-            { id:1 ,formIdName:"articulo"},
-            { id:2 ,formIdName:"formCarga"},
-            { id:3 ,formIdName:"formcasco_aereo"},
-            { id:4 ,formIdName:"formCasco_maritimo"},
-            { id:5 ,formIdName:"persona"},
-            { id:6 ,formIdName:"formProyecto_actividad"},
-            { id:7 ,formIdName:"formUbicacion"},
-            { id:8 ,formIdName:"vehiculo"}] ,values = {};
-
-            if($('#formPolizasCrear').validate().form()){
-
-                var participationArray = [];
-                participationArray.push({
-                    nombre: $("select[name='agente[]']").map(function () {
-                        return $(this).val();
-                    }).get(),
-                    valor: $("input[name='participacion[]']").map(function () {
-                        return $(this).val();
-                    }).get()
-
-                });
-
-                if (tipo_ramo == "individual" ) {
 
 
-                    for (var i =formIdArray.length - 1; i >= 0; i--) {
-                        var value= formIdArray[i],stringId;
-                        if (id_tipo_int_asegurado == value.id) {
-                            stringId= '#' +value.formIdName;
-                            if ($(stringId).validate().form()) {
-
-                                var inputs = $(stringId+' :input');
+    },
+    sendRenewalData: function(e)
+    {   
 
 
-                                inputs.each(function () {
+        if($('#formPolizasCrear').validate().form()){
 
-                                    values[this.name] =$(this).val();
-                                });
-                                this.$http.post({
-                                    url: phost() + 'polizas/policyRenewal',
-                                    method:'POST',
-                                    data:{
-                                        numeroPoliza:this.numeroPoliza,
-                                        erptkn: tkn,
-                                        fechaInicio:this.fechaInicio,
-                                        fechaExpiracion:this.fechaExpiracion,
-                                        participacion:participationArray[0],
-                                        renovarPoliza :true,
-                                        idPolicy :this.idPolicy,
-                                        comision: this.comision,
-                                        camposInteres:JSON.stringify(values),
-                                        interesId:$("#selInteres").val(),
-                                        clienteGrupo: this.clienteGrupo,
-                                        clienteTelefono : this.clienteTelefono,
-                                        clienteCorreo : this.clienteCorreo,
-                                        clienteDireccion: this.clienteDireccion,
-                                        clienteExoneradoImp :this.polizaCliente.exonerado_impuesto,
-                                        planesCoberturas: $("#planesCoberturasDeducibles").val(),
-                                        sumaAsegurada: this.sumaAsegurada,
-                                        vigenciapagador : this.vigenciaPagador,
-                                        vigenciaNombrePagador: this.polizaVigencia.pagador,
-                                        vigenciaPersonaAsegurada: this.vigenciaPersonaAsegurada,
-                                        vigenciaPolizaDeclarativa:this.vigenciaPolizaDeclarativa,
-                                        primaAnual : this.primaAnual,
-                                        primaDescuentos : this.primaDescuentos,
-                                        primaOtros : this.primaOtros,
-                                        primaImpuesto: this.primaImpuesto,
-                                        primaTotal:this.primaTotal,
-                                        pagosFrecuencia : this.pagosFrecuencia,
-                                        pagosMetodo : this.pagosMetodo,
-                                        pagosPrimerPago: this.pagosPrimerPago,
-                                        pagosCantidad : this.pagosCantidad,
-                                        pagosSitio :this.pagosSitio,
-                                        pagosCentroFac :this.pagosCentroFac,
-                                        pagosDireccion:this.pagosDireccion,
-                                        centroContable :this.centroContable
+            var participationArray = [];
+            participationArray.push({
+                nombre: $("select[name='agente[]']").map(function () {
+                    return $(this).val();
+                }).get(),
+                valor: $("input[name='participacion[]']").map(function () {
+                    return $(this).val();
+                }).get()
 
+            });
 
-
-
-                                    }
-                                }).then(function(response){
-                                    if (!_.isEmpty(response.data) && response.data.msg =='OK') {
-
-                                        window.location= phost()+"polizas/listar";
-                                    }else{
-
-                                        msg='Ocurrido un error al guardar la renovación '+'<br>'+response.data.field+'<b>';
-
-                                        toastr.error(msg);
-                                    }           
-                                }); 
-                                
-                            }else {
-                                window.location.href = "#divintereses";
-
-                            } 
-
-                        }
+            if (tipo_ramo == "individual" ) {
+              var values = this.selectFormToSend();  
+              if(values){
+                  this.$http.post({
+                    url: phost() + 'polizas/policyRenewal',
+                    method:'POST',
+                    data:{
+                        numeroPoliza:this.numeroPoliza,
+                        erptkn: tkn,
+                        fechaInicio:this.fechaInicio,
+                        fechaExpiracion:this.fechaExpiracion,
+                        participacion:participationArray[0],
+                        renovarPoliza :true,
+                        idPolicy :this.idPolicy,
+                        comision: this.comision,
+                        camposInteres:JSON.stringify(values),
+                        interesId:$("#selInteres").val(),
+                        clienteGrupo: this.clienteGrupo,
+                        clienteTelefono : this.clienteTelefono,
+                        clienteCorreo : this.clienteCorreo,
+                        clienteDireccion: this.clienteDireccion,
+                        clienteExoneradoImp :this.polizaCliente.exonerado_impuesto,
+                        planesCoberturas: $("#planesCoberturasDeducibles").val(),
+                        sumaAsegurada: this.sumaAsegurada,
+                        vigenciapagador : this.vigenciaPagador,
+                        vigenciaNombrePagador: this.polizaVigencia.pagador,
+                        vigenciaPersonaAsegurada: this.vigenciaPersonaAsegurada,
+                        vigenciaPolizaDeclarativa:this.vigenciaPolizaDeclarativa,
+                        primaAnual : this.primaAnual,
+                        primaDescuentos : this.primaDescuentos,
+                        primaOtros : this.primaOtros,
+                        primaImpuesto: this.primaImpuesto,
+                        primaTotal:this.primaTotal,
+                        pagosFrecuencia : this.pagosFrecuencia,
+                        pagosMetodo : this.pagosMetodo,
+                        pagosPrimerPago: this.pagosPrimerPago,
+                        pagosCantidad : this.pagosCantidad,
+                        pagosSitio :this.pagosSitio,
+                        pagosCentroFac :this.pagosCentroFac,
+                        pagosDireccion:this.pagosDireccion,
+                        centroContable :this.centroContable
                     }
+                }).then(function(response){
+                    if (!_.isEmpty(response.data) && response.data.msg =='OK') {
 
-                } 
-                
+                        window.location= phost()+"polizas/listar";
+                    }else{
+
+                        msg='Ocurrido un error al guardar la renovación '+'<br>'+response.data.field+'<b>';
+
+                        toastr.error(msg);
+                    }           
+                }); 
             }
-        },
+            else {
+                window.location.href = "#divintereses";
 
-        getIntereses: function () {
+            }   
+        }
+
+    }
+
+},
+
+getIntereses: function () {
             //polula el segundo select del header
             var self      = this;
             var interes    = $('#formulario').val();
@@ -785,7 +807,7 @@ coberturasModal: function (e) {
 
                     $('.relaciondetalle_persona_vida_otros').val(response.data.inter.detalle_relacion);
                     $('.relaciondetalle_persona_vida').val(response.data.inter.detalle_relacion);
-                    $('.relaciondetalle_persona_vida_otros').attr('disabled',true);
+                    
 
                         //$('#relaciondetalle_persona').val(response.data.inter.detalle_relacion);
                         //$('#relaciondetalle_persona').attr('disabled',true);
@@ -843,6 +865,7 @@ coberturasModal: function (e) {
                         $('#telefono_oficina').attr('disabled',true);
                         $('#direccion').attr('disabled',true);
                         $('#direccion_laboral').attr('disabled',true);
+                        $('.relaciondetalle_persona_vida_otros').attr('disabled',true);
                     }
                 } else if (tipoint == 6) {
                     $(".uuid_proyecto, #nombre_proyecto, #contratista_proyecto, #representante_legal_proyecto, #fecha_concurso, #no_orden_proyecto, .no_ordenr, #duracion_proyecto, .fecha_proyecto, .monto_proyecto, #monto_afianzado, #asignado_acreedor, #ubicacion_proyecto, #acreedor_opcional, #validez_fianza_opcional, #observaciones_proyecto").val("");
@@ -1153,6 +1176,14 @@ $(document).ready(function () {
 	}
     populateStoredCovergeData('indCoveragefields','coverage','removecoverage',coberturas,"cobertura","valor_cobertura");
     populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',deducciones,"deduccion","valor_deduccion");
+    var buttonClass = setButtonClickListener();
+    $("."+buttonClass).click(function(){
+        done =formularioCrear.individualInterest();
+        if(!done){
+           window.location.href = "#divintereses";
+ 
+        }
+    });
     var URL =window.location.href.split("/");
     var urlLastSegment= URL.pop();
     $(".select2").select2();
@@ -1262,14 +1293,16 @@ if( tablaTipo2 == 'vida' || tablaTipo2 == "accidentes" || tablaTipo2 == "acciden
         if(RegExp('\\bvida\\b',"gi").test(nombre_ramo) || RegExp('\\bsalud\\b',"gi").test(nombre_ramo) || RegExp('\\baccidente\\b',"gi").test(nombre_ramo) || RegExp('\\baccidentes\\b',"gi").test(nombre_ramo) ){
             $(".detalleinteres_persona").show();
             $(".tabladetalle_personas").show();   
-        }
-        $(".botones").remove();
+        }else{
+           $(".botones").remove(); 
+       }
 
 
-    }else if(tipo_ramo == "colectivo"){
 
-        $(" .detalleinteres_articulo, .detalleinteres_carga, .detalleinteres_aereo, .detalleinteres_maritimo, .detalleinteres_proyecto, .detalleinteres_ubicacion, .detalleinteres_vehiculo").show();
-        $(" .tabladetalle_articulo, .tabladetalle_carga, .tabladetalle_aereo, .tabladetalle_maritimo, .tabladetalle_proyecto, .tabladetalle_ubicacion, .tabladetalle_vehiculo").show();
+   }else if(tipo_ramo == "colectivo"){
+
+    $(" .detalleinteres_articulo, .detalleinteres_carga, .detalleinteres_aereo, .detalleinteres_maritimo, .detalleinteres_proyecto, .detalleinteres_ubicacion, .detalleinteres_vehiculo").show();
+    $(" .tabladetalle_articulo, .tabladetalle_carga, .tabladetalle_aereo, .tabladetalle_maritimo, .tabladetalle_proyecto, .tabladetalle_ubicacion, .tabladetalle_vehiculo").show();
 
         //if(RegExp('\\bvida\\b',"gi").test(nombre_ramo) || RegExp('\\bsalud\\b',"gi").test(nombre_ramo) || RegExp('\\baccidente\\b',"gi").test(nombre_ramo) || RegExp('\\baccidentes\\b',"gi").test(nombre_ramo) ){
             $(".detalleinteres_persona").show();   
@@ -1452,7 +1485,7 @@ function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
   var urlLastSegment= URL.pop();
   value.nombre = inputValue === undefined ? "" : inputValue.nombre;
   value.monetario = inputValue === undefined ? "" : inputValue.monetario;
-  enabled = urlLastSegment === "" ? "" : "";
+  enabled = urlLastSegment === "renovar" ? "" : "disabled";
   var text = '<div class="'+stringId+'" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" '+enabled+' name="'+stringId+'Name[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input '+enabled+' type="text" name="'+stringId+'Value[]" value="'+value.monetario+'" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 renewal '+del_row+'" data-id="'+counterCoverage+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
   $(wrapper).append(text);   
 }
@@ -1603,4 +1636,26 @@ function resetModalInputs(){
     $("#planesCoberturasDeducibles").val("");
     $("#verCoberturas").modal("hide");
 
+}
+
+function setButtonClickListener(){
+
+    var formButtonIdArray=[ 
+
+    { id:1 ,formIdName:"guardarArticulo"},
+    { id:2 ,formIdName:"guardarCarga"},
+    { id:3 ,formIdName:"guardarAereo"},
+    { id:4 ,formIdName:"guardarMaritimo"},
+    { id:5 ,formIdName:"guardarPersona"},
+    { id:6 ,formIdName:"guardarProyecto"},
+    { id:7 ,formIdName:"guardarUbicacion"},
+    { id:8 ,formIdName:"guardarVehiculo"}];    
+
+    for (var i = formButtonIdArray.length - 1; i >= 0; i--) {
+       var  value= formButtonIdArray[i];
+
+       if(window.id_tipo_int_asegurado ==value.id){
+           return value.formIdName;
+       }
+   }        
 }
