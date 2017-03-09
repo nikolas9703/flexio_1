@@ -143,7 +143,7 @@ coberturasModal: function (e) {
 
         if(values){
             this.$http.post({
-                url: phost() + 'Polizas/ajax_save_individual_interest',
+                url: phost() + 'polizas/ajax_save_individual_interest',
                 method:'POST',
                 data:{
                     camposInteres: JSON.stringify(values),
