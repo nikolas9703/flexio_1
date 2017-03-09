@@ -446,8 +446,8 @@ class Polizas extends CRM_Controller {
 
 
             $hidden_options = "<a href=" . base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas))) . " class='viewOptions btn btn-block btn-outline btn-success'>Ver Póliza</a>";
-            $hidden_options .= '<a href="#" id="crearEndosoBtn" class="viewOptions btn btn-block btn-outline btn-success">Crear Endoso</a>';
-            $hidden_options .= $row->poliza_declarativa == 'si' ? '<a href="'.base_url().'endosos/crear/'.$row->id.'" id="crearDeclaracionBtn"  class="viewOptions btn btn-block btn-outline btn-success">Crear Declaración</a>' : '';
+            $hidden_options .= '<a href="#" id="crearEndosoBtn" data-id="'.$row->id.'" class="viewOptions btn btn-block btn-outline btn-success">Crear Endoso</a>';
+            $hidden_options .= $row->poliza_declarativa == 'si' ? '<a href="'.base_url().'endosos/crear/'.$row->id.'/1" id="crearDeclaracionBtn"  class="viewOptions btn btn-block btn-outline btn-success">Crear Declaración</a>' : '';
             $hidden_options .= '<a href="#" id="agregarReclamoBtn" data-id="' . $row->id . '" data-ramo="'.$row->ramo_id.'" class="viewOptions btn btn-block btn-outline btn-success">Crear Reclamo</a>';
                 //$hidden_options .= '<a href="#" id="renovarBtn" data-id="' . $row->id . '" class="viewOptions btn btn-block btn-outline btn-success renovationModal">Renovar</a>';
             if($row->estado == "Facturada"){
@@ -1952,15 +1952,26 @@ function tabladetalles($data = array()) {
           $this->load->view('tablarenovaciones');
       }
 
-      public function ocultoTabEndosos(){
+      public function ocultoTabDeclaracion(){
+
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/polizas/tablaTabDeclaracion.js',
+        ));
+
+        $this->load->view('tablaDeclaraciones');
+
+    }
+
+     public function ocultoTabEndosos(){
 
         $this->assets->agregar_js(array(
             'public/assets/js/modules/polizas/tablaTabEndosos.js',
-            ));
+        ));
 
         $this->load->view('tablaEndosos');
 
     }
+    
 
     public function ajax_listar_intereses($grid = NULL) {
 
