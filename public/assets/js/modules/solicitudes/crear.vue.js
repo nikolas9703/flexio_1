@@ -1352,17 +1352,10 @@ $(document).ready(function () {
     $('#del_file_solicitudes_adicionales').hide();
     $('#add_file_solicitudes_adicionales').click(function () {
 
-        $('#file_tools_solicitudes_adicionales').before('<div class="file_upload_solicitudes_adicionales  col-xs-8 col-sm-8 col-md-8 col-lg-7" id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" '+
-            ' class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><button type="button" onclick="javascript:$(\'#h'+counter+'\').remove();" style="float: left; width: 40px; margin-top: 0px !important; display: block;" class="btn btn-default btn-block" id="del_file_solicitudes_adicionales"><i class="fa fa-trash"></i> </button><br><br> </div>');
+        $('#add_file_solicitudes_adicionales').before('<br><br><div class="file_upload_solicitudes_adicionales " id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" '+
+            ' class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><button type="button" onclick="javascript:$(\'#h'+counter+'\').remove();" style="float: left; width: 40px; margin-top: 0px !important; display: block;" class="btn btn-default btn-block col-lg-offset-1" id="del_file_solicitudes_adicionales"><i class="fa fa-trash"></i> </button></div>');
         $('#del_file_solicitudes_adicionales').fadeIn(0);
         counter++;
-    });
-    $('#del_file_solicitudes_adicionales').click(function () {
-        if (counter == 3) {
-            $('#del_file_solicitudes_adicionales').hide();
-        }
-        counter--;
-        $('#h' + counter).remove();
     });
 
     if (editar_asignado != 1) {
