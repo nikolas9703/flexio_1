@@ -13,7 +13,7 @@
           <label for="proveedor_id">Tipo de subcontrato <span required="" aria-required="true">*</span></label>
           <select name="campo[tipo_subcontrato_id]" id="tipo_subcontrato_id" class="form-control" data-rule-required="true" v-select2="detalle.tipo_subcontrato_id" :config="config.select2" :disabled="config.disableDetalle">
               <option value="">Seleccione</option>
-              <option :value="tipo.id" v-for="tipo in catalogos.tipos_subcontratos" v-html="tipo.valor"></option>
+              <option :value="tipo.id" v-for="tipo in catalogos.tipos_subcontratos" v-html="tipo.nombre"></option>
           </select>
           <label id="tipo_subcontrato_id-error" class="error" for="tipo_subcontrato_id"></label>
       </div>

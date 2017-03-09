@@ -346,20 +346,23 @@ var formularioCrearContratoAlquiler = new Vue({
 					return o.cliente_id == val;
 				});
 
-				this.contrato_alquiler.saldo = selectedClient.saldo;
-				this.contrato_alquiler.credito = selectedClient.credito;
+				this.contrato_alquiler.saldo = typeof selectedClient != 'undefined' && typeof selectedClient.saldo != 'undefined' ? selectedClient.saldo : "";
+				this.contrato_alquiler.credito = typeof selectedClient != 'undefined' && typeof selectedClient.credito != 'undefined' ? selectedClient.credito : "";
+				this.contrato_alquiler.centros_facturacion = typeof selectedClient != 'undefined' && typeof selectedClient.centros_facturacion != 'undefined' ? selectedClient.centros_facturacion : '';
 
-				this.contrato_alquiler.centros_facturacion = selectedClient.centros_facturacion;
-				if (selectedClient.centros_facturacion.length == 1) {
+				if (typeof selectedClient != 'undefined' && this.contrato_alquiler.centros_facturacion.length == 1) {
 					this.contrato_alquiler.centro_facturacion_id = selectedClient.centros_facturacion[0].id;
 				} else {
-					_.forEach(selectedClient.centros_facturacion, function (centrofactura) {
-						if (centrofactura.principal == 1) {
-							//selecciona el centro de facturacion principal
-							context.contrato_alquiler.centro_facturacion_id = centrofactura.id;
-						}
-					});
-					if (this.contrato_alquiler.centro_facturacion_id == '') {
+					if(this.contrato_alquiler.centros_facturacion!=''){
+						_.forEach(selectedClient.centros_facturacion, function (centrofactura) {
+							if (centrofactura.principal == 1) {
+								//selecciona el centro de facturacion principal
+								context.contrato_alquiler.centro_facturacion_id = centrofactura.id;
+							}
+						});
+					}
+
+					if (typeof selectedClient != 'undefined' && this.contrato_alquiler.centro_facturacion_id == '') {
 						//si no tiene ninguna como default selecciona la primera de la lista
 						this.contrato_alquiler.centro_facturacion_id = selectedClient.centros_facturacion[0].id;
 					}

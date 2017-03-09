@@ -1063,7 +1063,7 @@ var config = Object.defineProperties({
    * Disabled by default in production builds.
    */
 
-  devtools: 'development' !== 'production',
+  devtools: 'development',
 
   /**
    * Internal flag to indicate the delimiters have been

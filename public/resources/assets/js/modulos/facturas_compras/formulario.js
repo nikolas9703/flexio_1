@@ -1,10 +1,14 @@
-Vue.transition('listado',{
-    enterClass:'fadeIn',
-    leaveClass:'fadeOut'
+Vue.transition('listado', {
+    enterClass: 'fadeIn',
+    leaveClass: 'fadeOut'
 });
 
 Vue.directive('select2ajax', require('./../../vue/directives/select2ajax.vue'));
 var items = require('./../../config/lines_items.js'); //objecto compartido del items
+var maskByModulo = function(){
+  var decimales = window.location.href.match(/facturas_compras|ordenes\//gi) != null ? 4 : 2;
+  return {'mask':'9{1,2}[.9{0,'+ decimales +'}]','greedy':false};
+};
 var form_factura_compra = new Vue({
 
     el: '#form_crear_facturas_div',
@@ -17,137 +21,141 @@ var form_factura_compra = new Vue({
             comentable_type: 'Flexio\\Modulo\\FacturasCompras\\Models\\FacturaCompra',
             comentable_id: '',
 
-          },
-        por_facturar:0,
-        config:{
+        },
+        por_facturar: 0,
+        config: {
 
-            vista:window.vista,
-            politicaTransaccion:window.politica_transaccion,
-            enableWatch:false,
-            select2:{width:'100%'},
-            datepicker2:{dateFormat: "dd/mm/yy"},
-            inputmask:{
+            vista: window.vista,
+            politicaTransaccion: window.politica_transaccion,
+            enableWatch: false,
+            select2: {width: '100%'},
+            datepicker2: {dateFormat: "dd/mm/yy"},
+            inputmask: {
 
-                cantidad: {'mask':'9{1,4}','greedy':false},
-                descuento: {'mask':'9{1,2}[.9{0,2}]','greedy':false},
-                currency: {'mask':'9{1,8}[.9{0,2}]','greedy':false},
-                currency2: {'mask':'9{1,8}[.9{0,5}]','greedy':false}
+                cantidad: {'mask': '9{1,4}', 'greedy': false},
+                descuento: maskByModulo(),
+                currency: {'mask': '9{1,8}[.9{0,2}]', 'greedy': false},
+                currency2: {'mask': '9{1,8}[.9{0,5}]', 'greedy': false}
 
             },
             //disabledPorCantidad:false,
-            disableEmpezarDesde:false,
-            disableDetalle:false,
-            disableDetallePorcentaje:false,
-            disableArticulos:false,
-            facturaSuspendida:false,
-            modulo:'facturas_compras',
+            disableEmpezarDesde: false,
+            disableDetalle: false,
+            disableDetallePorcentaje: false,
+            disableArticulos: false,
+            isDisableByStatus: false,
+            facturaSuspendida: false,
+            modulo: 'facturas_compras',
             muestroRetenidoSubContrato: false,
             superUsuario: typeof super_user != 'undefined' ? super_user : ''
 
         },
 
-        catalogos:{
+        catalogos: {
 
-            proveedores:window.proveedores,
-            terminos_pago:window.terminos_pago,
-            usuarios:window.usuarios,
-            centros_contables:window.centros_contables,
-            bodegas:window.bodegas,
-            estados:window.estados,
-            categorias:window.categorias,
-            cuentas:window.cuentas,
-            impuestos:window.impuestos,
-            empresa:window.empresa,
-            cloneProveedores:[],//usado por el cambio de proveedores a ajax
-            aux:{}
+            proveedores: window.proveedores,
+            terminos_pago: window.terminos_pago,
+            usuarios: window.usuarios,
+            centros_contables: window.centros_contables,
+            bodegas: window.bodegas,
+            estados: window.estados,
+            categorias: window.categorias,
+            cuentas: window.cuentas,
+            impuestos: window.impuestos,
+            empresa: window.empresa,
+            cloneProveedores: [],//usado por el cambio de proveedores a ajax
+            aux: {}
 
         },
-
         detalle:{
-
+            ordenes_multiple: 0, //para especificar si se esta creando una factura de varias ordenes
+            ordenes_id: [],
             codigo: typeof window.codigo !== 'undefined' ? window.codigo : '', //requerido -> empezar_desde.js
-            id:'',
-            proveedor_id:'',
-            terminos_pago:'',
+            id: '',
+            proveedor_id: '',
+            terminos_pago: '',
             //saldo pendiente
             //credito a favor
-            nro_factura_proveedor:'',
-            fecha:moment().format('DD/MM/YYYY'), //requerido -> empezar_desde.js
-            creado_por:window.usuario_id,
-            centro_contable_id:'',
-            recibir_en_id:'',
-            estado:'13',//requerido -> empezar_desde.js
-            observaciones:'',
-            pagos:0,
-            saldo:0,
-            creditos_aplicados:0,
-            saldo_proveedor:0,
-            porcentaje_retencion:0,
-            credito_proveedor:0,
-            operacion_type:'',
-            referencia:'',
-            articulos:[
+            nro_factura_proveedor: '',
+            fecha: moment().format('DD/MM/YYYY'), //requerido -> empezar_desde.js
+            creado_por: window.usuario_id,
+            centro_contable_id: '',
+            recibir_en_id: '',
+            estado: '13',//requerido -> empezar_desde.js
+            observaciones: '',
+            pagos: 0,
+            saldo: 0,
+            creditos_aplicados: 0,
+            saldo_proveedor: 0,
+            porcentaje_retencion: 0,
+            credito_proveedor: 0,
+            operacion_type: '',
+            referencia: '',
+            articulos: [
                 {
-                    id:'',
+                    id: '',
                     cantidad: '',
                     categoria_id: '',
                     cuenta_id: '',
-                    cuentas:'[]',
+                    cuentas: '[]',
                     descuento: '',
                     impuesto_id: '',
                     item_id: '',
                     item_hidden_id: '',
-                    items:[],
+                    items: [],
                     precio_total: '',
                     precio_unidad: '',
                     unidad_id: '',
-                    unidad_hidden_id:'',
-                    unidades:[],
+                    unidad_hidden_id: '',
+                    unidades: [],
                     descripcion: '',
-                    facturado:false,
-                    atributos:[],
-                    atributo_text:'',
-                    atributo_id:'',
-                    cantidad_maxima:''
+                    facturado: false,
+                    atributos: [],
+                    atributo_text: '',
+                    atributo_id: '',
+                    cantidad_maxima: ''
                 }
             ]
 
         },
 
-        empezable:{
-            label:'Empezar factura desde',
-            type:'',
-            types:[
+        empezable: {
+            label: 'Empezar factura desde',
+            type: '',
+            types: [
                 //al cambiar el tipo se busca un catalgo en el objeto empezable con el nombre (empezable.type + 's') *** requerido
-                {id:'orden_compra',nombre:'&Oacute;rdenes de compra'},
-                {id:'subcontrato',nombre:'Subcontrato'}
+                {id: 'orden_compra', nombre: '&Oacute;rdenes de compra'},
+                {id: 'subcontrato', nombre: 'Subcontrato'}
             ],
-            id:'',
-            orden_compras:window.orden_compras,
-            subcontratos:window.subcontratos
+            id: '',
+            orden_compras: window.orden_compras,
+            subcontratos: window.subcontratos
         },
         disabledPorPolitica: false,
-        desHabilitandoPorCantidad:false
-      },
+        desHabilitandoPorCantidad: false
+    },
 
-    components:{
-        'articulos':require('./../../vue/components/tabla-dinamica.vue'),
+    components: {
+        'articulos': require('./../../vue/components/tabla-dinamica.vue'),
         'vista_comments': require('./../../vue/components/comentario.vue')
 
     },
 
-    ready:function(){
+    ready: function () {
 
         var context = this;
 
-        if(context.config.vista == 'editar'){
+        if (context.config.vista == 'editar') {
 
             context.config.disableEmpezarDesde = true;
 
 
-            Vue.nextTick(function(){
+            Vue.nextTick(function () {
 
-                 context.empezable = $.extend({label:context.empezable.label,types:context.empezable.types},JSON.parse(JSON.stringify(window.empezable)));
+                context.empezable = $.extend({
+                    label: context.empezable.label,
+                    types: context.empezable.types
+                }, JSON.parse(JSON.stringify(window.empezable)));
                 context.detalle = JSON.parse(JSON.stringify(window.factura));
                 context.referencia = JSON.parse(JSON.stringify(window.factura.referencia));
                 context.comentario.comentarios = JSON.parse(JSON.stringify(window.factura.comentario));
@@ -158,59 +166,90 @@ var form_factura_compra = new Vue({
                 context.catalogos.cloneProveedores = _.clone(context.catalogos.proveedores);
 
                 // /*&& permiso_editar_retenido == 1*/
-                if(context.detalle.operacion_type=='subcontrato'){
-                  context.config.muestroRetenidoSubContrato = true;
-                  if(permiso_editar_retenido == 1){
+                if (context.detalle.operacion_type == 'subcontrato') {
+                    context.config.muestroRetenidoSubContrato = true;
+                    if (permiso_editar_retenido == 1) {
 
-                        context.config.disableDetallePorcentaje= false;
-                  }else{
-                        context.config.disableDetallePorcentaje= true;
-                  }
+                        context.config.disableDetallePorcentaje = false;
+                    } else {
+                        context.config.disableDetallePorcentaje = true;
+                    }
 
-                }else{
-                  context.config.muestroRetenidoSubContrato = false;
+                } else {
+                    context.config.muestroRetenidoSubContrato = false;
                 }
-                if(context.detalle.estado == 13){
-                    context.catalogos.estados.splice(2,2);
-                }
-
-                if(context.detalle.estado == 14){
-                    context.catalogos.estados.splice(0,1);
-                    context.catalogos.estados.splice(1,2);
+                if (context.detalle.estado == 13) {
+                    context.catalogos.estados.splice(2, 2);
                 }
 
-                if(context.detalle.estado == 20){
-                    context.catalogos.estados.splice(1,3);
-                   // context.config.facturaSuspendida = true;
+                if (context.detalle.estado == 14) {
+                    context.catalogos.estados.splice(0, 1);
+                    context.catalogos.estados.splice(1, 2);
                 }
 
-                if(context.detalle.estado > 14 && context.detalle.estado !=20){ //sE AGREGP EL 20 POR QUE AHORA CUANDO ESTA SUSPEDIDO SE PUEDE EDITAR
+                if (context.detalle.estado == 20) {
+                    context.catalogos.estados.splice(1, 3);
+                    // context.config.facturaSuspendida = true;
+                }
+
+                if (context.detalle.estado > 14 && context.detalle.estado != 20) { //sE AGREGP EL 20 POR QUE AHORA CUANDO ESTA SUSPEDIDO SE PUEDE EDITAR
 
                     context.config.disableDetalle = true;
                     context.config.disableArticulos = true;
 
                 }
-                Vue.nextTick(function(){
+                Vue.nextTick(function () {
                     context.config.enableWatch = true;
                 });
 
+                context.detalle.ordenes_multiple = typeof window.ordenes_multiple != 'undefined' ? window.ordenes_multiple : '';
             });
 
-        }else{
+        } else {
 
             context.config.enableWatch = true;
 
-            Vue.nextTick(function(){
+            Vue.nextTick(function () {
 
-                if(context.config.vista == 'crear'){
+                if (context.config.vista == 'crear') {
+
+                  //Verificar si existen variables
+                  //creadas para crear una orden de varios pedidos
+                  if(typeof window.orden_multiple != 'undefined' && window.orden_multiple==true
+                  && typeof window.ordenes_id != 'undefined' && window.ordenes_id.length > 0
+                  ){
+                    context.config.enableWatch = false;
+                    context.config.disableEmpezarDesde = true;
+                    context.detalle.ordenes_multiple = 1;
+                    context.detalle.ordenes_id = window.ordenes_id;
+                    context.detalle.centro_contable_id = typeof window.centro_id != 'undefined' ? window.centro_id.toString() : '';
+                    context.detalle.recibir_en_id = typeof window.bodega_id != 'undefined' ? window.bodega_id.toString() : '';
+                    context.detalle.proveedor_id = typeof window.proveedor_id != 'undefined' ? window.proveedor_id.toString() : '';
+                    context.catalogos.proveedores = [{
+                      proveedor_id: context.detalle.proveedor_id,
+                      nombre: typeof window.proveedor_nombre != 'undefined' ? window.proveedor_nombre.toString() : ''
+                    }];
+                    context.catalogos.bodegas = [{
+                      bodega_id: context.detalle.recibir_en_id,
+                      nombre: typeof window.bodega_nombre != 'undefined' ? window.bodega_nombre.toString() : ''
+                    }];
+
+                    context.getOrdenesItems(window.ordenes_id);
+
+                    setTimeout(function(){
+                      $('#proveedor_id').trigger('change'); //actualizar select2
+                    }, 500);
+
+                    //mensaje de espera
+                    toastr.info('Porfavor, espere mientras cargan los datos.', 'Cargando...');
+
+                  }else {
 
                     context.empezable.type = window.empezable.type;
                     Vue.nextTick(function(){
-
                         context.empezable.id = window.empezable.id;
-
                     });
-
+                  }
                 }
 
             });
@@ -218,65 +257,101 @@ var form_factura_compra = new Vue({
         }
 
 
-        if(context.config.vista == 'crear'){
-         this.selectProveedores();
+        if (context.config.vista == 'crear') {
+            this.selectProveedores();
         }
+        else {
+            Vue.nextTick(function () {
+                context.config.isDisableByStatus = +context.detalle.estado >= 13 && context.empezable.options.length > 0 || +context.detalle.estado > 13;
+                if (!context.config.isDisableByStatus) {
+                    context.selectProveedores();
+                }
+            });
+        }
+
     },
-    methods:{
+    methods: {
         selectProveedores(){
             var context = this;
             $("#proveedor_id").select2({
-            width:'100%',
-            ajax: {
-                url: phost() + 'proveedores/ajax_catalogo_proveedores',
-                dataType: 'json',
-                delay: 100,
-                cache: true,
-                data: function (params) {
-                    return {
-                        q: params.term, // search term
-                        page: params.page,
-                        erptkn: tkn
-                    };
-                },
-                processResults: function (data, params) {
+                width: '100%',
+                ajax: {
+                    url: phost() + 'proveedores/ajax_catalogo_proveedores',
+                    dataType: 'json',
+                    delay: 100,
+                    cache: true,
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                            erptkn: tkn
+                        };
+                    },
+                    processResults: function (data, params) {
 
-                   let resultados = data.map(resp=> [{'id': resp.proveedor_id,'text': resp.nombre}]).reduce((a, b) => a.concat(b),[]);
+                        let resultados = data.map(resp => [{
+                            'id': resp.proveedor_id,
+                            'text': resp.nombre
+                        }]).reduce((a, b) => a.concat(b), []);
 
-                   context.catalogos.cloneProveedores = data;
+                        context.catalogos.cloneProveedores = data;
 
-                     return {
-                          results:resultados
-                     };
-                },
-                escapeMarkup: function (markup) { return markup; },
-            }
-        });
+                        return {
+                            results: resultados
+                        };
+                    },
+                    escapeMarkup: function (markup) {
+                        return markup;
+                    },
+                }
+            });
+        },
+        getOrdenesItems: function(ordenes_id){
+          var scope = this;
+          this.$http.post({
+              url: window.phost() + "facturas_compras/ajax-get-ordenes-items",
+              method:'POST',
+              data: $.extend({erptkn: tkn},{ordenes_id: ordenes_id})
+          }).then(function(response){
+              /*if(_.has(response.data, 'session') || _.isEmpty(response.data)){
+                  window.location.assign(window.phost());
+                  return;
+              }*/
+
+              if(typeof response.data.articulos=='undefined' && response.data.articulos.length==0){
+                return;
+              }
+
+              Vue.nextTick(function(){
+                scope.detalle.articulos = response.data.articulos;
+              });
+          });
+
         },
         getEmpezableAjax: function(empezable){
 
             var context = this;
-            var datos = $.extend({erptkn: tkn},{type:empezable.type, id:empezable.id});
+            var datos = $.extend({erptkn: tkn}, {type: empezable.type, id: empezable.id});
 
             context.config.enableWatch = false;
             context.$http.post({
                 url: window.phost() + "facturas_compras/ajax-get-empezable",
-                method:'POST',
-                data:datos
-            }).then(function(response){
+                method: 'POST',
+                data: datos
+            }).then(function (response) {
 
-                if(_.has(response.data, 'session')){
+                if (_.has(response.data, 'session')) {
                     window.location.assign(window.phost());
                     return;
                 }
-                if(!_.isEmpty(response.data)){
+                if (!_.isEmpty(response.data)) {
                     context.catalogos.proveedores = [response.data.proveedor];
                     context.catalogos.cloneProveedores = _.clone(context.catalogos.proveedores);
                     context.por_facturar = response.data.por_facturar;
-                    context.detalle = $.extend(context.detalle,JSON.parse(JSON.stringify(response.data)));
+                    context.detalle = $.extend(context.detalle, JSON.parse(JSON.stringify(response.data)));
 
                     context.detalle.id = '';
-                    Vue.nextTick(function(){
+                    Vue.nextTick(function () {
                         context.detalle.proveedor_id = response.data.proveedor_id;
                         context.config.enableWatch = true;
                     });
@@ -296,113 +371,115 @@ var form_factura_compra = new Vue({
                 wrapper: '',
                 errorPlacement: function (error, element) {
                     var self = $(element);
-                    if(self.hasClass("cuenta")){
+                    if (self.hasClass("cuenta")) {
                         toastr.error("Verifique en los items el campo 'Cuenta', es obligatorio", "Mensaje");
                     }
 
                     if (self.closest('div').hasClass('input-group') && !self.closest('table').hasClass('itemsTable')) {
                         element.parent().parent().append(error);
-                    }else if(self.closest('div').hasClass('form-group') && !self.closest('table').hasClass('itemsTable')){
+                    } else if (self.closest('div').hasClass('form-group') && !self.closest('table').hasClass('itemsTable')) {
                         self.closest('div').append(error);
-                    }else if(self.closest('table').hasClass('itemsTable')){
+                    } else if (self.closest('table').hasClass('itemsTable')) {
                         $form.find('.tabla_dinamica_error').empty().append('<label class="error">Estos campos son obligatorios (*).</label>');
-                    }else{
+                    } else {
                         error.insertAfter(error);
                     }
                 },
                 submitHandler: function (form) {
                     $('input, select').prop('disabled', false);
-                    $('form').find(':submit').prop('disabled',true);
+                    $('form').find(':submit').prop('disabled', true);
                     form.submit();
                 }
             });
         },
 
-        inPolitica: function(politicasQueCumplen){
+        inPolitica: function (politicasQueCumplen) {
 
 
             var estado = this.detalle.estado;
             var self = this;
             var politicas = this.config.politicaTransaccion;
 
-            if(self.config.vista !== "editar"){
+            if (self.config.vista !== "editar") {
 
                 return false;
             }
             console.log(politicas.length);
-            if(politicas.length === 0){
+            if (politicas.length === 0) {
                 toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");
                 return false;
             }
 
             //filtros respectiva categoria y montos ejemplo [{categoria_id: 1, monto_limite:"200.00"}]
-            var modulo_politicas =_.flattenDeep(_.map(politicasQueCumplen,function(policy){
+            var modulo_politicas = _.flattenDeep(_.map(politicasQueCumplen, function (policy) {
 
-                    return _.map(policy.categorias,function(pol){
-                        return {categoria_id:pol.id,monto_limite:policy.monto_limite};
+                return _.map(policy.categorias, function (pol) {
+                    return {categoria_id: pol.id, monto_limite: policy.monto_limite};
 
-                     });
-                   }));
+                });
+            }));
 
             //elimino los duplicados y obtengo los montos mayores;
 
-            var politica_categoria = _.uniqWith(modulo_politicas,function(a, b){
+            var politica_categoria = _.uniqWith(modulo_politicas, function (a, b) {
 
-                if(a.categoria_id === b.categoria_id){
-                   if(a.monto_limite > b.monto_limite){
-                       return true;
-                   }else{
-                       return true;
-                   }
-              }
+                if (a.categoria_id === b.categoria_id) {
+                    if (a.monto_limite > b.monto_limite) {
+                        return true;
+                    } else {
+                        return true;
+                    }
+                }
             });
 
             ///buscar y filtrar si la politica esta los articulos
             ///cuando se cumpla enviar mensaje y bloquer boton
 
-           var colecion_articulos = this.detalle.articulos;
+            var colecion_articulos = this.detalle.articulos;
 
-           var categoriaArticuloPolitica = _.map(_.filter(colecion_articulos,function(articulo){
-               return  _.some(politica_categoria, { 'categoria_id': parseInt(articulo.categoria_id) });
-           }),function(a){ return {categoria_id:parseInt(a.categoria_id),subtotal: a.subtotal};});
+            var categoriaArticuloPolitica = _.map(_.filter(colecion_articulos, function (articulo) {
+                return _.some(politica_categoria, {'categoria_id': parseInt(articulo.categoria_id)});
+            }), function (a) {
+                return {categoria_id: parseInt(a.categoria_id), subtotal: a.subtotal};
+            });
 
-            if(categoriaArticuloPolitica.length === 0){
+            if (categoriaArticuloPolitica.length === 0) {
                 return false;
             }
             ///console.log(politica_categoria,categoriaArticuloPolitica);
             ///creo un array para comparar
-            var objfiltradoCat = _.uniqWith(categoriaArticuloPolitica,function(a, b){
+            var objfiltradoCat = _.uniqWith(categoriaArticuloPolitica, function (a, b) {
 
-                if(a.categoria_id === b.categoria_id){
-                  b.subtotal = parseFloat(a.subtotal) + parseFloat(b.subtotal);
-                  return true;
+                if (a.categoria_id === b.categoria_id) {
+                    b.subtotal = parseFloat(a.subtotal) + parseFloat(b.subtotal);
+                    return true;
                 }
 
             });
 
             //var objfiltradoCat =
 
-            var politica_aplicadas = _.filter(politica_categoria,function(value){
-                return _.some(objfiltradoCat, { 'categoria_id': value.categoria_id });
+            var politica_aplicadas = _.filter(politica_categoria, function (value) {
+                return _.some(objfiltradoCat, {'categoria_id': value.categoria_id});
             });
 
-            var politica_aplicada = _.filter(politica_aplicadas,function(value,key){
-                return  objfiltradoCat[key].subtotal > parseFloat(value.monto_limite);
+            var politica_aplicada = _.filter(politica_aplicadas, function (value, key) {
+                return objfiltradoCat[key].subtotal > parseFloat(value.monto_limite);
             });
 
 
-            if(politica_aplicada.length > 0){
-                _.forEach(politica_aplicada,function(mensaje){
-                    var categoria = _.find(self.catalogos.categorias,['id', mensaje.categoria_id]);
-                    toastr["info"]("El monto limite para su aprobaci\u00F3n es " + mensaje.monto_limite, "Categor\u00EDa "+categoria.nombre);
+            if (politica_aplicada.length > 0) {
+                _.forEach(politica_aplicada, function (mensaje) {
+                    var categoria = _.find(self.catalogos.categorias, ['id', mensaje.categoria_id]);
+                    toastr["info"]("El monto limite para su aprobaci\u00F3n es " + mensaje.monto_limite, "Categor\u00EDa " + categoria.nombre);
                     toastr.options = {
-                       "closeButton": true,
-                       "preventDuplicates": true,
-                       "showDuration": "300",
-                       "hideDuration": "0",
-                       "timeOut": "7000",
-                       "extendedTimeOut": "1000",
-                     };
+                        "closeButton": true,
+                        "preventDuplicates": true,
+                        "showDuration": "300",
+                        "hideDuration": "0",
+                        "timeOut": "7000",
+                        "extendedTimeOut": "1000",
+                    };
                 });
 
                 return true;
@@ -412,110 +489,110 @@ var form_factura_compra = new Vue({
             return false;
         }
     },
-    watch:{
+    watch: {
 
-        'detalle.centro_contable_id':function(val, oldVal){
+        'detalle.centro_contable_id': function (val, oldVal) {
             var context = this;
-            if(context.config.vista == 'crear'){
-                _.forEach(context.detalle.articulos, function(articulo){
+            if (context.config.vista == 'crear') {
+                _.forEach(context.detalle.articulos, function (articulo) {
                     articulo.cuenta_id = '';
                 });
             }
         },
 
-        'empezable.id': function(val, oldVal){
+        'empezable.id': function (val, oldVal) {
 
             console.log('execute watch for empezable.id from facturas_compras/formulario.js');
             var context = this;
-            if(context.config.vista == 'crear')
-            {
+            if (context.config.vista == 'crear') {
                 context.getEmpezableAjax(context.empezable);
             }
 
         },
 
-          'empezable.type': function (val, oldVal) {
+        'empezable.type': function (val, oldVal) {
 
             //empezable_type
 
-                var context = this; // /*&& permiso_editar_retenido == 1*/
+            var context = this; // /*&& permiso_editar_retenido == 1*/
 
 
-                if(val == 'subcontrato' || context.detalle.operacion_type=='subcontrato'){
-                      context.config.muestroRetenidoSubContrato = true;
-                       if(permiso_editar_retenido == 1){
-                          context.config.disableDetallePorcentaje= false;
-                       }else{
-                          context.config.disableDetallePorcentaje= true;
-                       }
+            if (val == 'subcontrato' || context.detalle.operacion_type == 'subcontrato') {
+                context.config.muestroRetenidoSubContrato = true;
+                if (permiso_editar_retenido == 1) {
+                    context.config.disableDetallePorcentaje = false;
+                } else {
+                    context.config.disableDetallePorcentaje = true;
+                }
 
-               }else{
-                        context.config.muestroRetenidoSubContrato = false;
-               }
+            } else {
+                context.config.muestroRetenidoSubContrato = false;
+            }
 
-          },
+        },
         'detalle.estado': function (val, oldVal) {
-              var context = this;
+            var context = this;
 
             // context.config.disableBotonForEstado = true; //Se desbloquea x el momento el boton
-             /*if(context.config.vista != 'crear' && context.config.politicaTransaccion.length > 0){
-                 var politica = _.head(context.config.politicaTransaccion);
-                 var estadoPolitica = politica.estado_politica.estado2;
-                 if(val == politica.estado_politica.estado2){
-                   console.log("Entro en inpolitica");
-                     context.disabledPorPolitica = context.inPolitica();
-                 }else{
-                     context.disabledPorPolitica = false;
-                 }
+            /*if(context.config.vista != 'crear' && context.config.politicaTransaccion.length > 0){
+             var politica = _.head(context.config.politicaTransaccion);
+             var estadoPolitica = politica.estado_politica.estado2;
+             if(val == politica.estado_politica.estado2){
+             console.log("Entro en inpolitica");
+             context.disabledPorPolitica = context.inPolitica();
+             }else{
+             context.disabledPorPolitica = false;
+             }
 
-              }*/
-              //El cambio filtra cuales cumplen las condiciones de estado1 a estado 2, ya que puede haber n cantidad de politicas
-              if(context.config.vista != 'crear' && context.config.politicaTransaccion.length > 0){
+             }*/
+            //El cambio filtra cuales cumplen las condiciones de estado1 a estado 2, ya que puede haber n cantidad de politicas
+            //Se puso validacion de politicaTransaccion para evitar error de js (TypeError: Cannot read property 'length' of undefined) -> @josecoder (23/02/17)
+            if (context.config.vista != 'crear' && typeof context.config.politicaTransaccion != 'undefined' && context.config.politicaTransaccion.length > 0) {
 
-                 var politicas =  context.config.politicaTransaccion;
+                var politicas = context.config.politicaTransaccion;
 
-                  var aplica = _.filter(politicas, function(politica) {
-                      return politica.estado_politica.estado2 === val && oldVal===politica.estado_politica.estado1;
-                  });
+                var aplica = _.filter(politicas, function (politica) {
+                    return politica.estado_politica.estado2 === val && oldVal === politica.estado_politica.estado1;
+                });
 
-                  if(_.isEmpty(aplica)){
+                if (_.isEmpty(aplica)) {
                     context.disabledPorPolitica = false;
-                  }else{
-                     context.disabledPorPolitica = context.inPolitica(aplica);
-                  }
-               }
-           }
+                } else {
+                    context.disabledPorPolitica = context.inPolitica(aplica);
+                }
+            }
+        }
     },
-    computed:{
-      desHabilitandoPorCantidad: function desHabilitandoPorCantidad() {
+    computed: {
+        desHabilitandoPorCantidad: function desHabilitandoPorCantidad() {
 
-         var context = this;
-         context.config.disableDetalle = false;
+            var context = this;
+            context.config.disableDetalle = false;
 
-            _.forEach(context.detalle.articulos, function(articulo){
-                     if(parseFloat(articulo.cantidad) > parseFloat(articulo.cantidad_maxima)){
-                      context.config.disableDetalle = true;
-                       return false;
-                    }
-              });
+            _.forEach(context.detalle.articulos, function (articulo) {
+                if (parseFloat(articulo.cantidad) > parseFloat(articulo.cantidad_maxima)) {
+                    context.config.disableDetalle = true;
+                    return false;
+                }
+            });
         },
         subtotal(){
-            let subtotal=   _.sumBy(this.detalle.articulos,(a)=>parseFloat(a.cantidad) * parseFloat(a.precio_unidad));
+            let subtotal = _.sumBy(this.detalle.articulos, (a) => parseFloat(a.cantidad) * parseFloat(a.precio_unidad));
             return parseFloat(roundNumber(subtotal, 2));
         },
         validarContrato(){
             return this.empezable.type == 'subcontrato';
         },
         validacionPorContrato(){
-            if(this.validarContrato){
-                if(this.subtotal > this.por_facturar){
-                    toastr.error("El subtotal de la factura de ser "+this.por_facturar,"Error al crear factura");
+            if (this.validarContrato) {
+                if (this.subtotal > this.por_facturar) {
+                    toastr.error("El subtotal de la factura de ser " + this.por_facturar, "Error al crear factura");
                     return true;
                 }
             }
             return false;
         }
-     }
+    }
 
 });
 

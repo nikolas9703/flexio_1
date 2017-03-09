@@ -20,7 +20,7 @@ var form_crear_ordenventa = new Vue({
           },
 
         config:{
-
+            loading:false,
             vista:window.vista,
             enableWatch:false,
             select2:{width:'100%'},
@@ -182,7 +182,7 @@ var form_crear_ordenventa = new Vue({
                     Vue.nextTick(function(){
 
                         context.empezable.id = window.empezable.id;
-
+                        window.this_=context;
                     });
 
                 }
@@ -237,6 +237,36 @@ var form_crear_ordenventa = new Vue({
             });
         }
 
+    },
+    watch: {
+        'empezable.id': function (val, oldVal) {
+
+            var self= this;
+            var datos = {
+                erptkn: tkn,
+                type:this.empezable.type,
+                id:val
+            };
+            self.config.loading = true;
+
+            this.$http.post({
+                url: window.phost() + "ordenes_ventas/ajax_get_items",
+                method: 'POST',
+                data: datos
+            }).then((response) => {
+                if (_.has(response.data, 'session')) {
+                    window.location.assign(window.phost());
+                    return;
+                }
+                self.detalle.articulos=response.data.articulos;
+                self.$nextTick(function () {
+                    self.config.loading = false;
+                });
+            });
+
+
+           console.log(val, oldVal);
+        }
     }
 
 });

@@ -65,8 +65,6 @@ var notaDebitoFormulario = new Vue({
             proveedores:[],
             monto_factura:0,
             saldo_factura:0,
-            saldo_proveedor:0,
-            credito_proveedor:0,
             fecha_factura:'',
             fecha:moment().format('DD/MM/YYYY'),
             creado_por:window.usuario_id,
@@ -204,8 +202,6 @@ var notaDebitoFormulario = new Vue({
             if(this.config.vista != 'crear')return;
 
             if(val === ''  || val === null){
-                this.detalle.saldo_proveedor = 0;
-                this.detalle.credito_proveedor = 0;
                 return '';
             }
 
