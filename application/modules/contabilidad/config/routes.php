@@ -30,11 +30,13 @@ $route['contabilidad/ajax-cambiar-estado-centro-contable'] = 'contabilidad/ajax_
 $route['contabilidad/ajax-cambiar-estado-cuenta-contable'] = 'contabilidad/ajax_cambiar_estado_cuenta_contable';
 $route['contabilidad/ajax-listar-impuestos'] = 'contabilidad/ajax_listar_impuestos';
 $route['contabilidad/ajax-guardar-impuesto'] = 'contabilidad/ajax_guardar_impuesto';
-$route['contabilidad/ajax-historial/(:any)'] = 'contabilidad/ajax_historial/$1';
+$route['contabilidad/ajax_historial'] = 'contabilidad/ajax_historial';
 $route['contabilidad/ajax-cambiar-estado-impuesto'] = 'contabilidad/ajax_cambiar_estado_impuesto';
 $route['contabilidad/ajax-lista-centros-contables'] = 'contabilidad/ajax_lista_centros_contables';
 $route['contabilidad/ajax-get-impuesto-exonerado'] = 'contabilidad/ajax_get_impuesto_exonerado';
 $route['contabilidad/ajax-habilitar-cuenta'] = 'contabilidad/ajax_habilitar_cuenta';
+$route['contabilidad/ajax-deshabilitar-cuentas-total'] = 'contabilidad/ajax_deshabilitar_cuentas_total';
+$route['contabilidad/ajax-habilitar-cuentas-total'] = 'contabilidad/ajax_habilitar_cuentas_total';
 
 /* End_of file routes.php '/
 /* Location: ./application/config/routes.php */

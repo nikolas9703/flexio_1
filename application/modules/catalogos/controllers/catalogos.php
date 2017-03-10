@@ -33,8 +33,13 @@ use Flexio\Modulo\Politicas\Repository\PoliticasRepository as PoliticasRepositor
 use Flexio\Modulo\Ramos\Models\RamosRoles;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
 use Flexio\Modulo\Ramos\Repository\RamoRepository;
+use Flexio\Modulo\Geo\Models\Provincia as provincias;
+use Flexio\Modulo\Geo\Models\Corregimiento as corregimientos;
+use Flexio\Modulo\Geo\Models\Distrito as distritos;
+use Flexio\Modulo\Rutas\Models\Rutas as rutas;
 //use Flexio\Modulo\Solicitudes\Models\SolicitudesDocumentacionCategoria as DocumentacionCategoria;
 use Flexio\Modulo\Usuarios\Models\RolesUsuario;
+use Flexio\Modulo\Rutas\Repository\RutasRepository as rutasRepository;
 
 //use Flexio\Modulo\aseguradoras\Models\Aseguradoras_orm as AseguradorasFormModel;
 
@@ -63,6 +68,11 @@ class Catalogos extends CRM_Controller {
     protected $politicas;
     protected $politicas_general;
     protected $PoliticasRepository;
+	protected $provincias;
+	protected $corregimientos;
+	protected $distritos;
+	protected $rutas;
+	protected $rutasRepository;
 //    protected $DocumentacionCategoria;
 
     /**
@@ -99,6 +109,13 @@ class Catalogos extends CRM_Controller {
         $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
         $this->id_usuario = $this->session->userdata("huuid_usuario");
         $this->id_empresa = $this->empresaObj->id;
+		
+		//cargar las provincias, distritos y corregimientos
+		
+		$this->provincias=new provincias();
+		$this->corregimientos=new corregimientos();
+		$this->distritos=new distritos();
+		$this->rutasRepository= new rutasRepository();
 
 
         //Obtener el id de usuario de session
@@ -106,6 +123,7 @@ class Catalogos extends CRM_Controller {
         $usuario = Usuario_orm::findByUuid($uuid_usuario);
 
         $this->usuario_id = $usuario->id;
+		$this->rutas=new rutas();
 
         //Obtener el id_empresa de session
         //$uuid_empresa = $this->session->userdata('uuid_empresa');
@@ -298,6 +316,9 @@ class Catalogos extends CRM_Controller {
             'public/assets/css/plugins/jquery/switchery.min.css'
         ));
         $this->assets->agregar_js(array(
+			
+			'public/assets/js/modules/rutas/configuracion.js',
+			'public/assets/js/modules/rutas/routes.js',
             'public/assets/js/modules/planes/formulario.js',
             'public/assets/js/modules/planes/crear.js',
             'public/assets/js/modules/planes/crear.vue.js',
@@ -379,6 +400,7 @@ class Catalogos extends CRM_Controller {
 //        $data['documentacion_n'] = DocumentacionCategoria::all();
 
         $data['aseguradoras'] = AseguradorasModel::where($clauseasegura)->get();
+		$data['provincias'] = $this->provincias->get();
         $data['tipo_intereses'] = CatalogoTipoIntereses::all();
         $data['tipo_poliza'] = CatalogoTipoPoliza::all();
         $data['impuestos'] = Impuestos_orm::impuesto_select(array('empresa_id' => $empresa->id, 'estado' => 'Activo'));
@@ -1215,5 +1237,166 @@ class Catalogos extends CRM_Controller {
         echo json_encode($response);
         exit;
     }
+	
+	function ajax_listar_distritos()
+	{
+		if (!$this->input->is_ajax_request()) {
+            return false;
+        }
 
+        $id = $this->input->post('provincia_id');
+		
+		$distritos=$this->distritos->where('provincia_id',$id)->get(array('id','nombre'));
+
+		$response = new stdClass();
+		/*foreach ($distritos as $key => $value) {
+			$response->distritos = array(
+				"id" => $value->id,
+				"nombre" => $value->nombre
+				);
+		}*/
+		$response->distritos = $distritos;
+		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+		->set_output(json_encode($response))->_display();
+		exit;
+	}
+	
+	function ajax_listar_corregimientos()
+	{
+		if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        $id = $this->input->post('distrito_id');
+		
+		$corregimientos=$this->corregimientos->where('distrito_id',$id)->get(array('id','nombre'));
+
+		$response = new stdClass();
+		/*foreach ($distritos as $key => $value) {
+			$response->distritos = array(
+				"id" => $value->id,
+				"nombre" => $value->nombre
+				);
+		}*/
+		$response->corregimientos = $corregimientos;
+		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+		->set_output(json_encode($response))->_display();
+		exit;
+	}
+	
+	function ajax_guardar_rutas()
+	{
+       /* if (!$this->input->is_ajax_request()) {
+            return false;
+        }*/
+        
+        $response = new stdClass();
+        $id_ruta = $this->input->post('id_ruta');
+
+		 if (empty($id_ruta)) {
+			$datos = array();
+			$datos['uiid_ruta']=Capsule::raw("ORDER_UUID(uuid())");
+			$datos['nombre_ruta'] = $this->input->post('nombre1_ruta');
+			$datos['provincia_id'] = $this->input->post('provincia_ruta');
+			$datos['distrito_id'] = $this->input->post('distrito_ruta');
+			$datos['corregimiento_id'] = $this->input->post('corregimiento_ruta');
+			$datos['nombre_mensajero'] = $this->input->post('nombremensajero_ruta');
+			$datos['empresa_id'] = $this->empresa_id;
+			$datos['usuario_id'] = $this->usuario_id;
+			$datos['estado']='Activo';
+			$datos['created_at']=date('Y-m-d H:i:s');
+			$datos['updated_at']= date('Y-m-d H:i:s');
+			//var_dump($this->input->post());
+			$ruta_save = $this->rutas->create($datos);
+
+			$response->clase = "success";
+			$response->estado = 200;
+			$response->mensaje = '<b>¡&Eacute;xito!</b> Se ha guardado correctamente  ' . $ruta_save->nombre;
+		}
+		else{
+			$datos = array();
+			$datos['nombre_ruta'] = $this->input->post('nombre1_ruta');
+			$datos['provincia_id'] = $this->input->post('provincia_ruta');
+			$datos['distrito_id'] = $this->input->post('distrito_ruta');
+			$datos['corregimiento_id'] = $this->input->post('corregimiento_ruta');
+			$datos['nombre_mensajero'] = $this->input->post('nombremensajero_ruta');
+			$datos['empresa_id'] = $this->empresa_id;
+			$datos['usuario_id'] = $this->usuario_id;
+			$datos['updated_at']= date('Y-m-d H:i:s');
+			$ruta_save = $this->rutas->find($id_ruta)->update($datos);
+
+			$response->clase = "success";
+			$response->estado = 200;
+			$response->mensaje = '<b>¡&Eacute;xito!</b> Se ha actualizado correctamente  ' .$datos['nombre_ruta'];
+		}
+		echo json_encode($response);
+		exit;
+	}
+	
+	function ajax_cambiar_estados_rutas()
+	{
+		if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $response = array();
+        $estado = $this->input->post('estado');
+        $id = $this->input->post('id');
+		$campos['estado']=$estado;
+
+        $total = $this->rutas->find($id)->update($campos);
+
+        if ($total > 0) {
+            $response = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> La actualizaci&oacute;n de estado');
+        } else {
+            $response = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Su solicitud no fue Procesada');
+        }
+        echo json_encode($response);
+        exit;
+	}
+	
+	public function exportar_rutas() {
+    	if(empty($_POST)){
+    		exit();
+    	}
+		
+    	$ids =  $this->input->post('id_rutas', true);
+		$id = explode(",", $ids);
+
+		if(empty($id)){
+			return false;
+		}
+		$csv = array();
+
+        $clause['id'] = $id;
+                
+		$rutas = $this->rutasRepository->exportar($clause);
+		if(empty($rutas)){
+			return false;
+		}
+		
+		$i=0;
+		foreach ($rutas AS $row)
+		{
+			$csvdata[$i]['nombre'] = utf8_decode($row->nombre_ruta);
+			$csvdata[$i]["provincia"] = utf8_decode($row->datosProvincia->nombre);
+			$csvdata[$i]["distrito"] = utf8_decode($row->datosDistrito->nombre);
+			$csvdata[$i]["corregimiento"] = utf8_decode($row->datosCorregimiento->nombre);
+			$csvdata[$i]["mensajero"] = utf8_decode($row->nombre_mensajero);
+			$csvdata[$i]["estado"] = $row->estado;
+			$i++;
+		}
+		//we create the CSV into memory
+		$csv = Writer::createFromFileObject(new SplTempFileObject());
+		$csv->insertOne([
+			'Nombre de ruta',
+			'Provincia',
+			'Distrito',
+			'Corregimiento',
+			'Mensajero',
+			'Estado'
+		]);
+		$csv->insertAll($csvdata);
+		$csv->output("rutas-". date('ymd') .".csv");
+		exit();
+    }
 }

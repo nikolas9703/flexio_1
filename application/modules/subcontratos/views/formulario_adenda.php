@@ -42,7 +42,7 @@ $info = !empty($info) ? $info : array();
         </div>
         <div class="col-lg-3 col-md-3"></div>
     </div>
-    <div class="row">
+    <div class="row" v-show="campo.adenda_id == ''">
         <div class="form-group col-xs-12 col-sm-12 col-md-8 col-lg-8"></div>
         <div class="form-group col-xs-12 col-sm-12 col-md-2 col-lg-2">
             <a href="<?php echo base_url('subcontratos/listar'); ?>" class="btn btn-default btn-block" id="cancelarFormBtn">Cancelar </a>

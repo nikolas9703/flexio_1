@@ -82,7 +82,7 @@ class FacturaVenta extends Model
     }
 
     public function getEnlaceAttribute() {
-        return base_url("facturas/ver/".$this->uuid_factura);
+        return base_url("facturas/editar/".$this->uuid_factura);
     }
 
     public function getTimelineAttribute() {

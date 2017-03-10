@@ -9,7 +9,7 @@ $info = !empty($info) ? $info : array();
             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                 <label for="">Cuenta de banco</label>
 
-                <select name="campo[cuenta_id]" class="form-control select2" id="cuenta_id" v-model="campo.cuenta_id">
+                <select name="campo[cuenta_id]" class="form-control select2" id="cuenta_id"  v-model="campo.cuenta_id" v-select2="campo.cuenta_id" >
                     <option v-for="cuenta_banco in campo.cuentas_bancos" :value="cuenta_banco.cuenta_id" v-text="cuenta_banco.cuenta.nombre"></option>
                 </select>
 

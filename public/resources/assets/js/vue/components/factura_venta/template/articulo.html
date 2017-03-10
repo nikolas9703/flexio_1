@@ -146,7 +146,8 @@
  	<td class="precio_unidad{{parent_index}}">
  		<div class="input-group">
  			<span class="input-group-addon"><i class="fa fa-dollar"></i></span>
- 			<input type="text" name="items[{{parent_index}}][precio_unidad]" class="form-control precio_unidad valid" data-rule-requiredvalidation="true" aria-required="true" id="precio_unidad{{parent_index}}" v-model="row.precio_unidad" v-moneda :disabled="permisoEditarPrecio || debeEditar|| desabledPorEstado">
+ 			<input type="text" name="items[{{parent_index}}][precio_unidad]" class="form-control precio_unidad valid" data-rule-requiredvalidation="true" aria-required="true" id="precio_unidad{{parent_index}}"
+            v-model="row.precio_unidad" v-moneda :disabled="permisoEditarPrecio || debeEditar || desabledPorEstado">
  		</div>
  	</td>
 

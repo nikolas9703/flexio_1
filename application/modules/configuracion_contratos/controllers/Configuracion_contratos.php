@@ -16,6 +16,7 @@ use Flexio\Library\Util\FormRequest;
 use League\Csv\Writer as Writer;
 use Carbon\Carbon;
 use Flexio\Modulo\Catalogos\Repository\CatalogoRepository;
+use Flexio\Modulo\ConfiguracionContratos\Repository\TipoSubContratoCatalogoRepository;
 
 class Configuracion_contratos extends CRM_Controller
 {
@@ -23,6 +24,7 @@ class Configuracion_contratos extends CRM_Controller
     protected $empresa_id;
     protected $usuario_id;
     protected $CatalogoRepository;
+    protected $TipoSubContratoCatalogoRepository;
 
     const PREFIJO_FUNC_GUARDAR_CONFIGURACION = 'guardar_configuracion_';
 
@@ -38,6 +40,7 @@ class Configuracion_contratos extends CRM_Controller
         $this->empresa_id   = $this->empresa->id;
 
         $this->CatalogoRepository = new CatalogoRepository;
+        $this->TipoSubContratoCatalogoRepository = new TipoSubContratoCatalogoRepository;
     }
     public function index() {
         redirect("configuracion_contratos/listar");
@@ -101,14 +104,14 @@ class Configuracion_contratos extends CRM_Controller
         }
 
         $clause = array(
-          'modulo' => 'subcontratos'
+          'empresa_id' => $this->empresa_id
         );
-        $tipo = $this->input->post('tipo');
+       /* $tipo = $this->input->post('tipo');
         if(!empty($tipo)){
             $clause['tipo'] = $tipo;
-        }
+        }*/
 
-        $jqgrid = new Flexio\Modulo\Catalogos\Services\CatalogoJqgrid();
+        $jqgrid = new Flexio\Modulo\ConfiguracionContratos\Services\TipoSubContratoCatalogoJqgrid();
         $response = $jqgrid->listar($clause);
         $this->output->set_status_header(200)
             ->set_content_type('application/json', 'utf-8')
@@ -141,18 +144,31 @@ class Configuracion_contratos extends CRM_Controller
 
       unset($fieldset["formulario"]);
       unset($fieldset["guardarBtn"]);
+      unset($fieldset["tipo"]);
+      unset($fieldset["modulo"]);
 
-      $cat_subcontrato = $this->CatalogoRepository->get(['modulo' => 'subcontratos']);
-      $tipos_subcontratos = $this->CatalogoRepository->get(['modulo' => 'subcontratos', 'tipo' => 'tipo_subcontrato']);
+      //$cat_subcontrato = $this->CatalogoRepository->get(['modulo' => 'subcontratos']);
+     // $tipos_subcontratos = $this->CatalogoRepository->get(['modulo' => 'subcontratos', 'tipo' => 'tipo_subcontrato']);
       $fieldset["empresa_id"] = $this->empresa_id;
-      $fieldset["orden"] = !empty($tipos_subcontratos) ? $tipos_subcontratos->max('orden')+1 : 0;
-      $fieldset["key"] = !empty($tipos_subcontratos) ? $cat_subcontrato->max('key')+1 : 0;
+      $fieldset["created_by"] = $this->usuario_id;
+
+      $fieldset["acceso"] = !empty($fieldset["con_acceso"]) ? $fieldset["con_acceso"] : 0;
+        unset($fieldset["con_acceso"]);
+      $fieldset["estado"] = !empty($fieldset["activo"]) ? $fieldset["activo"] : 0;
+        unset($fieldset["activo"]);
+       $fieldset["nombre"] =  $fieldset["valor"];
+        unset($fieldset["valor"]);
+
+      //$fieldset["orden"] = !empty($tipos_subcontratos) ? $tipos_subcontratos->max('orden')+1 : 0;
+      //$fieldset["key"] = !empty($tipos_subcontratos) ? $cat_subcontrato->max('key')+1 : 0;
 
       try{
          if(!empty($fieldset['id'])){
-             $this->CatalogoRepository->actualizar($fieldset);
+             $this->TipoSubContratoCatalogoRepository->actualizar($fieldset);
          }else{
-           $this->CatalogoRepository->crear($fieldset);
+           //$this->CatalogoRepository->crear($fieldset);
+             //Se crea un catalogo para el tipo de SubContratos
+             $this->TipoSubContratoCatalogoRepository->crear($fieldset);
          }
 
          $mensaje = array('tipo'=>"success", 'mensaje'=>'<b>¡&Eacute;xito!</b> Se ha guardado correctamente');

@@ -11,6 +11,6 @@ class PolizasAcreedores extends Model
 {
 	
 	protected $table        = 'pol_polizas_acreedores';    
-    protected $fillable     = ['acreedor', 'porcentaje_cesion', 'monto_cesion', 'id_poliza', 'updated_at', 'created_at'];
+    protected $fillable     = ['acreedor', 'porcentaje_cesion', 'monto_cesion', 'id_poliza', 'updated_at', 'created_at', 'fecha_inicio', 'fecha_fin'];
     protected $guarded      = ['id'];
 }

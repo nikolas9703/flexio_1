@@ -60,7 +60,8 @@
                   <li class="<?php echo $actplanes; ?>" id="tab_planes"><a data-toggle="tab" href="#tab-3" aria-expanded="false"  data-targe="beneficios">Planes</a></li>
                   <?php
                 }
-                ?>  											
+                ?>  
+				<li class="" id="tab_rutas"><a data-toggle="tab" href="#tab-4" aria-expanded="false"  data-targe="beneficios1">Rutas</a></li>
               </ul>
 
               <div class="tab-content">
@@ -873,6 +874,82 @@ if($planesPermission['listar'])
 
 </div>
 
+<!--- Aqui empieza el tab de rutas -->
+<div id="tab-4" class="tab-pane ">
+	<div class="panel-body" style="padding: 0px 15px 20px 0px !important">
+		<?php
+				$formAttr = array(
+				'method'        => 'POST',
+				'id'            => 'crearRutasForm',
+				'autocomplete'  => 'off'
+				);
+				echo form_open(base_url(uri_string()), $formAttr);
+				?>
+		<div class="tab-content row" ng-controller="configRutasController">
+		<!-- Tab panes -->
+
+		<!-- BUSCADOR -->
+
+		<!-- Inicia campos de Busqueda -->
+
+			<div class="ibox-content tab-pane fade in active" style="padding: 15px 20px 152px 0px !important" id="Impuesto1">
+				<div class='row'>
+					<div id="mensaje_info_ruta"></div>
+					<input type='hidden' id='id_ruta' name='id_ruta' ng-model="ruta.id" class="form-control" />
+					<div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
+						<label for="">Nombre de ruta <span required="" aria-required="true">*</span></label>
+						   <input type="text" id="nombre1_ruta" name="nombre1_ruta" ng-model="ruta.nombre" class="form-control"  placeholder="" autocomplete="off" data-rule-required="true">
+					</div>
+					<div class="form-group col-xs-12 col-sm-2 col-md-2 col-lg-2 ">
+						<label>Provincia<span required="" aria-required="true">*</span></label>
+						<select name="provincia_ruta" ng-model="ruta.provincia" class="form-control" id="provincia_ruta" data-rule-required="true" v-model="provincia" @change='getObtenerProvincias(provincia)'>
+							<option value="" selected >Seleccione</option>
+							<?php foreach($provincias as $provincia) {?>
+							<option value="<?php echo $provincia->id; ?>" ><?php echo $provincia->nombre?></option>
+							<?php }?>
+						</select>
+					</div>
+					<div class="form-group col-xs-12 col-sm-2 col-md-2 col-lg-2 ">
+						<label>Distrito<span required="" aria-required="true">*</span></label>
+						<select name="distrito_ruta" ng-model="ruta.distrito" class="form-control" id="distrito_ruta" data-rule-required="true" v-model="distrito" @change='getObtenerCorregimientos(distrito)'>
+							<option value="" >Seleccione</option>
+							<option v-for='dis in distritosInfo' v-bind:value="dis.id"  >{{dis.nombre}}</option>
+						</select>
+					</div>
+					<div class="form-group col-xs-12 col-sm-2 col-md-2 col-lg-2 ">
+						<label>Corregimiento<span required="" aria-required="true">*</span></label>
+						<select name="corregimiento_ruta" ng-model="ruta.corregimiento" class="form-control" id="corregimiento_ruta" data-rule-required="true" v-model="corregimiento" >
+							<option value="" >Seleccione</option>
+							<option v-for='corre in corregimientosInfo' value='{{corre.id}}' >{{corre.nombre}}</option>
+						</select>
+					</div>
+					<div class="form-group col-xs-12 col-sm-3 col-md-3 col-lg-3">
+						<label for="">Nombre de mensajero </label>
+						  <input type="text" id="nombremensajero_ruta" name="nombremensajero_ruta" ng-model="ruta.mensajero" class="form-control"  placeholder="" autocomplete="off" data-rule-required="false">
+					</div>
+				</div>
+				<div class="row"> 
+                        <div class="col-xs-0 col-sm-6 col-md-8 col-lg-8">&nbsp;</div>
+                        <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
+                            <input type="button" class="btn btn-default btn-block" id="cancelar" value="Cancelar" ng-click="cancelarRuta($target)"> 
+                        </div>
+                        <div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2" id='boton_guardar'>
+                            <input type="button" name="guardar_ruta" value="Guardar" class="btn btn-primary btn-block" id="guardar_ruta" ng-click="guardarRuta(ruta)">
+                        </div>
+						<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2" id='boton_actualizar'>
+                            <input type="button" name="actualizar_ruta" value="Actualizar" class="btn btn-primary btn-block" id="actualizar_ruta" ng-click="guardarRuta(ruta)">
+                        </div>
+                    </div>
+					<?php 
+					echo modules::run('configuracion_seguros/ocultotabla_rutas'); 
+				?>
+			</div>
+		</div>
+		<?php echo form_close(); ?>
+	</div>
+</div>
+<!--- Aqui finaliza el tab de rutas -->
+
 </div>
 
 </div>
@@ -904,6 +981,13 @@ $formAttr = array('method' => 'POST', 'id' => 'exportarPlanesLnk','autocomplete'
 echo form_open(base_url('planes/exportar'), $formAttr);
 ?>
 <input type="hidden" name="ids" id="ids2" value="" />
+<?php
+echo form_close();
+
+$formAttr = array('method' => 'POST', 'id' => 'exportarRutas','autocomplete'  => 'off');
+echo form_open(base_url('catalogos/exportar_rutas'), $formAttr);
+?>
+<input type="hidden" name="id_rutas" id="id_rutas" value="" />
 <?php
 echo form_close();
 

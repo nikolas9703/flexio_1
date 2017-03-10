@@ -28,11 +28,11 @@ class GuardarCuenta{
 
          $cuenta = FormRequest::data_formulario($this->request->only('id','nombre','codigo','descripcion','padre_id'));
 
-         $this->cuentaExiste($cuenta['codigo']);
 
          if(isset($cuenta['id'])){
              return $this->actualizar($cuenta);
          }
+         $this->cuentaExiste($cuenta['codigo']);
          $tipo_cuenta = $this->findPadre($cuenta['padre_id']);
          $cuenta['tipo_cuenta_id'] = $tipo_cuenta->tipo_cuenta_id;
          $cuenta['usuario_id'] = $this->session->usuarioId();

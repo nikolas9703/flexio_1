@@ -12,7 +12,7 @@ $config['modulo_config'] = array(
     'grupo' => 'Administración',
     'agrupador' => array(
         'Seguros' => array(
-            'grupo_orden' => 8
+            'grupo_orden' => 9
         ),
     ),
     'permisos' => array(

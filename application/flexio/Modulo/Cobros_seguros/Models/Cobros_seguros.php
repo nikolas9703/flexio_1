@@ -136,6 +136,9 @@ class Cobros_seguros extends Model
 		return $this->hasMany(CobroFactura::class,'cobro_id');
     }
 
+    public function polizas(){
+        return $this->belongsToMany(Polizas::class,'id','empezable_id')->select('numero as numero_poliza');
+    }
 
     //no va
 /*    public function total_cobrado(){

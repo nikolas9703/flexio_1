@@ -42,17 +42,17 @@ class CotizacionRepository {
                 })->get();
     }
 
-    public function getCollectionCotizacionesEmpezarDesde($cotizaciones){
+    public function getCollectionCotizacionesEmpezarDesde($cotizaciones, $withItems=true){
 
-        return $cotizaciones->map(function($cotizacion){
+        return $cotizaciones->map(function($cotizacion) use ($withItems){
 
-            return $this->getCollectionCotizacionEmpezarDesde($cotizacion);
+            return $this->getCollectionCotizacionEmpezarDesde($cotizacion, $withItems);
 
         });
 
     }
 
-    public function getCollectionCotizacionEmpezarDesde($cotizacion){
+    public function getCollectionCotizacionEmpezarDesde($cotizacion, $withItems=true){
 
         $articulo = new \Flexio\Library\Articulos\ArticuloVenta;
         return collect(array_merge(
@@ -61,7 +61,7 @@ class CotizacionRepository {
                 ],
                 $cotizacion->toArray(),
                 [
-                    'articulos' => $articulo->get($cotizacion->items, $cotizacion),
+                    'articulos' => $withItems?$articulo->get($cotizacion->items, $cotizacion):[],
                     'observaciones' => $cotizacion->comentario,
                     'saldo_cliente' => 0,
                     'credito_cliente' => 0,

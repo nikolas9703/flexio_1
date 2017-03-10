@@ -49,7 +49,16 @@
                                                     <input type="text" class="form-control" id="numero_factura" />
                                             </div>
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                                <label for="fecha1">Rango de fechas</label>
+                                                <label for="proveedor">Proveedor</label>
+                                                <select name="proveedor" class="form-control" id="proveedor3">
+                                                    <option value="">Seleccione</option>
+                                                    <?php foreach($proveedores as $proveedor) {?>
+                                                    <option value="<?php echo $proveedor->id?>"><?php echo $proveedor->nombre?></option>
+                                                    <?php }?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                                <label for="fecha1">Rango de fechas de emisi&oacute;n</label>
                                                 <div class="form-inline">
                                                     <div class="form-group">
                                                         <div class="input-group">
@@ -61,15 +70,21 @@
                                                     </div>
                                                 </div>
                                             </div>
+
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                                <label for="proveedor">Proveedor</label>
-                                                <select name="proveedor" class="form-control" id="proveedor3">
-                                                    <option value="">Seleccione</option>
-                                                    <?php foreach($proveedores as $proveedor) {?>
-                                                    <option value="<?php echo $proveedor->id?>"><?php echo $proveedor->nombre?></option>
-                                                    <?php }?>
-                                                </select>
+                                                <label for="fecha1">Rango de fechas de creaci&oacute;n</label>
+                                                <div class="form-inline">
+                                                    <div class="form-group">
+                                                        <div class="input-group">
+                                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                            <input type="text" name="creacion_min" id="creacion_min" class="form-control">
+                                                            <span class="input-group-addon">a</span>
+                                                            <input type="text" class="form-control" name="creacion_max" id="creacion_max">
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
+                                            
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                                 <label for="categoria">Categoría(s) de item</label><br>
                                                 <select id="categoria_id" multiple class="form-control" data-placeholder=" ">
@@ -80,6 +95,15 @@
                                                 </select>
                                             </div>
 
+                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                                <label for="termino_pago">T&eacute;rmino de pago</label><br>
+                                                <select id="termino_pago" multiple class="form-control chosen-select" data-placeholder=" ">
+                                                    <option value=""> </option>
+                                                    <?php foreach($catalogo_termino_pago as $termino_pago):?>
+                                                    <option value="<?php echo $termino_pago['etiqueta']?>"><?php echo $termino_pago['valor']?></option>
+                                                    <?php endforeach;?>
+                                                </select>
+                                            </div>
 
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                                 <label for="monto1">Rango de montos</label>
@@ -94,6 +118,23 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                                <label for="pagos">Pagos</label>
+                                                <select name="pagos" class="form-control chosen-select" id="pagos">
+                                                    <option value="">Seleccione</option>
+                                                     <option value="si">Si</option>
+                                                     <option value="no">No</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
+                                                <label for="fecha1">Antiguedad de factura mayor a (d&iacute;as)</label>
+                                                    <input type="text" class="form-control" id="numero_dias" />
+                                            </div>
+
+
+
                                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                                 <label for="centro_contable">Centro contable</label>
                                                 <select name="centro_contable" class="form-control chosen-select" id="centro_contable">
@@ -121,16 +162,6 @@
                                                     <?php }?>
                                                 </select>
                                             </div>
-
-                                          <!--  <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                                <label for="tipo">Tipo</label>
-                                                <select name="tipo" class="form-control chosen-select" id="tipo">
-                                                    <option value="">Seleccione</option>
-                                                    <?php foreach($tipos as $tipo) {?>
-                                                    <option value="<?php echo $tipo->id?>"><?php echo $tipo->valor?></option>
-                                                    <?php }?>
-                                                </select>
-                                            </div>-->
                                         </div>
 
                                         <div class="row">

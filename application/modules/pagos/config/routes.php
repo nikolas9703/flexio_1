@@ -55,5 +55,7 @@ $route['pagos/ajax-anular-pago'] = 'pagos/ajax_anular_pago';
 $route['pagos/ajax-get-empezables'] = 'pagos/ajax_get_empezables';
 $route['pagos/ajax-get-empezable'] = 'pagos/ajax_get_empezable';
 
+
+
 //Obtinene los agentes y los provedores 
 $route['pagos/ajax_agentes_proovedores'] = 'pagos/ajax_agentes_proovedores';

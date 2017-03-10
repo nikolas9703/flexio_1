@@ -27,6 +27,9 @@ use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros as ComisionesSeguro
 use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSegurosRemesas as ComisionesSegurosRemesas;
 use Flexio\Modulo\ComisionesSeguros\Repository\ComisionesSegurosRepository as ComisionesSegurosRepository;
 use Carbon\Carbon as Carbon;
+use Flexio\Modulo\ComisionesSeguros\Models\SegComisionesParticipacion as SegComisionesParticipacion;
+use Flexio\Modulo\Polizas\Models\SegPolizasAgentePrin as agentePrincipal;
+use Flexio\Modulo\Polizas\Models\PolizasParticipacion as agenteParticipacion;
 
 class Remesas_entrantes extends CRM_Controller
 {
@@ -45,6 +48,9 @@ class Remesas_entrantes extends CRM_Controller
 	protected $ComisionesSeguros;
 	protected $COmisionesSegurosRemesas;
 	protected $COmisionesSegurosRepository;
+	protected $SegComisionesParticipacion;
+	protected $agentePrincipal;
+	protected $agenteParticipacion;
 
 
     function __construct()
@@ -78,6 +84,9 @@ class Remesas_entrantes extends CRM_Controller
 		$this->ComisionesSeguros=new ComisionesSeguros();
 		$this->COmisionesSegurosRemesas=new COmisionesSegurosRemesas();
 		$this->COmisionesSegurosRepository=new COmisionesSegurosRepository();
+		$this->SegComisionesParticipacion=new SegComisionesParticipacion();
+		$this->agentePrincipal= new agentePrincipal();
+		$this->agenteParticipacion=new agenteParticipacion();
 
     }
 
@@ -349,7 +358,7 @@ class Remesas_entrantes extends CRM_Controller
         $breadcrumb["menu"]["opciones"] = $menuOpciones;
 
 
-        $this->template->agregar_titulo_header('Crer Remesa saliente');
+        $this->template->agregar_titulo_header('Crer Remesa entrante');
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar($breadcrumb);
@@ -786,6 +795,49 @@ class Remesas_entrantes extends CRM_Controller
 					
 					$comision_remesa_creada=$this->COmisionesSegurosRemesas->create($comisionremesa);
 					
+					//obtener los agentes de participacion de la poliza y crearlos para la comision
+					$agentespolizas=$this->agenteParticipacion->where('id_poliza',$value->polizas->id)->get();
+					
+					foreach($agentespolizas as $agente)
+					{
+						$datosagentecomision=array();
+						$datosagentecomision['agente_id']=$agente->agente_id;
+						$datosagentecomision['porcentaje']=$agente->porcentaje_participacion;
+						$datosagentecomision['comision_id']=$comision_creada->id;
+						$datosagentecomision['created_at']=date('Y-m-d H:i:s');
+						$datosagentecomision['updated_at']=date('Y-m-d H:i:s');
+						
+						if($comision_creada->comision_pagada>0)
+							$datosagentecomision['monto']=$comision_creada->comision_pagada*($agente->porcentaje_participacion/100);
+						else
+							$datosagentecomision['monto']=$comision_creada->comision_descontada*($agente->porcentaje_participacion/100);
+						
+						$partcomisioncreada=$this->SegComisionesParticipacion->create($datosagentecomision);
+						
+					}
+					
+					//obtener el porcentaje del agente principal y guardarlo en la comision
+					$totalagentespolizasprincipal=$this->agentePrincipal->where('poliza_id',$value->polizas->id)->count();
+					
+					if($totalagentespolizasprincipal>0)
+					{
+						$agentespolizasprincipal=$this->agentePrincipal->where('poliza_id',$value->polizas->id)->first();
+					
+						$datosagentepcomision=array();
+						$datosagentepcomision['agente_id']=$agentespolizasprincipal->agente_id;
+						$datosagentepcomision['porcentaje']=$agentespolizasprincipal->comision;
+						$datosagentepcomision['comision_id']=$comision_creada->id;
+						$datosagentepcomision['created_at']=date('Y-m-d H:i:s');
+						$datosagentepcomision['updated_at']=date('Y-m-d H:i:s');
+						
+						if($comision_creada->comision_pagada>0)
+							$datosagentepcomision['monto']=$comision_creada->comision_pagada*($agentespolizasprincipal->comision/100);
+						else
+							$datosagentepcomision['monto']=$comision_creada->comision_descontada*($agentespolizasprincipal->comision/100);
+						
+						$partcomisioncreadap=$this->SegComisionesParticipacion->create($datosagentepcomision);
+						
+					}
 				}
 				
 				if($value->estado=='cobrado_completo')
@@ -979,8 +1031,10 @@ class Remesas_entrantes extends CRM_Controller
 			
 			$ramo=$value->id_ramo;
 		}
-	
-		$nombre_ramo_anterior=$this->Ramos->find($ramo)->nombre;
+		
+		$nombre_ramo_anterior='';
+		if($ramo!="")
+			$nombre_ramo_anterior=$this->Ramos->find($ramo)->nombre;
 		
 		if($comision_esperada_comparar_total!=$comision_pagada_total)
 			$estilo='font-weight: bold; background-color:#efefef; color:#ff0000;';
@@ -1190,6 +1244,7 @@ class Remesas_entrantes extends CRM_Controller
 		if(isset($_POST['liquidar']))
 		{
 			$campoupdate["estado"] ='liquidada';
+			$campoupdate["fecha_liquidada"] =date('y-m-d H:i:s');
 		}
 		
 		$campoupdate["monto"] =$total_pago;
@@ -1546,7 +1601,10 @@ class Remesas_entrantes extends CRM_Controller
 			else if($row->estado=='por_liquidar')
 				$estado='Por liquidar';
 			if($row->estado=='liquidada')
+			{
 				$estado='Liquidada';
+			}
+				
 			$csvdata[$i]['no_remesa'] = $row->no_remesa;
 			$csvdata[$i]["pagos_remesados"] = $row->pagos_remesados;
 			$csvdata[$i]["nom_aseguradora"] = utf8_decode(Util::verificar_valor($row->nom_aseguradora));

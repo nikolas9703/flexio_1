@@ -57,7 +57,9 @@ class Configuracion_ventas extends CRM_Controller
             'public/assets/css/plugins/jquery/chosen/chosen.min.css',
             'public/assets/css/plugins/bootstrap/bootstrap-tagsinput.css',
             'public/assets/css/plugins/jquery/fileinput/fileinput.css',
-            'public/assets/css/plugins/jquery/toastr.min.css',
+            //select2
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css',
         ));
 
         $this->assets->agregar_js(array(
@@ -85,6 +87,9 @@ class Configuracion_ventas extends CRM_Controller
             'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/toastr.min.js',
+            //select2
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
             'public/assets/js/default/formulario.js',
 
             /* Archivos js del propio modulo*/

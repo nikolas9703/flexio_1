@@ -20,6 +20,7 @@ $route['catalogos/ajax-listar-ramos-tree'] = 'Configuracion_seguros/ajax_listar_
 $route['catalogos/ajax-cambiar-estado-ramo'] = 'Configuracion_seguros/ajax_cambiar_estado_ramo';
 $route['catalogos/ajax-guardar-ramos'] = 'Configuracion_seguros/ajax_guardar_ramos';
 $route['catalogos/ajax-buscar-ramo'] = 'Configuracion_seguros/ajax_buscar_ramo';
-//$route['catalogos/editar'] = 'catalogos/editar';
+
+$route['catalogos/ajax-listar-distritos'] = 'catalogos/ajax_listar_distritos';
 
 ?>

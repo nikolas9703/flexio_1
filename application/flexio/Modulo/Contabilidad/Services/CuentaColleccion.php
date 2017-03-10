@@ -14,8 +14,8 @@ class CuentaColleccion{
     function buscarHijos($cuentas){
 
       foreach($cuentas as $cuenta){
-        if(count($cuenta['cuentas_item']) > 0){
-          $this->buscarHijos($cuenta['cuentas_item']);
+        if(count($cuenta->cuentas_item) > 0){
+          $this->buscarHijos($cuenta->cuentas_item);
         }else{
           array_push(self::$cuentas_contable,$this->retornarId($cuenta));
         }

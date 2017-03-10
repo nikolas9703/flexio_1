@@ -11,3 +11,4 @@ $route['ordenes_ventas/ajax-get-item-existencia'] = 'ordenes_ventas/ajax_get_ite
 $route['ordenes_ventas/ocultoformulariocomentarios'] = 'ordenes_ventas/ocultoformulariocomentarios';
 $route['ordenes_ventas/ajax-guardar-comentario'] = 'ordenes_ventas/ajax_guardar_comentario';
 $route['ordenes_ventas/ajax-guardar-documentos'] = 'ordenes_ventas/ajax_guardar_documentos';
+$route['ordenes_ventas/ajax-get-items'] = 'ordenes_ventas/ajax_get_items';

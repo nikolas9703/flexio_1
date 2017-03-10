@@ -58,6 +58,9 @@ var notaDebitoFormulario = new Vue({
         detalle:{
             id:'',
             factura_id:0,
+            factura:{
+                porcentaje_retencion:0
+            },
             listas_loader:false,
             proveedor_id:'',
             prov_id:'',

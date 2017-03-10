@@ -509,7 +509,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 
         <div class="col-xs-12 col-sm-12 col-md-6 col-lg-2" style="margin-left: -20px;">
             <label>Centro Contable</label>
-            <select type="text" name="nombre_centroContable" data-rule-required="true" id="centro_contable" class="form-control"  :disabled="disabledfechaInicio" v-model="centroContable">
+            <select type="text" name="nombre_centroContable" id="centro_contable" class="form-control"  :disabled="disabledfechaInicio" v-model="centroContable">
                 <option value="">Seleccione</option>
                 <option v-for="centro in centrosContables" v-bind:value="centro.id" :selected="centro.nombre==nombre_centroContable">{{centro.nombre}}</option>
             </select>

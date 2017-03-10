@@ -9,7 +9,7 @@ use Flexio\Modulo\Empresa\Models\Empresa;
 class RemesasEntrantes extends Model
 {
     protected $table = 'seg_remesas_entrantes';
-    protected $fillable = ['id','uuid_remesa_entrante','no_remesa','pagos_remesados','aseguradora_id','monto','fecha', 'usuario_id','estado', 'empresa_id', 'created_at', 'updated_at','fecha_desde','fecha_hasta','ramos_id'];
+    protected $fillable = ['id','uuid_remesa_entrante','no_remesa','pagos_remesados','aseguradora_id','monto','fecha', 'usuario_id','estado', 'empresa_id', 'created_at', 'updated_at','fecha_desde','fecha_hasta','ramos_id','fecha_liquidada'];
     protected $guarded = ['id'];
     public $timestamps = false;
 

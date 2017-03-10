@@ -14,14 +14,14 @@
                 <option value="">Seleccione</option>
             </select>
         </td>
-        <td>
+        <td v-show="!isMovimientoMonetario() || config.modulo == 'retiro_dinero'">
             <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-dollar"></i></span>
                 <input type="text" class="form-control" name="transacciones[{{parent_index}}][debito]" aria-required="true" data-rule-required="true"
                 v-model="trans.debito | currencyDisplay" :disabled="config.disableDetalle" @change="debitoChanged()">
             </div>
         </td>
-        <td>
+        <td v-show="!isMovimientoMonetario() || config.modulo == 'recibo_dinero'">
             <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-dollar"></i></span>
                 <input type="text" class="form-control" name="transacciones[{{parent_index}}][credito]" aria-required="true" data-rule-required="true"
@@ -81,6 +81,11 @@ export default {
     },
 
     methods:{
+        isMovimientoMonetario: function(){
+            var context = this;
+            var movimientos_monetarios = ['recibo_dinero', 'retiro_dinero'];
+            return movimientos_monetarios.indexOf(context.config.modulo) != -1;
+        },
         debitoChanged: function(){
             var context = this;
             if(context.trans.debito != 0 && context.trans.credito != 0){

@@ -15,8 +15,9 @@ trait HistorialCuenta {
                                      ->fetch();
 
         $cuentas->load('cuentas_item');
-
-        $array_ids = $colleccionCuenta->soloTransaccionales($cuentas->toArray());
+        
+        $array_ids = $colleccionCuenta->soloTransaccionales($cuentas);
+        //dd($array_ids);
         $cuenta_ids = array_pluck($array_ids, "id");
 
         $data=array();

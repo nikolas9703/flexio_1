@@ -26,4 +26,15 @@ class LinesItems extends Model
     {
         return $this->belongsToMany('Flexio\Modulo\Inventarios\Models\Seriales','inv_items_seriales_lines', 'line_id', 'serial_id');
     }
+
+     public function setCantidadAttribute($value){
+
+        $this->attributes['cantidad'] =  str_replace(",", "", $value);
+
+    }
+
+     public function setPrecioTotalAttribute($value){
+
+        $this->attributes['precio_total'] =  str_replace(",", "", $value);
+    }
 }

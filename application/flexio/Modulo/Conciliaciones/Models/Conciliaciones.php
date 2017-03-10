@@ -64,6 +64,22 @@ class Conciliaciones extends Model
         return $html->setType("htmlLabel")->setAttrs($attrs)->setHtml($this->balance_flexio)->getSalida();
     }
 
+    public function setDiferenciaAttribute($value){
+        $value = str_replace("$", "", $value);
+        $this->attributes['diferencia'] =  str_replace(",", "", $value);
+    }
+
+    public function setBalanceFlexioAttribute($value){
+        $value = str_replace("$", "", $value);
+        $this->attributes['balance_flexio'] =  str_replace(",", "", $value);   
+    }
+
+    public function setBalanceBancoAttribute($value){
+        $value = str_replace("$", "", $value);
+        $this->attributes['balance_banco'] =  str_replace(",", "", $value);   
+
+    }
+
     public function getDiferenciaLabelAttribute()
     {
         $attrs = [

@@ -39,6 +39,17 @@ class CuentaRepositorio {
         return $this;
     }
 
+    function transaccionalesDeEmpresa($empresa_id)
+    {
+         $this->builder->where("contab_cuentas.empresa_id", $empresa_id)
+                ->whereNotIn("id", function($q) use ($empresa_id){
+                    $q->select("padre_id")
+                    ->from("contab_cuentas")
+                    ->where("empresa_id", $empresa_id);
+                });
+        return $this;        
+    }
+
     
 
     function fetch(){

@@ -90,8 +90,6 @@
         </div>
 
 
-
-
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
             <label>Estado <span required="" aria-required="true">*</span></label>
             <select name="campo[estado]" class="chosen" id="estado" data-rule-required="true" aria-required="true" v-select2="detalle.estado" :config="config.select2" :disabled="config.disableDetalle || config.vista == 'crear' || tienePoliticas ">
@@ -100,11 +98,9 @@
             </select>
         </div>
 
-
-
-
-
-
+        <template v-for="(index, pedido_id) in detalle.pedidos_id">
+          <input type="hidden" name="pedidos[{{index}}][id]" :value="pedido_id" />
+        </template>
     </div>
 
 </template>

@@ -4,6 +4,8 @@ namespace Flexio\Modulo\Polizas\Repository;
 use Flexio\Modulo\Polizas\Models\Polizas;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados;
 use Flexio\Modulo\Cobros\Models\CobroFactura;
+use Flexio\Modulo\Polizas\Models\PolizasAcreedores;
+use Flexio\Modulo\Polizas\Models\PolizasAcreedores_detalles;
 
 class PolizasRepository{
 	
@@ -142,5 +144,19 @@ class PolizasRepository{
 	public function total_facturado_polizas($ids) {
     	$query = CobroFactura::whereIn("cobrable_id", $ids)->where('transaccion',1)->sum('monto_pagado');
       return $query;
+    }
+
+    public function verAcreedores($id_poliza){
+        $acreedores = PolizasAcreedores::where('id_poliza',$id_solicitudes);
+        
+        return $acreedores->get();
+
+    }
+
+    public function verAcreedoresDetalle($id){
+        $acreedores = PolizasAcreedores_detalles::where('idinteres_detalle',$id);
+        
+        return $acreedores->get();
+
     }
 }

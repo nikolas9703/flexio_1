@@ -109,8 +109,10 @@ class Contabilidad extends CRM_Controller
         $this->template->visualizar($breadcrumb);
     }
     public function listar_cuentas_contables($uuid_cuenta) {
-                $data = array();
-               $this->assets->agregar_css(array(
+
+        $data = array();
+
+        $this->assets->agregar_css(array(
                   'public/assets/css/default/ui/base/jquery-ui.css',
                   'public/assets/css/default/ui/base/jquery-ui.theme.css',
                   'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
@@ -137,7 +139,9 @@ class Contabilidad extends CRM_Controller
                $this->assets->agregar_var_js(array(
                    "centro_id" =>$centro->id
              ));
-
+        $count_cuentas = CuentasCentro::where('empresa_id', $this->empresa_id)
+            ->where('centro_id',$centro->id)
+            ->count();
 
                      $breadcrumb = array(
                        "titulo" => '<i class="fa fa-calculator"></i> Centro contable: '.$centro->nombre,
@@ -166,6 +170,15 @@ class Contabilidad extends CRM_Controller
                          )
                      );
                $breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
+        if ($count_cuentas > 0){
+            $breadcrumb["menu"]["opciones"]["#deshabilitarBtn"] = "Deshabilitar";
+        }else{
+            $breadcrumb["menu"]["opciones"]["#habilitarBtn"] = "Habilitar";
+            $this->assets->agregar_var_js(array(
+                "uuid_cuenta" =>$uuid_cuenta
+            ));
+        }
+
                $this->template->agregar_titulo_header('Cuentas contables');
                $this->template->agregar_breadcrumb($breadcrumb);
                $this->template->agregar_contenido($data);
@@ -365,7 +378,7 @@ class Contabilidad extends CRM_Controller
                 $result = \Flexio\Modulo\Contabilidad\Models\Cuentas::where(function($query) use ($post, $clause, $centro_contable_id){
                     $query->whereRaw('contab_cuentas.id='.$post['campo']['id']);
                 });
-                if(isset($clause["centro_contable_id"]) and !empty($clause["centro_contable_id"]) and !$this->input->get('aplica_centro')){
+                if(isset($clause["centro_contable_id"]) and !empty($clause["centro_contable_id"]) and $this->input->get('aplica_centro') == 1){
                     $result->select('contab_cuentas.*')
                     ->join("contab_cuentas_centros", function ($join) use ($clause){
                         $join->on("contab_cuentas_centros.cuenta_id", "=", "contab_cuentas.id");
@@ -623,6 +636,56 @@ $response = new stdClass ();*/
       exit;
  }
 
+    function ajax_deshabilitar_cuentas_total()
+    {
+        Capsule::beginTransaction();
+
+        try {
+            CuentasCentro::where('empresa_id', $this->empresa_id)->delete();
+        } catch (ValidationException $e) {
+            Capsule::rollback();
+            echo json_encode(array(
+                "response" => false,
+                "mensaje" => "Hubo un error tratando de deshabilitar las cuentas."
+            ));
+            exit;
+        }
+        Capsule::commit();
+
+        echo json_encode(array(
+            "response" => true,
+        ));
+        exit;
+    }
+    function ajax_habilitar_cuentas_total()
+    {
+        $uuid_cuenta= $this->input->post('uuid_cuenta', true);
+        //dd($uuid_cuenta);
+        Capsule::beginTransaction();
+
+        try {
+
+            $centro = Flexio\Modulo\CentrosContables\Models\CentrosContables::where('uuid_centro', hex2bin($uuid_cuenta))->first();
+            $cuentas = Flexio\Modulo\Contabilidad\Models\Cuentas::transaccionalesDeEmpresa($this->empresa_id)->deEmpresa($this->empresa_id)->activas()->get()->pluck('id')->toArray();
+            //dd($cuentas->toArray());
+           //$centro->cuentas()->sync($cuentas);
+            $centro->cuentas()->attach($cuentas,['empresa_id'=>$this->empresa_id]);
+          // dd($centro->toArray(), $cuentas, $centro->cuentas()->sync($cuentas),$centro->cuentas->toArray());
+        } catch (ValidationException $e) {
+            Capsule::rollback();
+            echo json_encode(array(
+                "response" => false,
+                "mensaje" => "Hubo un error tratando de Habilitar las cuentas."
+            ));
+            exit;
+        }
+        Capsule::commit();
+
+        echo json_encode(array(
+            "response" => true,
+        ));
+        exit;
+    }
     function ajax_listar_centros_contable() {
         if(!$this->input->is_ajax_request()) {
             return false;

@@ -27,6 +27,8 @@ use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros as Cobros_seg;
 use Flexio\Modulo\Polizas\Models\Polizas as Polizas;
 use Flexio\Modulo\Cobros_seguros\Models\CobroFactura;
 use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
+use Flexio\Modulo\Cliente\Models\Cliente as Cliente;
+use Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro as FacturaSeguro;
 
 
 class Cobros_seguros extends CRM_Controller {
@@ -125,8 +127,20 @@ class Cobros_seguros extends CRM_Controller {
 		
 		if($this->input->post("uuid_poliza")!=""){
 			$poliza=Polizas::where('uuid_polizas',hex2bin($this->input->post("uuid_poliza")))->first();
+			
+			$todosempezable_id=array();
+			array_push($todosempezable_id, $poliza->id);
+			
+			//traigo todas las facturas que tienen esa poliza asignada
+			$facturaspolizas=FacturaSeguro::where('id_poliza',$poliza->id)->get();
+			
+			foreach($facturaspolizas as $facpoliza)
+			{
+				array_push($todosempezable_id, $facpoliza->id);
+				array_push($todosempezable_id, $facpoliza->cliente_id);
+			}
 			if($poliza->id!="")
-				$clause['empezable_id'] = $poliza->id;
+				$clause['empezable_id'] = $todosempezable_id;
 		}
 		
 		if($this->input->post("codigo")!=""){
@@ -294,9 +308,11 @@ class Cobros_seguros extends CRM_Controller {
 
 			if($_GET['reg']=='com'){
 				$regreso='com';
+			}elseif($_GET['reg']=='fase'){
+				$regreso='fase';
 			}else{
 				$regreso='';
-			}	
+			}
 		}elseif (isset($_GET['mod'])) {
 			if($_GET['mod']=='polizas'){
 				$regreso = 'polizas';
@@ -304,11 +320,7 @@ class Cobros_seguros extends CRM_Controller {
 				$regreso='';
 			}
 		}
-		elseif($_GET['reg']=='fase')
-		{
-			$regreso='fase';
-		}
-
+		
 		$this->_Css();
 		$this->assets->agregar_css(array(
 			'public/assets/css/modules/stylesheets/animacion.css'
@@ -485,6 +497,7 @@ class Cobros_seguros extends CRM_Controller {
 		$cobro->load('metodo_cobro','cliente','cobros_facturas','landing_comments');
 		$cobro->load(['factura_cobros.cobros'=>function($cob){
 			$cob->where('cob_cobros.estado','aplicado');
+			$cob->orWhere('cob_cobros.estado','agendado');
 		}]);
 		
 		$this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output($cobro)->_display();
@@ -551,17 +564,19 @@ class Cobros_seguros extends CRM_Controller {
 		if(empty($id)){
 			$faturas = $facturasObj->getPolizasFacturas($this->empresa_id)->fetch();
 		}else{
-			$faturas = $facturasObj->getPolizasFacturas($this->empresa_id)->conId($id)->fetch();
+			$faturas = $facturasObj->getPolizasFacturas($this->empresa_id)->conIdPoliza($id)->fetch();
 		}
-		/*
+		
 		$faturas->load(['cobros'=>function($cob){
+			//var_dump($cob);
 			$cob->where('estado','aplicado');
+			$cob->orWhere('estado','agendado');
 			$cob->with('metodo_cobro');
-		}]);*/
+		}]);
 		
 		$response =  $faturas->map(function($fac){
 			return collect([
-				'id'=> $fac->id,
+				'id'=> $fac->idPoliza,
 				'nombre'=> $fac->cliente_nombre." - ".$fac->ramo_aso." - No. ".$fac->numero_poliza,
 				'codigo'=> $fac->codigo,
 				'numero_poliza' => $fac->numero_poliza,

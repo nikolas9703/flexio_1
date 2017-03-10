@@ -20,7 +20,7 @@ use Flexio\Modulo\FacturasCompras\Models\FacturaCompra as FaccomModel;
 
 //transacciones
 use Flexio\Modulo\FacturasCompras\Transacciones\FacturasComprasTransacciones;
-
+use Flexio\Modulo\FacturasCompras\TransaccionesAnular\FacturasComprasAnular;
 //repositories
 use Flexio\Modulo\OrdenesCompra\Repository\OrdenesCompraRepository as ordenesCompraRep;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository as impuestosRep;
@@ -35,6 +35,7 @@ use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategorias
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\FacturasCompras\Repository\FacturaCompraCatalogoRepository;
 use Flexio\Modulo\FacturasCompras\Models\FacturaCompra as FacturaCompra;
+use Flexio\Modulo\OrdenesCompra\Transform\OrdenesTransformer;
 use Carbon\Carbon as Carbon;
 
 //utils
@@ -202,6 +203,7 @@ class Facturas_compras extends CRM_Controller
 
         $this->assets->agregar_var_js(array(
             'flexio_mensaje' => Flexio\Library\Toast::getStoreFlashdata(),
+            'prex' => 'factura_compra'
         ));
 
         $clause2 = ['empresa_id' => $this->empresa_id, 'ordenables' => true, 'transaccionales' => true, 'conItems' => true, 'estado != por_aprobar'];
@@ -230,6 +232,7 @@ class Facturas_compras extends CRM_Controller
         $data['estados'] = Factura_catalogo_orm::estadosFacturasCompras()->get();
         $data['tipos'] = Factura_catalogo_orm::tiposFacturasCompras()->get();
         $data['centros'] = $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause));
+        $data['catalogo_termino_pago'] = $this->FacturaVentaCatalogoRepository->getTerminoPago();
         /*$data["centros"] = Centros_orm::deEmpresa($this->empresa_id)
                 ->activa()
                 ->deMasJuventud($this->empresa_id)
@@ -264,6 +267,10 @@ class Facturas_compras extends CRM_Controller
             return false;
         }
 
+
+        $request = Illuminate\Http\Request::createFromGlobals();
+        $busqueda = $request->only(['creacion_min','creacion_max','termino_pago','pagos','numero_dias']);
+
         //Paramentos de busqueda
         $numero_factura = $this->input->post('numero_factura');
         $fecha1 = $this->input->post('fecha1', true);
@@ -284,6 +291,15 @@ class Facturas_compras extends CRM_Controller
         $categoria_id = $this->input->post('categoria_id', true);
         $categoria_id = !empty($categoria_id) ? (is_array($categoria_id) ? $categoria_id : array($categoria_id)) : array();
         $campo = $this->input->post('campo', true);
+
+        if(!empty($busqueda)){
+            if(is_null($campo)){
+                $campo = $busqueda;
+            }else if(is_array($campo)){
+                $campo = array_merge($campo, $busqueda);
+            }
+
+        }
         //subpanels
         $orden_compra_id = $this->input->post('orden_compra_id', true);
        //$subcontrato_id = $this->input->post('subcontrato_id', true); Esta linea fue comentada porque esta enviando datos malos al listar y hace que se rompa
@@ -294,12 +310,12 @@ class Facturas_compras extends CRM_Controller
         }
 
         if (!empty($fecha1)) {
-            $fecha1 = date('Y-m-d H:i:s', strtotime($fecha1));
+            $fecha1 = date('Y-m-d', strtotime($fecha1));
             $registros->deFechaCreacionMayorIgual($fecha1);
         }
 
         if (!empty($fecha2)) {
-            $fecha2 = date('Y-m-d H:i:s', strtotime($fecha2));
+            $fecha2 = date('Y-m-d', strtotime($fecha2));
             $registros->deFechaCreacionMenorIgual($fecha2);
         }
 
@@ -396,8 +412,12 @@ class Facturas_compras extends CRM_Controller
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'.$row->uuid_factura.'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $hidden_options = '<a href="'.base_url('facturas_compras/ver/'.$row->uuid_factura).'" data-id="'.$row->uuid_factura.'" class="btn btn-block btn-outline btn-success">Ver detalle</a>';
 
-                if ($row->pagable && $this->auth->has_permission('acceso', 'pagos/crear/(:any)')) {
+                if (0 && $row->pagable && $this->auth->has_permission('acceso', 'pagos/crear/(:any)')) {
                     $hidden_options .= '<a href="#" data-id="'.$row->uuid_factura.'" class="btn btn-block btn-outline btn-success aplicar-credito-favor">Aplicar cr&eacute;dito a favor</a>';
+                }
+
+                if ($row->pagable && $this->auth->has_permission('acceso', 'pagos/crear/(:any)')) {
+                    $hidden_options .= '<a href="#" data-id="'.$row->uuid_factura.'" class="btn btn-block btn-outline btn-success aplicar-nota-credito-favor">Aplicar nota de cr&eacute;dito a favor</a>';
                 }
 
                 if ($this->auth->has_permission('acceso', 'pagos/crear/(:any)')) {
@@ -479,6 +499,7 @@ class Facturas_compras extends CRM_Controller
     {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas_compras/aplicar_credito.js',
+            'public/assets/js/modules/facturas_compras/aplicar_nota.js',
             'public/assets/js/modules/facturas_compras/change_state.js',
             'public/assets/js/modules/facturas_compras/tabla2.js',
         ));
@@ -514,6 +535,7 @@ class Facturas_compras extends CRM_Controller
     {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas_compras/aplicar_credito.js',
+            'public/assets/js/modules/facturas_compras/aplicar_nota.js',
             'public/assets/js/modules/facturas_compras/change_state.js',
             'public/assets/js/modules/facturas_compras/tabla2.js',
         ));
@@ -532,6 +554,7 @@ class Facturas_compras extends CRM_Controller
     {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas_compras/aplicar_credito.js',
+            'public/assets/js/modules/facturas_compras/aplicar_nota.js',
             'public/assets/js/modules/facturas_compras/change_state.js',
             'public/assets/js/modules/facturas_compras/tabla2.js',
         ));
@@ -549,6 +572,7 @@ class Facturas_compras extends CRM_Controller
     {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas_compras/aplicar_credito.js',
+            'public/assets/js/modules/facturas_compras/aplicar_nota.js',
             'public/assets/js/modules/facturas_compras/change_state.js',
             'public/assets/js/modules/facturas_compras/tabla2.js',
         ));
@@ -566,6 +590,7 @@ class Facturas_compras extends CRM_Controller
     {
         $this->assets->agregar_js(array(
             'public/assets/js/modules/facturas_compras/aplicar_credito.js',
+            'public/assets/js/modules/facturas_compras/aplicar_nota.js',
             'public/assets/js/modules/facturas_compras/change_state.js',
             'public/assets/js/modules/facturas_compras/tabla2.js',
         ));
@@ -601,6 +626,9 @@ class Facturas_compras extends CRM_Controller
 
     public function crear($foreing_key = '')
     {
+        $empezable_id = '';
+        $empezable_type = '';
+
         if (preg_match('/proveedor/', $foreing_key)) {
             //$proveedor_id   = str_replace('proveedor', '', $foreing_key);
             //queda pendiente integracion
@@ -610,6 +638,24 @@ class Facturas_compras extends CRM_Controller
         } elseif (preg_match('/subcontrato/', $foreing_key)) {
             $empezable_id = str_replace('subcontrato', '', $foreing_key);
             $empezable_type = 'subcontrato';
+
+        } else if(preg_match('/ordenes/', $foreing_key)){
+            $ordenes_id = $this->input->post("ordenes_id", true);
+            $centro_id = $this->input->post("centro_id", true);
+            $bodega_id = $this->input->post("bodega_id", true);
+            $bodega_nombre = $this->input->post("bodega_nombre", true);
+            $proveedor_id = $this->input->post("proveedor_id", true);
+            $proveedor_nombre = $this->input->post("proveedor_nombre", true);
+
+            $this->assets->agregar_var_js(array(
+                'orden_multiple' => true,
+                'centro_id' => !empty($centro_id) ? $centro_id : "",
+                'bodega_id' => !empty($bodega_id) ? $bodega_id : "",
+                'bodega_nombre' => !empty($bodega_nombre) ? $bodega_nombre : "",
+                'proveedor_id' => !empty($proveedor_id) ? $proveedor_id : "",
+                'proveedor_nombre' => !empty($proveedor_nombre) ? $proveedor_nombre : "",
+                'ordenes_id' => collect($ordenes_id)
+            ));
         }
 
         $acceso = 1;
@@ -627,8 +673,8 @@ class Facturas_compras extends CRM_Controller
         $this->_js();
 
         $empezable = collect([
-            'id' => isset($empezable_id) ? $empezable_id : '',
-            'type' => isset($empezable_type) ? $empezable_type : '',
+            'id' => !empty($empezable_id) ? $empezable_id : '',
+            'type' => !empty($empezable_type) ? $empezable_type : '',
             'orden_compras' => [],
             'subcontratos' => [],
         ]);
@@ -722,6 +768,13 @@ class Facturas_compras extends CRM_Controller
             'permiso_editar_retenido' => $permiso_editar_retenido,
             'super_user' => !empty($is_admin) ? $is_admin : 0,
         ));
+
+        //Verificar si se trata de una factura creada con varias ordenes de compra
+        if(empty($factura_compra->operacion_type) && empty($factura_compra->operacion_id) && !empty($factura_compra->ordenes()->get()->toArray()) ){
+          $this->assets->agregar_var_js(array(
+              'ordenes_multiple' => 1,
+          ));
+        }
 
         $data = array();
         $data['factura_compra_id'] = $factura_compra->id;
@@ -872,12 +925,32 @@ class Facturas_compras extends CRM_Controller
         return $aux;
     }
 
-    private function _actualizarEstadoOrdenContrato($operacion_type, $operacion_id, $anulada = false)
+    private function _actualizarEstadoOrdenContrato($factura)
     {
-        if ($operacion_type == 'Ordenes_orm' && $operacion_id) {
-            $registro = Ordenes_orm::find($operacion_id);
+        $anulada = $factura->estado->etiqueta == 'anulada' ? true : false;
+
+        //!empty($factura->operacion_type) && count($factura->operacion) > 0
+        if (!empty($factura->operacion_type) && $factura->operacion_type == 'Ordenes_orm' && $factura->operacion_id) {
+            $registro = Ordenes_orm::find($factura->operacion_id);
             $registro->actualizarEstado($anulada);
-        } elseif ($operacion_type == 'Contratos_orm') {
+        }
+
+        //----------------------------------------------------
+        // Verificar si operacion_type y operacion_id de la factura es vacio
+        // si es vacio se trata de una factura relacionada
+        // a varias ordenes de compra.
+        //----------------------------------------------------
+        else if(empty($factura->operacion_type) && empty($factura->operacion_id) && !empty($factura->ordenes()->get()->toArray()) ){
+          $ordenes = $factura->ordenes()->get();
+          if(!empty($ordenes) && !empty($ordenes->toArray())){
+            foreach ($ordenes AS $orden) {
+              $registro = Ordenes_orm::find($orden->id);
+              $registro->actualizarEstado($anulada);
+            }
+          }
+        }
+
+        elseif ($operacion_type == 'Contratos_orm') {
             //...logica para contratos
         }
     }
@@ -952,10 +1025,26 @@ class Facturas_compras extends CRM_Controller
 
                     $this->FacturaCompraRepository->_sync_items($factura, $post['items']);
 
-                //ACTUALIZAR EL ESTADO DE LA ORDEN
-                if (!empty($factura->operacion_type) && count($factura->operacion) > 0 && ($factura->estado->etiqueta == 'por_pagar' || $factura->estado->etiqueta == 'anulada')) {
-                    $this->_actualizarEstadoOrdenContrato($factura->operacion_type, $factura->operacion_id,  $factura->estado->etiqueta == 'anulada');
-                }
+                    //-------------------------------------------------------
+                    // Verificar si en el post existe el array de ordenes
+                    // esto viene cuando se convierte varias ordenes a factura.
+                    // author: @josecoder
+                    // date: 23/02/17
+                    if(!empty($post['ordenes'])){
+                      $instaciaOrdenes = new OrdenesTransformer;
+                      $ordenes = $instaciaOrdenes->crearInstancia($post['ordenes']);
+                      $factura->ordenes()->saveMany($ordenes);
+                    }
+
+                    //ACTUALIZAR EL ESTADO DE LA ORDEN
+                    if (($factura->estado->etiqueta == 'por_pagar' || $factura->estado->etiqueta == 'anulada')) {
+                        $this->_actualizarEstadoOrdenContrato($factura);
+                    }
+
+                    if($factura->estado->etiqueta == 'anulada' || $factura->estado->etiqueta == 'suspendida'){
+                        $anularTransaccion = new FacturasComprasAnular();
+                        $anularTransaccion->haceTransaccion($factura);
+                    }
                 });
             } catch (Exception $e) {
                 log_message('error', $e);
@@ -1097,6 +1186,31 @@ class Facturas_compras extends CRM_Controller
         }
 
         return $aux;
+    }
+
+    /**
+     * Consultar las ordenes y retornar un array
+     * con todos los items.
+     *
+     * @return array
+     */
+    public function ajax_get_ordenes_items(){
+
+      if(!$this->input->is_ajax_request()){
+        return false;
+      }
+
+      $ordenes_id = $this->input->post("ordenes_id");
+      $ordenes = $this->ordenesCompraRep->findIn($ordenes_id);
+
+      if(empty($ordenes->toArray())){
+        return [];
+      }
+
+      $response = $this->ordenesCompraRep->getOrdenesItems($ordenes);
+      $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    	->set_output(Collect($response))->_display();
+    	exit;
     }
 
     private function _getFactura($registro)
@@ -1279,6 +1393,19 @@ class Facturas_compras extends CRM_Controller
         exit();
     }
 
+    public function ajax_get_nota_credito_aplicable_factura()
+    {
+        $clause = ['empresa' => $this->empresa_id, 'uuid' => $this->input->post('factura_compra_uuid')];
+        $result = \Flexio\Modulo\FacturasCompras\Models\FacturaCompra::where(function ($q) use ($clause) {
+            $q->deFiltro($clause);
+        })->first();
+        $response = count($result) ? $result->collection()->nota_credito_aplicable_factura : [];
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+                ->set_output(Collect($response))->_display();
+        exit();
+    }
+
     public function ajax_aplicar_credito()
     {
         try {
@@ -1295,6 +1422,26 @@ class Facturas_compras extends CRM_Controller
         echo json_encode(array(
             'response' => true,
             'mensaje' => 'Se aplic&oacute; el cr&eacute;dito correctamente.',
+        ));
+        exit;
+    }
+
+    public function ajax_aplicar_nota_credito()
+    {
+        try {
+            $GuardarNotaCreditoAplicado = new \Flexio\Modulo\FacturasCompras\FormRequest\GuardarNotaCreditoAplicado();
+            $GuardarNotaCreditoAplicado->guardar();
+        } catch (\Exception $e) {
+            echo json_encode(array(
+                'response' => false,
+                'mensaje' => $e->getMessage(),
+            ));
+            exit;
+        }
+
+        echo json_encode(array(
+            'response' => true,
+            'mensaje' => 'Se aplic&oacute; la nota de cr&eacute;dito correctamente.',
         ));
         exit;
     }

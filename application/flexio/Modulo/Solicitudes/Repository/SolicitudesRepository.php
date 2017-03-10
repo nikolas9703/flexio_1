@@ -9,6 +9,7 @@ use Flexio\Modulo\Solicitudes\Models\SolicitudesVigencia;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesPrima;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesParticipacion;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores;
+use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores_detalles;
 
 class SolicitudesRepository {
     
@@ -197,6 +198,13 @@ class SolicitudesRepository {
 
     public function verAcreedores($id_solicitudes){
         $acreedores = SolicitudesAcreedores::where('id_solicitud',$id_solicitudes);
+        
+        return $acreedores->get();
+
+    }
+
+    public function verAcreedoresDetalle($id){
+        $acreedores = SolicitudesAcreedores_detalles::where('idinteres_detalle',$id);
         
         return $acreedores->get();
 

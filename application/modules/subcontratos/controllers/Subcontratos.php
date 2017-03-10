@@ -21,6 +21,7 @@ use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\SubContratos\Models\SubContrato      as SubContrato;
 use Flexio\Modulo\ConfiguracionContabilidad\Models\CuentaContrato;
+use Flexio\Modulo\ConfiguracionContratos\Repository\TipoSubContratoCatalogoRepository as TipoSubContratoCatalogoRepository;
 
 
 //utils
@@ -45,6 +46,7 @@ class Subcontratos extends CRM_Controller
     protected $DocumentosRepository;
     protected $FlexioAssets;
     protected $Toast;
+    protected $TipoSubContratoCatalogoRepository;
 
     /**
      * Método constructor
@@ -78,6 +80,7 @@ class Subcontratos extends CRM_Controller
 
         $this->FlexioAssets = new FlexioAssets;
         $this->Toast = new Toast;
+        $this->TipoSubContratoCatalogoRepository = new TipoSubContratoCatalogoRepository();
     }
 
     /*public function configuracion()
@@ -138,14 +141,14 @@ class Subcontratos extends CRM_Controller
         $clause = array('empresa_id' => $this->empresa_id);
 
         //catalogo tipos de Subcontratos q no necesitan acceso
-        $tipos_subcontratos = $this->CatalogoRepository->get(['modulo' => 'subcontratos', 'tipo' => 'tipo_subcontrato', 'con_acceso' => 0]);
+        $tipos_subcontratos = $this->TipoSubContratoCatalogoRepository->get(['empresa_id' => $this->empresa_id, 'con_acceso' => 0]);
 
         //Obtener los tipos de suncontrato al que el usuario tiene acceso
         $tipos_subcontrato_acceso_restringido = $this->listaTiposSubcontratosRestringidosDelUsuario();
         if(!empty($tipos_subcontrato_acceso_restringido)) {
 
           //si tiene acceso poner el tipo en el array del catalogo
-          $tipos_subcontratos_restringidos = $this->CatalogoRepository->get(['id' => $tipos_subcontrato_acceso_restringido, 'modulo' => 'subcontratos', 'tipo' => 'tipo_subcontrato', 'con_acceso' => 1]);
+          $tipos_subcontratos_restringidos = $this->TipoSubContratoCatalogoRepository->get(['empresa_id' => $this->empresa_id, 'acceso' => 1]);
           $tipos_subcontratos = $tipos_subcontratos->merge($tipos_subcontratos_restringidos);
         }
 
@@ -191,18 +194,16 @@ class Subcontratos extends CRM_Controller
         {
             return false;
         }
-
-        $clause = array('empresa' => $this->empresa_id);
-
+        $clause['empresa'] = $this->empresa_id;
         $catalogos = $this->CatalogoRepository->get(['modulo' => 'subcontratos']);
         $tipos_subcontrato_acceso_libre = $catalogos->filter(function($option){return $option->tipo == 'tipo_subcontrato' && $option->con_acceso == 0;})->pluck("id");
         $clause["tipo_subcontrato_acceso"] = $tipos_subcontrato_acceso_libre->toArray();
 
         $tipos_subcontrato_acceso_restringido = $this->listaTiposSubcontratosRestringidosDelUsuario();
-        if(!empty($tipos_subcontrato_acceso_restringido)) {
-          $clause["tipo_subcontrato_acceso"] = array_merge($clause["tipo_subcontrato_acceso"], $tipos_subcontrato_acceso_restringido);
-        }
 
+        if(!empty($tipos_subcontrato_acceso_restringido)) {
+        $clause["tipo_subcontrato_acceso"] = array_merge($clause["tipo_subcontrato_acceso"], $tipos_subcontrato_acceso_restringido);
+    }
         //se pasa el objecto para poder validar las rutas
         $jqgrid = new Flexio\Modulo\SubContratos\Services\SubContratoJqgrid($this->auth);
         $response = $jqgrid->listar($clause);
@@ -275,7 +276,7 @@ class Subcontratos extends CRM_Controller
             'proveedores' => collect([]),
             'centros_contables' => $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause)),
             'estados' => $catalogos->filter(function($option){return $option->tipo == 'estado';}),
-            'tipos_subcontratos' => $catalogos->filter(function($option){return $option->tipo == 'tipo_subcontrato';}),
+            'tipos_subcontratos' => $this->TipoSubContratoCatalogoRepository->get($clause),
             'cuentas' => $this->CuentasRepository->get($clause),
             'cuentas_contrato' => collect($cuentas_contratos->get()->toarray()),
         ]);
@@ -510,7 +511,7 @@ class Subcontratos extends CRM_Controller
             'public/assets/js/modules/subcontratos/formulario_ver.js',
             'public/assets/js/modules/subcontratos/eventos.js',
         ));
-        $subcontrato->load('subcontrato_montos', 'tipo_abono', 'tipo_retenido', 'proveedor', 'adenda');
+        $subcontrato->load('subcontrato_montos', 'tipo_abono', 'tipo_retenido', 'proveedor', 'adenda', 'comentario_timeline');
         $adenda->load('adenda_montos','comentario');
         $data['adenda']         = $adenda->toArray();
         $data['subcontrato']    = $subcontrato->toArray();

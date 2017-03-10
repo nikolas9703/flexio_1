@@ -88,7 +88,7 @@ Template::cargar_vista('sidebar');
 													<thead>
 														<tr>
 															<th rowspan="2" width="8%">Secci&oacute;n</th>
-															<th align="center" colspan="<?php echo count($modulo['permissions']) ?>" width="30%">Permisos</th>
+                                                            <th align="center" colspan="<?php if(  !empty($modulo['permissions'])){ echo count($modulo['permissions']); } else { echo "0";} ?>" width="30%">Permisos</th>
 														</tr>
 														<tr>
 														<?php
@@ -107,7 +107,13 @@ Template::cargar_vista('sidebar');
 
 														$cntr = 0;
 														$total = count($modulo['resources']);
-														$permissions = $modulo['permissions'];
+                                                        if(!empty($modulo['permissions'])){
+                                                            $permissions = $modulo['permissions'];
+                                                        } else {
+                                                            $permissions= "";
+                                                        }
+
+
 														foreach ($modulo['resources'] AS $resource)
 														{
 															$resource_name  = $resource['resource_name'];

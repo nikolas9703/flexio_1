@@ -29,4 +29,16 @@ class FacturaCompraItems extends Model
         return $this->belongsTo('Flexio\Modulo\FacturasCompras\Models\FacturaCompra', 'factura_id');
     }
 
+
+    public function setCantidadAttribute($value){
+
+        $this->attributes['cantidad'] =  str_replace(",", "", $value);
+    }
+
+
+    public function setPrecioAttribute($value){
+
+        $this->attributes['total'] =  str_replace(",", "", $value);
+    }
+
 }

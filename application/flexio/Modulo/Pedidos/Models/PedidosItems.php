@@ -28,4 +28,17 @@ class PedidosItems extends Model
 
     }
 
+    public function unidades()
+    {
+        return $this->belongsTo('Flexio\Modulo\Inventarios\Models\Unidades','unidad');
+           
+    }
+
+
+    public function setCantidadAttribute($value){
+
+        $this->attributes['cantidad'] =  str_replace(",", "", $value);
+
+    }
+
 }

@@ -79,6 +79,7 @@
                                                 <option value="liquidada">Liquidada</option>
                                                 <option value="por_liquidar">Por liquidar</option>
 												<option value="con_diferencia">Con diferencia</option>
+												<option value="pagada">Pagada</option><option value="pagado_parcial">Pagado parcial</option>
                                             </select>
                                         </div>
 									</div>

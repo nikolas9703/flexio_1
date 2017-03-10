@@ -101,4 +101,19 @@ class LineItem extends Model
   	return $this->hasOne(LineItemComentario::class, 'lines_items_id');
    }
 
+
+   public function setCantidadAttribute($value){
+
+        $this->attributes['cantidad'] =  str_replace(",", "", $value);
+    }
+
+
+    public function setPrecioTotalAttribute($value){
+
+        $this->attributes['precio_total'] =  str_replace(",", "", $value);
+    }
+
+
+    
+
 }

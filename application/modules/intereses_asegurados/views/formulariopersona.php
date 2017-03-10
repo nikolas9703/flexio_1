@@ -2,7 +2,7 @@
 </style>
 <div class="row" style="margin-right:0px!important;">
     <div class="ibox-title border-bottom">
-        <h5>Datos de la persona</h5>
+        <h5 class="col-xs-12 col-sm-12 col-md-12 col-lg-12">Datos de la persona</h5>
         <hr style="margin-top:30px!important;">
         <div id="vistaPersona">
             <div class="tab-content">
@@ -15,8 +15,6 @@
                         print $campos['id'];
                     }
                     ?>" id="idPersona">
-                    <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val'])? $_GET['val'] : '' ; ?>" >
-                    <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg'])? $_GET['reg'] : '' ; ?>" >
                     <input type="hidden" name="campo[validar_editar]" id="validar_editar" value="">
                     <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val'])? $_GET['val'] : '' ; ?>" >
                     <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg'])? $_GET['reg'] : '' ; ?>" >
@@ -492,68 +490,7 @@
                                     <label class="nombre_doc_titulo" ></label>
                                 </div>        
                             </div>
-                            <div style="margin-bottom: 25px;" class="">
-                                <div class="file_tools_acreedores_adicionales row" id="a1">
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
-                                        <input type="text" name="campoacreedores[]" id="acreedor_1" class="form-control">
-                                    </div>    
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon">%</span> 
-                                            <input type="text" name="campoacreedores_por[]" id="porcentajecesion_1" class="form-control porcentaje_cesion_acreedor" value="0">
-                                        </div>
-                                    </div> 
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon">$</span> 
-                                            <input type="text" name="campoacreedores_mon[]" id="montocesion_1" class="form-control monto_cesion_acreedor" value="0">
-                                        </div>
-                                    </div> 
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
-                                            <input type="text" name="campoacreedores_ini[]" id="fechainicio_1" class="form-control fechas_acreedores_inicio">
-                                        </div>
-                                    </div> 
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
-                                            <input type="text" name="campoacreedores_fin[]" id="fechafin_1" class="form-control fechas_acreedores_fin">
-                                        </div>
-                                    </div>
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" style="float: left; width: 40px; margin-right:5px;" onclick="agregaracre()"><i class="fa fa-plus"></i>
-                                        </button>
-                                        <button type="button" style="float: left; width: 40px; margin-top:0px!important; display: none" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div> 
-                                <div id="agrega_acre"></div>           
-                            </div>
-                        </div> 
-                        <div id="campos_vida_acreedor_editar">
-                            <div class="row" id="divacreedores">
-                                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
-                                    <label class="nombre_doc_titulo" id="nombre_acre_titulo">Acreedor</label>
-                                </div>    
-                                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                    <label class="nombre_doc_titulo" id="nombre_acre_cesion">% Cesión</label>
-                                </div> 
-                                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                    <label class="nombre_doc_titulo" id="nombre_acre_monto">Monto</label>
-                                </div> 
-                                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                    <label class="nombre_doc_titulo" id="nombre_acre_inicio">Fecha Inicio</label>
-                                </div> 
-                                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                    <label class="nombre_doc_titulo" id="nombre_acre_fin">Fecha Fin</label>
-                                </div> 
-                                <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                    <label class="nombre_doc_titulo" ></label>
-                                </div>        
-                            </div>
-
-                            <div style="margin-bottom: 25px;" class="">
+                            <div style="margin-bottom: 25px;">
                                 <div class="file_tools_acreedores_adicionales row" v-for="find in acreedores" track-by="$index" id="a{{$index + 2}}">
                                     <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
                                         <input type="text" name="campoacreedores[]" id="acreedor_{{$index + 2}}" class="form-control" value="{{find.acreedor}}">
@@ -590,48 +527,50 @@
                                     </div>
                                     <input type="hidden" name="campoacreedores_id[]" value="{{find.id}}">
                                 </div>
-
-                                <div class="file_tools_acreedores_adicionales row" id="a1">
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
-                                        <input type="text" name="campoacreedores[]" id="acreedor_1" class="form-control">
-                                    </div>    
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon">%</span> 
-                                            <input type="text" name="campoacreedores_por[]" id="porcentajecesion_1" class="form-control porcentaje_cesion_acreedor" value="0">
+                                <div id="contacre"></div>
+                                <div id="contenedoracreedores">
+                                    <div class="file_tools_acreedores_adicionales row" id="a1">
+                                        <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px">
+                                            <input type="text" name="campoacreedores[]" id="acreedor_1" class="form-control">
+                                        </div>    
+                                        <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <div class="input-group">
+                                                <span class="input-group-addon">%</span> 
+                                                <input type="text" name="campoacreedores_por[]" id="porcentajecesion_1" class="form-control porcentaje_cesion_acreedor" value="0">
+                                            </div>
+                                        </div> 
+                                        <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <div class="input-group">
+                                                <span class="input-group-addon">$</span> 
+                                                <input type="text" name="campoacreedores_mon[]" id="montocesion_1" class="form-control monto_cesion_acreedor" value="0">
+                                            </div>
+                                        </div> 
+                                        <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                                                <input type="text" name="campoacreedores_ini[]" id="fechainicio_1" class="form-control fechas_acreedores_inicio">
+                                            </div>
+                                        </div> 
+                                        <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                                                <input type="text" name="campoacreedores_fin[]" id="fechafin_1" class="form-control fechas_acreedores_fin">
+                                            </div>
                                         </div>
-                                    </div> 
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon">$</span> 
-                                            <input type="text" name="campoacreedores_mon[]" id="montocesion_1" class="form-control monto_cesion_acreedor" value="0">
+                                        <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" onclick="agregaracre()" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i>
+                                            </button>
+                                            <button type="button" style="float: left; width: 40px; margin-top:0px!important;" id="del_acre" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i>
+                                            </button>
                                         </div>
-                                    </div> 
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
-                                            <input type="text" name="campoacreedores_ini[]" id="fechainicio_1" class="form-control fechas_acreedores_inicio">
-                                        </div>
-                                    </div> 
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <div class="input-group">
-                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
-                                            <input type="text" name="campoacreedores_fin[]" id="fechafin_1" class="form-control fechas_acreedores_fin">
-                                        </div>
+                                        <input type="hidden" name="campoacreedores_id[]" value="0">
                                     </div>
-                                    <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                        <button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" onclick="agregaracre()" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i>
-                                        </button>
-                                        <button type="button" style="float: left; width: 40px; margin-top:0px!important;" id="del_acre" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                    <input type="hidden" name="campoacreedores_id[]" value="0">
-                                </div>
 
-                                <div id="agrega_acre"></div> 
+                                    <div id="agrega_acre"></div> 
+                                </div>                               
+
                             </div>
-
-                        </div>   
+                        </div>
                     </div>
                     <!-- Fin Acreedores Para Vida Colectivo -->
 
