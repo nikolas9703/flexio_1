@@ -150,6 +150,7 @@ coberturasModal: function (e) {
                     interestType:window.id_tipo_int_asegurado,
                     detalleUnico:unico,
                     polizaId: polizaId,
+                    interesId:$("#selInteres").val(),
                     erptkn: tkn}
             }).then(function(response){
 
