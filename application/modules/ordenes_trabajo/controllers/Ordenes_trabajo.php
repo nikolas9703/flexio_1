@@ -1022,7 +1022,7 @@ class Ordenes_trabajo extends CRM_Controller {
         $clause = ["empresa_id" => $this->empresa_id, 'transaccionales' => true, 'conItems' => true, 'vendedor' => true];
         $this->assets->agregar_var_js(array(
             'bodegas' => $this->BodegasRepository->getCollectionBodegas($this->BodegasRepository->get($clause)),
-            'cotizaciones' => $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause)),
+            'cotizaciones' => collect([]),// $this->cotizacionRepository->getCollectionCotizacionesEmpezarDesde($this->cotizacionRepository->getCotizacionOrdenables($clause)),
             'usuario_id' => $this->usuario_id,
             'clientes' => $this->ClienteRepository->getCollectionClientes($this->ClienteRepository->get($clause)),
             'terminos_pago' => $this->FacturaVentaCatalogoRepository->getTerminoPago(),

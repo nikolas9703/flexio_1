@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Flexio\Modulo\MovimientosMonetarios\Transacciones\MovimientosMonetariosRecibo;
 use Flexio\Modulo\MovimientosMonetarios\Transacciones\MovimientosMonetariosRetiro;
 use Flexio\Modulo\MovimientosMonetarios\Models\MovimientosRetiros;
+use Flexio\Modulo\ConfiguracionContabilidad\Repository\CuentaRemesaEntranteRepository;
 
 class Movimiento_monetario extends CRM_Controller
 {
@@ -24,6 +25,7 @@ class Movimiento_monetario extends CRM_Controller
     protected $pagoGuardar;
     protected $DocumentosRepository;
     protected $upload_folder = './public/uploads/';
+    protected $cuenta_contable;
 
     function __construct()
     {
@@ -41,6 +43,7 @@ class Movimiento_monetario extends CRM_Controller
         $this->load->model('entrada_manual/Comentario_orm');
         $this->load->model('centros/Centros_orm');
         $this->load->model('clientes/Cliente_orm');
+        $this->load->model('aseguradoras/Aseguradoras_orm');
         $this->load->model('proveedores/Proveedores_orm');
         $this->load->model('facturas_compras/Facturas_compras_orm');
         $this->load->model('pagos/Pagos_orm');
@@ -62,6 +65,7 @@ class Movimiento_monetario extends CRM_Controller
         //transacciones
         $this->MovimientosMonetariosRecibo = new MovimientosMonetariosRecibo();
         $this->MovimientosMonetariosRetiro = new MovimientosMonetariosRetiro();
+        $this->cuenta_contable = new CuentaRemesaEntranteRepository();
     }
 
 
@@ -115,7 +119,12 @@ class Movimiento_monetario extends CRM_Controller
 
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-calculator"></i> Recibos de dinero',
-
+            "ruta" => array(
+                0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
+                1 => array("nombre" => '<b>Recibos de dinero</b>', "activo" => true)
+                ),
+            "filtro" => false,
+            "menu" => array()
         );
 
         //Verificar permisos para crear
@@ -323,18 +332,23 @@ class Movimiento_monetario extends CRM_Controller
                     $base_url = base_url('clientes/ver/' . $uuid_cliente_proveedor);
 
 
-                } else {
+                } elseif(!empty($row['proveedor_id'])) {
                     $cliente_proveedor = "Proveedor";
                     $cliente_proveedor_name = $row['proveedor']['nombre'];
                     $uuid_cliente_proveedor = $row['proveedor']['uuid_proveedor'];
                     $base_url = base_url('proveedor/ver/' . $uuid_cliente_proveedor);
+
+                }elseif(!empty($row['aseguradora_id'])){
+                    $cliente_proveedor = "Aseguradora";
+                    $cliente_proveedor_name = $row['aseguradora']['nombre'];
+                    $uuid_cliente_proveedor = bin2hex($row['aseguradora']['uuid_aseguradora']);
+                    $base_url = base_url('aseguradoras/editar/' . $uuid_cliente_proveedor);
                 }
 
                 $link_option = '<center><button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button></center>';
                 $hidden_options = "";
                 $hidden_options .= '<a href="' . base_url('movimiento_monetario/ver/' . $uuid_recibos) . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success">Ver recibo de dinero</a>';
                 $hidden_options .= '<a href="#" class="btn btn-block btn-outline btn-success anular">Anular</a>';
-
 
                 $response->rows[$i]["id"] = $row['id'];
                 $response->rows[$i]["cell"] = array(
@@ -343,8 +357,7 @@ class Movimiento_monetario extends CRM_Controller
                     '<a style="color:blue; text-decoration:underline;" href="' . $base_url . '">' . Util::verificar_valor($cliente_proveedor_name) . '</a>',
                     Util::verificar_valor($row['narracion']),
                     $row['fecha_inicio'],
-                    $sum,
-
+                    '<label class="label-outline outline-success">$ '.number_format($sum, 2, '.', '').'</label>',
                     $link_option,
                     $hidden_options,
                 );
@@ -509,13 +522,20 @@ class Movimiento_monetario extends CRM_Controller
                 $query->where("nombre", "like", "%" . $_POST['q'] . "%");
             }
 
-        } else {
+        } elseif($cliente_proveedor == "2") {
             $query = Cliente_orm::query();
             $query->where('empresa_id', '=' , $clause);
             if (isset($_POST['q'])) {
                 $query->where("nombre", "like", "%" . $_POST['q'] . "%");
             }
 
+        }elseif($cliente_proveedor == "3"){
+
+            $query = Aseguradoras_orm::query();
+            $query->where('empresa_id', '=' , $clause);
+            if (isset($_POST['q'])) {
+                $query->where("nombre", "like", "%" . $_POST['q'] . "%");
+            }
         }
 
         $query->take(isset($_POST['limit']) ? $_POST['limit'] : 10);
@@ -572,7 +592,7 @@ class Movimiento_monetario extends CRM_Controller
             } else {
                 $check_narracion = "0";
             }
-
+           
             // $dategen = date('Y-m-d H:i:s');
             $recibos_id = $_POST['campo']['id'];
             $narracion = $_POST['campo']['nombre'];
@@ -580,9 +600,12 @@ class Movimiento_monetario extends CRM_Controller
             $cuenta_banco = $_POST['campo']['cuenta_banco'];
             if ($_POST['campo']['id_categoria'] == "1") {
                 $id_proveedor = $_POST['campo']['id_cliente_proveedor'];
-            } else {
+            } elseif($_POST['campo']['id_categoria'] == "2") {
                 $id_cliente = $_POST['campo']['id_cliente_proveedor'];
+            }elseif($_POST['campo']['id_categoria'] == "3"){
+                $id_aseguradora = $_POST['campo']['id_cliente_proveedor'];
             }
+            
             $fecha_inicio = date('Y-m-d H:i:s');
             $fecha_inicio = !empty($fecha_inicio) ? str_replace('/', '-', $fecha_inicio) : "";
             $fecha_inicio = !empty($fecha_inicio) ? date("Y-m-d", strtotime($fecha_inicio)) : "";
@@ -608,8 +631,10 @@ class Movimiento_monetario extends CRM_Controller
                     $recibos->cuenta_id = $cuenta_banco;
                     if ($_POST['campo']['id_categoria'] == "1") {
                         $recibos->proveedor_id = $id_proveedor;
-                    } else {
+                    } elseif($_POST['campo']['id_categoria'] == "2") {
                         $recibos->id_cliente = $id_cliente;
+                    }elseif($_POST['campo']['id_categoria'] == "3"){
+                        $recibos->aseguradora_id = $id_aseguradora;
                     }
                     $recibos->fecha_inicio = $fecha_inicio;
                     $recibos->save();
@@ -618,9 +643,15 @@ class Movimiento_monetario extends CRM_Controller
                     if ($_POST['campo']['id_categoria'] == "1") {
                         $id_proveedor;
                         $id_cliente = NULL;
-                    } else {
+                        $id_aseguradora = NULL;
+                    } elseif($_POST['campo']['id_categoria'] == "2") {
                         $id_cliente;
                         $id_proveedor = NULL;
+                        $id_aseguradora = NULL;
+                    }elseif($_POST['campo']['id_categoria'] == "3"){
+                        $id_cliente = NULL;
+                        $id_proveedor = NULL;
+                        $id_aseguradora;
                     }
 
 
@@ -631,6 +662,7 @@ class Movimiento_monetario extends CRM_Controller
                         "cuenta_id" => $cuenta_banco,
                         "proveedor_id" => $id_proveedor,
                         "cliente_id" => $id_cliente,
+                        "aseguradora_id" => $id_aseguradora,
                         "fecha_inicio" => $fecha_inicio,
                         "codigo" => $codigo,
                         "uuid_recibo_dinero" => $uuid_recibos
@@ -727,9 +759,19 @@ class Movimiento_monetario extends CRM_Controller
             //'public/assets/js/modules/entrada_manual/routes.js'
         ));
         $data = array();
+        $this->assets->agregar_var_js(array(
+            'vista' => 'crear',    
+        ));
         $data['cliente_proveedor'] = Movimiento_cat_orm::lista();
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-calculator"></i> Recibos de dinero: Crear',
+            "ruta" => array(
+                0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
+                1 => array("nombre" => '<b>Recibos de dinero</b>', "url" => "movimiento_monetario/listar_recibos", "activo" => true),
+                2 => array("nombre" => '<b>Crear</b>', "activo" => true)
+            ),
+            "filtro" => false,
+            "menu" => array()
 
         );
 
@@ -740,6 +782,7 @@ class Movimiento_monetario extends CRM_Controller
             $recibos = Movimiento_monetario_orm::findByUuid($recibos_uuid);
             $proveedores = $recibos->proveedor;
             $clientes = $recibos->cliente;
+            $aseguradora = $recibos->aseguradora;
             $transacciones = $recibos->transacciones->toArray();
             $items = Items_recibos_orm::listar($transacciones[0]['id_recibo']);
             $data_recibos = $recibos;
@@ -755,19 +798,29 @@ class Movimiento_monetario extends CRM_Controller
             }
 
 
-            $breadcrumb = array("titulo" => '<i class="fa fa-calculator"></i> Recibos de dinero: ' . $data_recibos->codigo,
+            $breadcrumb = array(
+                "titulo" => '<i class="fa fa-calculator"></i> Recibos de dinero: ' . $data_recibos->codigo,
+                "ruta" => array(
+                    0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
+                    1 => array("nombre" => '<b>Recibos de dinero</b>', "url" => "movimiento_monetario/listar_recibos", "activo" => true),
+                    2 => array("nombre" => '<b>Editar</b>', "activo" => true)
+                ),
 
             );
 
 
             //Verificar cargo_id y crear variable js
             $es_cliente = $data_recibos->proveedor_id;
+            $es_proveedor = $data_recibos->cliente_id;
             if (!empty($es_cliente)) {
 
                 $cliente_proveedor = 1;
-            } else {
+            } elseif(!empty($es_proveedor)) {
 
                 $cliente_proveedor = 2;
+            }else{
+
+                $cliente_proveedor = 3;
             }
 
             $data['info'] = $cliente_proveedor;
@@ -775,7 +828,8 @@ class Movimiento_monetario extends CRM_Controller
             $this->assets->agregar_var_js(array(
                 // "selected_departamento_id" => $descuento_info[0]["colaborador"]["id"],
                 "cliente_proveedor" => $cliente_proveedor,
-                "recibos_id" => $data_recibos->id
+                "recibos_id" => $data_recibos->id,
+                'vista' => 'editar',   
             ));
 
             if (!empty($data_recibos->proveedor_id)) {
@@ -783,10 +837,14 @@ class Movimiento_monetario extends CRM_Controller
                 $cliente_proveedor = $proveedores->nombre;
                 $id_cliente_proveedor = $data_recibos->proveedor_id;
 
-            } else {
+            } elseif(!empty($data_recibos->cliente_id)) {
 
                 $cliente_proveedor = $clientes->nombre;
                 $id_cliente_proveedor = $data_recibos->cliente_id;
+            }else{
+
+                $cliente_proveedor = $aseguradora->nombre;
+                $id_cliente_proveedor = $data_recibos->aseguradora_id;
             }
             //----------------------------
             // Agregra variables PHP como variables JS
@@ -1325,6 +1383,22 @@ public function ocultoformularioretiros($data=NULL)
             $response = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Su solicitud no fue procesada ');
         }
         echo json_encode($response);
+        exit;
+    }
+
+    public function ajax_cuenta_contable(){
+        $cliente_aseguradora = $this->input->post('cliente_aseguradora');
+        $cuenta = [];
+
+        if($cliente_aseguradora == 3){
+            $empresa = [
+                'empresa_id' => $this->empresa_id,
+            ];
+            if ($this->cuenta_contable->tieneCuenta($empresa)) {
+                $cuenta = $this->cuenta_contable->getAll($empresa);
+            }
+        }
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($cuenta))->_display();
         exit;
     }
 

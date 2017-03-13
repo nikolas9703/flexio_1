@@ -6,6 +6,8 @@ use Flexio\Modulo\Ramos\Models\RamosUsuarios as RamosUsuarios;
 use Flexio\Modulo\Ramos\Models\Ramos as Ramos;
 use Flexio\Modulo\Solicitudes\Models\Solicitudes;
 use Flexio\Modulo\Roles\Models\Roles as Roles;
+use Flexio\Modulo\Rutas\Models\Rutas as rutas;
+use Flexio\Modulo\Rutas\Repository\RutasRepository as rutasRepository;
 
 class Configuracion_seguros extends CRM_Controller
 {
@@ -13,6 +15,8 @@ class Configuracion_seguros extends CRM_Controller
     private $id_empresa;
     private $id_usuario;
     private $empresaObj;
+	private $rutas;
+	private $rutasRepository;
 
 
     function __construct() {
@@ -41,6 +45,8 @@ class Configuracion_seguros extends CRM_Controller
         $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
         $this->id_usuario = $this->session->userdata("huuid_usuario");
         $this->id_empresa = $this->empresaObj->id;
+		$this->rutas=new rutas();
+		$this->rutasRepository=new rutasRepository();
     }
 
     public function ocultotabla_ramos() {
@@ -50,6 +56,15 @@ class Configuracion_seguros extends CRM_Controller
         ));//'public/assets/js/modules/aseguradoras/tabla_ramos.js'
 
         $this->load->view('tabla_ramos');
+    }
+	
+	public function ocultoformulario_rutas() {
+        //If ajax request
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/rutas/configuracion.js'
+        ));
+
+        $this->load->view('formulariorutas');
     }
 	
 	public function ocultotabla_planes() {
@@ -368,37 +383,6 @@ class Configuracion_seguros extends CRM_Controller
     exit;
 }
 
-public function ajax_verifica_padres_ramo(){
-	$id_ramo = $this->input->post('id_ramo');
-	$cont = 0;
-	
-	$Ramos1 = Ramos::select("padre_id")->where("id",$id_ramo)->get()->toArray();
-	if($Ramos1[0]["padre_id"] > 0){
-		$cont += 1;
-		$Ramos2 = Ramos::select("padre_id")->where("id",$Ramos1[0]["padre_id"])->get()->toArray();
-		if($Ramos2[0]["padre_id"] > 0){
-			$cont += 1;
-			$Ramos3 = Ramos::select("padre_id")->where("id",$Ramos2[0]["padre_id"])->get()->toArray();
-			if($Ramos3[0]["padre_id"] > 0){
-				$cont += 1;
-				/*$Ramos4 = Ramos::select("padre_id")->where("id",$Ramos3[0]["padre_id"])->get()->toArray();
-				if($Ramos4[0]["padre_id"] > 0){
-					$cont += 1;
-				}*/
-			}
-		}
-	}
-	
-	if($cont==3){
-		$inf["permitido"] = 0;
-	}else{
-		$inf["permitido"] = 1;
-	}
-	$inf["hfin"] = date("his");
-	$inf["count"] = $cont;
-	die(json_encode($inf));
-}
-
 public function test(){
     Capsule::beginTransaction();
     try {
@@ -473,4 +457,108 @@ public function ajax_listar_ramos_grid() {
  
 
 */
+	public function ocultotabla_rutas() {
+        //If ajax request
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/configuracion_seguros/tabla_rutas.js'
+        ));//'public/assets/js/modules/aseguradoras/tabla_ramos.js'
+
+        $this->load->view('tabla_rutas');
+    }
+	
+	public function ajax_listar_rutas($grid=NULL) {    	
+    	$clause = array(
+    		"empresa_id" =>  $this->id_empresa
+    	);
+    	$nombre 	= $this->input->post('nombre_ruta', true);
+    	$provincia 	= $this->input->post('provincia', true);
+    	$distrito 	= $this->input->post('distrito', true);
+    	$corregimiento 		= $this->input->post('corregimiento', true);
+		$estado    	= $this->input->post('estado', true);
+		$mensajero    	= $this->input->post('nombre_mensajero', true);
+		
+    	if(!empty($nombre)){
+    		$clause["nombre_ruta"] = array('LIKE', "%$nombre%");
+    	}
+    	if(!empty($provincia)){
+    		$clause["provincia"] = array('LIKE', "%$provincia%");;
+    	}
+    	if(!empty($distrito)){
+    		$clause["distrito"] = array('LIKE', "%$distrito%");;
+    	}
+    	if(!empty($corregimiento)){
+    		$clause["corregimiento"] = array('LIKE', "%$corregimiento%");;
+    	}
+    	if(!empty($estado)){
+			if($estado!="''")
+				$clause["estado"] =  $estado;
+    	}
+		if(!empty($mensajero)){
+    		$clause["nombre_mensajero"] = array('LIKE', "%$mensajero%");
+    	}
+	
+    	list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+		
+    	$count = $this->rutasRepository->listar($clause, NULL, NULL, NULL, NULL)->count();
+    		
+    	list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+    		 
+    	$rows = $this->rutasRepository->listar($clause, $sidx, $sord, $limit, $start);
+    	
+    	//Constructing a JSON
+    	$response = new stdClass();
+    	$response->page     = $page;
+    	$response->total    = $total_pages;
+    	$response->records  = $count;
+    	$response->result 	= array();
+    	$i=0;
+    
+    	if(!empty($rows)){
+    		foreach ($rows AS $i => $row){
+            $hidden_options = ""; 
+            $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->id .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+			
+			if($row->estado=='Activo')
+				$estado='Inactivar';
+			else
+				$estado='Activar';
+			
+			$hidden_options .= '<a href="javascript:" data-id="'. $row->id .'" class="btn btn-block btn-outline btn-success verdetalle">Ver detalle</a>';
+			/*if($this->auth->has_permission('acceso','aseguradoras/editar') || $this->auth->has_permission('acceso','aseguradoras/ver')){
+				$hidden_options .= '<a href="'. base_url('aseguradoras/editar/'. $uuid_aseguradora) .'" data-id="'. $row->id .'" class="btn btn-block btn-outline btn-success">Ver detalle</a>';
+			}*/
+			if($row->estado == "Inactivo")
+			{
+				$modalstate = '<a href="javascript:" data-estado-anterior="' . $row->estado . '" data-id="' . $row->id . '" data-estado="Activo" style="color:white; background-color: #5cb85c" class="btn btn-block btn-outline activarRuta">Activar</a>';
+			}
+			else
+			{
+				$modalstate = '<a href="javascript:" data-estado-anterior="' . $row->estado . '" data-id="' . $row->id . '" data-estado="Inactivo" style="color:white; background-color: red;" class="btn btn-block btn-outline inactivarRuta">Inactivar</a>';
+			}
+			
+			
+			$estado_color = $row->estado == "Activo" ? 'background-color: #5cb85c' : 'background-color: #fc0d1b';
+			
+            $response->rows[$i]["id"] = $row->id;
+            $response->rows[$i]["cell"] = array(
+					$row->id,
+                    $row->nombre_ruta, 
+					$row->datosProvincia->nombre,
+					$row->datosDistrito->nombre,
+					$row->datosCorregimiento->nombre,
+					$row->nombre_mensajero,
+					'<span style="color:white; ' . $estado_color . '" class="btn btn-xs btn-block estadoRutas" data-id="' . $row->id . '" data-rutaEstado="' . $row->estado . '">' . $row->estado . '</span>',
+                    $link_option,
+                    $hidden_options,
+					$modalstate,
+					$row->provincia_id,	
+					$row->distrito_id,	
+					$row->corregimiento_id,	
+            );
+    $i++;
+    		}
+    	}
+    	echo json_encode($response);
+    	exit;
+} 
 }

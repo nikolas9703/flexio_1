@@ -896,15 +896,15 @@ else if ($campo["regreso"] == 'age')
 else
     redirect(base_url('polizas/listar'));
 }else {
-						//Establecer el mensaje a mostrar
+                        //Establecer el mensaje a mostrar
  $data["mensaje"]["clase"] = "alert-danger";
  $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
-						//$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
+                        //$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
 }
 }
 
-				//Introducir mensaje de error al arreglo
-				//para mostrarlo en caso de haber error
+                //Introducir mensaje de error al arreglo
+                //para mostrarlo en caso de haber error
 $data["message"] = $mensaje;
 
 $this->_css();
@@ -1132,13 +1132,13 @@ $breadcrumb = array(
     1 => array("nombre" => '<a href="' . base_url() . 'polizas/listar">Pólizas</a>', "activo" => false),
     2 => array("nombre" => '<b>P&oacute;liza N° ' . $poliza->numero . '</b>', "activo" => true),
     ),
-			"filtro" => false, //sin vista grid
-			"menu" => array(
-				'url' => 'javascipt:',
-				'nombre' => "Acción",
-				"opciones" => $opciones,
+            "filtro" => false, //sin vista grid
+            "menu" => array(
+                'url' => 'javascipt:',
+                'nombre' => "Acción",
+                "opciones" => $opciones,
              ),
-			"historial" => true,
+            "historial" => true,
           );
 
 

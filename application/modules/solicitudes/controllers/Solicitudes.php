@@ -24,6 +24,7 @@ use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
 use Flexio\Modulo\Contabilidad\Models\Impuestos as impuestosModel;
 use Flexio\Modulo\Solicitudes\Models\Solicitudes as solicitudesModel;
 use Flexio\Modulo\Solicitudes\Models\SegSolicitudesAgentePrin as SegSolicitudesAgentePrin;
+use Flexio\Modulo\Polizas\Models\SegPolizasAgentePrin as SegPolizasAgentePrin;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_cat as InteresesAsegurados_catModel;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_detalles as InteresesAsegurados_detalles;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesVigencia as solicitudesVigenciaModel;
@@ -49,6 +50,7 @@ use Flexio\Modulo\Coberturas\Models\Coberturas as coberturaModel;
 use Flexio\Modulo\aseguradoras\Repository\AseguradorasRepository as AseguradorasRepository;
 use Flexio\Modulo\Planes\Models\Deducibles;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores;
+use Flexio\Modulo\Solicitudes\Models\SolicitudesAcreedores_detalles;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesCoberturas;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesDeduccion;
 use Flexio\Modulo\Solicitudes\Models\SolicitudesParticipacion as Participacion;
@@ -76,6 +78,7 @@ use Flexio\Modulo\Polizas\Models\PolizasPersonas;
 use Flexio\Modulo\Polizas\Models\PolizasProyecto;
 use Flexio\Modulo\Polizas\Models\PolizasUbicacion;
 use Flexio\Modulo\Polizas\Models\PolizasVehiculo;
+use Flexio\Modulo\Polizas\Models\PolizasAcreedores_detalles;
 use Flexio\Modulo\Catalogos\Models\RamosDocumentos as RamosDocumentos;
 use Flexio\Modulo\Documentos\Models\Documentos as Documentos;
 use Flexio\Modulo\Usuarios\Models\CentrosUsuario;
@@ -142,6 +145,7 @@ class Solicitudes extends CRM_Controller {
     private $RamosDocumentos;
     private $Documentos;
     private $SegSolicitudesAgentePrin;
+	private $SegPolizasAgentePrin;
 
     /**
      * @var string
@@ -210,6 +214,7 @@ class Solicitudes extends CRM_Controller {
         $this->RamosDocumentos = new RamosDocumentos();
         $this->Documentos = new Documentos();
         $this->SegSolicitudesAgentePrin=new SegSolicitudesAgentePrin();
+		$this->SegPolizasAgentePrin=new SegPolizasAgentePrin();
 
         $politicas_transaccion = $this->PoliticasRepository->getAllPoliticasRoles($clause);
 
@@ -1186,15 +1191,49 @@ public function ajax_cambioestado_bitacora() {
 
             $poliza6 = new Flexio\Modulo\Polizas\Models\PolizasParticipacion;
             $participacion = $this->solicitudesRepository->verParticipacion($solicitudes['id']);
+			$totalparotrosagentes=0;
             foreach ($participacion AS $value) {
                 $agentes = Agentes::where(['id' => $value->agente])->first();
                 $solParticipacion = [
                 'id_poliza' => $p->id,
                 'agente' => $agentes->nombre,
+				'agente_id' => $agentes->id,
                 ];
                 $solParticipacion['porcentaje_participacion'] = $value->porcentaje_participacion == '' ? 0 : $value->porcentaje_participacion;
                 $p6 = $poliza6->create($solParticipacion);
+				
+				$totalparotrosagentes+=$value->porcentaje_participacion;
             }
+			
+			$agenteprincipaltotal=Agentes::where('principal',1)->
+			where('id_empresa',$this->empresa_id)->count();
+
+			if($agenteprincipaltotal>0)
+			{
+				 $comisionagenteprincipal=$this->SegPolizasAgentePrin->where('poliza_id',$p->id)->count();
+				
+				 $agenteprincipal=Agentes::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
+				 
+				 if($comisionagenteprincipal>0)
+				 {
+					 $datossegprincipal['agente_id']=$agenteprincipal->id;
+					 $datossegprincipal['updated_at']=date('Y-m-d H:i:s');
+					 $datossegprincipal['comision']=number_format((100-$totalparotrosagentes),2);
+					 
+					 $poragenteprincipal=$this->SegPolizasAgentePrin->where('poliza_id',$p->id)->update($datossegprincipal);
+				 }
+				 else
+				 {
+					 $datossegprincipal['agente_id']=$agenteprincipal->id;
+					 $datossegprincipal['poliza_id']=$p->id;
+					 $datossegprincipal['created_at']=date('Y-m-d H:i:s');
+					 $datossegprincipal['updated_at']=date('Y-m-d H:i:s');
+					 $datossegprincipal['comision']=number_format((100-$totalparotrosagentes),2);
+					 
+					 $poragenteprincipal=$this->SegPolizasAgentePrin->create($datossegprincipal);
+				 }
+			 }
+					 
             //--------------------------------------------------------
             $poliza8 = new Flexio\Modulo\Polizas\Models\PolizasAcreedores;
             $acreedores = $this->solicitudesRepository->verAcreedores($solicitudes['id']);
@@ -1319,7 +1358,22 @@ public function ajax_cambioestado_bitacora() {
                     $datosPersonas["detalle_participacion"] = $value->detalle_participacion;
                     $datosPersonas["detalle_suma_asegurada"] = $value->detalle_suma_asegurada;
                     $datosPersonas["tipo_relacion"] = $value->tipo_relacion;
-                    PolizasPersonas::create($datosPersonas);
+                    $pper = PolizasPersonas::create($datosPersonas);
+
+                    $detalles = SolicitudesAcreedores_detalles::where("idinteres_detalle", $value->id)->get();
+                    foreach ($detalles as $val) {
+                        $poldetalles = array();
+                        $poldetalles['acreedor'] = $val->acreedor;
+                        $poldetalles['porcentaje_cesion'] = $val->porcentaje_cesion;
+                        $poldetalles['monto_cesion'] = $val->monto_cesion;
+                        $poldetalles['fecha_inicio'] = $val->fecha_inicio;
+                        $poldetalles['fecha_fin'] = $val->fecha_fin;
+                        $poldetalles['id_poliza'] = $p->id;
+                        $poldetalles['idinteres_detalle'] = $pper->id;
+
+                        $pdet = PolizasAcreedores_detalles::create($poldetalles);
+                    }
+
                 } elseif ($ramo->id_tipo_int_asegurado == 6) {
                     $datosProyecto = ProyectoModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datosProyecto["id"]);
@@ -2164,7 +2218,7 @@ function ajax_get_comision() {
                 if (empty($campo['uuid'])) {
                     //Crear en Solicitudes
                     $campo["uuid_solicitudes"] = Capsule::raw("ORDER_UUID(uuid())");
-                    $clause['empresa_id'] = $this->empresa_id;
+                    //$clause['empresa_id'] = $this->empresa_id;
                     $total = $this->solicitudesRepository->listar($clause);
                     $year = Carbon::now()->format('y');
                     $codigo = Util::generar_codigo($_POST['codigo_ramo'] . "-" . $year, count($total) + 1);
@@ -2176,6 +2230,8 @@ function ajax_get_comision() {
                     $campo['fecha_creacion'] = $date;
                     $solicitudes = $this->solicitudesModel->create($campo);
 
+                    /*$id_soli = $this->solicitudesModel->where(['id' => $solicitudes->id])->get(array('uuid'));
+                    error_log("id_soli"+$id_soli);*/
                     //Create Coverage and dedutibles
                     if (!empty($campoPlanesCoberturas["planesCoberturasDeducibles"])) {
                         $decodeJSON = json_decode($campoPlanesCoberturas["planesCoberturasDeducibles"], TRUE);
@@ -2242,7 +2298,17 @@ function ajax_get_comision() {
                             $fieldsetacre["id_solicitud"] = $solicitudes->id;
                             $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
                             $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                            //Fecha Inicio
+                            if (strpos($fecha_ini[$key], "/") > 0) {
+                                $x = explode("/", $fecha_ini[$key]);
+                                $fecha_ini[$key] = $x[2]."-".$x[0]."-".$x[1];
+                            }
                             $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                            //Fecha Fin
+                            if (strpos($fecha_fin[$key], "/") > 0) {
+                                $x = explode("/", $fecha_fin[$key]);
+                                $fecha_fin[$key] = $x[2]."-".$x[0]."-".$x[1];
+                            }
                             $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
                             if ($value != "") {
                                 SolicitudesAcreedores::create($fieldsetacre);    
@@ -2418,7 +2484,17 @@ function ajax_get_comision() {
                             $fieldsetacre["id_solicitud"] = $id_solicitud;
                             $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
                             $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                            //Fecha Inicio
+                            if (strpos($fecha_ini[$key], "/") > 0) {
+                                $x = explode("/", $fecha_ini[$key]);
+                                $fecha_ini[$key] = $x[2]."-".$x[0]."-".$x[1];
+                            }
                             $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                            //Fecha Fin
+                            if (strpos($fecha_fin[$key], "/") > 0) {
+                                $x = explode("/", $fecha_fin[$key]);
+                                $fecha_fin[$key] = $x[2]."-".$x[0]."-".$x[1];
+                            }
                             $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
                             if ($id_acreedores[$key] != "0") {
                                 SolicitudesAcreedores::where("id", $id_acreedores[$key])->update($fieldsetacre); 
@@ -2430,6 +2506,7 @@ function ajax_get_comision() {
                                 }
                             }                                                       
                         }
+                        SolicitudesAcreedores::whereNotIn("id", $ids)->where("id_solicitud", $id_solicitud)->delete();
                     }
 
                     $primerpago = $this->input->post('fecha_primer_pago'); //$campoprima['fecha_primer_pago'];
@@ -2568,7 +2645,7 @@ function ajax_get_comision() {
         else if (!empty($reg) && $reg == "aseg" ) 
             redirect(base_url('aseguradoras/editar/'.$_POST['val']));
         else
-            redirect(base_url('solicitudes/listar'));  
+            redirect(base_url('solicitudes/editar/'.bin2hex($soli->uuid_solicitudes)));//redirect(base_url('solicitudes/listar'));  redirect(base_url('solicitudes/listar'));//redirect(base_url('solicitudes/editar/'.strtoupper(bin2hex($id_soli))));//redirect(base_url('solicitudes/editar/'.$campo['uuid']));//redirect(base_url('solicitudes/listar'));  
 
         
     }
@@ -3111,12 +3188,11 @@ function ajax_get_invidualCoverage() {
     ->orderBy("created_at",'asc')
     ->get()
     ->toArray();
-
-    /*if(!count($coberturas) &&!count($deducion)){
+   /* if(!count($coberturas) &&!count($deducion)){
       $coberturas = $this->coberturaModel->where($clause2)->get()->toArray();
       $deducion = $this->deduciblesModel->where($clause2)->get()->toArray();  
-      }
-    */
+  }*/
+
 
   $response = new stdClass();
   $response->coberturas = $coberturas;
@@ -3125,5 +3201,21 @@ function ajax_get_invidualCoverage() {
   ->set_output(json_encode($response))->_display();
   exit;
 }
+
+    function ajax_carga_acreedores_vida_colectivo(){
+        $acreedores = $this->solicitudesRepository->verAcreedoresDetalle($_POST['idinteres_detalle']);
+        if (count($acreedores) == 0) {
+            $acreedores = [];
+        } 
+
+        //$acreedores = $acreedores->toArray();    
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($acreedores))->_display();
+
+        exit;
+
+
+    }
 
 }

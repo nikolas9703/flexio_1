@@ -65,7 +65,7 @@
                     				<select name="tipo_subcontrato_id" class="form-control select2" id="tipo_subcontrato_id">
                       				<option value="">Seleccione</option>
                       				<?php foreach($tipos_subcontratos as $tipo): ?>
-                      				<option value="<?php echo $tipo->id?>"><?php echo $tipo->valor?></option>
+                      				<option value="<?php echo $tipo->id?>"><?php echo $tipo->nombre?></option>
                       				<?php endforeach; ?>
                     				</select>
 										</div>

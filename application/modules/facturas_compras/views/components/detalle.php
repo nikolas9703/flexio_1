@@ -5,7 +5,7 @@
 
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
             <label>Proveedor <span required="" aria-required="true">*</span></label>
-            <select name="campo[proveedor]" id="proveedor_id" data-rule-required="true" aria-required="true" v-model="detalle.proveedor_id" v-select2="detalle.proveedor_id" :config="config.select2" :disabled="config.disableDetalle">
+            <select name="campo[proveedor]" id="proveedor_id" data-rule-required="true" aria-required="true" v-model="detalle.proveedor_id" v-select2="detalle.proveedor_id" :config="config.select2" :disabled="config.disableDetalle || config.isDisableByStatus || detalle.ordenes_multiple==1">
                 <option value="">Seleccione</option>
                 <option :value="proveedor.proveedor_id" v-for="proveedor in catalogos.proveedores">{{proveedor.nombre}}</option>
             </select>
@@ -63,7 +63,7 @@
 
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
             <label>Centro contable <span required="" aria-required="true">*</span></label>
-            <select name="campo[centro]" class="chosen" id="centro" data-rule-required="true" aria-required="true" v-model="detalle.centro_contable_id" v-select2="detalle.centro_contable_id" :config="config.select2" :disabled="config.disableDetalle">
+            <select name="campo[centro]" class="chosen" id="centro" data-rule-required="true" aria-required="true" v-model="detalle.centro_contable_id" v-select2="detalle.centro_contable_id" :config="config.select2" :disabled="config.disableDetalle || detalle.ordenes_multiple==1">
                 <option value="">Seleccione</option>
                 <option :value="centro_contable.centro_contable_id" v-for="centro_contable in catalogos.centros_contables">{{centro_contable.nombre}}</option>
             </select>
@@ -77,7 +77,7 @@
 
         <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
             <label>Recibir en bodega <span required="" aria-required="true">*</span></label>
-            <select name="campo[lugar]" class="chosen" id="lugar" data-rule-required="true" aria-required="true" v-model="detalle.recibir_en_id" v-select2-catalog="detalle.recibir_en_id" :config="select2_bodega" :disabled="config.disableDetalle">
+            <select name="campo[lugar]" class="chosen" id="lugar" data-rule-required="true" aria-required="true" v-model="detalle.recibir_en_id" v-select2-catalog="detalle.recibir_en_id" :config="select2_bodega" :disabled="config.disableDetalle || detalle.ordenes_multiple==1">
                 <option value="">Seleccione</option>
                 <option :value="bodega.bodega_id" v-for="bodega in catalogos.bodegas">{{bodega.nombre}}</option>
             </select>
@@ -97,7 +97,9 @@
             </select>
         </div>
 
-
+        <template v-for="(index, orden_id) in detalle.ordenes_id">
+          <input type="hidden" name="ordenes[{{index}}][id]" :value="orden_id" />
+        </template>
     </div>
 
 </template>

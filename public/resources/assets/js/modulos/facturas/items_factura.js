@@ -7,7 +7,7 @@ Vue.component('items_factura', {
 	data: function () {
 		return {
 			currentView: 'items_venta',
-                        permiso_editar_precio: editar_precio,
+			permiso_editar_precio: editar_precio,
 			subtotal: '',
 			impuesto: '',
 			descuento: 0,
@@ -111,7 +111,7 @@ Vue.component('items_factura', {
 				// Calculo subtotal - items de alquiler
 				if (typeof this.$refs.items.$refs.items != 'undefined') {
 					impuesto_items_alquiler = _.sumBy(this.$refs.items.$refs.items.items, function (o) {
-						if(typeof porcentaje=='undefined'){
+						if (typeof porcentaje == 'undefined') {
 							return;
 						}
 						return parseFloat((o.precio_total - ((o.descuento / 100) * o.precio_total)) * (porcentaje / 100)) || 0;
@@ -121,7 +121,7 @@ Vue.component('items_factura', {
 				// Calculo subtotal - items de cargos adicionales
 				if (typeof this.$refs.items.$refs.items_adicionales != 'undefined') {
 					impuesto_items_adicionales = _.sumBy(this.$refs.items.$refs.items_adicionales.items, function (o) {
-						if(typeof porcentaje=='undefined'){
+						if (typeof porcentaje == 'undefined') {
 							return;
 						}
 						return parseFloat((o.precio_total - ((o.descuento / 100) * o.precio_total)) * (porcentaje / 100)) || 0;
@@ -210,7 +210,9 @@ Vue.component('items_factura', {
 			if (this.factura.estado_id == 'anulada') {
 				return 0;
 			} else {
-                var aux = typeof window.nota_credito_aprobada !== 'undefined' ? window.nota_credito_aprobada : {total:0};
+				var aux = typeof window.nota_credito_aprobada !== 'undefined' ? window.nota_credito_aprobada : {
+					total: 0
+				};
 				return roundNumber(parseFloat((this.total - this.cobros - aux.total)), 2);
 			}
 		}

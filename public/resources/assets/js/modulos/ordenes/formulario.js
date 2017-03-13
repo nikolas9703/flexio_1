@@ -5,6 +5,12 @@ Vue.transition('listado',{
 var bloqueandoGuardar = 0; //El boton Guardar x default, debe ir activado, independiente de las politicas, solo al mover el estado, activa o desactiva
 var items = require('./../../config/lines_items.js');
 Vue.directive('select2ajax', require('./../../vue/directives/select2ajax.vue'));
+
+var maskByModulo = function(){
+  var decimales = window.location.href.match(/facturas_compras|ordenes\//gi) != null ? 4 : 2;
+  return {'mask':'9{1,2}[.9{0,'+ decimales +'}]','greedy':false};
+};
+
 var form_orden_compra = new Vue({
 
     el: "#appOrdenventa",
@@ -29,7 +35,7 @@ var form_orden_compra = new Vue({
             inputmask:{
 
                 cantidad: {'mask':'9{1,4}','greedy':false},
-                descuento: {'mask':'9{1,2}[.9{0,2}]','greedy':false},
+                descuento: maskByModulo(),
                 currency: {'mask':'9{1,8}[.9{0,2}]','greedy':false},
                 currency2: {'mask':'9{1,8}[.9{0,5}]','greedy':false}
 
@@ -68,6 +74,8 @@ var form_orden_compra = new Vue({
             pedidos:window.pedidos
         },
         detalle:{
+            pedidos_multiple: 0, //para especificar si se esta creando una orden de varios pedidos
+            pedidos_id: [],
             politicaTransaccion: 0,
             estado:1,//por aprobar
             fecha:moment().format('DD/MM/YYYY'), //requerido -> empezar_desde.js
@@ -174,27 +182,39 @@ var form_orden_compra = new Vue({
         }
         Vue.nextTick(function(){
 
-            context.config.enableWatch = true;
-            if(context.config.vista == 'crear'){
+            //Verificar si existen variables
+            //creadas para crear una orden de varios pedidos
+            if(typeof window.pedido_multiple != 'undefined' && window.pedido_multiple==true
+            && typeof window.pedidos_id != 'undefined' && window.pedidos_id.length > 0
+            ){
+              context.config.enableWatch = false;
+              context.config.disableEmpezarDesde = true;
+              context.detalle.pedidos_multiple = 1;
+              context.detalle.pedidos_id = window.pedidos_id;
+              context.detalle.centro_contable_id = typeof window.centro_uuid != 'undefined' ? window.centro_uuid.toString() : '';
+              context.detalle.recibir_en_id = typeof window.bodega_uuid != 'undefined' ? window.bodega_uuid.toString() : '';
+              context.getPedidosItems(window.pedidos_id);
 
-                context.empezable.type = window.empezable.type;
-                Vue.nextTick(function(){
+              //mensaje de espera
+              toastr.info('Porfavor, espere mientras cargan los datos.', 'Cargando...');
 
-                    context.empezable.id = window.empezable.id;
+            }else{
 
-                });
-
+              //Orden con 1 solo pedido
+              context.config.enableWatch = true;
+              if(context.config.vista == 'crear'){
+                  context.empezable.type = window.empezable.type;
+                  Vue.nextTick(function(){
+                      context.empezable.id = window.empezable.id;
+                  });
+              }
             }
 
-        });
-        Vue.nextTick(function(){
-
-        if(context.config.disableDetalle == true){
+            if(context.config.disableDetalle == true){
               toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");
-
-          }
-
+            }
         });
+
         //if(context.config.vista == 'crear'){
          this.selectProveedores();
         //}
@@ -268,7 +288,28 @@ var form_orden_compra = new Vue({
             }
         });
         },
+        getPedidosItems: function(pedidos_id){
+          var scope = this;
+          this.$http.post({
+              url: window.phost() + "ordenes/ajax-get-pedidos-items",
+              method:'POST',
+              data: $.extend({erptkn: tkn},{pedidos_id: pedidos_id})
+          }).then(function(response){
+              if(_.has(response.data, 'session') || _.isEmpty(response.data)){
+                  window.location.assign(window.phost());
+                  return;
+              }
 
+              if(typeof response.data.articulos=='undefined' && response.data.articulos.length==0){
+                return;
+              }
+
+              Vue.nextTick(function(){
+                scope.detalle.articulos = response.data.articulos;
+              });
+          });
+
+        },
         getEmpezableAjax: function(empezable){
 
             var context = this;
@@ -286,7 +327,7 @@ var form_orden_compra = new Vue({
                     return;
                 }
                 if(!_.isEmpty(response.data)){
-
+                    console.log('items', response.data);
                     context.detalle = $.extend(context.detalle,JSON.parse(JSON.stringify(response.data)));
                     context.detalle.id = '';
                     Vue.nextTick(function(){

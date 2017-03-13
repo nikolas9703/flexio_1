@@ -6,12 +6,14 @@ use Flexio\Modulo\Politicas\Models\Politicas;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Library\Util\FlexioSession;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Flexio\Library\Util\AuthUser;
 
 class PedidoRepository{
 
     public function __construct()
     {     
-        $this->session = new FlexioSession();        
+        $this->session = new FlexioSession();    
+        $this->AuthUser = new AuthUser();    
     }
     private function _filtros($query, $clause){
 
@@ -229,6 +231,9 @@ class PedidoRepository{
     //politicas
     private function getPoliticas($pedido, $campos)
     {
+        if($this->AuthUser->is_owner() == true){
+            return;
+        }
         $usuario = Usuarios::find($this->session->usuarioId());
         $campos['role_id'] = count($usuario->roles_reales->first()) ? $usuario->roles_reales->first()->id : -1;
         $campos['categorias'] = count($pedido->pedidos_items) ? $pedido->pedidos_items->pluck('categoria_id') : [-1];
@@ -285,6 +290,28 @@ class PedidoRepository{
 
     }
 
+    /**
+     * Retornar los items de los pedidos
+     * seleccionados.
+     *
+     * @param  pedidos collection
+     * @return array
+     */
+    public function getPedidoItems($pedidos){
+        $articulos=array();
+        $j=0;
+        foreach ($pedidos AS $pedido) {
+          $articulo = new \Flexio\Library\Articulos\PedidoArticulo;
+          if(empty($pedido->pedidos_items)){ continue; }
+          $items = $articulo->get($pedido->pedidos_items, $pedido);
+          foreach ($items AS $item) {
+            $articulos[$j] = $item;
+            $j++;
+          }
+        }
+        return ['articulos' => $articulos];
+    }
+
     public function getCollectionPedidosAjax($pedidos){
 
         return $pedidos->map(function($pedido){
@@ -322,6 +349,10 @@ class PedidoRepository{
   function find($id)
   {
     return Pedido::find($id);
+  }
+
+  function findIn($id){
+    return Pedido::whereIn("id", $id)->get();
   }
 
   function findByUuid($uuid){

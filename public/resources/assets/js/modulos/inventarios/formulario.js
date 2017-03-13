@@ -94,6 +94,7 @@ var crear_items_form = new Vue({
 
     components:{
         'detalle': require('./components/detalle.vue'),
+        'dato-adicional': require('./components/dato_adicional.vue'),
         'vista_comments':require('./../../vue/components/comentario.vue')
     },
 

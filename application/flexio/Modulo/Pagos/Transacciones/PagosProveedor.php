@@ -87,10 +87,12 @@ class PagosProveedor {
                 {
                     $asientos[] = new AsientoContable([
                         'codigo'        => $pago->codigo,
-                        'nombre'        => $pago->codigo. ' - '.$anticipo->codigo,
+                        'nombre'        => $pago->codigo. ' - '.$anticipo->codigo .' - '.$pago->nombre_proveedor,
                         'debito'        => $anticipo->pivot->monto_pagado,
+                        'centro_id'     => $anticipo->centro_contable_id,
                         'cuenta_id'     => $cuenta_id,
-                        'empresa_id'    => $pago->empresa_id
+                        'empresa_id'    => $pago->empresa_id,
+                        'created_at'   => $pago->fecha_pago_data_base
                     ]);
 
                     //logic changed -> card 8 from flexio 2017 board
@@ -110,10 +112,12 @@ class PagosProveedor {
                 {
                     $asientos[] = new AsientoContable([
                         'codigo'        => $pago->codigo,
-                        'nombre'        => $pago->codigo. ' - '.$factura->codigo,
+                        'nombre'        => $pago->codigo. ' - '.$factura->codigo.' - '.$pago->nombre_proveedor,
                         'debito'        => $factura->pivot->monto_pagado,
+                        'centro_id'     => $factura->centro_contable_id,
                         'cuenta_id'     => $cuenta_id,
-                        'empresa_id'    => $pago->empresa_id
+                        'empresa_id'    => $pago->empresa_id,
+                        'created_at'    => $pago->fecha_pago_data_base
                     ]);
                 }
             }
@@ -138,10 +142,12 @@ class PagosProveedor {
                 */
                 $asientos[] = new AsientoContable([
                     'codigo'        => $pago->codigo,
-                    'nombre'        => $pago->codigo. ' - '.$anticipo->codigo,
+                    'nombre'        => $pago->codigo. ' - '.$anticipo->codigo.' - '.$pago->nombre_proveedor,
                     'credito'       => $pago->monto_pagado,
                     'cuenta_id'     => $cuenta_id,
-                    'empresa_id'    => $pago->empresa_id
+                    'centro_id'     => $anticipo->centro_contable_id,
+                    'empresa_id'    => $pago->empresa_id,
+                    'created_at'    => $pago->fecha_pago_data_base
                 ]);
             }
         }else if($pago->empezable_type == "movimiento_monetario"){
@@ -152,6 +158,7 @@ class PagosProveedor {
                   'nombre'        => $pago->codigo. ' - '.$retiro->codigo,
                   'credito'       => $pago->monto_pagado,
                   'cuenta_id'     => $cuenta_id,
+                  'created_at'    => $pago->fecha_pago_data_base, 
                   'empresa_id'    => $pago->empresa_id
               ]);
           }
@@ -160,10 +167,12 @@ class PagosProveedor {
             {
                 $asientos[] = new AsientoContable([
                     'codigo'        => $pago->codigo,
-                    'nombre'        => $pago->codigo. ' - '.$factura->codigo,
+                    'nombre'        => $pago->codigo. ' - '.$factura->codigo.' - '.$pago->nombre_proveedor,
                     'credito'       => $pago->monto_pagado,
+                    'centro_id'     => $factura->centro_contable_id,
                     'cuenta_id'     => $cuenta_id,
-                    'empresa_id'    => $pago->empresa_id
+                    'empresa_id'    => $pago->empresa_id,
+                    'created_at'    => $pago->fecha_pago_data_base
                 ]);
             }
         }
@@ -183,10 +192,12 @@ class PagosProveedor {
       {
           $asientos[] = new AsientoContable([
             'codigo'        => $pago->codigo,
-            'nombre'        => $pago->codigo. ' - '.$retiro->codigo,
+            'nombre'        => $pago->codigo. ' - '.$retiro->codigo.' - '.$pago->nombre_proveedor,
             'debito'        => $item->debito,
+            'centro_id'     => $item->centro_id,
             'cuenta_id'     => $item->cuenta_id,
-            'empresa_id'    => $pago->empresa_id
+            'empresa_id'    => $pago->empresa_id,
+            'created_at'    => $pago->fecha_pago_data_base
           ]);
       }
       return $asientos;
@@ -203,7 +214,7 @@ class PagosProveedor {
     {
         $cuenta_id = 0;
 
-        if($pago->metodo_pago[0]->tipo_pago == 'aplicar_credito')
+        if($pago->metodo_pago[0]->tipo_pago == 'aplicar_credito' || $pago->empezable_type == "anticipo")
         {
             $cuenta_id = $pago->empresa->cuenta_abonar_proveedores->first()->cuenta_id;
         }

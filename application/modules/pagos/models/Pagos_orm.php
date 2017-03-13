@@ -120,11 +120,11 @@ class Pagos_orm extends Model {
     }
 
     public function scopeDeCodigo($query, $codigo) {
-      return $query->where("codigo", $codigo);
+      return $query->where("pag_pagos.codigo", "like", "%$codigo%");
     }
 
     public function scopeDeEmpresa($query, $empresa_id) {
-        return $query->where("empresa_id", $empresa_id);
+        return $query->where("pag_pagos.empresa_id", $empresa_id);
     }
 
     public function scopeDeCaja($query, $caja_id) {
@@ -141,7 +141,7 @@ class Pagos_orm extends Model {
 
     public function scopeDeProveedor($query, $proveedor_id) {
         $aux = is_numeric($proveedor_id) ? $proveedor_id : Proveedores_orm::where("uuid_proveedor", hex2bin($proveedor_id))->first()->id;
-        return $query->where("proveedor_id", $aux);
+        return $query->where("pag_pagos.proveedor_id", $aux);
     }
 
     public function scopeDeOrdenDeCompra($query, $orden_compra_id)
@@ -166,11 +166,11 @@ class Pagos_orm extends Model {
     }
 
     public function scopeDeMontoMin($query, $montoMin) {
-        return $query->where("monto_pagado", ">=", $montoMin);
+        return $query->where("pag_pagos.monto_pagado", ">=", $montoMin);
     }
 
     public function scopeDeMontoMax($query, $montoMax) {
-        return $query->where("monto_pagado", "<=", $montoMax);
+        return $query->where("pag_pagos.monto_pagado", "<=", $montoMax);
     }
 
     public function scopeDeFormaPago($query, $formaPago) {

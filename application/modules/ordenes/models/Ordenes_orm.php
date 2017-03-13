@@ -77,6 +77,13 @@ class Ordenes_orm extends Model
         return $this->morphMany("Facturas_compras_orm", "operacion");
     }
 
+    /**
+    * Varias ordenes relacionadas a la factura
+    */
+    public function facturas_compras() {
+        return $this->morphedByMany('Flexio\Modulo\OrdenesCompra\Models\OrdenesCompra', 'facturable', 'faccom_facturables', 'facturable_id');
+    }
+
     public static  function facturas_realizadas($ordenid = NULL)
     {
     	 $incompletas =  array();
@@ -211,6 +218,17 @@ class Ordenes_orm extends Model
     {
         return $query->whereHas("facturas", function($factura) use ($factura_compra_id){
             $factura->where("id", $factura_compra_id);
+        });
+    }
+
+    /**
+     * Multiples ordenes relacionadas a una factura de compra
+     *
+     */
+    public function scopeDeMultipleFacturaDecompra($query, $factura_compra_id)
+    {
+        return $query->whereHas("facturas_compras", function($factura) use ($factura_compra_id){
+            $factura->where("faccom_facturables.factura_id", $factura_compra_id);
         });
     }
 

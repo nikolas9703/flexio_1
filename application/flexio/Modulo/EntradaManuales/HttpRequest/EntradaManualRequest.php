@@ -25,15 +25,15 @@ class EntradaManualRequest
         $dato_entrada = FormRequest::data_formulario($this->request->input('campo'));
         $dato_entrada['empresa_id'] = $empresa_id;
         $dato_entrada['codigo'] = $codigo_entrada + 1;
-
+        
         $datos_transaciones = FormRequest::array_filter_dos_dimenciones($this->request->input('transacciones'));
 
-        $transaciones = $this->asignar_signo($datos_transaciones,$empresa_id,$codigo_transaccion +1);
+        $transaciones = $this->asignar_signo($datos_transaciones,$empresa_id,$codigo_transaccion +1,$dato_entrada);
 
         return [$dato_entrada,$transaciones];
     }
 
-    function asignar_signo($transaciones,$empresa_id,$codigo){
+    function asignar_signo($transaciones,$empresa_id,$codigo, $entrada){
 
         foreach($transaciones as $key=>$transacion){
             $signos = new Cuentas;
@@ -42,6 +42,8 @@ class EntradaManualRequest
             $transaciones[$key]['balance_verificado'] = 0;
             $transaciones[$key]['empresa_id'] = $empresa_id;
             $transaciones[$key]['codigo'] =  GenerarCodigo::setCodigo('TR'.Carbon::now()->format('y'), $codigo + $key);
+            $transaciones[$key]['nombre'] =  GenerarCodigo::setCodigo('EM'.Carbon::now()->format('y'), $entrada['codigo'])." - ".$transacion['nombre'] ;
+            $transaciones[$key]['created_at'] =   $entrada['fecha_entrada'];
         }
 
         return $transaciones;

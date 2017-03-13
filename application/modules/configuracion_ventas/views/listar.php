@@ -34,6 +34,9 @@
                                 <li class="active">
                                     <a data-toggle="tab" href="#catalogos">Cat&aacute;logos</a>
                                 </li>
+                                <li>
+                                    <a data-toggle="tab" href="#terminos_condiciones">T&eacute;rminos &amp; Condiciones</a>
+                                </li>
                             </ul>
                         </div>
                         <div role="tabpanel" class="tab-pane active" id="catalogos">
@@ -112,6 +115,11 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div role="tabpanel" class="tab-pane active" id="terminos_condiciones">
+                            <?php echo modules::run('configuracion_compras/terminos_condiciones'); ?>
+                        </div>
+
                     </div>
                 </div>
             </div>

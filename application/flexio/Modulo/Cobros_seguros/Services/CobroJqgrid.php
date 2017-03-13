@@ -28,7 +28,7 @@ class CobroJqgrid extends JqgridAbstract{
 		$contador = $this->registros($clause)->where("formulario","seguros");
 		if(isset($clause['empezable_id']))
 		{
-			$contador->where("empezable_id",$clause['empezable_id']);
+			$contador->whereIn("empezable_id",$clause['empezable_id']);
 		}
 		
 		$count=$contador->count();
@@ -38,7 +38,7 @@ class CobroJqgrid extends JqgridAbstract{
 		$anticipostodos = $this->registros($clause,$sidx, $sord, $limit, $start);
 		if(isset($clause['empezable_id']))
 		{
-			$anticipostodos->where("empezable_id",$clause['empezable_id']);
+			$anticipostodos->whereIn("empezable_id",$clause['empezable_id']);
 		}
 		$anticipos=$anticipostodos->where("formulario","seguros")->get();
 
@@ -66,7 +66,7 @@ class CobroJqgrid extends JqgridAbstract{
 			$sidx='pago2.tipo_pago';
 		}
 		//var_dump($registros);
-		$registros->orderByRaw('FIELD(cob_cobros.estado, "vencido", "agendado", "aplicado", "anulado")');
+		$registros->orderByRaw('FIELD(cob_cobros.estado, "vencido", "agendado", "por aplicar", "aplicado", "anulado")');
 		if(!is_null($sidx) && !is_null($sord)) $registros->orderBy($sidx, $sord);
 		if(!is_null($limit) && !is_null($start)) $registros->skip($start)->take($limit);
 

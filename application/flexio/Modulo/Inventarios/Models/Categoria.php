@@ -54,6 +54,11 @@ class Categoria extends Model
         return strtoupper(bin2hex($value));
     }
 
+    public function datos_adicionales()
+    {
+        return $this->morphMany('Flexio\Modulo\Inventarios\Models\DatoAdicional', 'adicionable');
+    }
+
     public function getUuidActivoAttribute($value)
     {
         return strtoupper(bin2hex($value));

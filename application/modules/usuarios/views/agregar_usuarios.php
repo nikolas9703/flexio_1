@@ -111,7 +111,7 @@ Template::cargar_vista('sidebar');
 						<div class="form-group">
 							<label>Tipo de subcontrato</label>
 							<select name="campo[tipos_subcontrato]" multiple="true" class="form-control" v-select2="detalle.tipos_subcontrato" :config="config.select2" data-placeholder="Seleccione">
-								<option :value="option.id" v-for="option in catalogos.tipos_subcontrato" v-html="option.valor"></option>
+								<option :value="option.id" v-for="option in catalogos.tipos_subcontrato" v-html="option.nombre"></option>
 							</select>
 						</div>
 					</div>

@@ -10,6 +10,8 @@ use Flexio\Modulo\Catalogos\Repository\CatalogoRepository;
 use Flexio\Library\Util\FlexioAssets;
 use Flexio\Library\Util\FlexioSession;
 use Flexio\Library\Toast;
+use Flexio\Modulo\ConfiguracionContratos\Repository\TipoSubContratoCatalogoRepository as TipoSubContratoCatalogoRepository;
+
 
 class Usuarios extends CRM_Controller {
 
@@ -24,6 +26,7 @@ class Usuarios extends CRM_Controller {
     protected $FlexioAssets;
     protected $FlexioSession;
     protected $Toast;
+    protected $TipoSubContratoCatalogoRepository;
 
     function __construct() {
         parent::__construct();
@@ -60,6 +63,7 @@ class Usuarios extends CRM_Controller {
         $this->FlexioAssets = new FlexioAssets;
         $this->FlexioSession = new FlexioSession;
         $this->Toast = new Toast;
+        $this->TipoSubContratoCatalogoRepository = new TipoSubContratoCatalogoRepository();
     }
 
     public function ajax_get_usuarios()
@@ -438,7 +442,8 @@ class Usuarios extends CRM_Controller {
 
         $clause = ['empresa_id'=>$empresa->id,'transaccionales'=>true];
 
-        $tipos_subcontrato = $this->CatalogoRepository->get(['modulo' => 'subcontratos', 'tipo' => 'tipo_subcontrato', 'con_acceso' => 1]);
+        $tipos_subcontrato = $this->TipoSubContratoCatalogoRepository->get(['empresa_id' => $empresa->id, 'acceso' => 1]);
+
         //Agregra variables PHP como variables JS
         $this->assets->agregar_var_js(array(
             'vista' => 'agregar_usuarios',

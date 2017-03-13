@@ -7,25 +7,33 @@ use Carbon\Carbon as Carbon;
 
 use Flexio\Library\Util\FormRequest;
 use Flexio\Library\Util\FlexioSession;
+use Flexio\Library\Util\AuthUser;
 use Flexio\Modulo\Pagos\Models\Pagos;
 use Flexio\Modulo\Anticipos\Models\Anticipo;
 
 use Flexio\Strategy\Transacciones\Transaccion;
 use Flexio\Modulo\Pagos\Transacciones\PagosProveedor;
 use Flexio\Modulo\Pagos\Validators\PagoValidator;
+use Flexio\Modulo\Politicas\Models\Politicas;
+use Flexio\Modulo\Usuarios\Models\Usuarios;
 
 class GuardarPagos{
     protected $request;
     protected $session;
     protected $tipo_deposito;
     protected $PagoValidator;
+    protected $states_validations = ['por_aplicar' => 'validatePorAplicar', 'aplicado' => 'validateAplicado'];
 
     function __construct(){
         $this->PagoValidator = new PagoValidator();
+        $this->session = new FlexioSession();
+        $this->disparador = new \Illuminate\Events\Dispatcher();
+        $this->AuthUser = new AuthUser();
     }
 
     function save($data){
 
+        $data['campo']['empresa_id'] = $this->session->empresaId();
         if(array_get($data, 'campo.id', '') !=''){
             return $this->actualizar($data);
         }
@@ -59,7 +67,7 @@ class GuardarPagos{
     function actualizar($campo){
       return  Capsule::transaction(function() use($campo){
              $pago = Pagos::find($campo["campo"]["id"]);
-
+             $this->update_validations($pago, $campo);
             if(isset($campo['metodo_pago']) && !empty($campo['metodo_pago'])){
                 $pago->metodo_pago()->delete();
                 $metodo_pago = $pago->metodo_pago()->firstOrNew($campo['metodo_pago'][0]);
@@ -73,6 +81,48 @@ class GuardarPagos{
              $this->_actualizarEstadoPagable($pago->fresh());
              return $pago;
          });
+    }
+
+    private function update_validations($pago, $campo)
+    {
+        if($pago->estado != $campo['campo']['estado']){
+            call_user_func_array([$this, $this->states_validations[$campo['campo']['estado']]], [$pago, $campo]);
+        }
+    }
+
+    private function validatePorAplicar($pago, $campo)
+    {
+        if($pago->estado != 'por_aprobar')throw new \Exception("El pago Nro. {$pago->codigo} requiere estar 'Por Aprobar' antes de cambiar el estado");
+        if(!count($this->getPoliticas($pago, $campo['campo'])))throw new \Exception("No tiene permisos para cambiar el estado del pago Nro. {$pago->codigo}");
+    }
+
+    private function validateAplicado($pago, $campo)
+    {
+        if($pago->estado != 'por_aplicar')throw new \Exception("El pago Nro. {$pago->codigo} requiere estar 'Por Aplicar' antes de cambiar el estado");
+        if(!count($this->getPoliticas($pago, $campo['campo'])))throw new \Exception("No tiene permisos para cambiar el estado del pago Nro. {$pago->codigo}");
+    }
+
+    private function getPoliticas($pago, $campo)
+    {
+        $usuario = Usuarios::find($this->session->usuarioId());
+        if(count($usuario->roles_admin)){
+            return [1];
+        }
+        $campo['role_id'] = count($usuario->roles_reales->first()) ? $usuario->roles_reales->first()->id : -1;
+        return Politicas::select('ptr_transacciones.*')->where(function($q) use ($pago, $campo){
+            $q->where('ptr_transacciones.empresa_id', $campo['empresa_id']);
+            $q->where('ptr_transacciones.role_id', $campo['role_id']);
+            $q->where('ptr_transacciones.estado_id', 1);
+            $q->whereHas('estado_politica', function($estado_politica) use ($pago, $campo){
+                $estado_politica->where('ptr_transacciones_catalogo.estado1', $pago->estado);
+                $estado_politica->where('ptr_transacciones_catalogo.estado2', $campo['estado']);
+            });
+        })
+        ->where(function($aux) use ($pago, $campo){
+        $aux->where('ptr_transacciones.monto_limite', ">=", $pago->monto_pagado);
+        })
+        ->groupBy('ptr_transacciones.id')
+        ->get();
     }
 
     private function _getSyncFacturas($post)

@@ -261,7 +261,21 @@ class Polizas extends Model
 
     public static function saldo_pendiente($pol) {
     	$total = FacturaSeguro::where("id_poliza", $pol)->sum("total");
-    	$cobrado = Cobro::where("empezable_id", $pol)->where('empezable_type',"Flexio\Modulo\Polizas\Models\Polizas")->sum('monto_pagado');
+		
+		$todosempezable_id=array();
+		array_push($todosempezable_id, $pol);
+		
+		//traigo todas las facturas que tienen esa poliza asignada
+		$facturaspolizas = FacturaSeguro::where("id_poliza", $pol)->get();
+		
+		foreach($facturaspolizas as $facpoliza)
+		{
+			array_push($todosempezable_id, $facpoliza->id);
+			array_push($todosempezable_id, $facpoliza->cliente_id);
+		}
+		$cobrado = Cobro::whereIn("empezable_id", $todosempezable_id)->sum('monto_pagado');
+		
+    	/*$cobrado = Cobro::where("empezable_id", $pol)->where('empezable_type',"Flexio\Modulo\Polizas\Models\Polizas")->sum('monto_pagado');*/
     	$saldo = $total - $cobrado ;
     	return '<label class="label-outline outline-danger">$' . FormatoMoneda::numero($saldo) . '</label>';
     }

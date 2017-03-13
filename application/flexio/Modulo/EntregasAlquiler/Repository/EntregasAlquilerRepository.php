@@ -103,11 +103,11 @@ class EntregasAlquilerRepository
             }
         return [
             $entrega_alquiler->uuid_entrega_alqquiler,
-            $enlace_codigo,          
+            $enlace_codigo,
             $entrega_alquiler->fecha_entrega->format('d/m/Y'),
             //'16/01/2016',
             $entrega_alquiler->entregable->numero_documento_enlace,
-            $entrega_alquiler->cliente->nombre_completo_enlace,
+            !empty($entrega_alquiler) && !empty($entrega_alquiler->cliente) ? $entrega_alquiler->cliente->nombre_completo_enlace : "",
             count($entrega_alquiler->entregable->centro_facturacion) ? $entrega_alquiler->entregable->centro_facturacion->nombre : '',
             $entrega_alquiler->estado->nombre_span,
             $link_option,

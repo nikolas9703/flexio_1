@@ -14,6 +14,7 @@ use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 use Flexio\Modulo\ComisionesSeguros\Repository\ComisionesSegurosRepository as ComisionesSegurosRepository;
 use League\Csv\Writer as Writer;
 use Dompdf\Dompdf;
+use Flexio\Modulo\ComisionesSeguros\Models\SegComisionesParticipacion as SegComisionesParticipacion;
 
 class Comisiones_seguros extends CRM_Controller
 {
@@ -24,6 +25,7 @@ class Comisiones_seguros extends CRM_Controller
 	protected $aseguradoras;
 	protected $ComisionesSegurosRepository;
 	protected $ComisionesSeguros;
+	protected $SegComisionesParticipacion;
 
     function __construct()
     {
@@ -47,7 +49,7 @@ class Comisiones_seguros extends CRM_Controller
 		$this->aseguradoras= new Aseguradoras();
 		$this->ComisionesSegurosRepository=new ComisionesSegurosRepository();
 		$this->ComisionesSeguros=new ComisionesSeguros();
-
+		$this->SegComisionesParticipacion=new SegComisionesParticipacion();
     }
 	
 	 public function ocultotabla($id_cliente = NULL)
@@ -130,11 +132,12 @@ class Comisiones_seguros extends CRM_Controller
 		else
 			$remesa='';
 		
+		$participacioncomision=$this->SegComisionesParticipacion->where('comision_id',$comision->id)->get();
 		$data["campos"] = array(
 			"campos" => array(
 				"uuid_comision" => $uuid,
-				"no_comision" => $comision->no_comision,
 				"no_poliza" => $comision->polizas->numero,
+				"no_recibo" => $comision->datosCobro->codigo,
 				"cliente" => $comision->cliente->nombre,
 				"ramo" => $comision->datosRamos->nombre,
 				"impuesto_pago" => $comision->impuesto_pago,
@@ -152,6 +155,11 @@ class Comisiones_seguros extends CRM_Controller
 				"comision_pendiente" => number_format($comision->comision_pendiente,2),
 				"lugar_pago" => $comision->lugar_pago,
 				"estado" => $estado,
+				"comision_recibir"=>number_format(($comision->monto_comision + $comision->monto_scomision),2),
+				"comision_descontada"=>number_format($comision->comision_descontada,2),
+				"fecha_liquidacion" => $comision->datosRemesa->fecha_liquidada,
+				"comision_pagada" => number_format($comision->comision_pagada,2),
+				"participacioncomision"=>$participacioncomision
 			),
 
 		);
@@ -289,7 +297,7 @@ class Comisiones_seguros extends CRM_Controller
 				
 				if($row->estado=='liquidada')
 				{
-					$clase_estado='background-color: #5cb85c';
+					$clase_estado='background-color: #F8AD46';
 					$estado='Liquidada';
 				}
 				else if($row->estado=='por_liquidar')
@@ -301,6 +309,11 @@ class Comisiones_seguros extends CRM_Controller
 				{
 					$clase_estado='background-color: #fc0d1b';
 					$estado='Con diferencia';
+				}
+				else if($row->estado=='pagado')
+				{
+					$clase_estado='background-color: #5cb85c';
+					$estado='Pagada';
 				}
 				
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->id .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';

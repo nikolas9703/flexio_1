@@ -1,6 +1,6 @@
 <div class="row" style="margin-right:0px!important;">
     <div class="ibox-title border-bottom">
-        <h5>Datos del artículo</h5>
+        <h5 class="col-xs-12 col-sm-12 col-md-12 col-lg-12">Datos del artículo</h5>
         <hr style="margin-top:30px!important;">
         <div id="vistaPersona">
             <div class="tab-content">

@@ -37,7 +37,7 @@ class NotaCreditoEventos
 
     }
     /**
-     * ejecuta las funcionalidades para pasar un nota a aprobado
+     * transaccion de la nota de credito
      *
      * @param  object  $notaDebito
      * @return void
@@ -48,12 +48,20 @@ class NotaCreditoEventos
         //
         // 1.1 realiza la transaccion
         // 1.2 actualiza estado factura o el saldo del proveedor
-        $transaccionNotaDebito = new \Flexio\Modulo\NotaDebito\Transacciones\NotasDebitosFacturas;
-        $transaccionNotaDebito->haceTransaccion($notaDebito);
+        
+
         if(count($notaDebito->factura)){
+            $transaccionNotaDebitoFactura = new \Flexio\Modulo\NotaDebito\Transacciones\NotaCreditoFacturaCompras;
+            $transaccionNotaDebitoFactura->haceTransaccion($notaDebito);
+
+
             $notaAprobada = new \Flexio\Modulo\NotaDebito\Events\NotaCreditoFacturaAprobada($notaDebito);
             $notaAprobada->hacer();
         }else{
+
+          $transaccionNotaDebitoProveedor = new \Flexio\Modulo\NotaDebito\Transacciones\NotaCreditoProveedor;
+          $transaccionNotaDebitoProveedor->haceTransaccion($notaDebito);
+
           $notaAprobada = new \Flexio\Modulo\NotaDebito\Events\NotaCreditoProveedorAprobada($notaDebito);
           $notaAprobada->hacer();
         }
@@ -68,12 +76,17 @@ class NotaCreditoEventos
 
     private function aprobado_anulado($notaDebito){
 
-        $transaccionNotaDebito = new \Flexio\Modulo\NotaDebito\Transacciones\AnularTransaccionNotaDebito;
-        $transaccionNotaDebito->deshacerTransaccion($notaDebito);
+        
         if(count($notaDebito->factura)){
+            $transaccionNotaDebitoAnular = new \Flexio\Modulo\NotaDebito\Transacciones\AnularNotaCreditoFacturaCompra;
+            $transaccionNotaDebitoAnular->haceTransaccion($notaDebito);
+
             $notaAnulada = new \Flexio\Modulo\NotaDebito\Events\NotaCreditoFacturaAnulada($notaDebito);
             $notaAnulada->hacer();
         }else{
+          $transaccionNotaDebitoAnular = new \Flexio\Modulo\NotaDebito\Transacciones\AnularNotaCreditoProveedor;
+          $transaccionNotaDebitoAnular->haceTransaccion($notaDebito);
+
           $notaAnulada = new \Flexio\Modulo\NotaDebito\Events\NotaCreditoProveedorAnulada($notaDebito);
           $notaAnulada->hacer();
         }

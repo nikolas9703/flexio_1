@@ -12,7 +12,7 @@
 
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
 
-                <select name="empezable_type" id="empezable_type" v-model="empezable.type" v-select2="empezable.type" :config="config.select2" :disabled="config.disableEmpezarDesde">
+                <select name="empezable_type" id="empezable_type" v-model="empezable.type" v-select2="empezable.type" :config="config.select2" :disabled="config.disableEmpezarDesde || disableFromEvent">
                     <option value="">Seleccione</option>
                     <option :value="type.id" v-for="type in empezable.types">{{{type.nombre}}}</option>
                 </select>
@@ -20,7 +20,8 @@
             </div>
 
             <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-                <select v-if="typeof config.select2empezableId !== 'undefined'" name="empezable_id" v-select2ajax="empezable.id" :config="config.select2empezableId" :disabled="empezable.type == '' || config.disableEmpezarDesde">
+                <select v-if="typeof config.select2empezableId !== 'undefined'" name="empezable_id"
+                v-select2ajax="empezable.id" :config="config.select2empezableId" :disabled="empezable.type == '' || config.disableEmpezarDesde || disableFromEvent">
                     <option value="">Seleccione</option>
                 </select>
                 <select v-if="typeof config.select2empezableId === 'undefined'" name="empezable_id" id="empezable_id" v-model="empezable.id" v-select2="empezable.id" :config="config.select2" :disabled="empezable.type == '' || config.disableEmpezarDesde">
@@ -52,7 +53,8 @@ export default {
 
         return {
 
-            detalle_inicial:{}//se usa para conocer el estado inicial del formualrio (method ready store)
+            detalle_inicial:{},//se usa para conocer el estado inicial del formualrio (method ready store)
+            disableFromEvent:false
 
         };
 
@@ -72,6 +74,14 @@ export default {
 
         }
 
+    },
+
+    events:{
+        eSetEmpezable: function(empezable){
+            var context = this;
+            context.empezable = $.extend(context.empezable, JSON.parse(JSON.stringify(empezable)));
+            context.disableFromEvent = true;
+        }
     },
 
     watch:{

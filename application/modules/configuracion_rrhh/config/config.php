@@ -22,10 +22,10 @@ $config['modulo_config'] = array(
 	),
     'permisos'		=> array(
 		'acceso' => 'Acceso',
-    	'configuracion__crearCargo' => 'Crear Cargo',
-    	'configuracion__editarCargo' => 'Editar Cargo',
-    	'configuracion__duplicarCargo' => 'Duplicar Cargo',
-    	'configuracion__desactivarActivarCargo' => 'Desactivar/Activar Cargo',
-    	'configuracion__crearAreaNegocio' => 'Crear &Aacute;rea de Negocio',
+		'listar__crearCargo' => 'Crear Cargo',
+		'listar__editarCargo' => 'Editar Cargo',
+		'listar__duplicarCargo' => 'Duplicar Cargo',
+		'listar__desactivarActivarCargo' => 'Desactivar/Activar Cargo',
+		'listar__crearAreaNegocio' => 'Crear &Aacute;rea de Negocio',
 	)
 );

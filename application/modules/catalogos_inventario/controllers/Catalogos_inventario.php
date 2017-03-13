@@ -17,6 +17,11 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 //repositories
 use Flexio\Modulo\Ajustes\Repository\AjustesRazonesRepository as ajustesRazonesRep;
 
+//utils
+use Flexio\Library\Util\FlexioAssets;
+use Flexio\Library\Util\FlexioSession;
+use Flexio\Library\Toast;
+
 class Catalogos_inventario extends CRM_Controller
 {
     protected $empresa;
@@ -26,6 +31,11 @@ class Catalogos_inventario extends CRM_Controller
 
     //repositories
     private $ajustesRazonesRep;
+
+    //utils
+    protected $FlexioAssets;
+    protected $FlexioSession;
+    protected $Toast;
 
     public function __construct() {
         parent::__construct();
@@ -52,6 +62,11 @@ class Catalogos_inventario extends CRM_Controller
 
         //repositories
         $this->ajustesRazonesRep = new ajustesRazonesRep();
+
+        //utils
+        $this->FlexioAssets = new FlexioAssets();
+        $this->FlexioSession = new FlexioSession();
+        $this->Toast = new Toast();
     }
 
 
@@ -414,7 +429,7 @@ class Catalogos_inventario extends CRM_Controller
                 $response["success"]    = true;
                 $response["registro"]   = $registro;
             }
-            
+
             echo json_encode($response);
             exit();
         }
@@ -569,6 +584,7 @@ class Catalogos_inventario extends CRM_Controller
                     $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-uuid="'. $row->uuid_categoria .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
                     $hidden_options.= '<a href="#" class="btn btn-block btn-outline btn-success editarCategoria" data-uuid="'. $row->uuid_categoria .'">Editar</a>';
+                    $hidden_options.= '<a href="'.base_url("catalogos_inventario/datos_adicionales/".$row->uuid_categoria).'" class="btn btn-block btn-outline btn-success">Datos adicionales</a>';
 
 
                     if($row->estado == "1")//activo
@@ -604,6 +620,161 @@ class Catalogos_inventario extends CRM_Controller
             echo json_encode($response);
             exit;
     	}
+    }
+
+    public function ajax_listar_datos_adicionales()
+    {
+        if(!$this->input->is_ajax_request())return false;
+
+        $clause = array('empresa' => $this->id_empresa);
+        $datos_adicional = new \Flexio\Modulo\Inventarios\Models\DatoAdicional;
+        $jqgrid = new Flexio\Modulo\Inventarios\Services\DatoAdicionalJqgrid($datos_adicional);
+        $response = $jqgrid->listar($clause);
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function ajax_get_dato_adicional()
+    {
+        if(!$this->input->is_ajax_request())return false;
+
+        $dato_adicional = \Flexio\Modulo\Inventarios\Models\DatoAdicional::find($this->input->post('id'));
+        $response = [
+            'success' => count($dato_adicional) ? true : false,
+            'data' => $dato_adicional
+        ];
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function ajax_get_datos_adicionales()
+    {
+        if(!$this->input->is_ajax_request())return false;
+        $clause = ['categoria' => $this->input->post('categoria_id'), 'estado' => 'activo'];
+        $datos_adicionales = \Flexio\Modulo\Inventarios\Models\DatoAdicional::deFiltro($clause)->get()->map(function($dato_adicional){
+            return ['llave' => $dato_adicional->nombre, 'valor' => ''];
+        });
+        $response = [
+            'success' => count($datos_adicionales) ? true : false,
+            'data' => $datos_adicionales
+        ];
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function ajax_guardar_dato_adicional()
+    {
+        $errors = "";
+        try {
+            $GuardarDatoAdicional = new \Flexio\Modulo\Inventarios\FormRequest\GuardarDatoAdicional();
+            $dato_adicional = $GuardarDatoAdicional->guardar();
+        } catch (\Exception $e) {
+            $errors .= $e->getMessage()."<br>";
+        }
+
+        echo json_encode(array(
+            'response' => strlen($errors) ? false : true,
+            'mensaje' => strlen($errors) ? $errors : 'Se actualiz&oacute; el elemento correctamente.'
+        ));
+        exit;
+    }
+
+    public function ajax_exportar_datos_adicionales()
+    {
+        $clause = [];
+        $clause['ids'] = $this->input->post('ids', true);
+        $datos_adicionales = \Flexio\Modulo\Inventarios\Models\DatoAdicional::whereIn('id', $clause['ids'])->get()
+        ->map(function($dato_adicional){
+            return [
+                'nombre' => $dato_adicional->nombre,
+                'requerido' => $dato_adicional->requerido,
+                'en_busqueda_avanzada' => $dato_adicional->en_busqueda_avanzada,
+                'estado' => $dato_adicional->estado
+            ];
+        });
+
+        $csv = \League\Csv\Writer::createFromFileObject(new \SplTempFileObject());
+        $csv->insertOne(['Nombre del campo', 'Requerido', utf8_decode('En búsqueda avanzada'), 'Estado']);
+        $csv->insertAll($datos_adicionales);
+
+        $csv->output('datos_adicionales.csv');
+        exit;
+    }
+
+    public function ajax_get_states_segment()
+    {
+        $id = $this->input->post('id');
+        $dato_adicional = \Flexio\Modulo\Inventarios\Models\DatoAdicional::find($id);
+        $data = ['dato_adicional' => $dato_adicional, 'id' => $id];
+        $response = ['data' => $this->load->view('segments/states', $data, true)];
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function ajax_update_state()
+    {
+        $id = $this->input->post('id');
+        $ids = is_array($id) ? $id : [$id];
+        $errors = "";
+
+        foreach($ids as $dato_id){
+            try {
+                $GuardarDatoAdicional = new \Flexio\Modulo\Inventarios\FormRequest\GuardarDatoAdicional();
+                $GuardarDatoAdicional->guardar(['estado' => $this->input->post('estado'), 'id' => $dato_id]);
+            } catch (\Exception $e) {
+                $errors .= $e->getMessage()."<br>";
+            }
+        }
+        echo json_encode(array(
+            'response' => strlen($errors) ? false : true,
+            'mensaje' => strlen($errors) ? $errors : 'Se actualiz&oacute; el estado correctamente.'
+        ));
+        exit;
+    }
+
+    public function datos_adicionales($uuid = null)
+    {
+        //permisos
+        $acceso = $this->auth->has_permission('acceso', 'catalogos_inventario/datos_adicionales/(:any)');
+        $this->Toast->runVerifyPermission($acceso);
+
+        //Cargo el registro y repository
+        $categoria = \Flexio\Modulo\Inventarios\Models\Categoria::where('uuid_categoria', hex2bin($uuid))->first();
+        $categoriaRepository = new \Flexio\Modulo\Inventarios\Repository\CategoriasRepository;
+
+        //assets
+        $this->FlexioAssets->run(); //css y js generales
+        $this->FlexioAssets->add('js',['public/resources/compile/modulos/catalogos_inventario/datos_adicionales.js']);
+        $this->FlexioAssets->add('vars', [
+            'vista' => 'main',
+            'acceso' => $acceso ? 1 : 0,
+            'categoria' => $categoriaRepository->getCollectionCategoria($categoria)
+        ]);
+
+        //breadcrumb
+        $breadcrumb = [
+            'titulo' => '<i class="fa fa-cubes"></i> Inventario: Datos adicionales',
+            'menu' => [
+                'nombre' => 'Acción',
+                'url' => '#',
+                'opciones' => [
+                    '#cambiar-estado-btn' => '<i class="fa fa-compass"></i> Cambiar estados</a>',
+                    '#toCSV' => '<i class="fa fa-download"></i> Exportar'
+                ],
+            ],
+        ];
+
+        //render
+        $this->template->agregar_titulo_header('Inventario: Datos adicionales');
+        $this->template->agregar_breadcrumb($breadcrumb);
+        $this->template->agregar_contenido([]);
+        $this->template->visualizar();
     }
 
     public function ajax_listar_precios() {

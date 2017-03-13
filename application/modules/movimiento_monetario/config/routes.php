@@ -61,6 +61,7 @@ $route['movimiento_monetario/ajax-cliente-proveedor'] = 'movimiento_monetario/aj
 $route['movimiento_monetario/ocultotabla'] = 'movimiento_monetario/ocultotabla';
 $route['movimiento_monetario/ocultotabla_retiros'] = 'movimiento_monetario/ocultotabla_retiros';
 $route['movimiento_monetario/ajax-guardar-documentos'] = 'movimiento_monetario/ajax_guardar_documentos';
+$route['movimiento_monetario/ajax-cuenta-contable'] = 'movimiento_monetario/ajax_cuenta_contable';
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

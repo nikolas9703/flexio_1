@@ -964,7 +964,10 @@ public function ajax_listar_seguros($grid=NULL) {
     			//Verificar si la accion personal tiene archivo para descargar
     			if(!empty($archivo_nombre)){
     				$hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success verAdjuntoBtn">Ver archivo</a>';
-                    $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success editnombreBtn">Cambiar nombre</a>';
+                    $verif = explode("-", $archivo_nombre);
+                    if (strpos($verif[1], "list") === false) {
+                        $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success editnombreBtn">Cambiar nombre</a>';
+                    }                    
                     $hidden_options .= '<a href="#" data-id="'. $row['id'] .'" class="btn btn-block btn-outline btn-success descargarAdjuntoBtn">Descargar</a>';
     			}
 
@@ -1097,10 +1100,16 @@ public function ajax_listar_seguros($grid=NULL) {
                 $extension = pathinfo($filename, PATHINFO_EXTENSION);
                 $file_name = preg_replace('/[^A-Za-z0-9\-.]/', '', $filename);
 
-                if(move_uploaded_file($tmp_name, $empresa_folder . '/' . $secuencial . "-" . $file_name)) {
+                if (!empty($_POST['campotipodoc'])) {
+                    $td = $_POST['campotipodoc'][$i]."-";
+                }else{
+                    $td = "";
+                }
+
+                if(move_uploaded_file($tmp_name, $empresa_folder . '/' . $secuencial . "-" . $td . $file_name)) {                    
                    
                    $documentos[$i]["archivo_ruta"] = $archivo_ruta;
-                   $documentos[$i]["archivo_nombre"] = $secuencial . "-" . $file_name;
+                   $documentos[$i]["archivo_nombre"] = $secuencial . "-" . $td . $file_name;
                    //$documentos[$i]["nombre_documento"] = !empty($nombre_docu) ? $nombre_docu : '';
                    $documentos[$i]["nombre_documento"] = $_POST['nombre_documento'][$j];
                    //   $documentos[$i]["nombre_documento"] = $nodoc;
@@ -1109,7 +1118,7 @@ public function ajax_listar_seguros($grid=NULL) {
 
                    if (!empty($_POST['campomodulo'])) {
                        
-                        if ($_POST['campomodulo'][$j] != "Solicitud") {
+                        if ($_POST['campomodulo'][$j] != "Solicitud" && $_POST['campomodulo'][$j] != "" && $_POST['campomodulo'][$j] != "reclamos") {
                             $documentoscopia[$i]["archivo_ruta"] = $archivo_ruta;
                             $documentoscopia[$i]["archivo_nombre"] = $secuencial . "-" . $file_name;
                             $documentoscopia[$i]["nombre_documento"] = $_POST['nombre_documento'][$j];

@@ -406,10 +406,15 @@ class Reportes_financieros extends CRM_Controller
     if($request['tipo'] == 'impuestos_sobre_itbms'){
       return $this->impuestosSobreItbms($datos,$request);
     }
-
-    if($request['tipo'] == 'formulario43' || $request['tipo'] == 'formulario433'){
+ 
+    if($request['tipo'] == 'formulario433'){
       $datos = collect($datos);
       return $datos->sortBy("nombre")->values()->all();
+
+    }
+
+    if($request['tipo'] == 'formulario43'){
+      return $datos;
 
     }
 

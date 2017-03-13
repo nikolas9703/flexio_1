@@ -153,7 +153,7 @@
     	</div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->
-
+<?php echo modules::run('pedidos/ocultoimprimirpedido'); ?>
 <?php
 
     echo    Modal::config(array(

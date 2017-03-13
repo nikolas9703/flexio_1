@@ -19,12 +19,15 @@ use Flexio\Strategy\Transacciones\TransaccionFacturaCompra as TransaccionFactura
 use Flexio\Modulo\OrdenesCompra\Repository\OrdenesCompraRepository as ordenesCompraRep;
 use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository as impuestosRep;
 use Flexio\Modulo\FacturasCompras\Repository\FacturaCompraRepository as facturasCompraRep;
+use Flexio\Modulo\FacturasVentas\Repository\FacturaVentaCatalogoRepository;
 use Flexio\Modulo\SubContratos\Repository\SubContratoRepository as subcontratosRep;
+use Flexio\Modulo\CentrosContables\Repository\CentrosContablesRepository;
 use Flexio\Modulo\Proveedores\Repository\ProveedoresRepository as proveedoresRep;
 use Flexio\Modulo\SubContratos\Models\SubContrato as subcontratosVal;
 use Carbon\Carbon as Carbon;
 use Flexio\Modulo\FacturasCompras\Models\FacturaCompra as FacturaCompra;
 use Flexio\FormularioDocumentos AS FormularioDocumentos;
+use Flexio\Modulo\Inventarios\Repository\CategoriasRepository as ItemsCategoriasRepository;
 
 //utils
 use Flexio\Library\Util\FlexioSession;
@@ -33,6 +36,7 @@ use Flexio\Library\Util\AuthUser;
 class Facturas_compras_contratos extends CRM_Controller {
 
     protected $facturaCompraRepository;
+    protected $FacturaVentaCatalogoRepository;
     private $empresa_id;
     private $id_usuario;
     private $empresaObj;
@@ -43,9 +47,11 @@ class Facturas_compras_contratos extends CRM_Controller {
     private $subcontratosVal;
     private $proveedoresRep;
     private $facturaCompra;
+    protected $ItemsCategoriasRepository;
+    protected $CentrosContablesRepository;
     protected $DocumentosRepository;
     protected $upload_folder = './public/uploads/';
-    
+
     //utils
     protected $FlexioSession;
 
@@ -91,7 +97,9 @@ class Facturas_compras_contratos extends CRM_Controller {
         $this->proveedoresRep = new proveedoresRep();
         $this->subcontratosVal = new subcontratosVal();
         $this->facturaCompra = new FacturaCompra();
-        
+        $this->FacturaVentaCatalogoRepository = new FacturaVentaCatalogoRepository();
+        $this->ItemsCategoriasRepository = new ItemsCategoriasRepository();
+        $this->CentrosContablesRepository = new CentrosContablesRepository();
         //utils
         $this->FlexioSession = new FlexioSession;
     }
@@ -112,13 +120,18 @@ class Facturas_compras_contratos extends CRM_Controller {
 
         $this->_Css();
         $this->assets->agregar_css(array(
-            'public/assets/css/plugins/jquery/fileinput/fileinput.css',
+            //'public/assets/css/plugins/jquery/fileinput/fileinput.css',
             'public/assets/css/plugins/jquery/jquery.fileupload.css',
+            //'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            //'public/assets/css/plugins/bootstrap/select2.min.css',
         ));
         $this->_js();
 
         $this->assets->agregar_js(array(
-            'public/assets/js/modules/facturas_compras_contratos/listar.js',
+            //'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            //'public/assets/js/plugins/bootstrap/select2/es.js',
+            //'public/assets/js/modules/facturas_compras_contratos/listar.js',
+            'public/assets/js/modules/facturas_compras/listar.js',
             'public/assets/js/default/toast.controller.js',
             'public/assets/js/plugins/jquery/fileupload/jquery.fileupload.js',
         ));
@@ -150,19 +163,37 @@ class Facturas_compras_contratos extends CRM_Controller {
         }
 
         $this->assets->agregar_var_js(array(
-            "toast_mensaje" => $mensaje
+            "toast_mensaje" => $mensaje,
+            'prex' => 'factura_compra_subcontrato'
         ));
 
+        $clause = ['empresa_id' => $this->empresa_id, 'facturables' => true, 'transaccionales' => true, 'conItems' => true];
+        $UsuariosRepository = new Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
+        $data['vendedores'] = $UsuariosRepository->get($clause)->map(function ($usuario) {
+            return ['id' => $usuario->id, 'nombre' => $usuario->nombre_completo];
+        });
+
+        /// filtro de categoria
+        $categorias_items = AuthUser::usuarioCategoriaItems();
+
+        $columns = ['id', 'nombre'];
+        $categorias = $this->ItemsCategoriasRepository->getAll(['empresa_id' => $this->empresa_id], $columns);
+
+        $categoria = $categorias->filter(function ($categoria) use ($categorias_items) {
+            if (!in_array('todos', $categorias_items)) {
+                return in_array($categoria->id, $categorias_items);
+            }
+
+            return $categoria;
+        });
+
+        $data['categorias'] = $categoria;
 
         $data['proveedores'] = Proveedores_orm::deEmpresa($this->empresa_id)->orderBy("nombre", "asc")->get();
         $data['estados'] = Factura_catalogo_orm::estadosFacturasCompras()->get();
         $data['tipos'] = Factura_catalogo_orm::tiposFacturasCompras()->get();
-         $data["centros"] = Centros_orm::deEmpresa($this->empresa_id)
-                ->activa()
-                ->deMasJuventud($this->empresa_id)
-                ->orderBy("nombre", "ASC")
-                ->get();
-
+        $data['centros'] = $this->CentrosContablesRepository->getCollectionCentrosContables($this->CentrosContablesRepository->get($clause));
+        $data['catalogo_termino_pago'] = $this->FacturaVentaCatalogoRepository->getTerminoPago();
         $breadcrumb["menu"]["opciones"]["#exportarListaFacturasCompras"] = "Exportar";
         // $breadcrumb["menu"]["opciones"]["#refacturar"] = "Refacturar";
         $this->template->agregar_titulo_header('Listado de facturas de compras');
@@ -239,9 +270,9 @@ class Facturas_compras_contratos extends CRM_Controller {
         if (!empty($monto2)) {
             $registros->deMontoMenorIgual($monto2);
         }
-        
+
         if (!empty($centro_contable)) {
-           
+
             $registros->deCentroContable($centro_contable);
         }
 
@@ -267,7 +298,7 @@ class Facturas_compras_contratos extends CRM_Controller {
         if (!empty($numero_factura)) {
             $registros = $registros->deFacturaProveedor($numero_factura);
         }
-        
+
         //filtros de centros contables del usuario
         $centros = $this->FlexioSession->usuarioCentrosContables();
         if(!in_array('todos', $centros))
@@ -955,32 +986,36 @@ $retenido = $registros->get()->toArray();
             'public/assets/css/plugins/jquery/chosen/chosen.min.css',
             'public/assets/js/plugins/jquery/sweetalert/sweetalert.css',
             'public/assets/css/modules/stylesheets/facturas_compras.css',
+            'public/assets/css/plugins/bootstrap/select2-bootstrap.min.css',
+            'public/assets/css/plugins/bootstrap/select2.min.css',
         ));
     }
 
     private function _js() {
         $this->assets->agregar_js(array(
-            'public/assets/js/default/jquery-ui.min.js',
-            'public/assets/js/plugins/jquery/jquery.sticky.js',
-            'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+            //'public/assets/js/default/jquery-ui.min.js',
+            //'public/assets/js/plugins/jquery/jquery.sticky.js',
+            //'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
             'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
             'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
-            'public/assets/js/plugins/jquery/jqgrid/plugins/jQuery.jqGrid.columnToggle.js',
+            'public/assets/js/plugins/jquery/chosen.jquery.min.js',
+            //'public/assets/js/plugins/jquery/jqgrid/plugins/jQuery.jqGrid.columnToggle.js',
             'public/assets/js/plugins/jquery/switchery.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
             'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
             'public/assets/js/plugins/jquery/combodate/combodate.js',
             'public/assets/js/plugins/jquery/combodate/momentjs.js',
-            'public/assets/js/default/lodash.min.js',
-            'public/assets/js/default/accounting.min.js',
-            'public/assets/js/plugins/jquery/chosen.jquery.min.js',
+            //'public/assets/js/default/lodash.min.js',
+            //'public/assets/js/default/accounting.min.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/inputmask.js',
             'public/assets/js/plugins/jquery/jquery-inputmask/jquery.inputmask.js',
             'public/assets/js/plugins/jquery/sweetalert/sweetalert.min.js',
             'public/assets/js/moment-with-locales-290.js',
             'public/assets/js/plugins/bootstrap/daterangepicker.js',
             'public/assets/js/plugins/bootstrap/bootstrap-datetimepicker.js',
+            'public/assets/js/plugins/bootstrap/select2/select2.min.js',
+            'public/assets/js/plugins/bootstrap/select2/es.js',
         ));
     }
     function ajax_guardar_documentos() {

@@ -136,7 +136,14 @@ export default {
 
     watch:{
 
-          //...
+          'detalle.categorias':function(val, oldVal){
+              var context = this;
+              var categoria = _.find(context.catalogos.categorias, function(categoria){
+                  return categoria.id == val;
+              });
+              if(_.isEmpty(categoria) || val == oldVal)return;
+              context.$root.$broadcast('ePopulateDatoAdicional', {detalle:context.detalle, categoria:categoria, val:val, oldVal:oldVal});
+          }
 
     },
 

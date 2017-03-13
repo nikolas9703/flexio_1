@@ -23,6 +23,9 @@ use Flexio\Modulo\Planes\Repository\PlanesRepository as PlanesRepository;
 use Flexio\Modulo\Bancos\Models\Bancos as bancos;
 use Flexio\Modulo\Cobros_seguros\Models\CobroFactura as CobroFactura;
 use Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro;
+use Flexio\Modulo\ConfiguracionContabilidad\Models\CuentaRemesaSaliente;
+use Flexio\Modulo\Pagos\Models\Pagos;
+use Flexio\Modulo\Pagos\Models\PagosMetodos;
 
 class Remesas extends CRM_Controller
 {
@@ -542,20 +545,19 @@ public function ajax_get_remesa_saliente() {
 
 public function guardar(){
 
-    $remesas = Util::set_fieldset("remesas");
+    $remesa = Util::set_fieldset("remesas");
     $cobros = Util::set_fieldset("id_cobros");
     $fecha_desde = $this->input->post("fecha_desde");
     $fecha_hasta = $this->input->post("fecha_hasta");
 
-        //Capsule::beginTransaction();
-        //try {
-
+    //Capsule::beginTransaction();
+    //try {
 
     $datosRemesas['uuid_remesa'] = Capsule::raw("ORDER_UUID(uuid())");;
-    $datosRemesas['remesa'] = $remesas["codigo_remesa"];
+    $datosRemesas['remesa'] = $remesa["codigo_remesa"];
     $datosRemesas['fecha'] = date('Y-m-d');
-    $datosRemesas['aseguradora_id'] = $remesas["id_aseguradora"]; 
-    $datosRemesas['monto'] = $remesas["monto_remesa"];
+    $datosRemesas['aseguradora_id'] = $remesa["id_aseguradora"]; 
+    $datosRemesas['monto'] = $remesa["monto_remesa"];
 
     $datosRemesas['recibos_remesados'] = count(array_unique($cobros));
     $datosRemesas['usuario'] = $this->usuario_id;
@@ -566,29 +568,31 @@ public function guardar(){
 
     $datosRemesas['fecha_desde'] = date('Y-m-d', strtotime($fecha_desde));
     $datosRemesas['fecha_hasta'] = date('Y-m-d', strtotime($fecha_hasta));
-    $datosRemesas['ramos_id'] = $remesas['ramos'];
+    $datosRemesas['ramos_id'] = $remesa['ramos'];
 
 
-    if(isset($remesas["guardar"])){
+    if(isset($remesa["guardar"])){
         $datosRemesas['estado'] = "En Proceso";
-    }elseif(isset($remesas["pagar"])){
+    }elseif(isset($remesa["pagar"])){
         $datosRemesas['estado'] = "Por Pagar";
     }
-
     
-    $remesas = Remesa::where(['remesa' => $remesas["codigo_remesa"]])->first();
-    if($remesas == null){
+    $remesas = Remesa::where(['remesa' => $remesa["codigo_remesa"]])->first();
+    var_dump(count($remesas));
+    if(count($remesas) == 0){
         $remesas = Remesa::create($datosRemesas);
     }else{
         $remesas = Remesa::find($remesas->id)->update($datosRemesas);
+        $remesas = Remesa::where(['remesa' => $remesa["codigo_remesa"]])->first();
     }
     $codigo = $remesas->remesa;
+    
+    $this->crear_pago_seguros($remesas);
 
-
-        //}catch (ValidationException $e) {
-            //log_message('error', $e);
-            //Capsule::rollback();
-        //}
+    //}catch (ValidationException $e) {
+        //log_message('error', $e);
+        //Capsule::rollback();
+    //}
     if(!empty($remesas)){
         $mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente', 'titulo' => 'Remesa ' . $codigo . '');
     }
@@ -1004,20 +1008,60 @@ private function _js() {
 
 public function ajax_cambiar_estado_remesa() {
 
-   $campos = $this->input->post('campo');
-   $ids = $campos['ids'];
-   $empresa_id = $this->empresa_id;
-   $campo = ['estado'=>$campos['estado'], 'fecha' => date('Y-m-d')];
+    $campos = $this->input->post('campo');
+    $ids = $campos['ids'];
+    $empresa_id = $this->empresa_id;
+    $campo = ['estado'=>$campos['estado'], 'fecha' => date('Y-m-d')];
 
 
    try {
-    $msg = $reclamo = Remesa::where('empresa_id', $empresa_id)->whereIn('id',$ids)->update($campo);
-} catch (\Exception $e) {
-    $msg = $e->getMessage() . "\r\n";
+        $msg = $reclamo = Remesa::where('empresa_id', $empresa_id)->whereIn('id',$ids)->update($campo);
+
+    } catch (\Exception $e) {
+        $msg = $e->getMessage() . "\r\n";
+    }
+
+    print json_encode($msg);
+    exit;
 }
 
-print json_encode($msg);
-exit;
+
+public function crear_pago_seguros($datosRemesas = null,$estado_remesa = null){
+
+    $cuenta_remesa_saliente = CuentaRemesaSaliente::where(['empresa_id' => $this->id_empresa])->first();
+    if(isset($datosRemesas) && !empty($datosRemesas)){
+
+        if($datosRemesas->estado == "Por pagar"){
+
+            $datosPagos['codigo'] = Pagos::whereEmpresaId($this->id_empresa)->count() + 1; //'PGO17000002';
+            $datosPagos['fecha_pago'] = date('d/m/Y');
+            $datosPagos['proveedor_id'] = 0;
+            $datosPagos['monto_pagado'] = number_format($datosRemesas->monto,4, '.', '');
+            $datosPagos['cuenta_id'] = 0;
+            $datosPagos['empresa_id'] = $this->id_empresa;
+            $datosPagos['estado'] = 'por_aplicar';
+            $datosPagos['formulario'] = 'factura';
+            //$datosPagos['depositable_type'] = 'Flexio\\Modulo\\Contabilidad\\Models\\Cuentas';
+            $datosPagos['depositable_id'] = $cuenta_remesa_saliente->cuenta_id;
+            //$datosPagos['empezable_type'] = 'Flexio\Modulo\Remesas\Models\Remesa';
+            $datosPagos['empezable_id'] = $datosRemesas->id;
+
+            $pagosSeguros =  Pagos::create($datosPagos);
+            Pagos::where(['id' => $pagosSeguros->id])->update(['depositable_type' => 'Flexio\\Modulo\\Contabilidad\\Models\\Cuentas', 'empezable_type' => 'Flexio\\Modulo\\Remesas\\Models\\Remesa']);
+
+            $datosPagoMetodo['pago_id'] = $pagosSeguros->id;
+            $datosPagoMetodo['tipo_pago'] = 'transferencia_internacional';
+            $datosPagoMetodo['total_pagado'] = number_format($datosRemesas->monto,4, '.', '');
+            $pagosSegurosmetodos = PagosMetodos::create($datosPagoMetodo);
+
+
+            //transferencia_internacional
+        }
+
+    }
+    
+    
+    
 }
 
 }

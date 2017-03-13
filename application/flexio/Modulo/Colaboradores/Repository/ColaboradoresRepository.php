@@ -59,6 +59,7 @@ class ColaboradoresRepository implements ColaboradoresInterface{
 
     public function getResponseCell($colaborador, $link_option, $hidden_options){
         $descuentosDirectos = $this->_getDescuentosDirectos($colaborador);
+        $symbol="$";
         return [
             $colaborador->uuid_colaborador,
             '<a style="color:blue;" class="link" href="'. base_url('colaboradores/ver/'. $colaborador->uuid_colaborador) .'" >'.$colaborador->nombre.' '.$colaborador->apellido.'</a>',
@@ -67,9 +68,9 @@ class ColaboradoresRepository implements ColaboradoresInterface{
             $this->_getCentroContable($colaborador),
             $this->_getCargo($colaborador),
             $descuentosDirectos["ciclo"],
-            $descuentosDirectos["monto_total"],
-            $descuentosDirectos["monto_por_ciclo"],
-            $descuentosDirectos["pendiente"]
+            $symbol.$descuentosDirectos["monto_total"],
+            $symbol.$descuentosDirectos["monto_por_ciclo"],
+            $symbol.$descuentosDirectos["pendiente"]
         ];
     }
 

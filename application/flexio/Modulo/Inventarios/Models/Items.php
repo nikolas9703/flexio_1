@@ -29,9 +29,12 @@ class Items extends Model
     protected $keepRevisionOf = ['codigo','nombre', 'descripcion', 'tipo_id', 'codigo_barra', 'estado', 'item_alquiler', 'tarifa_hora', 'tarifa_diario', 'tarifa_mensual', 'tarifa_4_horas', 'tarifa_6_dias', 'tarifa_15_dias', 'tarifa_28_dias', 'tarifa_30_dias', 'uuid_compra', 'uuid_venta', 'empresa_id', 'creado_por'];
 
     protected $table        = 'inv_items';
-    protected $fillable     = ['codigo','nombre', 'descripcion', 'tipo_id', 'codigo_barra', 'estado', 'item_alquiler', 'tarifa_hora', 'tarifa_diario', 'tarifa_mensual', 'tarifa_4_horas', 'tarifa_6_dias', 'tarifa_15_dias', 'tarifa_28_dias', 'tarifa_30_dias', 'uuid_compra', 'uuid_venta', 'empresa_id', 'creado_por', 'cuentas'];
+    protected $fillable     = ['codigo','nombre', 'descripcion', 'tipo_id', 'codigo_barra', 'estado', 'item_alquiler', 'tarifa_hora', 'tarifa_diario', 'tarifa_mensual', 'tarifa_4_horas', 'tarifa_6_dias', 'tarifa_15_dias', 'tarifa_28_dias', 'tarifa_30_dias', 'uuid_compra', 'uuid_venta', 'empresa_id', 'creado_por', 'cuentas', 'datos_adicionales'];
     protected $guarded      = ['id', 'uuid_item'];
     protected $appends      = ['icono','enlace'];
+    protected $casts = [
+        'datos_adicionales' => 'array',
+    ];
     //protected $appends      = ['seriales'];
     //protected $appends      = ['cuenta_variante', 'cantidad_disponible', 'costo_promedio'];
 
@@ -308,6 +311,7 @@ class Items extends Model
 
     public function scopeDeCategorias($query, $categorias)
     {
+        if(empty($categorias) || empty(array_filter($categorias)))return $query;
         return  $query->whereHas("categorias", function($q) use($categorias){
                     $q->whereIn("inv_categorias.id", $categorias);
                 });

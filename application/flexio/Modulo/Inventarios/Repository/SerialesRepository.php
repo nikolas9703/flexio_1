@@ -119,8 +119,10 @@ class SerialesRepository{
                     $registro->nombre = $serial;
                     $registro->item_id = $itemA->id;
                     $registro->empresa_id = $registro ? $registro_aux->empresa_id : 0;
-                    $this->_setBodegaOrCliente($registro, $registro_aux);
                     $registro->estado = $estado;
+                    //inside this method the states cab be updated....
+                    $this->_setBodegaOrCliente($registro, $registro_aux);
+
                     $registro->save();
 
                     $serialLinea            = new SerialesLineas();
@@ -145,7 +147,12 @@ class SerialesRepository{
         {
             $serie->cliente_id = 0;
             $serie->centro_facturacion_id = 0;
-            $serie->bodega_id = ($class->modulo !== 'Ajuste') ? $class->operacion->bodega->id : $class->bodega->id;
+
+            $bodega = ($class->modulo !== 'Ajuste') ? $class->operacion->bodega : $class->bodega;
+            $serie->bodega_id = $bodega->id;
+            if($bodega->estado_items == '4'){//no disponible
+                $serie->estado = 'no_disponible';
+            }
         }
     }
 
@@ -181,7 +188,7 @@ class SerialesRepository{
 
             $hidden_options = $row->hidden_options;
             $link_option = $row->link_option;
-            
+
             $rows[$i]["id"] = $row->id;
             $rows[$i]["cell"] = [
                 $row->numero_documento_enlace,
@@ -198,7 +205,7 @@ class SerialesRepository{
     }
 
     private function _get_ultimo_movimiento($row)
-    {   
+    {
         if(preg_match('/devoluciones_alquiler/', $row->ultimo_movimiento->enlace) && $row->ultimo_movimiento->estado_id == 2)
         {
             return count($row->bodega) ? $row->bodega->nombre : '';

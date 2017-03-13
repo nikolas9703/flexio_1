@@ -17,9 +17,9 @@ $config['modulo_config'] = array(
             'Ventas' => array(
                     "grupo_orden" => 0
             ),
-            'Seguros' => array(
+            /*'Seguros' => array(
     		"grupo_orden" => 3
-           ),
+           ),*/
              'Contratos' => array(
                 "grupo_orden" => 4
             )

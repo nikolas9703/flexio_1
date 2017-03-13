@@ -12,6 +12,7 @@ use Flexio\Modulo\Cliente\Models\Cliente;
 use Flexio\Modulo\Ramos\Models\Ramos;
 use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 use Flexio\Modulo\RemesasEntrantes\Models\RemesasEntrantes;
+use Flexio\Modulo\Cobros\Models\Cobro;
 
 class ComisionesSeguros extends Model
 {
@@ -50,6 +51,9 @@ class ComisionesSeguros extends Model
     }
 	 public function cliente() {
         return $this->belongsTo(Cliente::class, 'id_cliente');
+    }
+	 public function datosCobro() {
+        return $this->belongsTo(Cobro::class, 'id_cobro');
     }
 	public static function findByUuid($uuid){
         return self::where('uuid_comision',hex2bin($uuid))->first();

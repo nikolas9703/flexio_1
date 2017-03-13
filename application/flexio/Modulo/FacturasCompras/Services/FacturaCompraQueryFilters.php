@@ -49,4 +49,48 @@ class FacturaCompraQueryFilters extends QueryFilters{
         $query->where('id', $subcontrato);
     });
   }
+   
+   function creacion_min($fecha){
+      $fecha = Carbon::createFromFormat('d-m-Y', $fecha, 'America/Panama');
+      return $this->builder->where('created_at','>=',$fecha);
+   }
+
+
+   function creacion_max($fecha){
+      $fecha = Carbon::createFromFormat('d-m-Y', $fecha, 'America/Panama');
+      return $this->builder->where('created_at','<=',$fecha);
+   }
+
+   function termino_pago($termino){
+    $termino = array_filter($termino);
+    if(!empty($termino)){
+        if(is_array($termino)){
+        return $this->builder->whereIn('termino_pago', $termino);
+    }
+    return $this->builder->where('termino_pago', $termino);
+    }
+    
+
+   }
+
+   function pagos($pagos){
+
+     
+    if($pagos == 'si'){
+        return $this->builder->has('pagos', '>', 0);
+    }
+
+    return $this->builder->has('pagos', '=', 0);
+         
+   }
+
+
+   function numero_dias($numeros_dias){
+
+    return $this->builder->whereRaw('DATEDIFF(CURDATE(),fecha_desde) >= '.$numeros_dias);
+
+   }
+
+
+
 }

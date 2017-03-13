@@ -37,10 +37,7 @@ class NotasDebitosFacturas {
         }
     }
 
-    public function deshaceTransaccion($nota_debito)
-    {
-        //...
-    }
+    
 
     public function transacciones($nota_debito)
     {
@@ -67,7 +64,7 @@ class NotasDebitosFacturas {
             if(empty($cuenta_id)){throw new \Exception('No se logr&oacute; determinar la cuenta para realizar el cr&eacute;dito.');}
             $asientos[] = new AsientoContable([
                 'codigo' => $nota_debito->codigo,
-                'nombre' => $nota_debito->codigo,
+                'nombre' => $nota_debito->codigo .' - '.$nota_debito->nombre_proveedor,
                 'credito' => $item->monto,
                 'cuenta_id' => $cuenta_id,
                 'empresa_id' => $nota_debito->empresa_id

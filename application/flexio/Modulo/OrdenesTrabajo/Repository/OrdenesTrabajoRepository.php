@@ -183,7 +183,7 @@ class OrdenesTrabajoRepository
         $orden_trabajo->equipo_trabajo_id = $update['equipo_trabajo_id'];
         $orden_trabajo->centro_facturable_id = $update['centro_facturable_id'];
         $orden_trabajo->fecha_inicio = $update['fecha_inicio'];
-        $orden_trabajo->fecha_planificada_fin = $update['fecha_planificada_fin'];
+        $orden_trabajo->fecha_planificada_fin = isset($update['fecha_planificada_fin'])?$update['fecha_planificada_fin']:"";
         $orden_trabajo->centro_id = $update['centro_id'];
         $orden_trabajo->lista_precio_id = $update['lista_precio_id'];
         $orden_trabajo->facturable_id = $update['facturable_id'];

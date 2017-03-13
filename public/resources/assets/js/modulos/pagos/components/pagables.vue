@@ -18,7 +18,7 @@
       </thead>
 
       <tbody>
-          <tr class="item-listing" v-for="pagable in detalle.pagables">
+          <tr class="item-listing" v-for="pagable in getPagables">
               <td v-text="pagable.numero_documento" style="font-weight: bold;vertical-align: middle;"></td>
               <td v-text="pagable.fecha_emision" style="font-weight: bold;vertical-align: middle;"></td>
               <td v-text="pagable.total | currency" style="text-align: right;font-weight: bold;vertical-align: middle;"></td>
@@ -58,6 +58,21 @@ export default {
 
         return {};
 
+    },
+
+    computed:{
+        getPagables:function(){
+            var compare = function(a,b) {
+                a.numero_documento = _.trim(a.numero_documento);
+                b.numero_documento = _.trim(b.numero_documento);
+                if (a.numero_documento < b.numero_documento)
+                    return -1;
+                if (a.numero_documento > b.numero_documento)
+                    return 1;
+                return 0;
+            };
+            return this.detalle.pagables.sort(compare);
+        }
     },
 
     methods:{

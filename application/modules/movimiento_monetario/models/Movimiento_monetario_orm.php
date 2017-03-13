@@ -2,12 +2,14 @@
 
 use \Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
+
+use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
  
 class Movimiento_monetario_orm extends Model
 {
     
     protected $table = 'mov_recibo_dinero';
-    protected $fillable = [ 'codigo', 'narracion', 'created_at', 'updated_at', 'fecha_inicio', 'empresa_id', 'cliente_id', 'proveedor_id', 'estado', 'cuenta_id', 'incluir_narracion'];
+    protected $fillable = [ 'codigo', 'narracion', 'created_at', 'updated_at', 'fecha_inicio', 'empresa_id', 'cliente_id', 'proveedor_id', 'aseguradora_id','estado', 'cuenta_id', 'incluir_narracion'];
     protected $guarded = ['id'];
     
     public function __construct(array $attributes = array()){
@@ -22,7 +24,7 @@ class Movimiento_monetario_orm extends Model
     
     
 public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
-	$query = self::with(array('cliente', 'proveedor', 'items' => function($query){
+	$query = self::with(array('cliente', 'proveedor', 'aseguradora','items' => function($query){
             
     		}));
                 
@@ -30,25 +32,30 @@ public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NU
     {
         $query->where("estado", "1")->where("empresa_id", $clause['id_empresa']); 
             
-           if(!empty($clause['cliente']))
-            {
+           if(!empty($clause['cliente'])){
                
              if($clause['cliente']=="1"){
               
-            $query->whereHas('proveedor',function($query) use($clause){
-            $query->where('id','=',$clause['nombre']);
-            })->get();
+                $query->whereHas('proveedor',function($query) use($clause){
+                $query->where('id','=',$clause['nombre']);
+                })->get();
             
                  
-             }else{
+             }elseif($clause['cliente']=="2"){
                  
-            $query->whereHas('cliente',function($query) use($clause){
-            $query->where('id','=',$clause['nombre']);
-            })->get();     
-                
-                 
-             }  
-            } 
+              $query->whereHas('cliente',function($query) use($clause){
+              $query->where('id','=',$clause['nombre']);
+              })->get();     
+                  
+                   
+              }else{
+               $query->whereHas('aseguradora',function($query) use($clause){
+                  $query->where('id','=',$clause['nombre']);
+                })->get();     
+              }
+
+          }
+
         
            if(!empty($clause['narracion']))
             {
@@ -56,12 +63,13 @@ public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NU
             $query->where("narracion", "LIKE", "%$valor_narracion%");
             }  
             
-           if(!empty($clause['monto_desde']))
-           {
+            if(!empty($clause['monto_desde']) || !empty($clause['monto_hasta'])){
+              $query->join('mov_recibos_items','mov_recibos_items.id_recibo','=','mov_recibo_dinero.id');
+            }
+           if(!empty($clause['monto_desde'])){
             $query->where("credito", ">=", $clause['monto_desde']); 
            }   
-           if(!empty($clause['monto_hasta']))
-           {
+           if(!empty($clause['monto_hasta'])){
             $query->where("credito", "<=", $clause['monto_hasta']); 
            } 
            if(!empty($clause['fecha_desde']))
@@ -80,7 +88,7 @@ public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NU
 	if($sidx!=NULL && $sord!=NULL) $query->orderBy($sidx, $sord);
 	if($limit!=NULL) $query->skip($start)->take($limit);
         
-  return $query->get();
+  return $query->select('mov_recibo_dinero.*')->get();
   }
   
 public function cliente()
@@ -93,6 +101,10 @@ public function proveedor()
     
     return $this->hasOne('Proveedores_orm', 'id', 'proveedor_id');
     
+}
+
+public function aseguradora(){
+    return $this->hasOne(Aseguradoras::class, 'id', 'aseguradora_id');
 }
 
 public static function findByUuid($uuid){

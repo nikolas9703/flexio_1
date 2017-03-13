@@ -9,7 +9,7 @@ use Flexio\Modulo\Contratos\Models\Contrato as Contrato;
 use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler;
 use Flexio\Modulo\Devoluciones\Models\Devolucion as Devolucion;
 use Flexio\Modulo\NotaCredito\Models\NotaCredito as NotaCredito;
-use Flexio\Modulo\Cobros\Models\Cobro as Cobro;
+use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros as Cobro;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Modulo\Cliente\Models\Cliente;
 use Flexio\Modulo\Polizas\Models\Polizas;
@@ -32,7 +32,7 @@ class FacturaSeguro extends Model
 
     protected $table = 'fac_facturas';
 
-    protected $fillable = ['cotizacion_id', 'orden_venta_id','codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total' ,'descuento','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta','id_poliza','otros','remesa_saliente','remesa_entrante','saldo','porcentaje_impuesto'];
+    protected $fillable = ['cotizacion_id', 'orden_venta_id','codigo','cliente_id','empresa_id','fecha_hasta','fecha_desde','estado','created_by','comentario','termino_pago','fecha_termino_pago','item_precio_id','subtotal','impuestos','total' ,'descuento','bodega_id','centro_contable_id','referencia','formulario','centro_facturacion_id','cargos_adicionales', 'cuenta','id_poliza','numero_poliza','otros','remesa_saliente','remesa_entrante','saldo','porcentaje_impuesto'];
 
     protected $guarded = ['id','uuid_factura'];  
     protected $appends =['icono','enlace'];
@@ -309,8 +309,7 @@ class FacturaSeguro extends Model
     }
 //////////////////////////////////////////////////////////////
     function cobros() {
-      return $this->belongsToMany(Cobro::class,'cob_cobro_facturas','cobrable_id','cobro_id')->where('cobrable_type','Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro')
-      ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+      return $this->belongsToMany(Cobro::class,'cob_cobro_facturas','cobrable_id','cobro_id')->where('cobrable_type','Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro')->withPivot('monto_pagado','empresa_id')->withTimestamps();
     }
 
     public function total_facturado() {

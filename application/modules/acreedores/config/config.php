@@ -17,7 +17,7 @@ $config['modulo_config'] = array(
             "grupo_orden" => 3
         ),
             'Administración' => array(
-            "grupo_orden" => 8
+            "grupo_orden" => 9
         )
 	),
 	'agrupador_orden'     => 2,

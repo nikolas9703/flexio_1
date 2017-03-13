@@ -3675,6 +3675,10 @@ class Intereses_asegurados extends CRM_Controller {
                         if ($num > 0 && $validarEditar == 2) {
                             $det = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->update($detalleunico);
 
+                            $num1 = InteresesAsegurados_detalles::where('id_intereses', $detalle['id_intereses'])->where('detalle_unico', $detalle['detalle_unico'])->first();
+
+                            $prin = $detalle['detalle_relacion'];
+
                             if ($individual == 1 || $individual == 'colectivo') {
                                 unset($detalle['detalle_int_asociado']);
                                 unset($detalle['detalle_relacion']);
@@ -3703,8 +3707,8 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br>Valor Anterior: " . $detalle['detalle_deducible'] . "<br><br>";
                             }
 
-
-                            //Actualiza Detalle Acreedores
+                            if ($prin == 'Principal') {
+                                //Actualiza Detalle Acreedores
                                 //Crear Acreedores
                                 $fieldsetacre = array();
                                 $campoacreedores = $this->input->post('campoacreedores');
@@ -3721,10 +3725,20 @@ class Intereses_asegurados extends CRM_Controller {
                                         $fieldsetacre["id_solicitud"] = $id_solicitud;
                                         $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
                                         $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                        //Fecha Inicio
+                                        if (strpos($fecha_ini[$key], "/") > 0) {
+                                            $x = explode("/", $fecha_ini[$key]);
+                                            $fecha_ini[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                        }
                                         $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                        //Fecha Fin
+                                        if (strpos($fecha_fin[$key], "/") > 0) {
+                                            $x = explode("/", $fecha_fin[$key]);
+                                            $fecha_fin[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                        }
                                         $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
                                         $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
-                                        $fieldsetacre["idinteres_detalle"] = $det->id;
+                                        $fieldsetacre["idinteres_detalle"] = $num1->id;
                                         if ($id_acreedores[$key] != "0") {
                                             SolicitudesAcreedores_detalles::where("id", $id_acreedores[$key])->update($fieldsetacre); 
                                             array_push($ids, $id_acreedores[$key]);
@@ -3736,7 +3750,10 @@ class Intereses_asegurados extends CRM_Controller {
                                         }                                                       
                                     }
                                 }
+                                SolicitudesAcreedores_detalles::whereNotIn("id", $ids)->where("idinteres_detalle", $num1->id)->delete();
                                 //fin
+                            }
+                            
                             
                         } else if (($individual == 0 || $detalle['detalle_relacion'] == 'Dependiente' || $individual == 'colectivo') && $num <= 0) {
 
@@ -3768,30 +3785,41 @@ class Intereses_asegurados extends CRM_Controller {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor: " . $det->detalle_deducible . "<br><br>";
                             }
 
-
-                            //Agrega Acreedores a tabla temporal con Id de la tabla detalles
-                            $fieldsetacre = array();
-                            $campoacreedores = $this->input->post('campoacreedores');
-                            if($campoacreedores!=NULL){
-                                $porcentaje_cesion = $this->input->post('campoacreedores_por');
-                                $monto_cesion = $this->input->post('campoacreedores_mon'); 
-                                $fecha_ini = $this->input->post('campoacreedores_ini'); 
-                                $fecha_fin = $this->input->post('campoacreedores_fin');                    
-                                foreach ($campoacreedores as $key => $value) {
-                                    $fieldsetacre['acreedor'] = $value;
-                                    $fieldsetacre["id_solicitud"] = $solicitudes->id;
-                                    $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
-                                    $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
-                                    $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
-                                    $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
-                                    $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
-                                    $fieldsetacre["idinteres_detalle"] = $det->id;
-                                    if ($value != "") {
-                                        SolicitudesAcreedores_detalles::create($fieldsetacre);    
-                                    }                                                       
+                            if ($detalle['detalle_relacion'] == 'Principal') {
+                                //Agrega Acreedores a tabla temporal con Id de la tabla detalles
+                                $fieldsetacre = array();
+                                $campoacreedores = $this->input->post('campoacreedores');
+                                if($campoacreedores!=NULL){
+                                    $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                    $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                    $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                    $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                    foreach ($campoacreedores as $key => $value) {
+                                        $fieldsetacre['acreedor'] = $value;
+                                        $fieldsetacre["id_solicitud"] = $solicitudes->id;
+                                        $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                        $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                        //Fecha Inicio
+                                        if (strpos($fecha_ini[$key], "/") > 0) {
+                                            $x = explode("/", $fecha_ini[$key]);
+                                            $fecha_ini[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                        }
+                                        $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                        //Fecha Fin
+                                        if (strpos($fecha_fin[$key], "/") > 0) {
+                                            $x = explode("/", $fecha_fin[$key]);
+                                            $fecha_fin[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                        }
+                                        $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                        $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                        $fieldsetacre["idinteres_detalle"] = $det->id;
+                                        if ($value != "") {
+                                            SolicitudesAcreedores_detalles::create($fieldsetacre);    
+                                        }                                                       
+                                    }
                                 }
+                                //Fin---------------------- 
                             }
-                            //Fin---------------------- 
 
                         }
                         $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
@@ -3929,6 +3957,7 @@ class Intereses_asegurados extends CRM_Controller {
                                 if ($num1->detalle_relacion != $detalle['detalle_relacion']) {
                                     $comentario .= "<b>Campo: Relación</b><br>Valor Actual:" . $detalle['detalle_relacion'] . "<br>Valor Anterior: " . $num1->detalle_relacion . "<br><br>";
                                 }
+                                $prin = $detalle['detalle_relacion'];
                                 if ($individual == 1 || $individual == 'colectivo') {
                                     unset($detalle['detalle_int_asociado']);
                                     unset($detalle['detalle_relacion']);
@@ -3957,40 +3986,52 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
 
-
-                                //Actualiza Detalle Acreedores
-                                //Crear Acreedores
-                                $fieldsetacre = array();
-                                $campoacreedores = $this->input->post('campoacreedores');
-                                $ids = array();
-                                //SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
-                                $id_acreedores = $this->input->post('campoacreedores_id');
-                                if($campoacreedores!=NULL){                        
-                                    $porcentaje_cesion = $this->input->post('campoacreedores_por');
-                                    $monto_cesion = $this->input->post('campoacreedores_mon'); 
-                                    $fecha_ini = $this->input->post('campoacreedores_ini'); 
-                                    $fecha_fin = $this->input->post('campoacreedores_fin');                    
-                                    foreach ($campoacreedores as $key => $value) {
-                                        $fieldsetacre['acreedor'] = $value;
-                                        $fieldsetacre["id_solicitud"] = $id_solicitud;
-                                        $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
-                                        $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
-                                        $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
-                                        $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
-                                        $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
-                                        $fieldsetacre["idinteres_detalle"] = $det->id;
-                                        if ($id_acreedores[$key] != "0") {
-                                            SolicitudesAcreedores_detalles::where("id", $id_acreedores[$key])->update($fieldsetacre); 
-                                            array_push($ids, $id_acreedores[$key]);
-                                        }else{
-                                            if ($value != "") {
-                                                $acre = SolicitudesAcreedores_detalles::create($fieldsetacre); 
-                                                array_push($ids, $acre->id );   
+                                if ($prin == 'Principal') {
+                                    //Actualiza Detalle Acreedores
+                                    //Crear Acreedores
+                                    $fieldsetacre = array();
+                                    $campoacreedores = $this->input->post('campoacreedores');
+                                    $ids = array();
+                                    //SolicitudesAcreedores::where("id_solicitud", $id_solicitud)->delete();
+                                    $id_acreedores = $this->input->post('campoacreedores_id');
+                                    if($campoacreedores!=NULL){                        
+                                        $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                        $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                        $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                        $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                        foreach ($campoacreedores as $key => $value) {
+                                            $fieldsetacre['acreedor'] = $value;
+                                            $fieldsetacre["id_solicitud"] = $id_solicitud;
+                                            $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                            $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                            //Fecha Inicio
+                                            if (strpos($fecha_ini[$key], "/") > 0) {
+                                                $x = explode("/", $fecha_ini[$key]);
+                                                $fecha_ini[$key] = $x[2]."-".$x[0]."-".$x[1];
                                             }
-                                        }                                                       
+                                            $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                            //Fecha Fin
+                                            if (strpos($fecha_fin[$key], "/") > 0) {
+                                                $x = explode("/", $fecha_fin[$key]);
+                                                $fecha_fin[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                            }
+                                            $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                            $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                            $fieldsetacre["idinteres_detalle"] = $num1->id;
+                                            if ($id_acreedores[$key] != "0") {
+                                                SolicitudesAcreedores_detalles::where("id", $id_acreedores[$key])->update($fieldsetacre); 
+                                                array_push($ids, $id_acreedores[$key]);
+                                            }else{
+                                                if ($value != "") {
+                                                    $acre = SolicitudesAcreedores_detalles::create($fieldsetacre); 
+                                                    array_push($ids, $acre->id );   
+                                                }
+                                            }                                                       
+                                        }
                                     }
+                                    SolicitudesAcreedores_detalles::whereNotIn("id", $ids)->where("idinteres_detalle", $num1->id)->delete();
+                                    //fin
                                 }
-                                //fin
 
 
                             } else if (($individual == 0 || $detalle['detalle_relacion'] == 'Dependiente' || $detalle['detalle_relacion'] == 'Beneficiario' || $individual == 'colectivo') && $num <= 0) {
@@ -4029,30 +4070,41 @@ class Intereses_asegurados extends CRM_Controller {
                                     $cambio = 'si';
                                 }
 
-
-                                //Agrega Acreedores a tabla temporal con Id de la tabla detalles
-                                $fieldsetacre = array();
-                                $campoacreedores = $this->input->post('campoacreedores');
-                                if($campoacreedores!=NULL){
-                                    $porcentaje_cesion = $this->input->post('campoacreedores_por');
-                                    $monto_cesion = $this->input->post('campoacreedores_mon'); 
-                                    $fecha_ini = $this->input->post('campoacreedores_ini'); 
-                                    $fecha_fin = $this->input->post('campoacreedores_fin');                    
-                                    foreach ($campoacreedores as $key => $value) {
-                                        $fieldsetacre['acreedor'] = $value;
-                                        $fieldsetacre["id_solicitud"] = $solicitudes->id;
-                                        $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
-                                        $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
-                                        $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
-                                        $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
-                                        $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
-                                        $fieldsetacre["idinteres_detalle"] = $det->id;
-                                        if ($value != "") {
-                                            SolicitudesAcreedores_Detalles::create($fieldsetacre);    
-                                        }                                                       
+                                if ($detalle['detalle_relacion'] == 'Principal') {
+                                    //Agrega Acreedores a tabla temporal con Id de la tabla detalles
+                                    $fieldsetacre = array();
+                                    $campoacreedores = $this->input->post('campoacreedores');
+                                    if($campoacreedores!=NULL){
+                                        $porcentaje_cesion = $this->input->post('campoacreedores_por');
+                                        $monto_cesion = $this->input->post('campoacreedores_mon'); 
+                                        $fecha_ini = $this->input->post('campoacreedores_ini'); 
+                                        $fecha_fin = $this->input->post('campoacreedores_fin');                    
+                                        foreach ($campoacreedores as $key => $value) {
+                                            $fieldsetacre['acreedor'] = $value;
+                                            $fieldsetacre["id_solicitud"] = $solicitudes->id;
+                                            $fieldsetacre["porcentaje_cesion"] = $porcentaje_cesion[$key];
+                                            $fieldsetacre["monto_cesion"] = $monto_cesion[$key];
+                                            //Fecha Inicio
+                                            if (strpos($fecha_ini[$key], "/") > 0) {
+                                                $x = explode("/", $fecha_ini[$key]);
+                                                $fecha_ini[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                            }
+                                            $fieldsetacre["fecha_inicio"] = $fecha_ini[$key];
+                                            //Fecha Fin
+                                            if (strpos($fecha_fin[$key], "/") > 0) {
+                                                $x = explode("/", $fecha_fin[$key]);
+                                                $fecha_fin[$key] = $x[2]."-".$x[0]."-".$x[1];
+                                            }
+                                            $fieldsetacre["fecha_fin"] = $fecha_fin[$key];
+                                            $fieldsetacre["detalle_unico"] = $_POST['detalleunico'];
+                                            $fieldsetacre["idinteres_detalle"] = $det->id;
+                                            if ($value != "") {
+                                                SolicitudesAcreedores_Detalles::create($fieldsetacre);    
+                                            }                                                       
+                                        }
                                     }
+                                    //Fin---------------------- 
                                 }
-                                //Fin---------------------- 
 
                             }
                             
@@ -4107,9 +4159,7 @@ class Intereses_asegurados extends CRM_Controller {
         }
 
         $this->session->set_flashdata('mensaje', $mensaje);
-        if (!empty($_POST['reg']) && $_POST['reg'] == "poli") {
-            redirect(base_url('polizas/editar/'.$_POST['val']));
-        } else if ($campodesde['desde'] != "solicitudes") {
+        if ($campodesde['desde'] != "solicitudes") {
             redirect(base_url('intereses_asegurados/listar'));
         } else if ($campodesde['desde'] == "solicitudes") {
             print_r($uuid . "&" . $codigo . "&" . $individual);
@@ -4925,7 +4975,7 @@ class Intereses_asegurados extends CRM_Controller {
                 }
 
                 $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoUbicacion' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
-                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageUbc' data-int-gr='" . $row['id_intereses'] . "'data-id='" . $row['id'] . "'>Coberturas</a>";
+               $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoverageUbc' data-int-gr='" . $row['id_intereses'] . "'data-id='" . $row['id'] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "'  data-tipo-interes='ubicacion' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
@@ -5088,8 +5138,8 @@ class Intereses_asegurados extends CRM_Controller {
                 else
                     $spanStyle = 'label label-warning';
 
-                $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "'>Ver Inter&eacute;s</a>";
-                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoveragePer' data-int-gr='" . $row['id_intereses'] . "' data-id='" . $row["id_intereses"] . "'>Coberturas</a>";
+                $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id_intereses"] . "' data-int-id='" . $row["interesestable_id"] . "' data-idint-det='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+                $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success setIndividualCoveragePer' data-int-gr='" . $row['id_intereses'] . "' data-id='" . $row["id"] . "'>Coberturas</a>";
                 $hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["interesestable_id"] . "' data-tipo-interes='persona' >Subir Documento</a>";
                 $hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
 

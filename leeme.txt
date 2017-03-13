@@ -1,0 +1,2 @@
+Esta informacion son las que no se suben por defecto entonces pero si son necesarios 
+la carpeta de las imagenes tampoco se suben y tampoco quedan en el git

@@ -187,8 +187,11 @@ var subcontratoFormulario = new Vue({
                   context.config.disableDetalle = true;
                 }
                   context.config.disablePermisoAdenda = window.permiso_adenda;
-                  context.detalle.movimientos[0]['label'] ='anticipo';
-                  context.detalle.movimientos[1]['label'] ='retenido';
+                  if(typeof context.detalle.movimientos !== 'undefined' && context.detalle.movimientos.length == 2){
+                      context.detalle.movimientos[0]['label'] ='anticipo';
+                      context.detalle.movimientos[1]['label'] ='retenido';
+                  }
+
             });
         }
 

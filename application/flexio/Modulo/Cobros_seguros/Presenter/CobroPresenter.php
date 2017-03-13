@@ -10,12 +10,18 @@ class CobroPresenter extends Presenter{
 
   private $labelEstado = [
     'anulado'=>'label-dark',
-    'aplicado'=>'label-successful'
+    'aplicado'=>'label-successful',
+    'agendado'=>'label-warning',
+    'por_aplicar'=>'label-info',
+    'vencido' => 'label-danger'
   ];
 
   private $labelOutline = [
     'anulado' => 'outline-dark',
-    'aplicado' => 'outline-success'
+    'aplicado' => 'outline-success',
+    'agendado'=>'outline-warning',
+    'por_aplicar' =>'outline-info',
+    'vencido' => 'outline-danger'
   ];
 
   public function __construct($cobro) {
@@ -52,7 +58,7 @@ class CobroPresenter extends Presenter{
   }
 
   function metodo_pago(){
-
+	 
     if(is_null($this->cobro->metodo_cobro)){
       return '';
     }
@@ -62,11 +68,8 @@ class CobroPresenter extends Presenter{
         $tipos[] = $metodo->catalogo_metodo_pago->valor;
       }
     }
-
     return implode(",", $tipos);
 
   }
-
-
 
 }

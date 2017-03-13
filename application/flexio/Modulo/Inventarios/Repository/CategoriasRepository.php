@@ -41,6 +41,16 @@ class CategoriasRepository{
         return Categorias::deEmpresa($clause["empresa_id"])->has('items_solo_alquiler')->get();
     }
 
+	public function getCollectionCategoria($categoria)
+	{
+		return Collect([
+			'adicionable_id' => $categoria->id,
+			'adicionable_type' => get_class($categoria),
+			'categoria_id' => $categoria->id,
+			'categoria_nombre' => $categoria->nombre
+		]);
+	}
+
     public function getCollectionCategorias($categorias){
 
         return $categorias->map(function($categoria){

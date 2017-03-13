@@ -89,7 +89,7 @@ $formAttr = array(
                         <div class="row">
                             <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
                                 <label>Método preferido de pago </label>
-                                <select name="campo[forma_pago][]" class="chosen" id="forma_pago" data-placeholder="Seleccione" multiple="multiple" style="display: none;">
+                                <select name="campo[forma_pago][]" class="chosen" id="forma_pago" data-placeholder="Seleccione" style="display: none;">
                                     <option value="">Seleccione</option>
                                     <?php foreach ($info['formaPago'] as $formaPago) { ?>
                                         <option value="<?php echo $formaPago->id?>" <?php echo ((isset($info['pagosSelect'])) && in_array($formaPago->id, $info['pagosSelect'])) ? ' selected ' : ''?>><?php echo $formaPago->valor;?></option>
@@ -106,7 +106,7 @@ $formAttr = array(
                                 </select>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row hide campos_metodo_ach">
                             <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3 ">
                                 <label>Banco </label>
                                 <select name="campo[banco]" class="chosen" id="banco" style="display: none;">

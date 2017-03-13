@@ -55,7 +55,7 @@ class GuardarFacturaCompra
             $this->update_validations($factura, $campos);
             $factura->update($campos);
 
-            $this->FacturasComprasTransacciones->haceTransaccion($factura);
+            //$this->FacturasComprasTransacciones->haceTransaccion($factura);
             if (!empty($factura->operacion_type) && count($factura->operacion) > 0 && $this->states_updaters($factura)){
                 call_user_func_array([$this, 'eventoUpdateInvoice'], [$factura]);
             }

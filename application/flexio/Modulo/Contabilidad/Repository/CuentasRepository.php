@@ -63,7 +63,7 @@ class CuentasRepository implements CuentasInterface{
 
     public function get($clause = array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL)
     {
-        $cuentas = Cuentas::deEmpresa($clause["empresa_id"]);
+        $cuentas = Cuentas::deEmpresa($clause["empresa_id"])->where("estado", 1);
 
         if(isset($clause["centro_contable_id"]) and !empty($clause["centro_contable_id"])){
             $cuentas->select('contab_cuentas.*')

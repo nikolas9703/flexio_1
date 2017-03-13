@@ -216,7 +216,7 @@ class Notas_debitos extends CRM_Controller
                 $hidden_options = "";
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_nota_debito .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
                 $hidden_options = '<a href="'. base_url('notas_debitos/ver/'. $row->uuid_nota_debito) .'" data-id="'. $row->uuid_nota_debito .'" class="btn btn-block btn-outline btn-success">Ver Notas Debitos</a>';
-                
+
                 $hidden_options .= '<a href="javascript:" data-id="'. $row->uuid_nota_debito .'" class="btn btn-block btn-outline btn-success subirArchivoBtn">Subir Documentos</a>';
 
                 $proveedor = $row->proveedor;
@@ -341,7 +341,7 @@ class Notas_debitos extends CRM_Controller
                 'documento'=>['nota_debito'=>$nota_debito->id]
             ];
         $data['subpanels'] = $subpanels;
-        $data['nota_debito'] = $nota_debito;    
+        $data['nota_debito'] = $nota_debito;
         //render
         $this->template->agregar_titulo_header('Notas de cr&eacute;dito de proveedor: Detalle');
         $this->template->agregar_breadcrumb($breadcrumb);
@@ -388,13 +388,13 @@ class Notas_debitos extends CRM_Controller
 
         if($_POST){
 
-           
+
             $formRequest =  new Flexio\Modulo\NotaDebito\FormRequest\FormGuardarNotaDebito;
 
             try{
                 $nota_debito = $formRequest->guardar();
                 $this->Toast->run("success",[$nota_debito->codigo]);
-               
+
 
             }catch(\Exception $e){
                 log_message('error', __METHOD__." ->". ", Linea: ". __LINE__ ." --> ". $e->getMessage()."\r\n");

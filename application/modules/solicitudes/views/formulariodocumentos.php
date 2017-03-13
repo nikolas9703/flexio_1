@@ -18,7 +18,8 @@
                         }
                         ?>
                         <div id="campo_documentacion" class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="vertical-align: middle;">
-                            <input <?php if ($doc->categoria == "Obligatorio") { ?> data-rule-required="true" <?php } ?> id="documentacion_<?php print $i; ?>" type="checkbox" value="<?php print $doc->nombre; ?>" v-model="documentacion" @click="documenteshion(<?php print $i; ?>,'<?php echo $doc->nombre; ?>','<?php echo $requerido; ?>','<?php echo $doc->modulo; ?>')" name="documentacion[]_<?php print $i; ?>" /> <label class="label_espacio documentaciones_<?php print $i; ?>">
+                            <label class="label_espacio documentaciones_<?php print $i; ?>">
+                            <input <?php if ($doc->categoria == "Obligatorio") { ?> data-rule-required="true" <?php } ?> id="documentacion_<?php print $i; ?>" type="checkbox" value="<?php print $doc->nombre; ?>" v-model="documentacion" @click="documenteshion(<?php print $i; ?>,'<?php echo $doc->nombre; ?>','<?php echo $requerido; ?>','<?php echo $doc->modulo; ?>')" name="documentacion[]_<?php print $i; ?>" />
 
                                 <?php
                                 print $doc->nombre;
@@ -46,25 +47,28 @@
                 <?php } ?>
             </div>
         </div>
-        <div class="docentregados_crear row" id="docentregados_crear">
+         <div class="docentregados_crear row" id="docentregados_crear">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                 <label class="nombre_doc_titulo" id="nombre_doc_titulo">Nombre del documento</label>
             </div>
-            <div style="margin-bottom: 25px;" class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+            <div style="margin-bottom: 25px;" class="row col-xs-11 col-sm-11 col-md-11 col-lg-11">
 
-                <div class='file_upload_solicitudes_adicionales' id='h1'>
-                    <input class="form-control" style="width: 300px!important; float: left;" name="nombre_documento[]" type="text" id="nombre_documento" /><input style="width: 300px!important; float: left;" class="form-control" name='file[]' type='file'/>
-                    <br><br>
+                <div class='file_upload_solicitudes_adicionales col-xs-12 col-sm-12 col-md-12 col-lg-12' >
+                    <div id="h1" >
+                        <input class="form-control" style="width: 300px!important; float: left;" name="nombre_documento[]" type="text" id="nombre_documento" /><input style="width: 300px!important; float: left;" class="form-control" name='file[]' type='file'/>
+                        <button type="button" style="float: left; width: 40px; margin-top:0px!important;" onclick="javascript:$('#h1').remove();" class=" col-lg-offset-1 btn btn-default btn-block" ><i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                    <button type="button" class=" col-lg-offset-1 btn btn-default btn-block" style="float: left; width: 40px; margin-right:5px;" id="add_file_solicitudes_adicionales"><i class="fa fa-plus"></i>
+                    </button>
                 </div>
-                <div id='file_tools_solicitudes_adicionales'>
+                <!--div id='file_tools_solicitudes_adicionales' class="col-xs-2 col-sm-2 col-md-4 col-lg-4">
                     <button type="button" class="btn btn-default btn-block" style="float: left; width: 40px; margin-right:5px;" id="add_file_solicitudes_adicionales"><i class="fa fa-plus"></i>
                     </button>
-                    <button type="button" style="float: left; width: 40px; margin-top:0px!important;" class="btn btn-default btn-block" id="del_file_solicitudes_adicionales"><i class="fa fa-trash"></i>
-                    </button>
-                </div>
+                </div-->
             </div>
         </div>
-
+        
         <div class="row documentos_editar" id="documentos_editar">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-bottom: 25px;">
                 <h5 style="font-size:14px">Documentos para tr&aacute;mites</h5>
@@ -186,9 +190,9 @@
                 </div>
 
                 <div class="col-xs-12 col-sm-12 col-md-3 col-lg-2" style="margin-left: -20px;"> <!-- float:right;   -->
-                    <label>Centro Contable</label>
-                    <select name="campo[centro_contable]" id="centro_contable" class="form-control">
-                        <option value="0">Seleccione</option>
+                    <label>Centro Contable <span required="" aria-required="true">*</span></label>
+                    <select name="campo[centro_contable]" id="centro_contable" class="form-control" data-rule-required="true">
+                        <option value>Seleccione</option>
                         <option v-for="centro in centros_contables" v-bind:value="centro.id" :selected="centro.id == id_centro">{{centro.nombre}}</option>
                     </select>
                 </div>
