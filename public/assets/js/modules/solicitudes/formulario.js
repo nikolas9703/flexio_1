@@ -1,7 +1,7 @@
 
 var colectivePeople = ['vida', 'salud', 'accidente', 'accidentes'],
 valid = 0,
-sendIdividualForm,
+sendIndividualForm,
 setting = {},
 ContVidaInd,
 tablaTipo;

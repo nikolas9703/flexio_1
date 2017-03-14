@@ -2985,6 +2985,7 @@ public function ajax_listar_personas($grid = NULL) {
                 foreach ($child->toArray() as $key => $value) {
                         # code...
                     array_push($parents, $value);
+
                 }
             }
         }
@@ -3312,13 +3313,13 @@ $p7 = $poliza7->create($solCliente);
 $policyType=$solicitudes['id_tipo_int_asegurado'];
 $adittionalParam['id_poliza'] = $p->id;
 $adittionalParam['id_interes'] = $campos["interesId"];
-$genericObject->where(['id_poliza'=>$aditionalParam['id_poliza']])->update(['detalle_unico'=>$aditionalParam['detalleUnico']]);
+$genericObject=$this->factoryHelper($policyType);
 if($solicitudes['tipo_ramo']=="colectivo"){
  $interesTypo  = $solicitudes['id_tipo_int_asegurado'];
- $detalleUnico = $campos["detalle"];
-
+ $detalleUnico = $camposInteres["detalleunico"];
+ $genericObject->where(['detalle_unico'=>$detalleUnico])->update(['id_poliza'=>$adittionalParam['id_poliza']]);
+ $inf['msg'] ="OK";
 }else{
-    $adittionalParam['detalleUnico']=0;
     $inf['msg'] = $this->saveIndividualInterestByType($policyType,$camposInteres,$adittionalParam);
 }
 $this->polizasModel->where(['id'=> $solicitud])

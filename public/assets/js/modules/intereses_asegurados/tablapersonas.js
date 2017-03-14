@@ -270,7 +270,7 @@
         e.returnValue=false;
         e.stopPropagation();
         
-        if(desde == "poliza"){
+        if(desde == "poliza" ){
             var selInteres = $(this).attr("data-int-id");
             $("#selInteres").val(selInteres);
             $("#selInteres").trigger('change'); 
