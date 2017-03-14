@@ -40,73 +40,73 @@ var formularioCrear = new Vue({
         polizaGrupo:grupo
 
     },
-   
-methods: {
-      
+
+    methods: {
+
 
      destroyed:function(){
          var unico = $("input[name='detalleunico']").val();
          this.$http.post({
-                url: phost() + 'polizas/restoreInformation',
-                method:'POST',
-                data:{
-                   
-                    interestType:window.id_tipo_int_asegurado,
-                    detalleUnico:unico,
-                    erptkn: tkn}
-                }).then(function(response){
+            url: phost() + 'polizas/restoreInformation',
+            method:'POST',
+            data:{
 
-                    alert(" los cambios se perderan ...");
-                });
-    
-},
-    getAsociado: function () {
-        var self = this;
-        var idpoliza = $("#idPoliza").val();
-        this.$http.post({
-            url: phost() + 'polizas/ajax_get_asociados',
-            method: 'POST',
-            data: {idpoliza: idpoliza, erptkn: tkn}
-        }).then(function (response) {
+                interestType:window.id_tipo_int_asegurado,
+                detalleUnico:unico,
+                erptkn: tkn}
+            }).then(function(response){
 
-            if (_.has(response.data, 'session')) {
-                window.location.assign(phost());
-            }
-            if (!_.isEmpty(response.data)) {
-                self.$set('InteresesAsociados', response.data.inter);
-            }
-        });
-    },
-    getOpcionPagador: function () {
-        var self = this;
-        var pagador_tipo = $('#pagador').val();
-        if (pagador_tipo == "cliente" || pagador_tipo == "otro") {
-            $("#divpagadornombre").show();
-            $("#divpgnombre").show();
-            $("#campopagador").attr("data-rule-required", true);
-            $("#divselpagador").hide();
-            $("#selpagadornombre").removeAttr("data-rule-required");
-            var paga = $(".ncli").val();
-            if (pagador_tipo == "cliente") {
-                $("#campopagador").val(vigencia.pagador);
-                $("#campopagador").attr("readonly", "readonly");
+                alert(" los cambios se perderan ...");
+            });
+
+        },
+        getAsociado: function () {
+            var self = this;
+            var idpoliza = $("#idPoliza").val();
+            this.$http.post({
+                url: phost() + 'polizas/ajax_get_asociados',
+                method: 'POST',
+                data: {idpoliza: idpoliza, erptkn: tkn}
+            }).then(function (response) {
+
+                if (_.has(response.data, 'session')) {
+                    window.location.assign(phost());
+                }
+                if (!_.isEmpty(response.data)) {
+                    self.$set('InteresesAsociados', response.data.inter);
+                }
+            });
+        },
+        getOpcionPagador: function () {
+            var self = this;
+            var pagador_tipo = $('#pagador').val();
+            if (pagador_tipo == "cliente" || pagador_tipo == "otro") {
+                $("#divpagadornombre").show();
+                $("#divpgnombre").show();
+                $("#campopagador").attr("data-rule-required", true);
+                $("#divselpagador").hide();
+                $("#selpagadornombre").removeAttr("data-rule-required");
+                var paga = $(".ncli").val();
+                if (pagador_tipo == "cliente") {
+                    $("#campopagador").val(vigencia.pagador);
+                    $("#campopagador").attr("readonly", "readonly");
+                } else {
+                    $("#campopagador").val("");
+                    $("#campopagador").removeAttr("readonly");
+                }
+            } else if (pagador_tipo == "asegurado") {
+                $("#divpagadornombre").show();
+                $("#divpgnombre").hide();
+                $("#campopagador").removeAttr("data-rule-required");
+                $("#divselpagador").show();
+                $("#selpagadornombre").attr("data-rule-required", true);
             } else {
-                $("#campopagador").val("");
-                $("#campopagador").removeAttr("readonly");
+                $("#divpagadornombre").hide();
+                $("#campopagador").removeAttr("data-rule-required");
+                $("#selpagadornombre").removeAttr("data-rule-required");
             }
-        } else if (pagador_tipo == "asegurado") {
-            $("#divpagadornombre").show();
-            $("#divpgnombre").hide();
-            $("#campopagador").removeAttr("data-rule-required");
-            $("#divselpagador").show();
-            $("#selpagadornombre").attr("data-rule-required", true);
-        } else {
-            $("#divpagadornombre").hide();
-            $("#campopagador").removeAttr("data-rule-required");
-            $("#selpagadornombre").removeAttr("data-rule-required");
-        }
-    },
-    coberturasModal: function (e) {
+        },
+        coberturasModal: function (e) {
             //Inicializar opciones del Modal
             $('#verCoberturas').modal({
                 backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
@@ -176,11 +176,14 @@ methods: {
             return values;
         },
         renovationModal: function (idPolicy) {
-
+            var unico = $("input[name='detalleunico']").val();
             this.$http.post({
                 url: phost() + 'polizas/getRenovationData',
                 method:'POST',
-                data:{idPoliza:idPolicy,erptkn: tkn}
+                data:{idPoliza:idPolicy,
+                    detalleUnico:unico,
+                    erptkn: tkn
+                }
             }).then(function(response){
                 if(_.has(response.data, 'session')){
                     window.location.assign(phost());

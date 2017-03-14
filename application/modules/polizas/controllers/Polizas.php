@@ -2937,7 +2937,7 @@ public function ajax_listar_personas($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-    $categoria =empty($this->input->post("categoria")) ? "": strtotime('now');
+    $detalle_unico = $this->input->post("detalle_unico");
     $relacion = empty($this->input->post('relacion')) ? '' : 'Principal'; 
 
     $clause = array(
@@ -2953,7 +2953,7 @@ public function ajax_listar_personas($grid = NULL) {
         "estado" => $this->input->post('estado', true),
         "prima" => $this->input->post('prima', true),
         "detalle_relacion" => $relacion,
-        "categoria" => $categoria,
+        "detalleUnico" => $detalle_unico,
         );
 
     list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
@@ -3041,7 +3041,7 @@ public function ajax_listar_personas($grid = NULL) {
 
 public function getRenovationData() {
     $idPoliza = $this->input->post("idPoliza");
-
+    $detalleUnico = $this->input->post("detalleUnico");
     $rows = $this->polizasModel->where('uuid_polizas', hex2bin($idPoliza))
     ->get();
     $response = new stdClass();
@@ -3058,8 +3058,9 @@ public function getRenovationData() {
         $genericObject = $this->factoryHelper($data->id_tipo_int_asegurado);
         $duplicateData = $genericObject->where($clause)->get()->toArray();
         foreach ($duplicateData as $key => $value) {
-            $value["categoria"] = strtotime('now');
+            $value["detalle_unico"] = $detalleUnico;
             unset($value['id']);
+            unset($value['id_poliza']);
             $genericObject->create($value);
         }
         $createdAt = new carbon ($data->created_at);
@@ -3347,7 +3348,7 @@ function ajax_save_individual_interest(){
     $policyType = $this->input->post("interestType");
     $camposInteres =json_decode($this->input->post("camposInteres"),TRUE);
     $aditionalParam['detalleUnico'] = $this->input->post("detalleUnico");
-    $aditionalParam['id_poliza'] = $this->input->post("polizaId");
+    //$aditionalParam['id_poliza'] = $this->input->post("polizaId");
     $aditionalParam['id_interes']=$this->input->post("interesId");
     $msg= $this->saveIndividualInterestByType($policyType,$camposInteres,$aditionalParam);
 
@@ -3561,7 +3562,7 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
         "empresa_id"=>$this->empresa_id,
         "telefono_principal"=>$camposInteres["campo[telefono]"],
         "direccion_principal"=>$camposInteres["campo[direccion]"],
-        "detalle_relacion"=>isset($camposInteres["campodetalle[relacion]"])?$camposInteres["campodetalle[relacion]"] :$campoInteres["campodetalle[relacion_benficario]"],
+        "detalle_relacion"=>strlen($camposInteres["campodetalle[relacion]"])?$camposInteres["campodetalle[relacion]"] :$camposInteres["campodetalle[relacion_benficario]"],
         "detalle_int_asociado"=>$camposInteres["campodetalle[interes_asociado]"],
         "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
         "detalle_monto"=>$camposInteres["campodetalle[monto]"],
@@ -3576,9 +3577,9 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
 
         $msg="success";
         print_r($this->session->userdata("interest"));
-        $result=$genericObject->where(['numero'=>$numero,'id_poliza'=>$aditionalParam['id_poliza']])->count();
+        $result=$genericObject->where(['numero'=>$numero,'detalle_unico'=>$aditionalParam['detalleUnico']])->count();
         if($result){
-           $genericObject->where(['numero'=>$numero,'id_poliza'=>$aditionalParam['id_poliza']])->update($clause);
+           $genericObject->where(['numero'=>$numero,'detalle_unico'=>$aditionalParam['detalleUnico']])->update($clause);
        }else{
 
         $genericObject->create($clause);
