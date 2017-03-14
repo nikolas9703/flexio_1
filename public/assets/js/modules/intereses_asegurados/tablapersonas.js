@@ -129,7 +129,6 @@
                         ContVidaInd = 0;
                         if ($(this).val() == "Dependiente" || $(this).val() == "Beneficiario") {
                             $(this).prop("disabled", true);
-
                         }
                         else {
                             $(this).prop("disabled", false);
@@ -145,10 +144,16 @@
                     $('#' + gridId + 'NoRecords').empty();
                     $("#relaciondetalle_persona option").each(function () {
 
-                        if ($(this).val() == "Principal" && id_tipo_poliza==1 && desde == "solicitudes") {
-                            $(this).prop("disabled", true);
+                        if ($(this).val() == "Principal" ) {
+                            
+                            if(id_tipo_poliza==1 && desde == "solicitudes"){
+                                $(this).prop("disabled", true);
+                            }   
 
+                        }else if(vista == "renovar"){
+                            $(this).prop("disabled", false);
                         }
+                        
                     });
                 }
 

@@ -2973,10 +2973,14 @@ public function ajax_listar_personas($grid = NULL) {
     if (!empty($rows->toArray())) {
         foreach ($rows->toArray() AS $i => $row) {
             array_push($parents, $row);
-            $clause = array('id_interes' => $row['id_interes']);
+            $clause = array
+            (
+                'id_interes' => $row['id_interes'],
+                "desde"  => $vista,
+                "detalleUnico" => $detalle_unico,  
+            );
 
-            $child = PolizasPersonas::listar_personas_provicional($clause, NULL, NULL, NULL, NULL, $id_poliza);
-
+            $child = PolizasPersonas::listar_personas_provicional($clause, NULL, NULL, NULL, NULL,$id_poliza);
             if (count($child)) {
                 foreach ($child->toArray() as $key => $value) {
                         # code...
@@ -3312,7 +3316,6 @@ $genericObject->where(['id_poliza'=>$aditionalParam['id_poliza']])->update(['det
 if($solicitudes['tipo_ramo']=="colectivo"){
  $interesTypo  = $solicitudes['id_tipo_int_asegurado'];
  $detalleUnico = $campos["detalle"];
- $this->restoreInformation($interesTypo,$detalleUnico,$p->id);
 
 }else{
     $adittionalParam['detalleUnico']=0;
@@ -3332,25 +3335,11 @@ $this->session->set_flashdata('mensaje', $mensaje);
 print json_encode($inf);
 exit;
 }
-function restoreInformation($interestType,$detalleUnico,$idPoliza=NULL){
-    if ($this->input->is_ajax_request()) {
-     $detalleUnico = $this->input->post('detalleUnico');
-     $interestType =$this->input->post('interestType');
- }
- $genericObject=$this->factoryHelper($interestType);
 
- $genericObject->where(['detalle_unico'=> $detalleUnico])->update(['id_poliza'=>$idPoliza]);
- $previousInterest = $this->session->userdata("interest");
- foreach ($previousInterest as $key => $value) {
-    $genericObject->create($value);
-} 
-
-}
 function ajax_save_individual_interest(){
     $policyType = $this->input->post("interestType");
     $camposInteres =json_decode($this->input->post("camposInteres"),TRUE);
     $aditionalParam['detalleUnico'] = $this->input->post("detalleUnico");
-    //$aditionalParam['id_poliza'] = $this->input->post("polizaId");
     $aditionalParam['id_interes']=$this->input->post("interesId");
     $msg= $this->saveIndividualInterestByType($policyType,$camposInteres,$aditionalParam);
 
@@ -3523,7 +3512,7 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
 
         $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
         ->where("interesestable_id",$aditionalParam['id_interes'])
-        ->select("numero")
+        ->select("numero","id")
         ->first();
 
         if(!count($result)){
@@ -3531,6 +3520,7 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
             $numero= Util::generar_codigo('PER', count($total) + 1);
         }else{
             $numero = $result->numero;
+            $id = $result->id;
         }
     //$datosPersonas = PolizasPersonas::where(['id_poliza' => $solicitudes['id']])->get();
 
@@ -3544,7 +3534,7 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
             $camposInteres['ruc'] = $cedula;
         }
         $clause =[
-        "id_interes"=>$aditionalParam["id_interes"],
+        "id_interes"=>$id,
         "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
         "detalle_unico"=>$aditionalParam["detalleUnico"],
         "numero"=>$numero,

@@ -48,14 +48,18 @@ class PolizasPersonas extends Model
         $mainQuery['id_poliza'] =$id_poliza;
         if(isset($clause['desde'])){
             if($clause['desde']=="renovar"){
-                $mainQuery = [];
+                $mainQuery=[];
                 $mainQuery['detalle_unico'] =$clause['detalleUnico'];
             }
         }
         $personas = self::where($mainQuery)->where(function($query) use($clause,$sidx,$sord,$limit,$start){
 
             if((isset($clause['detalle_relacion'])) && (!empty($clause['detalle_relacion']))) $query->where('detalle_relacion','=' , $clause['detalle_relacion']);
-            if((isset($clause['id_interes'])) && (!empty($clause['id_interes']))) $query->where('detalle_int_asociado','=' , $clause['id_interes']);
+            if((isset($clause['id_interes'])) && (!empty($clause['id_interes']))){
+            
+             $query->where('detalle_int_asociado','=' , $clause['id_interes']);
+            
+            }
             if($limit!=NULL) $query->skip($start)->take($limit);            
         });
 
