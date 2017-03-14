@@ -44,22 +44,6 @@ var formularioCrear = new Vue({
     methods: {
 
 
-     destroyed:function(){
-         var unico = $("input[name='detalleunico']").val();
-         this.$http.post({
-            url: phost() + 'polizas/restoreInformation',
-            method:'POST',
-            data:{
-
-                interestType:window.id_tipo_int_asegurado,
-                detalleUnico:unico,
-                erptkn: tkn}
-            }).then(function(response){
-
-                alert(" los cambios se perderan ...");
-            });
-
-        },
         getAsociado: function () {
             var self = this;
             var idpoliza = $("#idPoliza").val();
@@ -313,8 +297,8 @@ var formularioCrear = new Vue({
             var interes    = $('#formulario').val();
             var id_poliza  = $('#idPoliza').val();
             var URL =window.location.href.split("/");
-            var urlLastSegment= URL.pop();
-            var getInteresUrl = urlLastSegment==="renovar" ? 'solicitudes/ajax_get_tipointereses' : 'polizas/ajax_get_tipointereses';
+            var vista= URL.pop();
+            var getInteresUrl = vista==="renovar" ? 'solicitudes/ajax_get_tipointereses' : 'polizas/ajax_get_tipointereses';
             var unico = $("input[name='detalleunico']").val();
             if (id_tipo_int_asegurado != "") {
                 interes = id_tipo_int_asegurado;
@@ -454,8 +438,8 @@ var formularioCrear = new Vue({
             var interes = $('#selInteres').val();
             var tipointeres = $('#formulario').val();
             var URL =window.location.href.split("/");
-            var urlLastSegment= URL.pop();
-            var getInteresUrl = urlLastSegment == 'renovar' ? 'solicitudes/ajax_get_intereses':'polizas/ajax_get_intereses';
+            var vista= URL.pop();
+            var getInteresUrl = vista == 'renovar' ? 'solicitudes/ajax_get_intereses':'polizas/ajax_get_intereses';
             
 
             if (interes != "") {
@@ -506,7 +490,7 @@ var formularioCrear = new Vue({
                                 
 
                             }
-                            if(urlLastSegment!=="renovar"){
+                            if(vista!=="renovar"){
                              //disabled Fields
                              $("#id_condicion").attr('disabled',true);
                              $("#observaciones_articulo").attr('disabled',true);
@@ -548,7 +532,7 @@ var formularioCrear = new Vue({
                             $(".tipo_empaque").val(response.data.inter.tipo_empaque); //option[value='" + response.data.inter.tipo_empaque + "']
                             
                             //disabled fields
-                            if(urlLastSegment!=="renovar"){
+                            if(vista!=="renovar"){
                                 $(".tipo_empaque").attr('disabled',true);
                                 $("#observaciones_carga").attr('disabled',true);
                                 $("#destino").attr('disabled',true);
@@ -635,7 +619,7 @@ var formularioCrear = new Vue({
 
 
                             //disabled fields
-                            if(urlLastSegment!=="renovar"){
+                            if(vista!=="renovar"){
                                 $("#serie_aereo").attr('disabled',true);
                                 $("#marca_aereo").attr('disabled',true);
                                 $("#modelo_aereo").attr('disabled',true);
@@ -695,7 +679,7 @@ var formularioCrear = new Vue({
 
 
                             //disabled fields 
-                            if(urlLastSegment!=="renovar"){
+                            if(vista!=="renovar"){
                                 $(".estado_casco").attr('disabled',true);
                                 $(".acreedor_maritimo").attr('disabled',true);
                                 $(".tipo_maritimo").attr('disabled',true);
@@ -847,7 +831,7 @@ var formularioCrear = new Vue({
                         $("#primadetalle_persona").val(response.data.inter.detalle_prima);
                         
                         //disabled fields
-                        if(urlLastSegment!=="renovar"){
+                        if(vista!=="renovar"){
                             $("#identificacion").attr('disabled',true);
                             $("#pasaporte").attr('disabled',true);
                             $("#provincia").attr('disabled',true);
@@ -946,7 +930,7 @@ var formularioCrear = new Vue({
 
                             }
                             //disabled fields
-                            if(urlLastSegment!=="renovar"){
+                            if(vista!=="renovar"){
                                 $("#nombre_proyecto").attr("disabled",true);
                                 $("#contratista_proyecto").attr("disabled",true);
                                 $(".estado_proyecto").attr("disabled",true);
@@ -1027,7 +1011,7 @@ var formularioCrear = new Vue({
                         }
 
                          //disabled fields 
-                         if(urlLastSegment!=="renovar"){
+                         if(vista!=="renovar"){
                            $(".estado_ubicacion").attr('disabled',true);
                            $("#acreedor_ubicacion").attr('disabled',true);
                            $("#observaciones_ubicacion").attr('disabled',true);
@@ -1099,7 +1083,7 @@ var formularioCrear = new Vue({
                                 
                             }
                              //disabled field
-                             if(urlLastSegment!=="renovar"){
+                             if(vista!=="renovar"){
                                $("#chasis").attr('disabled',true);
                                $("#unidad").attr('disabled',true); 
                                $("#deducibledetalle_vehiculo").attr('disabled',true);
@@ -1205,10 +1189,10 @@ $(document).ready(function () {
        }
    });
     var URL =window.location.href.split("/");
-    var urlLastSegment= URL.pop();
+    var vista= URL.pop();
     $(".select2").select2();
 
-    if(urlLastSegment==="renovar"){
+    if(vista==="renovar"){
        var uuidPolicy = URL.pop();
        $(".coverage").removeAttr(false);
        $(".deductible").removeAttr(false);  
@@ -1502,10 +1486,10 @@ function agregaracre(){
 function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
   var counterCoverage= new Date().valueOf(),value={},enabled;
   var URL =window.location.href.split("/");
-  var urlLastSegment= URL.pop();
+  var vista= URL.pop();
   value.nombre = inputValue === undefined ? "" : inputValue.nombre;
   value.monetario = inputValue === undefined ? "" : inputValue.monetario;
-  enabled = urlLastSegment === "renovar" ? "" : "disabled";
+  enabled = vista === "renovar" ? "" : "disabled";
   var text = '<div class="'+stringId+'" id="'+stringId+'_'+ counterCoverage+'"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"> <input type="text" '+enabled+' name="'+stringId+'Name[]" value="'+value.nombre+'" class="form-control"></div>'+'<div class="col-xs-12 col-sm-6 col-md-6 col-lg-5"><div class="input-group"><span class="input-group-addon">$</span><input '+enabled+' type="text" name="'+stringId+'Value[]" value="'+value.monetario+'" class="form-control moneda"  value=""></div></div>'+'<div class="col-xs-12 col-sm-3 col-md-3 col-lg-1 renewal '+del_row+'" data-id="'+counterCoverage+'" onclick="deleteFieldsInCoverageModal('+parameters+')"><button class="btn btn-default btn-block "><i class="fa fa-trash"></i></button></div></div>';
   $(wrapper).append(text);   
 }

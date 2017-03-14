@@ -9,7 +9,6 @@
             if(desde == "poliza"){
                 var id_poliza = $("#idPoliza").val();
                 tablaTipo = tablaTipo2;
-                console.log(id_poliza);
                 var tablaUrl = phost() + 'polizas/ajax_listar_personas';
             }else{
                 var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_personas';   
@@ -21,10 +20,7 @@
             var formularioBuscar = '';
             var documentosModal = $('#documentosModal');
             var grid_obj = $("#tablaSolicitudesPersonas");
-            var URL =window.location.href.split("/");
-            var urlLastSegment= URL.pop();
-
-
+            
             var botones = {
                 opciones: ".viewOptions",
                 subir_archivo: ".subir_documento_solicitudes_intereses",
@@ -86,7 +82,7 @@
 
                     ],
                     postData: {
-                        detalle_unico: urlLastSegment=="renovar" ? unico:'',
+                        detalle_unico:unico,
                         desde: vista,
                         erptkn: tkn,
                         id_poliza: id_poliza,

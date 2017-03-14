@@ -46,11 +46,12 @@ class PolizasPersonas extends Model
 
     public static function listar_personas_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL,$id_poliza) {
         $mainQuery['id_poliza'] =$id_poliza;
-        if(isset($clause['detalleUnico'])){
-            $mainQuery=[];
-            $mainQuery['detalle_unico'] =$clause['detalleUnico'];
+        if(isset($clause['desde'])){
+            if($clause['desde']=="renovar"){
+                $mainQuery = [];
+                $mainQuery['detalle_unico'] =$clause['detalleUnico'];
+            }
         }
-    
         $personas = self::where($mainQuery)->where(function($query) use($clause,$sidx,$sord,$limit,$start){
 
             if((isset($clause['detalle_relacion'])) && (!empty($clause['detalle_relacion']))) $query->where('detalle_relacion','=' , $clause['detalle_relacion']);

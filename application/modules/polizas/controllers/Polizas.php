@@ -1062,7 +1062,7 @@ if($renovar == "renovar"){
 //---------------------------------------------------------------
 
 $this->assets->agregar_var_js(array(
-   "vista" => 'editar',
+   "vista" => isset($renovar)? $renovar:"editar",
    "agtPrincipal"=>$agenteprincipalnombre,
    "agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
    "estado_solicitud" => $estado,
@@ -2935,8 +2935,9 @@ public function ajax_listar_vehiculo($grid = NULL) {
 public function ajax_listar_personas($grid = NULL) {
 
 
-    $estado = $this->input->post('estado', true);
+    $estado    = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
+    $vista     = $this->input->post("desde");
     $detalle_unico = $this->input->post("detalle_unico");
     $relacion = empty($this->input->post('relacion')) ? '' : 'Principal'; 
 
@@ -2954,6 +2955,7 @@ public function ajax_listar_personas($grid = NULL) {
         "prima" => $this->input->post('prima', true),
         "detalle_relacion" => $relacion,
         "detalleUnico" => $detalle_unico,
+        "desde" => $vista,
         );
 
     list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();

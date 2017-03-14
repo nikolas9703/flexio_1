@@ -4,8 +4,7 @@ valid = 0,
 sendIdividualForm,
 setting = {},
 ContVidaInd,
-tablaTipo,
-estado;
+tablaTipo;
 
 
 function getRamo() {
@@ -101,7 +100,7 @@ if ($().chosen) {
         });
     }
 }
-$("#verCoberturas").on('click', '.addCobertura', function(){
+$("#verCoberturas,#IndCoberturas").on('click', '.addCobertura', function(){
    $(".moneda").inputmask('currency',{
       prefix: "",
       autoUnmask : true,
@@ -110,6 +109,7 @@ $("#verCoberturas").on('click', '.addCobertura', function(){
 });
 
 $('.relaciondetalle_persona_vida, .relaciondetalle_persona_vida_otros').change( function() {
+    
     var nombre_ramo = $('#nombre_ramo').val();
     if(new RegExp('\\bvida\\b', "gi").test(nombre_ramo) || new RegExp('\\baccidente\\b', "gi").test(nombre_ramo) || new RegExp('\\baccidentes\\b', "gi").test(nombre_ramo) ){
         var relacion = $('.relaciondetalle_persona_vida').val(); 
@@ -120,8 +120,29 @@ $('.relaciondetalle_persona_vida, .relaciondetalle_persona_vida_otros').change( 
 
         if(relacion == "Principal"){
             $('#participacion_persona').attr('disabled',true);
+            if (validavida == 1 && id_tipo_poliza == 2) {
+                console.log("cambio princpial");
+                $("#vigencia_vida_colectivo").show();
+            }            
         }else{
             $('#participacion_persona').attr('disabled',false);
+            if(validavida == 1 && id_tipo_poliza == 2){
+                console.log("cambio princpial2");
+                $("#vigencia_vida_colectivo").hide();
+            }
+        }
+    }else{
+        if (validavida == 1 && id_tipo_poliza == 2) {
+            var relacion = $('.relaciondetalle_persona_vida').val(); 
+            if(relacion == "Principal"){
+                //$('#participacion_persona').attr('disabled',true);
+                console.log("cambio princpial");
+                $("#vigencia_vida_colectivo").show();           
+            }else{
+                //$('#participacion_persona').attr('disabled',false);
+                console.log("cambio princpial2");
+                $("#vigencia_vida_colectivo").hide();
+            }
         }
     }
 })
@@ -159,17 +180,33 @@ function modalEstados(form){
                         var inputs = $('#formClienteCrear :input');
                         var values = {};
                         inputs.each(function () {
-                            values[this.name] = $(this).val();
+                            if(this.name == "campovigencia[poliza_declarativa]"){
+                                if ($(this).prop("checked") == true) {
+                                    values[this.name] = "on";
+                                }else{
+                                    values[this.name] = "off";
+                                }
+                            }else if(this.name == "campoacreedores[]" || this.name == "campoacreedores_por[]" || this.name == "campoacreedores_mon[]" || this.name == "campoacreedores_ini[]" || this.name == "campoacreedores_fin[]" || this.name == "campoacreedores_id[]"){
+                                var con = 0 ;
+                                var nom = this.name;
+                                $('input[name="'+this.name+'"]').each(function () {
+                                    var x = $(this).val();
+                                    var n = nom.split("[]");
+                                    values[n[0]+"["+con+"]"] = x ;
+                                    con++;              
+                                });
+                            }else{
+                                values[this.name] = $(this).val();
+                            }                            
                         });
                         tkn = values.erptkn;
-                        console.log(values);
+                        
                         var guardarsolicitud = moduloSolicitudes.ajaxguardarsolicitud(values);
-
+                        
                         guardarsolicitud.success (function(){
                             var datosbitacora = {campo: {estado: estado, estado_anterior: estado_anterior, tipo: 'Solicitud_aprobada', motivo: motivo, solicitud: solicitud, id: ids}};
                             var cambiobitacora = moduloSolicitudesBitacora.cambiarEstadoSolicitudesBitacora(datosbitacora);
                             cambiobitacora.done(function (response) {
-                                console.log(response);
                                 toastr.success('Se ha Aprobado la solicitud correctamente.');
                                 var inf = $.parseJSON(response);
                                 if (inf.msg == "Ok") {
@@ -224,11 +261,9 @@ function modalEstados(form){
 
             var motivo = $('#RechazarSolicitud').find('#motivorechazar').val();
             var nsolicitud = $('#RechazarSolicitud').find('input[name="nsolicitud"]').val();
-            console.log(nsolicitud);
             if (motivo != "") {
                 var estado = $(this).attr("data-estado");
                 var estado_anterior = $(this).attr("data-estado-anterior");
-                console.log(estado_anterior);
                 var id_solicitud = $('#RechazarSolicitud').find('input[name="id_solicitud"]').val();
                 $('#RechazarSolicitud').modal('hide');
                 toastr.success('Se ha Rechazado la solicitud correctamente.');
@@ -253,6 +288,7 @@ function OnloadFunction(valid, tablaTipo) {
     if (tablaTipo == "vida" || tablaTipo == "accidentes" || tablaTipo == "accidente") {
 
         $('.salud').hide();
+        $('.montoPersona').remove();
     } else if (tablaTipo == "salud") {
         $('.vida').hide();
     } else {
@@ -294,8 +330,35 @@ function OnloadFunction(valid, tablaTipo) {
 
         $("#fecha_primer_pago").val(vig);
         $("#fecha_primerPago").val(vig);
-        console.log($("#fecha_primer_pago").val());
-        console.log($("#fecha_primerPago").val());
+
+        if (vig.indexOf('-') > -1) {
+            var dat = vig.split('-');
+            var dia = dat[2];
+            var mes = dat[1];
+            var anio = dat[0];
+            vig = mes + '/' + dia + '/' + anio ;
+        }
+
+        $('.fechas_acreedores_inicio').each(function () {
+            var inicio = $(this).val();
+            var desde = new Date(vig);            
+
+            if (inicio.indexOf('-') > -1) {
+                var dat = inicio.split('-');
+                var dia = dat[2];
+                var mes = dat[1];
+                var anio = dat[0];
+                inicio = mes + '/' + dia + '/' + anio ;
+            }
+
+            if (inicio != "") {
+                var ini = new Date(inicio);   
+                if (ini < desde) {
+                    $(this).val(vig);
+                }
+            }            
+        });
+        
     });
 
     $("#vigencia_hasta").change(function () {
@@ -307,14 +370,44 @@ function OnloadFunction(valid, tablaTipo) {
 
         if (ini > fin) {
             $("#vigencia_hasta").val(vigini);
+            vigfin = vigini;
         }
+
+        if (vigfin.indexOf('-') > -1) {
+            var dat = vigfin.split('-');
+            var dia = dat[2];
+            var mes = dat[1];
+            var anio = dat[0];
+            vigfin = mes + '/' + dia + '/' + anio ;
+        }
+
+        $('.fechas_acreedores_fin').each(function () {
+            var fin2 = $(this).val();
+            var hasta = new Date(vigfin);
+
+            if (fin2.indexOf('-') > -1) {
+                var dat = fin2.split('-');
+                var dia = dat[2];
+                var mes = dat[1];
+                var anio = dat[0];
+                fin2 = mes + '/' + dia + '/' + anio ;
+            }
+
+            if (fin != "") {
+                var fini = new Date(fin2);
+                if (fini > hasta) {
+                    $(this).val(vigfin);
+                }
+            }
+            
+        });
+
     });
 
     $("#fecha_primer_pago").change(function () {
 
         var vig = $("#fecha_primer_pago").val();
         $("#fecha_primerPago").val(vig);
-        console.log($("#fecha_primerPago").val());
     }); 
 
 
@@ -344,106 +437,41 @@ function OnloadFunction(valid, tablaTipo) {
         },
         submitHandler: function (form) {
 
-            if (id_tipo_poliza == 1 ) {
-                if (id_tipo_int_asegurado == 1) {
-                    if ($('#articulo').validate().form() == true) {
-                        console.log("ingreso al articulo");
-                        var inputs = $('#articulo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        console.log(values);
-                        var tipo = "articulo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 2) {
-                    if ($('#formCarga').validate().form() == true) {
-                        var inputs = $('#formCarga :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        console.log(values);
-                        var tipo = "carga";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 3) {
-                    if ($('#formcasco_aereo').validate().form() == true) {
-                        var inputs = $('#formcasco_aereo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "aereo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 4) {
-                    if ($('#formCasco_maritimo').validate().form() == true) {
-                        var inputs = $('#formCasco_maritimo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "maritimo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 5) {
-                    if ($('#persona').validate().form() == true || ContVidaInd > 0) {
-                        if(ContVidaInd == 0){
-                            var inputs = $('#persona :input');
-                            var values = {};
+            var porcen = 0 ;
+            var monto = 0;
+            var suma = 0;
 
+            //Inicio Cambio
+            if (id_tipo_poliza == 1) {
+                $('input[name="campoacreedores_por[]"]').each(function () {
+                    var x = $(this).val();
+                    if (x != "") {
+                        porcen = parseFloat(porcen) + parseFloat(x) ;
+                    }                
+                });
+                $('input[name="campoacreedores_mon[]"]').each(function () {
+                    var x = $(this).val();
+                    if (x != "") {
+                        monto = parseFloat(monto) + parseFloat(x) ;
+                    }                
+                });
+                var suma = $('input[name="campovigencia[suma_asegurada]"]').val();
+                if (suma == "") {suma = 0;}
+                suma = parseFloat(suma);
+            }  
+            //Fin Cambio          
+
+            if (porcen <= 100 && monto <= suma ) {
+                if (id_tipo_poliza == 1 ) {
+                    if (id_tipo_int_asegurado == 1) {
+                        if ($('#articulo').validate().form() == true) {
+                            var inputs = $('#articulo :input');
+                            var values = {};
                             inputs.each(function () {
                                 values[this.name] = $(this).val();
                             });
-                            console.log(values);
-                            //tkn = values.erptkn;
-                            var tipo = "persona";
+                            tkn = values.erptkn;
+                            var tipo = "articulo";
                             var guardar = Intereses.interes(values, tipo);
                             guardar.done(function (response) {
                                 modalEstados(form);
@@ -452,86 +480,178 @@ function OnloadFunction(valid, tablaTipo) {
                             guardar.fail(function () {
                                 toastr.error('Ha ocurrido un Error.');
                             });
-                        }else{
-                            modalEstados(form);
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
                         }
-                    } else {
-                        window.location.href = "#divintereses";
-                    }
+                    } else if (id_tipo_int_asegurado == 2) {
+                        if ($('#formCarga').validate().form() == true) {
+                            var inputs = $('#formCarga :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "carga";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 3) {
+                        if ($('#formcasco_aereo').validate().form() == true) {
+                            var inputs = $('#formcasco_aereo :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "aereo";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 4) {
+                        if ($('#formCasco_maritimo').validate().form() == true) {
+                            var inputs = $('#formCasco_maritimo :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "maritimo";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 5) {
+                        if ($('#persona').validate().form() == true || ContVidaInd > 0) {
+                            if(ContVidaInd == 0){
+                                var inputs = $('#persona :input');
+                                var values = {};
+
+                                inputs.each(function () {
+                                    values[this.name] = $(this).val();
+                                });
+                                //tkn = values.erptkn;
+                                var tipo = "persona";
+                                var guardar = Intereses.interes(values, tipo);
+                                guardar.done(function (response) {
+                                    modalEstados(form);
+                                    //form.submit();
+                                });
+                                guardar.fail(function () {
+                                    toastr.error('Ha ocurrido un Error.');
+                                });
+                            }else{
+                                modalEstados(form);
+                            }
+                        } else {
+                            window.location.href = "#divintereses";
+                        }
 
 
-                } else if (id_tipo_int_asegurado == 6) {
-                    if ($('#formProyecto_actividad').validate().form() == true) {
-                        var inputs = $('#formProyecto_actividad :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "proyecto";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
+                    } else if (id_tipo_int_asegurado == 6) {
+                        if ($('#formProyecto_actividad').validate().form() == true) {
+                            var inputs = $('#formProyecto_actividad :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "proyecto";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 7) {
+                        if ($('#formUbicacion').validate().form() == true) {
+                            var inputs = $('#formUbicacion :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "ubicacion";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
+                    } else if (id_tipo_int_asegurado == 8) {
+                        if ($('#vehiculo').validate().form() == true) {
+                            var inputs = $('#vehiculo :input');
+                            var values = {};
+                            inputs.each(function () {
+                                values[this.name] = $(this).val();
+                            });
+                            tkn = values.erptkn;
+                            var tipo = "vehiculo";
+                            var guardar = Intereses.interes(values, tipo);
+                            guardar.done(function (response) {
+                                modalEstados(form);
+                                //form.submit();
+                            });
+                            guardar.fail(function () {
+                                toastr.error('Ha ocurrido un Error.');
+                            });
+                        } else {
+                            toastr.error('Faltan campos por llenar del Interes Asegurado.');
+                            window.location.href = "#divintereses";
+                        }
                     }
-                } else if (id_tipo_int_asegurado == 7) {
-                    if ($('#formUbicacion').validate().form() == true) {
-                        var inputs = $('#formUbicacion :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        var tipo = "ubicacion";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
-                } else if (id_tipo_int_asegurado == 8) {
-                    if ($('#vehiculo').validate().form() == true) {
-                        var inputs = $('#vehiculo :input');
-                        var values = {};
-                        inputs.each(function () {
-                            values[this.name] = $(this).val();
-                        });
-                        tkn = values.erptkn;
-                        console.log(values);
-                        var tipo = "vehiculo";
-                        var guardar = Intereses.interes(values, tipo);
-                        guardar.done(function (response) {
-                            //console.log("Submit");
-                            modalEstados(form);
-                            //form.submit();
-                        });
-                        guardar.fail(function () {
-                            toastr.error('Ha ocurrido un Error.');
-                        });
-                    } else {
-                        toastr.error('Faltan campos por llenar del Interes Asegurado.');
-                        window.location.href = "#divintereses";
-                    }
+                } else if(vista == "editar"){
+                    modalEstados(form);
+                }else{
+                    form.submit();
                 }
-            } else if(vista == "editar"){
-                modalEstados(form);
+                if($('#formClienteCrear').validate().form() == true) 
+                    $('body').find('input[id="campo[guardar]"]').attr("disabled","disabled");
+                else 
+                    $('body').find('input[id="campo[guardar]"]').removeAttr("disabled");
+                //
             }else{
-                form.submit();
+                toastr.error("Acreedores: La sumatoria de porcentajes de cesión y/o el monto son mayores a la suma asegurada.");
             }
-            //
+            
         }
 
     });
@@ -610,7 +730,6 @@ function OnloadFunction(valid, tablaTipo) {
             var obtenerint = InteresesAct.obtenerInteres(val2);
 
             obtenerint.done(function (response) {
-                console.log(response);
                 if(response != null){
                     $("#selInteres").val(response.interesestable_id);
                     $("#selInteres").trigger('change');
@@ -687,7 +806,7 @@ function OnloadFunction(valid, tablaTipo) {
         $('.chek_solicitudes').addClass('hidden');
         $('#cantidad').val($("div > #total_agentes_participantes").length);
         formularioCrear.sumatotal();
-		
+        
     }
 
     if (observaciones != 'undefined') {
@@ -735,7 +854,7 @@ function OnloadFunction(valid, tablaTipo) {
 
 
     $("#articulo, #formCarga, #formcasco_aereo, #formCasco_maritimo, #persona, #formProyecto_actividad, #formUbicacion, #vehiculo").attr('action', '' + window.location.href + '');
-    $(".guardarVehiculo, .guardarArticulo, .guardarCarga, .guardarAereo, .guardarMaritimo, .guardarPersona, .guardarProyecto, .guardarUbicacion").attr("type", "button").val("Agregar");
+    $(".guardarVehiculo, .guardarArticulo, .guardarCarga, .guardarAereo, .guardarMaritimo, .guardarPersona, .guardarProyecto, .guardarUbicacion").attr("type", "button").attr('disabled',true).val("Agregar");
     $("#articulo #cancelar, #formCarga #cancelar, #formcasco_aereo #cancelar, #formCasco_maritimo #cancelar, #persona #cancelar, #formProyecto_actividad #cancelar, #formUbicacion #cancelar, #vehiculo #cancelar").hide();
 
     if (id_tipo_poliza == 1 && valid == 0) {
@@ -768,9 +887,7 @@ function OnloadFunction(valid, tablaTipo) {
 
         if ($('#guardarDocumentoIntereses').validate().form() == true) {
             var documentos = $('#guardarDocumentoIntereses :input');
-            console.log(documentos);
         } else {
-            console.log("No hay formulario");
         }
     });
 
@@ -831,7 +948,6 @@ function OnloadFunction(valid, tablaTipo) {
                 values[this.name] = $(this).val();
             });
             tkn = values.erptkn;
-            console.log(values);
             var tipo = "articulo";
             var guardar = Intereses.interes(values, tipo);
             guardar.done(function (response) {
@@ -879,8 +995,6 @@ function OnloadFunction(valid, tablaTipo) {
             inputs.each(function () {
                 values[this.name] = $(this).val();
             });
-            console.log($("#tripulacion_a").val());
-            console.log(values);
             tkn = values.erptkn;
             var tipo = "aereo";
             var guardar = Intereses.interes(values, tipo);
@@ -974,57 +1088,110 @@ function OnloadFunction(valid, tablaTipo) {
     });
 
     $('.guardarPersona').click(function () {
-        if ($('#persona').validate().form() == true ) {
-            var inputs = $('#persona :input');
-            var values = {};
 
-            inputs.each(function () {
-                values[this.name] = $(this).val();
+        var porcen = 0 ;
+        var monto = 0;
+        var suma = $('#suma_asegurada_persona').val();
+
+        //Inicio Cambio
+        if (id_tipo_poliza == 2) {
+            $('input[name="campoacreedores_por[]"]').each(function () {
+                var x = $(this).val();
+                if (x != "") {
+                    porcen = parseFloat(porcen) + parseFloat(x) ;
+                }                
             });
-            console.log(values);
-            var tipo = "persona";
+            $('input[name="campoacreedores_mon[]"]').each(function () {
+                var x = $(this).val();
+                if (x != "") {
+                    monto = parseFloat(monto) + parseFloat(x) ;
+                }                
+            });
+            
+            if (suma == "") {suma = 0;}
+            suma = parseFloat(suma);
+        }  
+        //Fin Cambio         
 
-            var guardar = Intereses.interes(values, tipo);
-            guardar.done(function (response) {
-                var x = response.split("&");
-                if ($(".uuid").val() == "") {
-                    $(".uuid").val(x[0]);
-                }
+        if (porcen <= 100 && monto <= suma ) {
 
-                if (jQuery.inArray($(".uuid").val(), idint) == -1) {
-                    idint.push($(".uuid").val());
-                    toastr.success('Se ha guardado correctamente el interés ' + x[1] + '');
-                } else {
-                    msg = "";
-                    if (x[2] == 'Exist') {
-                        msg = "Elimine el interés asegurado antes de cambiar el tipo de relación"
-                    } else {
-                        msg = "El interés asegurado ya se encuentra en la lista.";
+            if ($('#persona').validate().form() == true ) {
+                var inputs = $('#persona :input');
+                var values = {};
+
+                inputs.each(function () {
+                    if(this.name == "campoacreedores[]" || this.name == "campoacreedores_por[]" || this.name == "campoacreedores_mon[]" || this.name == "campoacreedores_ini[]" || this.name == "campoacreedores_fin[]" || this.name == "campoacreedores_id[]"){
+                        var con = 0 ;
+                        var nom = this.name;
+                        $('input[name="'+this.name+'"]').each(function () {
+                            var x = $(this).val();
+                            var n = nom.split("[]");
+                            values[n[0]+"["+con+"]"] = x ;
+                            con++;              
+                        });
+                    }else{
+                        values[this.name] = $(this).val();
                     }
-                    toastr.error(msg);
-                }
-
-                formularioCrear.getAsociado();
-                tablaSolicitudesPersonas.recargar();
-
-                //Formulario se deja Limpio
-                $("#selInteres,#tipo_relacion_persona,#asociadodetalle_persona,#relaciondetalle_persona,#beneficiodetalle_persona").val('');
-                $("#selInteres,#asociadodetalle_persona").trigger('change');
-                formularioCrear.getIntereses();
-                $("#certificadoPersona, #primadetalle_persona,#validar_editar,#edad, #montodetalle_persona,#participacion_persona,#suma_asegurada_persona").val("");
-                var unico = $("#detalleunico").val();
-                var camposi = {campo: unico, persona: 'interesPersona'};
-                var obtener = Intereses.prima(camposi);
-                obtener.done(function (resp) {
-                    formularioCrear.getPrimaAnual(resp);
                 });
+                var tipo = "persona";
 
-            });
-            guardar.fail(function () {
-                toastr.error('Ha ocurrido un Error.');
-            });
-        } else {
-            window.location.href = "#divintereses";
+                console.log(values);
+
+                var guardar = Intereses.interes(values, tipo);
+                guardar.done(function (response) {
+                    var x = response.split("&");
+                    if ($(".uuid").val() == "") {
+                        $(".uuid").val(x[0]);
+                    }
+
+                    if (jQuery.inArray($(".uuid").val(), idint) == -1) {
+                        idint.push($(".uuid").val());
+                        toastr.success('Se ha guardado correctamente el interés ' + x[1] + '');
+                    } else {
+                        msg = "";
+                        if (x[2] == 'Exist') {
+                            msg = "Elimine el interés asegurado antes de cambiar el tipo de relación"
+                        } else {
+                            msg = "El interés asegurado ya se encuentra en la lista.";
+                        }
+                        toastr.error(msg);
+                    }
+
+                    formularioCrear.getAsociado();
+                    tablaSolicitudesPersonas.recargar();
+
+                    //Formulario se deja Limpio
+                    $("#selInteres,#tipo_relacion_persona,#asociadodetalle_persona,#relaciondetalle_persona,#beneficiodetalle_persona").val('');
+                    $("#selInteres,#asociadodetalle_persona").trigger('change');
+                    formularioCrear.getIntereses();
+                    $("#certificadoPersona, #primadetalle_persona,#validar_editar,#edad, #montodetalle_persona,#participacion_persona,#suma_asegurada_persona").val("");
+                    var unico = $("#detalleunico").val();
+                    var camposi = {campo: unico, persona: 'interesPersona'};
+                    var obtener = Intereses.prima(camposi);
+                    obtener.done(function (resp) {
+                        formularioCrear.getPrimaAnual(resp);
+                    });
+
+                    if (validavida == 1 && id_tipo_poliza == 2) {
+                        $("#contenedoracreedores").remove();
+                        $('#contacre').after('<div id="contenedoracreedores"><div class="file_tools_acreedores_adicionales row" id="a1"><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px"><input type="text" name="campoacreedores[]" id="acreedor_1" class="form-control"></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">%</span> <input type="text" name="campoacreedores_por[]" id="porcentajecesion_1" class="form-control porcentaje_cesion_acreedor" value="0"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">$</span> <input type="text" name="campoacreedores_mon[]" id="montocesion_1" class="form-control monto_cesion_acreedor" value="0"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_ini[]" id="fechainicio_1" class="form-control fechas_acreedores_inicio"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_fin[]" id="fechafin_1" class="form-control fechas_acreedores_fin"></div></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" onclick="agregaracre()" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i></button><button type="button" style="float: left; width: 40px; margin-top:0px!important; display:none" id="del_acre" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i></button></div><input type="hidden" name="campoacreedores_id[]" value="0"></div><div id="agrega_acre"></div></div>');
+                        counter_acre2 = 2;
+                        formularioCrear.acreedores = [];
+                        $("#vigencia_vida_colectivo").hide();
+
+                        inicializaCamposAcreedor();
+
+                    }  
+
+                });
+                guardar.fail(function () {
+                    toastr.error('Ha ocurrido un Error.');
+                });
+            } else {
+                window.location.href = "#divintereses";
+            }
+        }else{
+            toastr.error("Acreedores: La sumatoria de porcentajes de cesión y/o el monto son mayores a la suma asegurada.");
         }
     });
 
@@ -1136,7 +1303,6 @@ function OnloadFunction(valid, tablaTipo) {
                 values[this.name] = $(this).val();
             });
             tkn = values.erptkn;
-            console.log(values);
             var tipo = "vehiculo";
             var guardar = Intereses.interes(values, tipo);
             guardar.done(function (response) {
@@ -1257,11 +1423,216 @@ function OnloadFunction(valid, tablaTipo) {
         $('#opcionesModalIntereses').modal('show');
     });
 
-}
 
-console.log(estado);
+}
 if(estado !='Pendiente' && estado !='En Trámite' && estado != "undefined"){
-	$(".guardarsolicitud").hide();
+    $(".guardarsolicitud").hide();
 }
 
 getRamo();
+
+var DetallesAcreedores = (function () {
+    return {
+        cargaAcreedores: function (parametros) {
+            return $.post(phost() + 'solicitudes/ajax_carga_acreedores_vida_colectivo', $.extend({
+                erptkn: tkn
+            }, parametros));
+        }
+    };
+})();
+
+function inicializaCamposAcreedor(){
+
+    $("#contenedoracreedores").remove();
+    $('#contacre').after('<div id="contenedoracreedores"><div class="file_tools_acreedores_adicionales row" id="a1"><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2" style="margin-right: -5px"><input type="text" name="campoacreedores[]" id="acreedor_1" class="form-control"></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">%</span> <input type="text" name="campoacreedores_por[]" id="porcentajecesion_1" class="form-control porcentaje_cesion_acreedor" value="0"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon">$</span> <input type="text" name="campoacreedores_mon[]" id="montocesion_1" class="form-control monto_cesion_acreedor" value="0"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_ini[]" id="fechainicio_1" class="form-control fechas_acreedores_inicio"></div></div> <div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><div class="input-group"><span class="input-group-addon"><i class="fa fa-calendar"></i></span> <input type="text" name="campoacreedores_fin[]" id="fechafin_1" class="form-control fechas_acreedores_fin"></div></div><div class="col-xs-12 col-sm-6 col-md-2 col-lg-2"><button type="button" class="btn btn-default btn-block add_file_acreedores_adicionales" onclick="agregaracre()" style="float: left; width: 40px; margin-right:5px;" ><i class="fa fa-plus"></i></button><button type="button" style="float: left; width: 40px; margin-top:0px!important; display:none" id="del_acre" class="btn btn-default btn-block del_file_acreedores_adicionales" onclick="eliminaracre(1)"><i class="fa fa-trash"></i></button></div><input type="hidden" name="campoacreedores_id[]" value="0"></div><div id="agrega_acre"></div></div>');
+                            
+    //Inicializa los campos
+    $(".monto_cesion_acreedor").inputmask('currency',{ 
+        prefix: "", 
+        autoUnmask : true, 
+        removeMaskOnSubmit: true 
+    });
+
+    $(".porcentaje_cesion_acreedor").inputmask('Regex', { regex: "^[1-9][0-9][.][0-9][0-9]?$|^100[.]00?$|^[0-9][.][0-9][0-9]$" });
+    //$(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
+
+    $('.fechas_acreedores_inicio').each(function () {
+        console.log("veces");
+        var f = $(this).val();
+        if ($(this).val() == "0000-00-00") {
+            var now = new Date();
+            now.setDate(now.getDate());
+            var dat = now.getDate();
+            var mon = now.getMonth() + 1;
+            var year = now.getFullYear();
+            if (mon < 10) {
+                mon = "0" + mon;
+            }
+            if (dat < 10) {
+                dat = "0" + dat;
+            }
+            var fe = mon + "/" + dat + "/" + year;
+            $(this).val(fe);
+            f = "";
+        }
+        $(this).daterangepicker({ 
+         locale: { format: 'MM/DD/YYYY' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val(f);
+    });
+    $('.fechas_acreedores_fin').each(function () {
+        console.log("veces2");
+        var f = $(this).val();
+        if ($(this).val() == "0000-00-00") {
+            var now = new Date();
+            now.setDate(now.getDate());
+            var dat = now.getDate();
+            var mon = now.getMonth() + 1;
+            var year = now.getFullYear();
+            if (mon < 10) {
+                mon = "0" + mon;
+            }
+            if (dat < 10) {
+                dat = "0" + dat;
+            }
+            var fe = mon + "/" + dat + "/" + year;
+            $(this).val(fe);
+            f = "";
+        }
+        $(this).daterangepicker({ 
+         locale: { format: 'MM/DD/YYYY' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val(f);
+    });
+
+    $('#fechafin_1').daterangepicker({ 
+     locale: { format: 'MM/DD/YYYY' },
+     showDropdowns: true,
+     defaultDate: '',
+     singleDatePicker: true
+ }).val('');
+
+    $(".fechas_acreedores_inicio").change(function () {
+        var vigini = $("#vigencia_desde").val();
+        var vigfin = $("#vigencia_hasta").val();
+        var actual = $(this).val();
+
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var final = $("#fechafin_"+x[1]).val();
+
+        /*if (vigini.indexOf('/') > -1) {
+            var dat = vigini.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigini = anio + '-' + mes + '-' + dia ;
+        }
+        if (vigfin.indexOf('/') > -1) {
+            var dat = vigfin.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigfin = anio + '-' + mes + '-' + dia ;
+        }
+        if (actual.indexOf('/') > -1) {
+            var dat = actual.split('/');
+            var dia = dat[0];
+            var mes = dat[1];
+            var anio = dat[2];
+            actual = anio + '-' + mes + '-' + dia ;
+        }*/
+
+        var ini = new Date(vigini);
+        var fin = new Date(vigfin);
+        var act = new Date(actual);
+        var fefin = new Date(final);
+
+        if (act < ini) {
+            $(this).val(vigini);
+        }else if(act > fin){
+            $(this).val(vigfin);
+        }else if(final != "" && act > fefin){
+            $(this).val(final);
+        }
+    });
+
+    $(".fechas_acreedores_fin").change(function () {
+        var vigini = $("#vigencia_desde").val();
+        var vigfin = $("#vigencia_hasta").val();
+        var actual = $(this).val();
+
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var inicial = $("#fechainicio_"+x[1]).val();
+
+        /*if (vigini.indexOf('/') > -1) {
+            var dat = vigini.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigini = anio + '-' + mes + '-' + dia ;
+        }
+        if (vigfin.indexOf('/') > -1) {
+            var dat = vigfin.split('/');
+            var dia = dat[1];
+            var mes = dat[0];
+            var anio = dat[2];
+            vigfin = anio + '-' + mes + '-' + dia ;
+        }*/
+
+        var ini = new Date(vigini);
+        var fin = new Date(vigfin);
+        var act = new Date(actual);
+        var feini = new Date(inicial);
+
+        if (act < ini) {
+            $(this).val(vigini);
+        }else if(act > fin){
+            $(this).val(vigfin);
+        }else if(inicial != "" && act < feini){
+            $(this).val(inicial);
+        }
+    });
+
+    $(".monto_cesion_acreedor").keyup(function(){
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var monto = $("#montocesion_"+x[1]).val();
+
+        if (id_tipo_poliza == 1) {
+            var sumaasegurada = $("#suma_asegurada").val();
+        }else if(id_tipo_poliza == 2){
+            var sumaasegurada = $("#suma_asegurada_persona").val();
+        }        
+        if (sumaasegurada == "") { sumaasegurada = 0;}
+        var porcentaje = (monto * 100 )/(sumaasegurada);
+        if (porcentaje > 100) { porcentaje = 100;}
+        $("#porcentajecesion_"+x[1]).val(porcentaje);
+    });
+
+    $(".porcentaje_cesion_acreedor").keyup(function(){
+        var id = $(this).attr("id");
+        var x = id.split('_');
+        var porcentaje = $("#porcentajecesion_"+x[1]).val();
+        if (porcentaje == "") { porcentaje = 0;}
+        if (id_tipo_poliza == 1) {
+            var sumaasegurada = $("#suma_asegurada").val();
+        }else if(id_tipo_poliza == 2){
+            var sumaasegurada = $("#suma_asegurada_persona").val();
+        } 
+        var monto = (porcentaje * sumaasegurada )/(100);
+        if (porcentaje>100) {
+            $("#montocesion_"+x[1]).val(sumaasegurada);
+        }else{
+            $("#montocesion_"+x[1]).val(monto);
+        }            
+    });
+    //------------------------
+}
+
+if (id_tipo_poliza == 1 ) $(".espac,.documentos_entregados").hide();
