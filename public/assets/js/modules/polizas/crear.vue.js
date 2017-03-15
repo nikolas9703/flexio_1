@@ -430,13 +430,14 @@ var formularioCrear = new Vue({
             });
 
         },
-        getInteres: function () {
+        getInteres: function (selectedUrl) {
             //polula el segundo select del header
-            var self = this;
-            var interes = $('#selInteres').val();
+            var self = this,selectInteresId;
+            //selectInteresId = $('#selInteres').val() ===undefined ? 0 :$('#selInteres').val();
+            var interes = selectedUrl=== undefined ? $('#selInteres').val():selectedUrl;
             var tipointeres = $('#formulario').val();
-            var getInteresUrl = window.vista == 'renovar' ? 'solicitudes/ajax_get_intereses':'polizas/ajax_get_intereses';
-            
+
+            var getInteresUrl = selectedUrl=== undefined ? 'solicitudes/ajax_get_intereses':'polizas/ajax_get_intereses';
 
             if (interes != "") {
                 this.$http.post({
@@ -825,7 +826,7 @@ var formularioCrear = new Vue({
                         $("#montodetalle_persona").val(response.data.inter.detalle_monto);
                         
                         $("#primadetalle_persona").val(response.data.inter.detalle_prima);
-                        
+                        $("#tipo_relacion_persona").val(response.data.inter.tipo_relacion);
                         //disabled fields
                         if(window.vista!=="renovar"){
                             $("#identificacion").attr('disabled',true);

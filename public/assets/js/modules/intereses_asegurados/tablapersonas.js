@@ -270,11 +270,11 @@
         e.returnValue=false;
         e.stopPropagation();
         
-        if(desde == "poliza" ){
+        if(desde == "poliza" || desde=="renovar" ){
             var selInteres = $(this).attr("data-int-id");
-            $("#selInteres").val(selInteres);
-            $("#selInteres").trigger('change'); 
-            formularioCrear.getInteres();
+            /*$("#selInteres").val(selInteres);
+            $("#selInteres").trigger('change'); */
+            formularioCrear.getInteres(selInteres);
             $("#opcionesModalIntereses").modal("hide"); 
 
             var int_det = $(this).attr("data-idint-det");
@@ -399,12 +399,11 @@
                     response.detalle_int_asociado!==0 ? $('#asociadodetalle_persona').val(response.Principal.interesestable_id).trigger("change"):$('#asociadodetalle_persona').val("").trigger("change");
                     $("#certificadoPersona").val(response.detalle_certificado);
                     $("#tipo_relacion_persona").val(response.tipo_relacion);
-
+                      
                     $("#beneficiodetalle_persona").val(response.detalle_beneficio).trigger("change");
                     $('#suma_asegurada_persona').val(response.detalle_suma_asegurada);
                     $('#participacion_persona').val(response.detalle_participacion);
 
-                    console.log(validavida, id_tipo_poliza);
                     if(response.detalle_relacion == "Principal"){
                         $('#participacion_persona').attr('disabled',true);
                         if (validavida == 1 && id_tipo_poliza == 2) {                             
