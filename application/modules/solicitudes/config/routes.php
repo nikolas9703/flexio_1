@@ -6,6 +6,7 @@ $route['solicitudes/ocultotabla']   = 'solicitudes/ocultotabla';
 $route['solicitudes/ocultoformulario']   = 'solicitudes/ocultoformulario';
 $route['solicitudes/editar participación']   = 'solicitudes/editar_participacion';
 $route['solicitudes/editar asignación']   = 'solicitudes/editar_asignacion';
+$route['solicitudes/editar comisión']   = 'solicitudes/editar_comision';
 
 //Ajax
 $route['solicitudes/ajax-listar']        = 'solicitudes/ajax_listar';

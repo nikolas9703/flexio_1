@@ -504,6 +504,7 @@ class Solicitudes extends CRM_Controller {
         "estado_solicitud" => $estado,
         "ramoscadena" => 0,
         "permiso_editar" => $ceditar,
+        "permisos_editar_comison" => $this->auth->has_permission('acceso', 'solicitudes/editar comisión') == true ? 1 : 0,
         "editar" => $ceditar,
         "cliente" => $clientes,
         "asegurada" => $aseguradoras,
@@ -1522,6 +1523,11 @@ public function crear($id_ramo = null, $id_interes = null) {
 
     $ram1 = Ramos::where('id', $id_ramo)->first();
     $nombrepadre = $ram1->nombre;
+    /*echo $ram1->nombre;
+    echo "<br>".$id_ramo;
+    //echo "<br>".serialize($solicitudes_titulo);
+    echo "<br>".$id_ramo;
+    echo "<br>".$solicitudes_id;*/
 
     if (strpos($ramocadena, "Vida")>-1) {
         $validavida = 1;
@@ -1589,7 +1595,7 @@ public function crear($id_ramo = null, $id_interes = null) {
         }
     }
 
-    if(count($centroContable) == 1){
+    if(count($centroContable) == 1 && isset($centroContable[0])){
         $id_centro_contable = $centroContable[0]->id;
     }else{
         $id_centro_contable = 0;
@@ -1609,7 +1615,6 @@ public function crear($id_ramo = null, $id_interes = null) {
      $agenteprincipalnombre="";
      $agtPrincipalporcentaje=0;
  }
-
 
  $data = array();
  $this->assets->agregar_var_js(array(
@@ -1647,6 +1652,7 @@ public function crear($id_ramo = null, $id_interes = null) {
     "uuid_solicitudes" => "undefined",
     "comision" => "undefined",
     "permisos_editar" => $this->auth->has_permission('acceso', 'solicitudes/editar') == true ? 1 : 0,
+    "permisos_editar_comison" => $this->auth->has_permission('acceso', 'solicitudes/editar comisión') == true ? 1 : 0,
             //********************************************************************
     "desde" => "solicitudes",
     "indcolec"=>$indcolec,
@@ -1865,14 +1871,19 @@ function ajax_get_clientes() {
 
     $clause['empresa_id'] = $this->empresa_id;
 
-    if ($_POST['tipo_cliente'] == 'juridico') {
+    if (!empty($_REQUEST['tipo_cliente']) &&  $_REQUEST['tipo_cliente'] == 'juridico') {
         $clause['tipo_identificacion'] = 'ruc';
     } else {
         $clause['tipo_identificacion'] = 'cedula';
     }
+    $limite = !empty($_REQUEST['limite']) ? $_REQUEST['limite'] : 10 ; 
+    if (!empty($_GET['q']) &&  $_GET['q']) {
+        $clause['nombre'] = $_GET['q'];
+    }
 
     $clientes = $this->clienteRepository->getClientesPorTipo($clause)
     ->select('id', 'nombre', 'identificacion','tipo_identificacion','detalle_identificacion')
+    ->limit($limite)
     ->get()
     ->toArray();
     foreach ($clientes  as $key => $value) {
@@ -1968,22 +1979,42 @@ function ajax_get_pagador() {
     exit;
 }
 
-function ajax_get_planes() {
+function ajax_get_planes() {//planes //aseguradoras  //ramos 
 
-    $ramo = Ramos::where('codigo_ramo', '=', $_POST['codigoRamo'])
+    /*$ramo = Ramos::where('codigo_ramo', '=', $_POST['codigoRamo'])
     ->where('empresa_id', $this->empresa_id)
     ->select('id', 'padre_id')
     ->get()
     ->first();
-    $clause['id_ramo'] = $ramo->id;
-    $planes = $this->planesModel->getPlanes($clause)->get();
+    $clause['id_aseguradora '] = $_POST['idRamoAseguradora'];
+    $clause['id_ramo'] = $_POST['ramo_id'];
+    $planes = $this->planesModel->getPlanes($clause)->get(array('id','nombre','prima_neta' ));
+
     if (!count($planes)) {
         $clause['id_ramo'] = $ramo->padre_id;
-        $planes = $this->planesModel->getPlanes($clause)->get();
+        $planes = $this->planesModel->getPlanes($clause)->get(array('id','nombre','prima_neta' ));
+
     }
     $response = new stdClass();
     foreach ($planes as $key => $value) {
-        $response->planes = array(
+        $response->planes[] = array(
+            "id" => $value->id,
+            "nombre" => $value->nombre,
+            "primaNeta" => $value->prima_neta
+            );
+    }
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($response))->_display();
+    exit;*/
+    $id_ramo = $this->validarRecursivoPlan($_POST['ramo_id'],$_POST['idRamoAseguradora']);
+
+    $clause['id_aseguradora'] = $_POST['idRamoAseguradora'];
+    $clause['id_ramo'] = $id_ramo;
+
+    $planes = $this->planesModel->getPlanes($clause)->get(array('id','nombre','prima_neta' ));
+    $response = new stdClass();
+    foreach ($planes as $key => $value) {
+        $response->planes[] = array(
             "id" => $value->id,
             "nombre" => $value->nombre,
             "primaNeta" => $value->prima_neta
@@ -1992,6 +2023,22 @@ function ajax_get_planes() {
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
     ->set_output(json_encode($response))->_display();
     exit;
+}
+
+function validarRecursivoPlan($ramo_id,$id_aseguradora)
+{
+     $ramo = Ramos::where('id', '=', $ramo_id)
+    ->where('empresa_id', $this->empresa_id)
+    ->select('id', 'padre_id')
+    ->get()
+    ->first();
+    $clause['id_aseguradora'] = $id_aseguradora;
+    $clause['id_ramo'] = $ramo_id;
+    $planes = $this->planesModel->getPlanes($clause)->get(array('id','nombre','prima_neta' ));
+    if (!count($planes)) 
+        return $this->validarRecursivoPlan($ramo->padre_id,$id_aseguradora);
+    else
+        return $ramo_id;
 }
 
 function ajax_get_comision() {
@@ -2213,6 +2260,7 @@ function ajax_get_comision() {
             $campoparticipacion = Util::set_fieldset("campoparticipacion");
             $campodocumentacion = Util::set_fieldset("campodocumentacion");
             $Bitacora = new Flexio\Modulo\Solicitudes\Models\SolicitudesBitacora;
+            $campo_uuid = isset($campo['uuid']) ? $campo['uuid'] : '' ;
             Capsule::beginTransaction();
             try {
                 if (empty($campo['uuid'])) {
@@ -2645,7 +2693,7 @@ function ajax_get_comision() {
         else if (!empty($reg) && $reg == "aseg" ) 
             redirect(base_url('aseguradoras/editar/'.$_POST['val']));
         else
-            redirect(base_url('solicitudes/editar/'.bin2hex($soli->uuid_solicitudes)));//redirect(base_url('solicitudes/listar'));  redirect(base_url('solicitudes/listar'));//redirect(base_url('solicitudes/editar/'.strtoupper(bin2hex($id_soli))));//redirect(base_url('solicitudes/editar/'.$campo['uuid']));//redirect(base_url('solicitudes/listar'));  
+            redirect(base_url( empty($campo_uuid) ? 'solicitudes/editar/'.bin2hex($soli->uuid_solicitudes) : 'solicitudes/listar' ));//redirect(base_url('solicitudes/listar'));  redirect(base_url('solicitudes/listar'));//redirect(base_url('solicitudes/editar/'.strtoupper(bin2hex($id_soli))));//redirect(base_url('solicitudes/editar/'.$campo['uuid']));//redirect(base_url('solicitudes/listar'));  
 
         
     }

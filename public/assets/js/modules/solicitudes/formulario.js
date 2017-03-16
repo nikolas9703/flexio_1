@@ -657,14 +657,19 @@ function OnloadFunction(valid, tablaTipo) {
     });
 
     $.validator.addMethod('validaPrima', function (e) {
-        if ($('#polizaDeclarativa').prop('checked')) {
-            return true;
-        }else{
-            if (parseFloat($("#prima_anual").val())>0) {
+        try {
+            if ($('#polizaDeclarativa').prop('checked')) {
                 return true;
             }else{
-                return false;
+                if (parseFloat($("#prima_anual").val())>0) {
+                    return true;
+                }else{
+                    return false;
+                }
             }
+        } catch (e) {
+            console.log(e);
+            return false;
         }
     }, 'El valor de la prima anual debe ser mayor a cero.');
 

@@ -90,7 +90,7 @@ var formularioCrear = new Vue({
             this.$http.post({
                 url: phost() + 'solicitudes/ajax-get-clientes',
                 method: 'POST',
-                data: {tipo_cliente: cliente_tipo, erptkn: tkn}
+                data: {tipo_cliente: cliente_tipo, erptkn: tkn ,limite : 10}
             }).then(function (response) {
                 if (_.has(response.data, 'session')) {
                     window.location.assign(phost());
@@ -108,7 +108,6 @@ var formularioCrear = new Vue({
                     } else {
                         self.$set('disabledEstados', false);
                     }
-
                 }
             });
             this.getPagadorCampo();
@@ -241,10 +240,11 @@ var formularioCrear = new Vue({
             //polula el segundo select del header
             var self = this;
             self.$set('planesInfo', "");
+            var valorAseguradora = $("#aseguradoras").find("option:selected").val();
             this.$http.post({
                 url: phost() + 'solicitudes/ajax-get-planes',
                 method: 'POST',
-                data: {codigoRamo: codigo_ramo, erptkn: tkn}
+                data: {codigoRamo: codigo_ramo, ramo_id : ramo_id, idRamoAseguradora : valorAseguradora ,  erptkn: tkn}
             }).then(function (response) {
                 if (_.has(response.data, 'session')) {
                     window.location.assign(phost());
@@ -254,7 +254,7 @@ var formularioCrear = new Vue({
                     if (response.data.primaNeta > 0) {
                         $("input[name='campodetalle[prima_anual]']").val(response.data.primaNeta);
                     }
-                    self.$set('planesInfo', response.data);
+                    self.$set('planesInfo', response.data['planes']);
                     self.$set('disabledOpcionPlanes', false);
                 }
             });
@@ -810,12 +810,15 @@ getAsociado: function () {
 },
 coberturasModal: function (e) {
             //Inicializar opciones del Modal
+            debugger;
+            formularioCrear.getCoberturasPlanEditar();
             $('#verCoberturas').modal({
                 backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
                 show: false
             });
             //Cerrar modal de opciones        
             var pantalla = $('.div_coberturas');
+            
             var botones_coberturas = $('.botones_coberturas');
 
             pantalla.css('display', 'block');
@@ -824,6 +827,7 @@ coberturasModal: function (e) {
             opcionesModal.find('.modal-body').empty().append(pantalla);
             opcionesModal.find('.modal-footer').empty().append(botones_coberturas);
             opcionesModal.modal('show');
+
         },
         getComisionesInfo: function (e) {
 
@@ -847,6 +851,8 @@ coberturasModal: function (e) {
                         self.$set('impuestoMonto', response.data.planes.impuesto.impuesto);
                         self.$set('sobreComision', response.data.planes.sobre_comisiones.sobre_comision);
                         permisos_editar == true ? self.$set('isEditable', false) : '';
+                        console.log(permisos_editar_comison);
+                        permisos_editar_comison == true ? $(".comision_solicitud").removeAttr('disabled') : $(".comision_solicitud").attr('disabled', 'disabled');
                     }
                 }
             });
@@ -1268,7 +1274,8 @@ var coberturasForm = new Vue({
         },
         clearFields: function () {
 
-            clearFields(validateFields);
+            //clearFields(validateFields);
+            //opcionesModal.find('.modal-body').empty();
             $(".error").remove();
             $("#verCoberturas").modal("hide");
 
@@ -1294,6 +1301,43 @@ if (vista == "crear") {
 
 
 $(document).ready(function () {
+
+    $("#cliente_seleccionado").select2({
+        ajax: {
+            url: phost() + "solicitudes/ajax-get-clientes",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    tipo_cliente: $('#formulario_tipo').val(),
+                    limite: 100,
+                    q: params.term, // search term
+                    page: params.page
+                };
+            },
+            processResults: function (data, params) {
+                formularioCrear.clientes = data;
+                var datos= new Array ();
+                $.each( data, function( key, value ) {
+                    var objt = new Object();
+                    objt.id = value.id;
+                    objt.text = value.nombre;
+                    datos.push(objt);
+                }) ;
+                return {
+                    results: datos,
+                    pagination: {
+                        more: (params.page * 30) < data.total_count
+                    }
+                };
+            },
+            cache: true
+        },
+        escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
+        //templateSelection: formatRepoSelection // omitted for brevity, see the source of this page
+    });
+
+
     
     if (vista === 'editar') {
         $('#documentos_editar').show();
@@ -1352,8 +1396,8 @@ $(document).ready(function () {
     $('#del_file_solicitudes_adicionales').hide();
     $('#add_file_solicitudes_adicionales').click(function () {
 
-        $('#add_file_solicitudes_adicionales').before('<br><br><div class="file_upload_solicitudes_adicionales " id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left;" '+
-            ' class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><button type="button" onclick="javascript:$(\'#h'+counter+'\').remove();" style="float: left; width: 40px; margin-top: 0px !important; display: block;" class="btn btn-default btn-block col-lg-offset-1" id="del_file_solicitudes_adicionales"><i class="fa fa-trash"></i> </button></div>');
+        $('#add_file_solicitudes_adicionales').before('<br><br><div class="file_upload_solicitudes_adicionales " id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left; " '+
+            ' class="form-control"><input name="file[]" class="form-control" style="width: 300px!important; float: left; margin-right:12px;" type="file"><button type="button" onclick="javascript:$(\'#h'+counter+'\').remove();" style="float: left; width: 40px; margin-top: 0px !important; display: block; margin-right:5px;" class="btn btn-default btn-block" id="del_file_solicitudes_adicionales"><i class="fa fa-trash"></i> </button></div>');
         $('#del_file_solicitudes_adicionales').fadeIn(0);
         counter++;
     });

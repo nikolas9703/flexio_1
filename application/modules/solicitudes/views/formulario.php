@@ -183,7 +183,7 @@ $formAttr = array(
                             <label>Comisión % <span required="" aria-required="true">*</span></label><div id="divintereses"></div>
                             <div class="input-group">
                                 <span class="input-group-addon">%</span>
-                                <input type="input-left-addon" name="campo[comision]" v-model="comisionPlanInfo" data-rule-required="true" data-rule-email="true" class="form-control comision_solicitud"  id="campo[comision]" :disabled="isEditable">
+                                <input type="input-left-addon" name="campo[comision]" v-model="comisionPlanInfo" data-rule-required="true" data-rule-email="true" class="form-control comision_solicitud"  id="campo[comision]" :disabled="isEditable" >
                             </div>                                
                         </div>
 

@@ -166,6 +166,7 @@ var formularioCrear = new Vue({
              window.location.assign(phost());
            }     
            if(!_.isEmpty(response.data)){             
+            console.log(response.data);
              self.$set('planesInfo',response.data);            
              self.$set('disabledOpcionPlanes',false);         
            }

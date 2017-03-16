@@ -71,6 +71,7 @@ class ClienteRepository
         } 
         $query->where('empresa_id', '=', $clause['empresa_id']);
         $query->where('estado', '=', 'activo');
+        if (isset($clause['nombre'])) $query->where('nombre', 'like', '%'.$clause['nombre'].'%');
         $query->orderBy('nombre', 'ASC');
         $query->select('id','nombre','identificacion','tipo_identificacion','detalle_identificacion');
       });

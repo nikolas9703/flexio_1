@@ -54,12 +54,12 @@
             <div style="margin-bottom: 25px;" class="row col-xs-11 col-sm-11 col-md-11 col-lg-11">
 
                 <div class='file_upload_solicitudes_adicionales col-xs-12 col-sm-12 col-md-12 col-lg-12' >
-                    <div id="h1" >
-                        <input class="form-control" style="width: 300px!important; float: left;" name="nombre_documento[]" type="text" id="nombre_documento" /><input style="width: 300px!important; float: left;" class="form-control" name='file[]' type='file'/>
-                        <button type="button" style="float: left; width: 40px; margin-top:0px!important;" onclick="javascript:$('#h1').remove();" class=" col-lg-offset-1 btn btn-default btn-block" ><i class="fa fa-trash"></i>
+                    <div id="h1" style="margin-right:5px;" >
+                        <input class="form-control" style="width: 300px!important; float: left;" name="nombre_documento[]" type="text" id="nombre_documento" /><input style="width: 300px!important; float: left; margin-right:12px;" class="form-control" name='file[]' type='file'/> 
+                        <button type="button" style=" margin-right:5px; float: left; width: 40px; margin-top:0px!important;" onclick="javascript:$('#h1').remove();" class=" btn btn-default btn-block" ><i class="fa fa-trash"></i>
                         </button>
                     </div>
-                    <button type="button" class=" col-lg-offset-1 btn btn-default btn-block" style="float: left; width: 40px; margin-right:5px;" id="add_file_solicitudes_adicionales"><i class="fa fa-plus"></i>
+                    <button type="button" class=" col-lg-offset-0 btn btn-default btn-block" style="float: left; width: 40px; margin-right:5px;" id="add_file_solicitudes_adicionales"><i class="fa fa-plus"></i>
                     </button>
                 </div>
                 <!--div id='file_tools_solicitudes_adicionales' class="col-xs-2 col-sm-2 col-md-4 col-lg-4">
