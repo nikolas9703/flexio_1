@@ -140,7 +140,7 @@ var tablaAccionPersonal = (function(){
 		   	colNames:[
 			   	'Nombre del archivo',
 					'Fecha y hora de subida',
-					'Usuario credor',
+					'Usuario creador',
 					'',
 					'',
 					'',

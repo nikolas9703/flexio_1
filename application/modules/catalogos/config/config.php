@@ -26,10 +26,28 @@ $config['modulo_config'] = array(
                            
     ),*/
     'menu' => array(          
-                             'nombre' =>'Catálogos' ,
-                             'url' => 'catalogos/ver',
-                             'orden'=> 1
+                             /*array(
+                                'nombre' =>'Catálogos' ,
+                                'url' => 'catalogos/ver',
+                                'orden'=> 1),
+                             array(
+                                'nombre'    => 'Configuración' ,
+                                'url'       => 'configuracion_ventas/listar',
+                                'orden'=> 2)*/
+       
+        array(
+            'nombre'    => 'Catálogos' ,
+            'url'       => 'catalogos/ver',
+            'orden'     => 1
+        ),
+        array(
+            'nombre'    => 'Configuración Clientes' ,
+            'url'       => 'configuracion_ventas/listar/seguros',
+            'orden'     => 2
+        )
+         
                              
+
                            
     ),
     'permisos'  => array(

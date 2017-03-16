@@ -93,6 +93,10 @@ $(window).load(function(){
 		$('select[name="campo[tipo_identificacion]"] option[value="cedula_nt"]').remove();
 		$('select[name="campo[tipo_identificacion]"] option[value="ruc_nt"]').remove();
 	}
+	else 
+	{
+		$('select[name="campo[tipo_identificacion]"] option[value="pasaporte"]').remove();	
+	}
 	
 });
 
