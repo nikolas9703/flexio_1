@@ -1,6 +1,6 @@
 //modulo clientes
 var tablaPagos = (function(){
-	
+
 	if(typeof uuid_cotizacion === 'undefined'){
 			uuid_cotizacion="";
 	}
@@ -15,6 +15,7 @@ var tablaPagos = (function(){
 		buscar: "#searchBtn",
 		limpiar: "#clearBtn"
 	};
+	
 
  var tabla = function(){
 	 gridObj.jqGrid({
