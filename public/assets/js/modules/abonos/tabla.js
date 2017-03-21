@@ -1,5 +1,6 @@
 //modulo clientes
 var tablaPagos = (function(){
+	
 	if(typeof uuid_cotizacion === 'undefined'){
 			uuid_cotizacion="";
 	}
