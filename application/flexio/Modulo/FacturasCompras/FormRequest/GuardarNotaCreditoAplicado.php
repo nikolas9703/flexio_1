@@ -56,6 +56,7 @@ class GuardarNotaCreditoAplicado
             if(round($suma_totales, 2) > round($factura->saldo, 2))throw new \Exception('El monto del cr&eacute;dito a aplicar no puede ser mayor al saldo pendiente');
 
             foreach($campos['pagos'] as $pago){
+                if(empty($pago['total']))continue;
                 $pago = array_merge($pago, ['empresa_id' => $campos['empresa_id']]);
                 $credito_aplicado_obj = new \Flexio\Modulo\CreditosAplicados\Models\CreditoAplicado($pago);
                 $credito_aplicado = $factura->creditos_aplicados()->save($credito_aplicado_obj);
@@ -71,8 +72,9 @@ class GuardarNotaCreditoAplicado
                 //do transacctions
                 $transaccionCreditoAplicado = new RealizarTransaccionCreditoAplicado($credito_aplicado);
                 $transaccionCreditoAplicado->hacer();
-                return $credito_aplicado;
+                //return $credito_aplicado;
             }
+            return true;
 
         });
     }

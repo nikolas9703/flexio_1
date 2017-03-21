@@ -1,93 +1,94 @@
 
+if(desde=="solicitudes" || desde == "poliza" || desde == "endosos"){
+
+    var tablaSolicitudesPersonas = (function () {
+
+        var unico = $("input[name='detalleunico']").val();
+        if(desde == "poliza" || desde == "endosos"){
+            var id_poliza = $("#idPoliza").val();
+            tablaTipo = tablaTipo2;
+            console.log(id_poliza);
+            var tablaUrl = phost() + 'polizas/ajax_listar_personas';
+        }else{
+            var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_personas';   
+        }
+
+        var gridId = "tablaSolicitudesPersonas";
+        var gridObj = $("#tablaSolicitudesPersonas");
+        var opcionesModal = $('#opcionesModalIntereses');
+        var formularioBuscar = '';
+        var documentosModal = $('#documentosModal');
+        var grid_obj = $("#tablaSolicitudesPersonas");
 
 
-    if(desde=="solicitudes" || desde == "poliza"){
 
-        var tablaSolicitudesPersonas = (function () {
+        var botones = {
+            opciones: ".viewOptions",
+            subir_archivo: ".subir_documento_solicitudes_intereses",
+        };
 
-            var unico = $("input[name='detalleunico']").val();
-            if(desde == "poliza"){
-                var id_poliza = $("#idPoliza").val();
-                tablaTipo = tablaTipo2;
-                var tablaUrl = phost() + 'polizas/ajax_listar_personas';
-            }else{
-                var tablaUrl = phost() + 'intereses_asegurados/ajax_listar_personas';   
-            }
+        var tabla = function () {
+            gridObj.jqGrid({
+                url: tablaUrl,
+                mtype: "POST",
+                datatype: "json",
+                colNames: ['N° interés','N° Certificado', 'Nombre', 'Cédula', 'Fecha nacimiento','Edad','Nacionalidad','Sexo','Estatura','Peso','Telefono','Relación','Tipo relación','Participación','Fecha inclusión','Fecha exclusión', 'Prima','Estado','',''],
+                colModel: desde == "poliza" || desde == "endosos" ?
+                [
+                {name:'numero', index:'numero',width:45,sortable:true,sorttype:"text"},
+                {name:'certificado', index:'detalle_int_asociado',width:45,sortable:true,sorttype:"text"},
+                {name:'nombrePersona', index:'nombrePersona', width:60,sortable:true,sorttype:"text"},
+                {name:'identificacion', index:'identificacion', width:45,sortable:true,sorttype:"text"},
+                {name:'fecha_nacimiento', index:'fecha_nacimiento', width: 40,sortable:true,sorttype:"text"},
+                {name:'edad', index:'edad', width:20,sortable:true,sorttype:"text"},
+                {name:'nacionalidad', index:'fecha_nacimiento', width: 40,sortable:true,sorttype:"text",hidden:setting.nacionalidad},
+                {name:'sexo', index:'sexo', width:20,sortable:true,sorttype:"text"},
+                {name:'estatura', index:'estatura', width: 20,sortable:true,sorttype:"text",hidden:setting.estatura},
+                {name:'peso', index:'peso', width:20,sortable:true,sorttype:"text",hidden:setting.peso},
+                {name:'telefono', index:'telefono_residencial', width: 40,sortable:true,sorttype:"text"},
+                {name:'relacion', index:'peso', width:45,sortable:true,sorttype:"text",hidden:setting.relacion},
+                {name:'tipo_relacion', index:'int_intereses_asegurados_detalles.detalle_relacion', width:45,sortable:true,sorttype:"text",hidden:setting.tipo_relacion},
+                {name:'participacion', index:'peso', width:20,sortable:true,sorttype:"text",hidden:setting.participacion},
+                {name:'fecha_inclusion', index:'fecha_inclusion', width: 40,sortable:true,sorttype:"text"},
+                {name:'fecha_exclusion', index:'fecha_exclusion', width: 40,sortable:true,sorttype:"text"},
+                {name:'prima', index:'detalle_prima', width: 30,sortable:true,sorttype:"text"},
+                {name:'estado', index:'estado', width: 40,sortable:true,sorttype:"text"},
+                {name:'options', index:'options', width:65, sortable:false, resizable:false, hidedlg:true, align:"center"},
+                {name:'link', index:'link', hidedlg:true, hidden: true}
+                ]
+                :
+                [
+                {name:'numero', index:'int_intereses_asegurados.numero',width:45,sortable:true,sorttype:"text"},
+                {name:'certificado', index:'int_intereses_asegurados_detalles.detalle_int_asociado',width:45,sortable:true,sorttype:"text"},
+                {name:'nombrePersona', index:'int_personas.nombrePersona', width:60,sortable:true,sorttype:"text"},
+                {name:'identificacion', index:'int_personas.identificacion', width:45,sortable:true,sorttype:"text"},
+                {name:'fecha_nacimiento', index:'int_personas.fecha_nacimiento', width: 40,sortable:true,sorttype:"text"},
+                {name:'edad', index:'int_personas.fecha_nacimiento', width:20,sortable:true,sorttype:"text"},
+                {name:'nacionalidad', index:'int_personas.fecha_nacimiento', width: 40,sortable:true,sorttype:"text",hidden:setting.nacionalidad},
+                {name:'sexo', index:'int_personas.sexo', width:20,sortable:true,sorttype:"text"},
+                {name:'estatura', index:'int_personas.estatura', width: 20,sortable:true,sorttype:"text",hidden:setting.estatura},
+                {name:'peso', index:'int_personas.peso', width:20,sortable:true,sorttype:"text",hidden:setting.peso},
+                {name:'telefono', index:'int_personas.telefono_residencial', width: 40,sortable:true,sorttype:"text"},
+                {name:'relacion', index:'int_intereses_asegurados_detalles.detalle_relacion', width:45,sortable:true,sorttype:"text",hidden:setting.relacion},
+                {name:'tipo_relacion', index:'int_intereses_asegurados_detalles.detalle_relacion', width:45,sortable:true,sorttype:"text",hidden:setting.tipo_relacion},
+                {name:'participacion', index:'int_intereses_asegurados_detalles.detalle_participacion', width:20,sortable:true,sorttype:"text",hidden:setting.participacion},
+                {name:'fecha_inclusion', index:'int_personas.fecha_inclusion', width: 40,sortable:true,sorttype:"text"},
+                {name:'fecha_exclusion', index:'int_personas.fecha_exclusion', width: 40,sortable:true,sorttype:"text"},
+                {name:'prima', index:'int_intereses_asegurados_detalles.detalle_prima', width: 30,sortable:true,sorttype:"text"},
+                {name:'estado', index:'int_intereses_asegurados.estado', width: 40,sortable:true,sorttype:"text"},
 
-            var gridId = "tablaSolicitudesPersonas";
-            var gridObj = $("#tablaSolicitudesPersonas");
-            var opcionesModal = $('#opcionesModalIntereses');
-            var formularioBuscar = '';
-            var documentosModal = $('#documentosModal');
-            var grid_obj = $("#tablaSolicitudesPersonas");
-            
-            var botones = {
-                opciones: ".viewOptions",
-                subir_archivo: ".subir_documento_solicitudes_intereses",
-            };
-
-            var tabla = function () {
-                gridObj.jqGrid({
-                    url: tablaUrl,
-                    mtype: "POST",
-                    datatype: "json",
-                    colNames: ['N° interés','N° Certificado', 'Nombre', 'Cédula', 'Fecha nacimiento','Edad','Nacionalidad','Sexo','Estatura','Peso','Telefono','Relación','Tipo relación','Participación','Fecha inclusión','Fecha exclusión', 'Prima','Estado','',''],
-                    colModel: desde == "poliza" ?
-                    [
-                    {name:'numero', index:'numero',width:45,sortable:true,sorttype:"text"},
-                    {name:'certificado', index:'detalle_int_asociado',width:45,sortable:true,sorttype:"text"},
-                    {name:'nombrePersona', index:'nombrePersona', width:60,sortable:true,sorttype:"text"},
-                    {name:'identificacion', index:'identificacion', width:45,sortable:true,sorttype:"text"},
-                    {name:'fecha_nacimiento', index:'fecha_nacimiento', width: 40,sortable:true,sorttype:"text"},
-                    {name:'edad', index:'edad', width:20,sortable:true,sorttype:"text"},
-                    {name:'nacionalidad', index:'fecha_nacimiento', width: 40,sortable:true,sorttype:"text",hidden:setting.nacionalidad},
-                    {name:'sexo', index:'sexo', width:20,sortable:true,sorttype:"text"},
-                    {name:'estatura', index:'estatura', width: 20,sortable:true,sorttype:"text",hidden:setting.estatura},
-                    {name:'peso', index:'peso', width:20,sortable:true,sorttype:"text",hidden:setting.peso},
-                    {name:'telefono', index:'telefono_residencial', width: 40,sortable:true,sorttype:"text"},
-                    {name:'relacion', index:'peso', width:45,sortable:true,sorttype:"text",hidden:setting.relacion},
-                    {name:'tipo_relacion', index:'int_intereses_asegurados_detalles.detalle_relacion', width:45,sortable:true,sorttype:"text",hidden:setting.tipo_relacion},
-                    {name:'participacion', index:'peso', width:20,sortable:true,sorttype:"text",hidden:setting.participacion},
-                    {name:'fecha_inclusion', index:'fecha_inclusion', width: 40,sortable:true,sorttype:"text"},
-                    {name:'fecha_exclusion', index:'fecha_exclusion', width: 40,sortable:true,sorttype:"text"},
-                    {name:'prima', index:'detalle_prima', width: 30,sortable:true,sorttype:"text"},
-                    {name:'estado', index:'estado', width: 40,sortable:true,sorttype:"text"},
-                    {name:'options', index:'options', width:65, sortable:false, resizable:false, hidedlg:true, align:"center"},
-                    {name:'link', index:'link', hidedlg:true, hidden: true}
-                    ]
-                    :
-                    [
-                    {name:'numero', index:'int_intereses_asegurados.numero',width:45,sortable:true,sorttype:"text"},
-                    {name:'certificado', index:'int_intereses_asegurados_detalles.detalle_int_asociado',width:45,sortable:true,sorttype:"text"},
-                    {name:'nombrePersona', index:'int_personas.nombrePersona', width:60,sortable:true,sorttype:"text"},
-                    {name:'identificacion', index:'int_personas.identificacion', width:45,sortable:true,sorttype:"text"},
-                    {name:'fecha_nacimiento', index:'int_personas.fecha_nacimiento', width: 40,sortable:true,sorttype:"text"},
-                    {name:'edad', index:'int_personas.fecha_nacimiento', width:20,sortable:true,sorttype:"text"},
-                    {name:'nacionalidad', index:'int_personas.fecha_nacimiento', width: 40,sortable:true,sorttype:"text",hidden:setting.nacionalidad},
-                    {name:'sexo', index:'int_personas.sexo', width:20,sortable:true,sorttype:"text"},
-                    {name:'estatura', index:'int_personas.estatura', width: 20,sortable:true,sorttype:"text",hidden:setting.estatura},
-                    {name:'peso', index:'int_personas.peso', width:20,sortable:true,sorttype:"text",hidden:setting.peso},
-                    {name:'telefono', index:'int_personas.telefono_residencial', width: 40,sortable:true,sorttype:"text"},
-                    {name:'relacion', index:'int_intereses_asegurados_detalles.detalle_relacion', width:45,sortable:true,sorttype:"text",hidden:setting.relacion},
-                    {name:'tipo_relacion', index:'int_intereses_asegurados_detalles.detalle_relacion', width:45,sortable:true,sorttype:"text",hidden:setting.tipo_relacion},
-                    {name:'participacion', index:'int_intereses_asegurados_detalles.detalle_participacion', width:20,sortable:true,sorttype:"text",hidden:setting.participacion},
-                    {name:'fecha_inclusion', index:'int_personas.fecha_inclusion', width: 40,sortable:true,sorttype:"text"},
-                    {name:'fecha_exclusion', index:'int_personas.fecha_exclusion', width: 40,sortable:true,sorttype:"text"},
-                    {name:'prima', index:'int_intereses_asegurados_detalles.detalle_prima', width: 30,sortable:true,sorttype:"text"},
-                    {name:'estado', index:'int_intereses_asegurados.estado', width: 40,sortable:true,sorttype:"text"},
-
-                    {name:'options', index:'options', width:65, sortable:false, resizable:false, hidedlg:true, align:"center"},
-                    {name:'link', index:'link', hidedlg:true, hidden: true}
+                {name:'options', index:'options', width:65, sortable:false, resizable:false, hidedlg:true, align:"center"},
+                {name:'link', index:'link', hidedlg:true, hidden: true}
 
 
-                    ],
-                    postData: {
-                        detalle_unico:unico,
-                        desde: vista,
-                        erptkn: tkn,
-                        id_poliza: id_poliza,
-                        relacion: tablaTipo 
-                    },
+                ],
+                postData: {
+                    detalle_unico: unico,
+                    desde: vista,
+                    erptkn: tkn,
+                    id_poliza: id_poliza,
+                    relacion: tablaTipo 
+                },
                 //  caption: "Stack Overflow Adjacency Example",
                 height: "auto",
                 treeGridModel: 'adjacency',
@@ -105,7 +106,7 @@
                 viewrecords: true,
                 refresh: true,
                 gridview: true,
-                sortname: desde == "poliza" ? "id" : "int_intereses_asegurados_detalles.id",
+                sortname: desde == "poliza" || desde == "endosos" ? "id" : "int_intereses_asegurados_detalles.id",
                 sortorder: "ASC",
 
                 beforeProcessing: function (data, status, xhr) {
@@ -116,7 +117,7 @@
             },
             loadBeforeSend: function () {//propiedadesGrid_cb
                 $(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
-                $(this).closest("div.ui-jqgrid-view").find("#tablaSolicitudesVehiculoGrid_cb, #jqgh_tablaSolicitudesVehiculoGrid_link").css("text-align", "center");
+                $(this).closest("div.ui-jqgrid-view").find("#tablaSolicitudesPersonasGrid_cb, #jqgh_tablaSolicitudesPersonasGrid_link").css("text-align", "center");
             },
             beforeRequest: function (data, status, xhr) {
 
@@ -129,6 +130,7 @@
                         ContVidaInd = 0;
                         if ($(this).val() == "Dependiente" || $(this).val() == "Beneficiario") {
                             $(this).prop("disabled", true);
+
                         }
                         else {
                             $(this).prop("disabled", false);
@@ -144,16 +146,10 @@
                     $('#' + gridId + 'NoRecords').empty();
                     $("#relaciondetalle_persona option").each(function () {
 
-                        if ($(this).val() == "Principal" ) {
-                            
-                            if(id_tipo_poliza==1 && desde == "solicitudes"){
-                                $(this).prop("disabled", true);
-                            }   
+                        if ($(this).val() == "Principal" && id_tipo_poliza==1 && desde == "solicitudes") {
+                            $(this).prop("disabled", true);
 
-                        }else if(vista == "renovar"){
-                            $(this).prop("disabled", false);
                         }
-                        
                     });
                 }
 
@@ -176,7 +172,8 @@
         });
         //Al redimensionar ventana
         $(window).resizeEnd(function () {
-            tablaSolicitudesVehiculo.redimencionar_tabla();
+            redimencionar_tabla
+            //recargar.redimencionar_tabla();
         });
     };
 
@@ -196,7 +193,7 @@
             console.log(rowINFO.nombrePersona);
             var numero_interes = rowINFO.numero;
             //Init Modal
-            
+
             opcionesModal.find('.modal-title').empty().append('Opciones: ' +$(numero_interes).text()+'');
             opcionesModal.find('.modal-body').empty().append(options);
             opcionesModal.find('.modal-footer').empty();
@@ -270,11 +267,11 @@
         e.returnValue=false;
         e.stopPropagation();
         
-        if(desde == "poliza" || desde=="renovar" ){
+        if(desde == "poliza" || desde == "endosos"){
             var selInteres = $(this).attr("data-int-id");
-            /*$("#selInteres").val(selInteres);
-            $("#selInteres").trigger('change'); */
-            formularioCrear.getInteres(selInteres);
+            $("#selInteres").val(selInteres);
+            $("#selInteres").trigger('change'); 
+            formularioCrear.getInteres();
             $("#opcionesModalIntereses").modal("hide"); 
 
             var int_det = $(this).attr("data-idint-det");
@@ -340,6 +337,7 @@
                         $('#relaciondetalle_persona').rules(
                             "add",{ required: false,
                             });
+
                         $('#participacion_persona').rules(
                             "add",{ required: false, 
                             });
@@ -349,6 +347,12 @@
                         $('#tipo_relacion_persona').rules(
                             "add",{ required: false, 
                             });
+                        $("#relaciondetalle_persona option").each(function () {
+
+                            $(this).prop("disabled", false);
+                        
+
+                    });
                         if(tablaTipo=="vida"||tablaTipo=="accidentes"){
                             $('#primadetalle_persona').rules(
                                 "add",{ required: true,
@@ -399,11 +403,12 @@
                     response.detalle_int_asociado!==0 ? $('#asociadodetalle_persona').val(response.Principal.interesestable_id).trigger("change"):$('#asociadodetalle_persona').val("").trigger("change");
                     $("#certificadoPersona").val(response.detalle_certificado);
                     $("#tipo_relacion_persona").val(response.tipo_relacion);
-                      
+
                     $("#beneficiodetalle_persona").val(response.detalle_beneficio).trigger("change");
                     $('#suma_asegurada_persona').val(response.detalle_suma_asegurada);
                     $('#participacion_persona').val(response.detalle_participacion);
 
+                    console.log(validavida, id_tipo_poliza);
                     if(response.detalle_relacion == "Principal"){
                         $('#participacion_persona').attr('disabled',true);
                         if (validavida == 1 && id_tipo_poliza == 2) {                             
@@ -456,33 +461,33 @@ $(opcionesModal).on("click", ".setIndividualCoveragePer", function (e) {
                   $(".coverage").remove();
                   $(".deductible").remove();
                   if(data.coberturas.length || data.deducion.length){
-                     temporalArrayArt.coberturas = data.coberturas;
-                     temporalArrayArt.deducion = data.deducion;
-                 }
-                 populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
-                 populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
+                   temporalArrayArt.coberturas = data.coberturas;
+                   temporalArrayArt.deducion = data.deducion;
+                }
+               populateStoredCovergeData('indCoveragefields','coverage','removecoverage',temporalArrayArt.coberturas,"nombre","cobertura_monetario");
+               populateStoredCovergeData('indDeductiblefields','deductible','removeDeductible',temporalArrayArt.deducion,"nombre","deducible_monetario");
 
-                 $(".moneda").inputmask('currency',{
-                  prefix: "",
-                  autoUnmask : true,
-                  removeMaskOnSubmit: true
-              });  
+                    $(".moneda").inputmask('currency',{
+                        prefix: "",
+                        autoUnmask : true,
+                        removeMaskOnSubmit: true
+                    });  
 
-             }
-         }
-     });  
+                   }
+               }
+            });  
 
-            $("#saveIndividualCoveragebtn").click(function(){
+        $("#saveIndividualCoveragebtn").click(function(){
 
-              saveInvidualCoverage(id,numeroArticulo);  
-          });  
-        }else{
-            $(this).text("Seleccione un plan");
-        }
-    });
+          saveInvidualCoverage(id,numeroArticulo);  
+        });  
+    }else{
+        $(this).text("Seleccione un plan");
+    }
+});
 
 
-var recargar = function () {
+    var recargar = function () {
 
         //Reload Grid
         gridObj.setGridParam({
@@ -546,16 +551,37 @@ var recargar = function () {
 
 })();
 
-
-
-}
-
-
-$( document ).ajaxStop(function() {
-if(desde=="solicitudes" || desde == "poliza"){
+/*$(function () {
     tablaSolicitudesPersonas.init();
-
     $("#jqgh_tablaSolicitudesPersonasGrid_cb span").removeClass("s-ico");
     $('#jqgh_tablaSolicitudesPersonasGrid_options span').removeClass("s-ico");
-}
 });
+*/
+
+
+}
+
+$( document ).ajaxStop(function() {
+
+    if(desde=="solicitudes" || desde == "poliza"){
+        tablaSolicitudesPersonas.init();
+
+        $("#jqgh_tablaSolicitudesPersonasGrid_cb span").removeClass("s-ico");
+        $('#jqgh_tablaSolicitudesPersonasGrid_options span').removeClass("s-ico");
+    }
+});
+
+$(document).ready(function(){
+    if(desde == "endosos" ){
+        tablaSolicitudesPersonas.init();
+        $("#jqgh_tablaSolicitudesPersonasGrid_cb span").removeClass("s-ico");
+        $('#jqgh_tablaSolicitudesPersonasGrid_options span').removeClass("s-ico");
+        $('#estado_endosos').on('change',function(){
+            var estado = $('#estado_endosos').val();
+            if(estado == "Aprobado"){
+                tablaSolicitudesPersonas.init();
+            }
+        }); 
+    }  
+});
+

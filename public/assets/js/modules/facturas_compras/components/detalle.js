@@ -19,6 +19,7 @@ Vue.component('detalle',{
 
         }
 
+
     },
 
     watch:{
@@ -32,7 +33,9 @@ Vue.component('detalle',{
             if(val == ''){
                 this.detalle.saldo_proveedor = 0;
                 this.detalle.credito_proveedor = 0;
-                this.config.disableEmpezarDesde = false;
+                if(typeof window.orden_multiple == 'undefined'){
+                  this.config.disableEmpezarDesde = false;
+                }
                 return '';
             }
 
@@ -54,7 +57,9 @@ Vue.component('detalle',{
                     context.detalle.saldo_proveedor = response.data.saldo;
                     context.detalle.credito_proveedor = response.data.credito;
                     if($('#empezable_type option:selected').val() == 'ordencompra' || $('#empezable_type option:selected').val() == 'subcontrato'){
-                      context.config.disableEmpezarDesde = false;
+                      if(typeof window.orden_multiple == 'undefined'){
+                        context.config.disableEmpezarDesde = false;
+                      }
                       $('#proveedor_id').attr('disabled', 'disabled');
                     }else{
                       context.config.disableEmpezarDesde = true;

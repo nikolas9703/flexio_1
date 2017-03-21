@@ -229,7 +229,10 @@ var conciliacionFormulario = new Vue({
                   window.location.assign(window.phost());
                   return;
                 }
-                self.campo.cuenta_id = response.data.cuenta_id;
+                self.$nextTick(function(){
+                    self.campo.cuenta_id = response.data.cuenta_id;
+                });
+                
                 self.campo.fecha_inicio = response.data.fecha_inicio;
                 self.campo.fecha_fin = response.data.fecha_fin;
                 self.campo.balance_flexio_original = response.data.balance_flexio;

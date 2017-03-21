@@ -132,6 +132,8 @@ class Polizas extends Model
 			$query->orderBy("cliente", "ASC");
 			$query->orderBy("ramo", "ASC");
 			$query->orderBy("inicio_vigencia", "ASC");
+			$query->orderBy("ultima_factura", "ASC");
+
 
 		}
 		if($limit!=NULL) $query->skip($start)->take($limit);

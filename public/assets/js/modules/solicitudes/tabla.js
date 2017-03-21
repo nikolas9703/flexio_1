@@ -348,7 +348,7 @@ var tablaSolicitudes = (function () {
                                     toastr.success('Se ha Aprobado la solicitud correctamente.');
                                     var datosbitacora = {campo: {estado: estado, estado_anterior: estado_anterior, tipo: 'Solicitud_aprobada', motivo: motivo, solicitud: solicitud, id: id_modificado}};
                                     var cambiobitacora = moduloSolicitudesBitacora.cambiarEstadoSolicitudesBitacora(datosbitacora);
-
+                                
                                     cambiobitacora.done(function (response) {
 
                                         var inf = $.parseJSON(response);

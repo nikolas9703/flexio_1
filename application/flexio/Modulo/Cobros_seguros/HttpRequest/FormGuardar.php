@@ -136,9 +136,9 @@ class FormGuardar{
 										$tipo = "Cobro_seguros";
 										if($cobro->estado == "agendado" || $cobro->estado == "por_aplicar" ){
 
-											$comentario = "Cobro agendado: ".$datosCobros->codigo."<br>Fecha de cobro: ".date('d/m/Y', strtotime($datosCobros->fecha_pago))."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".$facInfo["total"]."<br>";
+											$comentario = "Cobro agendado: ".$datosCobros->codigo."<br>Fecha de cobro: ".date('d/m/Y', strtotime($datosCobros->fecha_pago))."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".number_format($datosCobros->monto_pagado,2, '.', '')."<br>";
 										}else{
-											$comentario = "Cobro realizado: ".$cobro->codigo."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".$facInfo["total"]."<br>";	
+											$comentario = "Cobro realizado: ".$datosCobros->codigo."<br>Factura: ".$facInfo["codigo"]."<br>Monto: $ ".number_format($datosCobros->monto_pagado,2, '.', '')."<br>";	
 										}
 										$fecha_creado = date('Y-m-d H:i:s');
 										$Bitacora = new PolizasBitacora;
@@ -165,7 +165,15 @@ class FormGuardar{
     {
         return  Capsule::transaction(function() use($campos, $items, $metodo_cobros){
             $cobro = Cobro::find($campos['id']);
-            $cobro->update(['estado'=>$campos['estado'],'num_remesa'=>$campos['num_remesa']]);
+            if(isset($campos['fecha_pago']) && isset($metodo_cobros)){
+            	$cobro->metodo_cobro()->delete();
+            	$metodoCobros =  FormatoMetodoCobro::formato($metodo_cobros);
+				$cobro->metodo_cobro()->saveMany($metodoCobros);
+            	$cobro->update(['estado'=>$campos['estado'],'fecha_pago' => $campos['fecha_pago'],'num_remesa'=>$campos['num_remesa']]);
+            }else{
+            	$cobro->update(['estado'=>$campos['estado'],'num_remesa'=>$campos['num_remesa']]);
+            }
+            
             return $cobro;
         });
     }

@@ -21,9 +21,12 @@ if (typeof uuid_cotizacion === 'undefined'){
                 //pagarColaboradorExtraordinario: ".pagarColaboradorExtraordinario",
                 anularColaborador: ".anularColaborador",
                 aprobarPago: ".aprobarPago", //No planilla
+                aprobarPagoPE: ".aprobarPagoPE", //No planilla
                 anularPago: ".anularPago",
                 aplicarPago: ".aplicarPago",
-                generarAplicadoMultiple:"#generarAplicadoMultiple"
+                generarAplicadoMultiple:"#generarAplicadoMultiple",
+                changeStateBtn: ".change-state-btn",
+		            changeStateMultipleBtn: "#change-state-multiple-btn"
 
         };
 
@@ -229,7 +232,7 @@ console.log("iniciando filtro inicial");
                 {name:'Proveedor', index:'proveedor_id', width:70, sortable:true, },
                 {name:'fecha', index:'fecha_pago', width:50, sortable:true},
                 {name:'monto', index:'monto_pagado', width: 60, sortable:true},
-                {name:'tipo', index:'tipo', width: 50, sortable:false},
+                {name:'no_documento', index:'no_documento', width: 50, sortable:true},
                 {name:'forma_pago', index:'pag_pagos_metodo_pago.tipo_pago', width: 40, sortable:false},
                 //{name:'banco', index:'banco', width: 60, sortable:false},
                 {name:'estado', index:'estado', width: 45, sortable:true, align:'center'},
@@ -308,6 +311,9 @@ console.log("iniciando filtro inicial");
                         opcionesModal.find('.modal-footer').empty();
                         opcionesModal.modal('show');
                 });
+
+
+
                 };
         $(botones.limpiar).click(function (e) {
                   e.preventDefault();
@@ -343,6 +349,26 @@ console.log("iniciando filtro inicial");
        			.append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancear</button>')
        			.append('<button id="confirmarPagoColaborador" data-tipo="'+ tipo_formulario +'" data-id="'+ uuid_pago +'" class="btn btn-w-m btn-primary" type="button">Confirmar</button>');
        	 });
+
+         $('body').on('click', '.state-btn', function(){
+             var btn = $(this);
+             var id = btn.data('id');
+             var aux = gridObj.jqGrid('getGridParam','selarrrow');
+             var params = $.extend({erptkn:window.tkn}, {id: !id ? aux : id, estado: btn.data('estado')});
+             opcionesModal.modal('hide');
+             $.ajax({
+                 url: phost() + "pagos/ajax_update_state",
+                 type: "POST",
+                 data: params,
+                 dataType: "json",
+                 success: function (response) {
+                     if (!_.isEmpty(response)) {
+                         toastr[response.response ? 'success' : 'error'](response.mensaje);
+                         recargar();
+                     }
+                 }
+             });
+         });
 
          opcionesModal.on("click", botones.anularPago, function(e){
              e.preventDefault();
@@ -437,6 +463,22 @@ console.log("iniciando filtro inicial");
               .append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>')
               .append('<button id="confirmarAplicarPago" data-id="'+ uuid_pago +'" class="btn btn-w-m btn-primary" type="button">Aplicar Pago</button>');
            });
+           opcionesModal.on("click", botones.aprobarPagoPE, function(e){
+
+             e.preventDefault();
+             e.returnValue=false;
+             e.stopPropagation();
+
+              var nombre = $(this).attr('data-nombre');
+              var uuid_pago = $(this).attr('data-pagoid');
+               //Init boton de opciones
+              opcionesModal.find('.modal-title').empty().append('Confirme');
+              opcionesModal.find('.modal-body').empty().append('Est&aacute; seguro que desea aprobar este pago?');
+              opcionesModal.find('.modal-footer')
+               .empty()
+               .append('<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>')
+               .append('<button id="confirmarAprobarPagoPE" data-id="'+ uuid_pago +'" class="btn btn-w-m btn-primary" type="button">Aprobar Pago</button>');
+            });
 
           opcionesModal.on("click", botones.aprobarPago, function(e){
 
@@ -494,7 +536,43 @@ console.log("iniciando filtro inicial");
               });
 
       });
+      opcionesModal.on("click", "#confirmarAprobarPagoPE", function(e){
+             e.preventDefault();
+             e.returnValue=false;
+             e.stopPropagation();
 
+             var id = $(this).attr('data-id');
+
+             $("div.modal-content").find('#confirmarAprobarPago').attr('disabled', true);
+
+             $.ajax({
+                     url: phost() + 'pagos/ajax_aprobar_pagoPE',
+                     data: {
+                       id: id,
+                       estado:'por_aplicar',
+                       erptkn: tkn,
+                     },
+                     type: "POST",
+                     dataType: "json",
+                     cache: false,
+             }).done(function(json) {
+
+                   if( $.isEmptyObject(json.session) === false){
+                                window.location = phost() + "login?expired";
+                   }
+
+                   if(json.response === true){
+                            toastr.success(json.mensaje);
+                            opcionesModal.modal('hide');
+                            recargar();
+                   }
+                    else{
+                            toastr.error(json.mensaje);
+                            opcionesModal.modal('hide');
+                     }
+                  });
+
+      });
 opcionesModal.on("click", "#confirmarAprobarPago", function(e){
        e.preventDefault();
        e.returnValue=false;
@@ -573,6 +651,31 @@ opcionesModal.on("click", "#confirmarAprobarPago", function(e){
                       });
 
          });
+
+//change state
+	opcionesModal.on("click", botones.changeStateBtn, function (e) {
+		e.preventDefault();
+		e.returnValue = false;
+		e.stopPropagation();
+		//aplicar_credito.js
+		change_state_pagos().m.run($(this));
+	});
+
+	gridObj.on("click", botones.changeStateBtn, function (e) {
+		e.preventDefault();
+		e.returnValue = false;
+		e.stopPropagation();
+		//aplicar_credito.js
+		opcionesModal.modal('show');
+		change_state_pagos().m.run($(this));
+	});
+
+	$("#moduloOpciones").on("click", botones.changeStateMultipleBtn, function (e) {
+		//aplicar_credito.js
+		opcionesModal.modal('show');
+		change_state_pagos().m.run($(this));
+	});
+
 
 
         /*opcionesModal.on("click", "#confirmarPagoColaboradorExtraordinario", function(e){

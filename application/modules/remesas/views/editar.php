@@ -52,10 +52,6 @@
                                         ?>
                                     </select>
                                 </div>
-                                <!-- <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                    <label>N° poliza</label>
-                                    <input type="text" name="poliza" id="poliza" class="form-control" />
-                                </div> -->
                                 <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-4">
                                     <label>Rango de fechas</label>
                                     <div class="input-group">
@@ -65,20 +61,30 @@
                                         <input type="input" id="fecha_hasta" name="fecha_hasta" readonly="readonly" class="form-control" value="" data-rule-required="true" <?php if($ver == 1){echo 'disabled';} ?> >
                                     </div>
                                 </div>
-                                <!--
-                                <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
-                                    <label>cliente</label>
-                                    <input type="text" name="cliente" id="cliente" class="form-control" />
-                                </div> -->
-                            
-
-                            <!-- <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12"> -->
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                     <label>Ramo</label>
                                     <select id="ramos" name="ramos" class="ramo chosen-select grouper" multiple="multiple" data-placeholder="Seleccione una opción" <?php if($ver == 1){echo 'disabled';} ?> >
                                         <option value="todos">Todos</option>
                                         <?php 
-                                            //var_dump($ramos_id);
+                                            $cont = 0;
+                                            foreach ($menu_crear as  $value) {
+                                                foreach ($menu_crear AS $menu) {
+                                                    if ($value['id'] == $menu['padre_id']) {
+                                                        $cont++;
+                                                    }
+                                                }
+                                                if($cont == 0 && $value['padre_id'] != 0 && $value['estado'] && in_array($value['id'], $rolesArray) && in_array($value['id'], $usuariosArray) ){
+                                                    echo '
+                                                    <option value="'.$value['id'].'">'.$value['nombre'].'</option>
+                                                    '; 
+                                                }
+                                                $cont = 0;
+                                            }
+                                        ?>
+                                    </select>
+                                    <select id="ramos2" name="ramos2" class="hidden" multiple="multiple" data-placeholder="Seleccione una opción" >
+                                        <option value="todos">Todos</option>
+                                        <?php 
                                             $cont = 0;
                                             foreach ($menu_crear as  $value) {
                                                 foreach ($menu_crear AS $menu) {
@@ -96,16 +102,14 @@
                                         ?>
                                     </select>
                                 </div>
-                            <!--</div> -->
-
                             </div>
-
                             <input type="hidden" id="vista" name="vista" value="<?php echo $vista?>">
+                            <input type="hidden" id="id_remesa" name="id_remesa" value="{{id_remesa}}">
                         </div>
                         <div class="row">
                             <div class="col-xs-0 col-sm-0 col-md-9 col-lg-9">&nbsp;</div>
                             <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-                                <input type="button" id="clearBtn" class="btn btn-success btn-block" value="Actualizar" @click="getRemesas()" :disabled="disabledActualizar"/>
+                                <input type="button" id="clearBtn" class="btn btn-success btn-block" value="Actualizar" @click="getRemesas(2,0)" :disabled="disabledActualizar"/>
                             </div>
                         </div>
                     <?php echo form_close(); ?>

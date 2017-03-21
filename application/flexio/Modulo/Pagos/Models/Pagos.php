@@ -42,7 +42,9 @@ class Pagos extends Model
         'proveedor' => 'Flexio\\Modulo\\Proveedores\\Models\\Proveedores',
         'subcontrato' => 'Flexio\\Modulo\SubContratos\\Models\\SubContrato',
         'anticipo' => 'Flexio\\Modulo\\Anticipos\\Models\\Anticipo',
-        'movimiento_monetario' => 'Flexio\\Modulo\\MovimientosMonetarios\\Models\\MovimientosRetiros'
+        'movimiento_monetario' => 'Flexio\\Modulo\\MovimientosMonetarios\\Models\\MovimientosRetiros',
+		'participacion' => 'Flexio\\Modulo\\HonorariosSeguros\\Models\\HonorariosSeguros',
+        'remesas_salientes' => 'Flexio\\Modulo\\Remesas\\Models\\Remesa'
     ];
 
     public function __construct(array $attributes = array()){
@@ -189,6 +191,12 @@ class Pagos extends Model
     {
         return $this->morphedByMany('Flexio\Modulo\Anticipos\Models\Anticipo','pagable', 'pag_pagos_pagables','pago_id')
                 ->withPivot('monto_pagado','empresa_id')->withTimestamps();
+    }
+	
+	public function honorario()
+    {
+        return $this->belongsToMany('Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros', 'pag_pagos_pagables','pago_id','pagable_id')->select('seg_comisiones.no_comision', 'seg_comisiones.fecha', 'seg_comisiones.monto_recibo')
+                ->withPivot('monto_pagado','pagable_id','pagable_type','empresa_id')->withTimestamps();
     }
 
     public function empezable()

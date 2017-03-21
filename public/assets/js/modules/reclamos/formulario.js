@@ -156,6 +156,21 @@ $(document).ready(function () {
             peso: true,
             treeview: true
         };
+
+        $(".limpiar_detalle_salud").click(function () {
+            $("#tipo_salud").attr("disabled", false).val("");
+            $("#hospital").attr("disabled", false).val("");
+            $("#doctor").attr("disabled", false).val("");
+            $("#especialidad_salud").attr("disabled", false).val("");
+            $("#detalle_salud").attr("disabled", false).val("");
+            $("#fecha_salud").attr("disabled", false).val("");
+            $("#monto").attr("disabled", false).val("");
+            $("#detalle_unico").attr("disabled", false).val("");
+            $("#id_detalle_salud").attr("disabled", false).val("0");
+            $("#id_reclamo_salud").attr("disabled", false).val("0");
+            $(".agregar_detalle_salud").show();
+        });
+
     }
 
 
@@ -189,12 +204,14 @@ $(document).ready(function () {
         }
     });
 
+    
+
         
 
     $('#formReclamosCrear').validate({
         submitHandler: function (form) {
             $.post(phost() + 'reclamos/existsIdentificacion', $('#formReclamosCrear').serialize(), function(data){
-                //console.log(data);
+                console.log(data);
                 var respuesta = $.parseJSON(data);
                 if(respuesta.existe){
                     toastr.error("Este numero de reclamo ya existe, por favor intente con otro numero de caso.");

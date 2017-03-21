@@ -1,0 +1,854 @@
+<?php
+/**
+ * Acreedores
+ *
+ * Modulo para administrar la creacion, edicion de acreedores
+ *
+ * @package    PensaApp
+ * @subpackage Controller
+ * @category   Controllers
+ * @author     Pensanomica Team
+ * @link       http://www.pensanomca.com
+ * @copyright  10/29/2015
+ */
+
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Carbon\Carbon;
+//Repositorios
+use Flexio\Modulo\Acreedores\Repository\AcreedoresRepository as acreedoresRep;
+use Flexio\Modulo\Acreedores\Repository\AssetsAcreedoresRepository as assetsAcreedores;
+use Flexio\Modulo\Modulos\Repository\ModulosRepository as modulosRep;
+use Flexio\Modulo\Bancos\Repository\BancosRepository as bancosRep;
+use Flexio\Modulo\Colaboradores\Repository\ColaboradoresRepository as colaboradoresRep;
+use League\Csv\Writer as Writer;
+
+class Acreedores extends CRM_Controller
+{
+    private $empresa_id;
+    private $usuario_id;
+    private $userID;
+    private $empresaObj;
+
+    //flexio
+    private $acreedoresRep;
+    private $assetsAcreedores;
+    private $modulosRep;
+    private $bancosRep;
+    private $colaboradoresRep;
+    private $breadcrumb;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $uuid_empresa       = $this->session->userdata('uuid_empresa');
+        $empresaObj         = new Buscar(new Empresa_orm,'uuid_empresa');
+
+        //modelos de la vieja estructura
+        $this->load->model("descuentos/Descuentos_orm");
+        $this->load->model("colaboradores/Colaboradores_orm");
+        $this->load->model("planilla/Pagadas_descuentos_orm");
+        $this->load->library('orm/catalogo_orm');
+        $this->load->model('descuentos/Estado_orm');
+
+        //variables para el entorno del modulo
+        $this->empresaObj   = $empresaObj->findByUuid($uuid_empresa);
+        $this->usuario_id   = $this->session->userdata("huuid_usuario");
+        $this->empresa_id   = $this->empresaObj->id;
+        $this->userID = $this->session->userdata("id_usuario");
+
+        //flexio
+        $this->acreedoresRep    = new acreedoresRep();
+        $this->assetsAcreedores = new assetsAcreedores();
+        $this->modulosRep       = new modulosRep();
+        $this->bancosRep        = new bancosRep();
+        $this->colaboradoresRep = new colaboradoresRep();
+
+
+    }
+
+    public function index()
+    {
+        redirect("acreedores/listar");
+    }
+
+    private function _breadcrumbListar()
+    {
+        $breadcrumb = array(
+            "titulo" => '<i class="fa fa-users"></i> Acreedores',
+            "ruta" => array(
+                0 => array("nombre" => "Recursos humanos",  "activo" => false),
+                1 => array("nombre" => '<b>Acreedores</b>', "activo" => true)
+                ),
+            "filtro"    => false,
+            "menu"      => array()
+            );
+
+        if ($this->auth->has_permission('acceso', 'acreedores/crear')){
+            $breadcrumb["menu"]["nombre"]   = "Crear";
+            $breadcrumb["menu"]["url"]      = "acreedores/crear/";
+        }
+
+        if ($this->auth->has_permission('listar__exportarAcreedores', 'acreedores/listar')){
+            //$breadcrumb["menu"]["opciones"]["#exportarBtn"] = "Exportar";
+        }
+
+        return $breadcrumb;
+    }
+
+    public function listar()
+    {
+    	$data = array();
+
+        $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
+        $this->assets->agregar_css($this->assetsAcreedores->agregar_css_listar());
+
+        $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
+        $this->assets->agregar_js($this->assetsAcreedores->agregar_js_listar());
+
+        if($this->session->userdata('idProveedor')){
+          $this->session->unset_userdata('idProveedor');
+          $data["mensaje"] = [
+          "clase"		=> "alert-success",
+          "contenido"	=> "Se ha creado el Acreedor satisfactoriamente."
+          ];
+      }
+      $breadcrumbName="<script>
+      var str =localStorage.getItem('ms-selected');
+      var capitalize = str[0].toUpperCase()+str.substring(1);
+      document.write(capitalize);
+  </script>";
+  $breadcrumbUrl =base_url("/");
+  $completeBreadCrumb="<a href='$breadcrumbUrl'>$breadcrumbName</a>";
+        //Verificar permisos para crear
+        //if($this->auth->has_permission('acceso', 'colaboradores/crear')){
+  $breadcrumb= array(
+     "titulo" => '<i class="fa fa-users"></i> Acreedores',
+     "ruta" => array(
+      0 => array("nombre" => "$completeBreadCrumb",  "activo" => false),
+      1 => array("nombre" => 'Acreedores', "url"=>"acreedores/listar", "activo" => true),
+      2=> array("nombre" => '<b>Listar</b>',"activo" => true)
+      
+      ),
+     "filtro" => false,
+     "menu" => array(
+      "url"	=> 'acreedores/crear/',
+      "clase" 	=> '',
+      "nombre" => "Crear"
+      )
+     );
+
+  $menuOpciones["#exportarLnk"] = "Exportar";
+  $breadcrumb["menu"]["opciones"] = $menuOpciones;
+
+        //Agregra variables PHP como variables JS
+  $this->assets->agregar_var_js($this->assetsAcreedores->agregar_var_js_listar($data));
+
+  unset($data["mensaje"]);
+  $data["tipos"]  = $this->acreedoresRep->getTipos();
+
+  $this->template->agregar_titulo_header('Listado de Acreedores');
+  $this->template->agregar_breadcrumb($breadcrumb);
+  $this->template->agregar_contenido($data);
+  $this->template->visualizar($breadcrumb);
+
+}
+
+public function listar_reporte($uuid_proveedor=NULL)
+{
+    $proveedor_info = array();
+    $proveedor_info['info'] = $this->acreedoresRep->listar_reporte($uuid_proveedor)->toArray();
+    $proveedor_id = $proveedor_info['info'][0]['id'];
+
+    $this->assets->agregar_css(array(
+      'public/assets/css/default/ui/base/jquery-ui.css',
+      'public/assets/css/default/ui/base/jquery-ui.theme.css',
+      'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
+      'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
+      'public/assets/css/plugins/jquery/chosen/chosen.min.css',
+      'public/assets/css/plugins/jquery/jquery.webui-popover.css',
+      'public/assets/css/plugins/bootstrap/jquery.bootstrap-touchspin.css',
+      'public/assets/css/plugins/bootstrap/bootstrap-datetimepicker.css',
+      'public/assets/css/plugins/bootstrap/daterangepicker-bs3.css',
+      'public/assets/css/modules/descuentos/estado_cuenta.css',
+      ));
+    $this->assets->agregar_js(array(
+      'public/assets/js/default/jquery-ui.min.js',
+      'public/assets/js/plugins/jquery/jquery-validation/jquery.validate.min.js',
+      'public/assets/js/plugins/jquery/jquery-validation/localization/messages_es.min.js',
+      'public/assets/js/plugins/jquery/jquery-validation/additional-methods.js',
+      'public/assets/js/plugins/jquery/jquery.webui-popover.js',
+      'public/assets/js/plugins/jquery/jquery.sticky.js',
+      'public/assets/js/plugins/jquery/jQuery.resizeEnd.js',
+      'public/assets/js/plugins/jquery/jqgrid/i18n/grid.locale-es.js',
+      'public/assets/js/plugins/jquery/jqgrid/jquery.jqGrid.min.js',
+      'public/assets/js/plugins/jquery/chosen.jquery.min.js',
+      'public/assets/js/moment-with-locales-290.js',
+      'public/assets/js/plugins/bootstrap/jquery.bootstrap-touchspin.js',
+      'public/assets/js/plugins/bootstrap/daterangepicker.js',
+      'public/assets/js/default/formulario.js',
+      'public/assets/js/modules/acreedores/reporte_pagos.js',
+      'public/assets/js/plugins/jspdf/jspdf.min.js',
+      'public/assets/js/plugins/jspdf/libs/html2canvas/dist/html2canvas.js',
+
+      ));
+
+    	//Opcion Default
+    $menuOpciones = array();
+
+
+    	//Breadcrum Array
+    $breadcrumb = array(
+      "titulo" => 'Acreedores: Reporte de Pagos',
+
+      );
+
+        //Agregar variable js de requisitos y colaborador_id
+    $this->assets->agregar_var_js(array(
+      "acreedor_id" => $proveedor_id
+      ));
+
+       /* echo '<h2>Consultando Antes:</h2><pre>';
+            print_r($descuentos);
+            echo '</pre>';
+        */
+    	//Verificar permisos para crear
+            if($this->auth->has_permission('acceso', 'acreedores/reporte')){
+              $breadcrumb["menu"] = array(
+               "url"	 => '#',
+               "nombre" => "Acci&oacute;n"
+               );
+              $menuOpciones["#exportarReporteLnk"] = "Exportar";
+          }
+
+          $breadcrumb["menu"]["opciones"] = $menuOpciones;
+
+
+          $this->template->agregar_titulo_header('Acreedores: Reporte de Pagos');
+          $this->template->agregar_breadcrumb($breadcrumb);
+          $this->template->agregar_contenido($proveedor_info);
+          $this->template->visualizar($breadcrumb);
+      }
+
+      public function exportar()
+      {
+         if(empty($_POST)){
+          return false;
+      }
+
+      $ids =  $this->input->post('ids', true);
+      $id = explode(",", $ids);
+
+      if(empty($id)){
+          return false;
+      }
+
+      $csv = array();
+      $clause = array(
+          "empresa_id" => $this->empresa_id,
+          "acreedor" => $id
+          );
+      $acreedores = $this->acreedoresRep->get($clause, NULL, NULL, NULL, NULL);
+
+    	/*echo "<pre>";
+    	print_r($acreedores);
+    	echo "</pre>";
+    	die();*/
+
+    	if(empty($acreedores)){
+    		return false;
+    	}
+
+    	$i=0;
+    	foreach ($acreedores AS $row)
+    	{
+    		$csvdata[$i]['nombre'] = Util::verificar_valor($row->nombre);
+    		$csvdata[$i]["ruc"] = utf8_decode(Util::verificar_valor($row->ruc));
+    		$csvdata[$i]["telefono"] = utf8_decode(Util::verificar_valor($row->telefono));
+    		$csvdata[$i]["email"] = utf8_decode(Util::verificar_valor($row->email));
+    		$csvdata[$i]["tipo_acreedor"] = utf8_decode(Util::verificar_valor($row->tipo->etiqueta));
+    		$csvdata[$i]["descuentos"] = $row->descuentos->where("estado_id", "6")->count();
+    		$i++;
+    	}
+
+    	//we create the CSV into memory
+    	$csv = Writer::createFromFileObject(new SplTempFileObject());
+    	$csv->insertOne([
+    		'Nombre',
+    		'Ruc',
+    		'Telefono',
+    		'Email',
+    		'Tipo de Acreedor',
+    		'Descuentos a colaboradores'
+         ]);
+    	$csv->insertAll($csvdata);
+    	$csv->output("acreedores-". date('ymd') .".csv");
+    	die;
+    }
+
+    public function ajax_obtener_item()
+    {
+    	//Just Allow ajax request
+    	if($this->input->is_ajax_request())
+        {
+            $this->load->model("inventarios/Items_orm");
+            $uuid = $this->input->post("uuid", true);
+
+            $registro   = Items_orm
+            ::where("uuid_item", "=", hex2bin(strtolower($uuid)))
+            ->get();
+
+            $item       = array();
+            $i          = 0;
+            foreach ($registro as $row)
+            {
+                $item[$i] = array(
+                    "descripcion"   => $row->descripcion,
+                    "unidades"      => $row->unidades
+                    );
+                $i += 1;
+            }
+
+            $response               = array();
+            $response["success"]    = false;
+            $response["item"]       = $item;
+
+            if(!empty($response["item"]))
+            {
+                $response["success"]    = true;
+            }
+
+            echo json_encode($response);
+            exit();
+        }
+
+    }
+
+    public function ajax_obtener_pedido_item()
+    {
+    	//Just Allow ajax request
+    	if($this->input->is_ajax_request())
+        {
+            $this->load->model("pedidos/Pedidos_items_orm");
+
+            $id_pedido_item = $this->input->post("id_pedido_item", true);
+            $registro       = Pedidos_items_orm::find($id_pedido_item)->toArray();
+
+
+            $response               = array();
+            $response["success"]    = false;
+            $response["registro"]   = $registro;
+
+            if(!empty($response["registro"]))
+            {
+                $response["success"]    = true;
+            }
+
+            echo json_encode($response);
+            exit();
+        }
+
+    }
+
+    function ajax_reporte_pagos()
+    {
+        $acreedor_id =  $this->input->post('acreedor_id', true);
+        $fecha_desde =  $this->input->post('fecha_desde', true);
+        $fecha_hasta =  $this->input->post('fecha_hasta', true);
+
+        if(empty($acreedor_id)){
+          return false;
+      }
+
+      if(!empty($acreedor_id)){
+          $clause["acreedor_id"] = $acreedor_id;
+      }
+      if( !empty($fecha_desde)){
+          $fecha_desde = str_replace('/', '-', $fecha_desde);
+          $fecha_inicio = date("Y-m-d", strtotime($fecha_desde));
+          $clause["fecha_inicio"] = array(">=", $fecha_inicio);
+      }
+      if( !empty($fecha_hasta)){
+          $fecha_hasta = str_replace('/', '-', $fecha_hasta);
+          $fecha_fin = date("Y-m-d", strtotime($fecha_hasta));
+          $clause["fecha_inicio@"] = array('<=', $fecha_fin);
+      }
+
+      $reporte_pago = Descuentos_orm::reporte($clause)->toArray();
+
+      $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+      ->set_output(json_encode($reporte_pago))->_display();
+      exit;
+  }
+
+  public function ajax_listar()
+  {
+     if(!$this->input->is_ajax_request()){
+        return false;
+    }
+
+    $clause                 = $this->input->post();
+    $clause["empresa_id"]   = $this->empresa_id;
+
+    list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+
+    $count = $this->acreedoresRep->count($clause);
+    list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+
+    $acreedores = $this->acreedoresRep->get($clause, $sidx, $sord, $limit, $start);
+
+    $response           = new stdClass();
+    $response->page     = $page;
+    $response->total    = $total_pages;
+    $response->records  = $count;
+
+
+    if($count){
+
+        foreach($acreedores as $i => $row){
+
+            $hidden_options = "";
+            $link_option    = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_proveedor .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+            $hidden_options .= '<a href="'. base_url('acreedores/ver/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Ver Acreedor</a>';
+            $hidden_options .= '<a href="'. base_url('acreedores/reporte/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Reporte de pagos</a>';
+
+            $response->rows[$i]["id"]   = $row->uuid_proveedor;
+            $response->rows[$i]["cell"] = $this->_getResponseCell($row, $link_option, $hidden_options);
+        }
+    }
+
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($response))->_display();
+    exit;
+}
+
+public function ajax_listar_colaboradores()
+{
+ if(!$this->input->is_ajax_request()){
+    return false;
+}
+
+        $clause                 = $this->input->post();//viene acreedor_id
+        $clause["empresa_id"]   = $this->empresa_id;
+
+        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+
+        $count = $this->colaboradoresRep->count($clause);
+        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+
+        $acreedores = $this->colaboradoresRep->get($clause, $sidx, $sord, $limit, $start);
+
+        $response           = new stdClass();
+        $response->page     = $page;
+        $response->total    = $total_pages;
+        $response->records  = $count;
+
+
+        if($count){
+
+            foreach($acreedores as $i => $row){
+
+                $hidden_options = "";
+                $link_option    = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->uuid_proveedor .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+                $hidden_options = '<a href="'. base_url('acreedores/ver/'. $row->uuid_proveedor) .'" class="btn btn-block btn-outline btn-success">Ver Acreedor</a>';
+
+                $response->rows[$i]["id"]   = $row->uuid_proveedor;
+                $response->rows[$i]["cell"] = $this->colaboradoresRep->getResponseCell($row, $link_option, $hidden_options);
+            }
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    private function _getResponseCell($row, $link_option, $hidden_options){
+
+
+        return [
+        $row->uuid_proveedor,
+        '<a style="color:blue;" class="link" href="'. base_url('acreedores/ver/'. $row->uuid_proveedor) .'" >'.$row->nombre.'</a>',
+        $row->telefono,
+        $row->email,
+        $row->tipo->etiqueta,
+        $row->cantidad_colaboradores(),
+            //$row->descuentos->where("estado_id", "6")->count(),//descuentos directos activos
+//            $this->acreedoresRep->getTotalAPagar($row->total_pagar),
+
+        '<label style="border: #d9534f solid 2px;color: #d9534f;display: block;text-align: center;padding: 2px;">$'.$this->pagados_from_des_descuentos($row['id'])[0]->suma.'</label>',
+        $link_option,
+        $hidden_options
+        ];
+    }
+    
+    public function pagados_from_des_descuentos($proveedor_id){
+       $pln_pagadas = Capsule::table('pro_proveedores')
+       ->select(Capsule::raw('sum(pln_pagadas_descuentos.monto_ciclo) as suma'))
+       ->join('desc_descuentos', 'desc_descuentos.acreedor_id', '=', 'pro_proveedores.id')
+       ->join('pln_pagadas_descuentos', 'pln_pagadas_descuentos.descuento_id', '=', 'desc_descuentos.id' )
+       ->where('pro_proveedores.id', '=', $proveedor_id)
+       ->get();
+       //dd($pln_pagadas);
+       return $pln_pagadas;
+   }
+
+   function ajax_anular()
+   {
+    $response = array();
+    $response["success"]    = false;
+    $response["mensaje"]    = "Error de sistema. Comuniquelo con el administrador de sistema";
+    $response["clase"]      = "alert-danger";
+
+    $uuid   = $this->input->post("uuid", true);
+    if(!empty($uuid))
+    {
+        $registro   = Pedidos_orm
+        ::where("uuid_pedido", "=", hex2bin(strtolower($uuid)))
+        ->first();
+
+            //DEFINO EL ESTADO COMO ANULADO = 6
+        $registro->id_estado = "6";
+        if($registro->save())
+        {
+            $response["success"]    = true;
+            $response["mensaje"]    = "Su solicitud fue procesada satifastoriamente.";
+            $response["clase"]      = "alert-success";
+        }
+
+    }
+
+    echo json_encode($response);
+    exit();
+}
+
+function ajax_eliminar_pedido_item()
+{
+    	//Just Allow ajax request
+ if(!$this->input->is_ajax_request()){
+  return false;
+}
+
+$this->load->model("pedidos/Pedidos_items_orm");
+
+$id_registro    = $this->input->post("id_registro", true);
+$registro       = Pedidos_items_orm::find($id_registro);
+
+$response   = array(
+    "respuesta" => $registro->delete(),
+    "mensaje"   => "Se ha eliminado el registro satisfactoriamente"
+    );
+
+
+$json       = '{"results":['.json_encode($response).']}';
+echo $json;
+exit;
+}
+
+function ajax_reabrir()
+{
+    $response = array();
+    $response["success"]    = false;
+    $response["mensaje"]    = "Error de sistema. Comuniquelo con el administrador de sistema";
+    $response["clase"]      = "alert-danger";
+
+    $uuid   = $this->input->post("uuid", true);
+    if(!empty($uuid))
+    {
+        $registro   = Pedidos_orm
+        ::where("uuid_pedido", "=", hex2bin(strtolower($uuid)))
+        ->first();
+
+            //DEFINO EL ESTADO COMO ABIERTO = 1
+        $registro->id_estado = "1";
+        if($registro->save())
+        {
+            $response["success"]    = true;
+            $response["mensaje"]    = "Su solicitud fue procesada satifastoriamente.";
+            $response["clase"]      = "alert-success";
+        }
+
+    }
+
+    echo json_encode($response);
+    exit();
+}
+
+private function _getProveedor($acreedor){
+    return [
+    "id"        => $acreedor->id,
+    "nombre"    => $acreedor->nombre,
+            "credito"   => $acreedor->credito, //Por desarrollar -> depende de abonos
+            "saldo"     => (string)($acreedor->total_saldo_pendiente()) ? : "0.00"
+            ];
+        }
+
+        function ajax_get_acreedor (){
+
+            $acreedor_id   = $this->input->post("acreedor_id");
+            $acreedor      = $this->acreedoresRep->find($acreedor_id);
+
+            $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($this->acreedoresRep->getColletionCampos($acreedor)))->_display();
+
+            exit;
+        }
+
+        function ajax_exportar()
+        {
+            $id_registros = $this->input->post("id_registros", true);
+
+            if(!$id_registros){
+                return false;
+            }
+
+            $id_registros = explode("-", $id_registros);
+
+        //EN CASO DE QUE SEAN UUID LOS CAMBIO AL
+        //FORMATO QUE ESTA EN LA BASE DE DATOS
+            foreach ($id_registros as &$row)
+            {
+                $row = hex2bin(strtolower($row));
+            }
+
+            $registros  = Acreedores_orm
+            ::whereIn("uuid_acreedor", $id_registros)
+            ->get();
+
+            $items = array();
+            $i = 0;
+            foreach($registros as $registro)
+            {
+            //Categorias
+                $categorias = array();
+                $aux        = $registro->categorias;
+                foreach ($aux as $categoria)
+                {
+                    $categorias[] = $categoria->nombre;
+                }
+
+                $items[$i]["Nombre"]        = $registro->nombre;
+                $items[$i]["Telefono"]      = $registro->telefono;
+                $items[$i]["E-mail"]        = $registro->email;
+                $items[$i]["Categoria(s)"]  = (empty($categorias)) ? "No tiene" : implode(", ", $categorias);
+                $items[$i]["Tipo"]          = $registro->tipo->nombre;
+                $items[$i]["O/C abiertas"]  = "".$registro->ordenesAbiertas()."";
+                $items[$i]["Total a pagar"] = "###";
+
+                $i += 1;
+            }
+
+            if(empty($items)){
+                return false;
+            }
+
+            $objecto        = new stdClass();
+            $objecto->count = count($items);
+            $objecto->items = $items;
+
+            echo json_encode($objecto);
+            exit();
+        }
+
+    /**
+     * Cargar Vista Parcial de Tabla
+     *
+     * @return void
+     */
+    public function ocultotabla()
+    {
+        $this->assets->agregar_js($this->assetsAcreedores->agregar_js_ocultotabla());
+
+        $this->load->view('tabla');
+    }
+
+    public function ocultotablaColaboradores()
+    {
+        $this->assets->agregar_js($this->assetsAcreedores->agregar_js_ocultotablaColaboradores());
+        //variable del acreedor para filtar los colaboradores
+
+        $this->load->view('tablaColaboradores');
+    }
+
+    /**
+     * Cargar Vista Parcial de Formulario
+     *
+     * @return void
+     */
+    public function ocultoformulario($data = array())
+    {
+    	$this->assets->agregar_js($this->assetsAcreedores->agregar_js_ocultoformulario());
+
+        if(empty($data))
+        {
+            $data["campos"] = array();
+        }
+
+        //catalogos
+        $data["categorias"]     = $this->acreedoresRep->getAcreedoresCategorias($this->empresa_id);
+        $data["tipos"]          = $this->acreedoresRep->getTipos();
+        $data["formas_pago"]    = $this->modulosRep->getFormasDePago();
+        $data["terminos_pago"]  = $this->modulosRep->getTerminosDePago();
+        $data["tipos_cuenta"]   = $this->modulosRep->getTiposDeCuenta();
+        $data["bancos"]         = $this->bancosRep->get(array(), "nombre", "asc", NULL, NULL);
+
+        $this->load->view('formulario', $data);
+    }
+
+    public function crear()
+    {
+        $data = array();
+        $breadcrumbName="<script>
+        var str =localStorage.getItem('ms-selected');
+        var capitalize = str[0].toUpperCase()+str.substring(1);
+        document.write(capitalize);
+    </script>";
+    $breadcrumbUrl =base_url("/");
+    $completeBreadCrumb="<a href='$breadcrumbUrl'>$breadcrumbName</a>";
+    if(!isset($data["mensaje"])){$data["mensaje"] = [];}
+
+    $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
+    $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
+
+    //	$breadcrumb = array();
+
+    $breadcrumb = array(
+        "titulo" => '<i class="fa fa-users"></i> Acreedores: Crear',
+        "filtro" => false,
+
+        "ruta" => array(
+          0 => array(
+              "nombre" => "$completeBreadCrumb",
+              "activo" => false,
+              ),
+          1 => array(
+            "nombre" => "Acreedores",
+            "activo" => false,
+            "url" => 'acreedores/listar'
+            ),
+          2=> array(
+            "nombre" => '<b>Crear</b>',
+            "activo" => true
+            )
+          ),
+        );
+
+    $this->template->agregar_titulo_header('Acreedores');
+    $this->template->agregar_breadcrumb($breadcrumb);
+    $this->template->agregar_contenido($data);
+    $this->template->visualizar();
+}
+
+public function guardar()
+{
+    $post = $this->input->post();
+    if(!empty($post))
+    {
+//            echo "<pre>";
+//            print_r($post);
+//            echo "<pre>";
+//            die();
+        $response = false;
+        Capsule::transaction(
+            function() use ($post, &$response){
+                $response = $this->acreedoresRep->save($post, $this->usuario_id, $this->empresa_id);
+                $this->session->set_userdata('idProveedor', "1");
+            }
+            );
+
+        if(!$response){
+            $data["mensaje"]["clase"]       = "alert-danger";
+            $data["mensaje"]["contenido"]   = "Hubo un error al tratar de crear el proveedor.";
+        }
+    }
+    redirect(base_url('acreedores/listar'));
+}
+
+
+function editar($uuid=NULL)
+{
+    if(!$uuid)
+    {
+        echo "El metodo editar requiere el identificador del elemento";
+        die();
+    }
+
+    $data       = array();
+    $acreedor   = $this->acreedoresRep->findByUuid($uuid);
+    $acreedor->load('comentario_timeline','acreedores_asignados');
+    $this->assets->agregar_css($this->assetsAcreedores->agregar_css_principal());
+    $this->assets->agregar_js($this->assetsAcreedores->agregar_js_principal());
+    $this->assets->agregar_var_js([
+        "acreedor_id"   => $acreedor->id,
+        "vista"         => "ver",
+        "coment" =>(isset($acreedor->comentario_timeline)) ? $acreedor->comentario_timeline : ""
+        ]);
+
+    $breadcrumbName="<script>
+    var str =localStorage.getItem('ms-selected');
+    var capitalize = str[0].toUpperCase()+str.substring(1);
+    document.write(capitalize);
+</script>";
+$breadcrumbUrl =base_url("/");
+$completeBreadCrumb="<a href='$breadcrumbUrl'>$breadcrumbName</a>";  
+$breadcrumb = array(
+    "titulo" => '<i class="fa fa-users"></i> Acreedor: '.$acreedor->nombre,
+    "filtro" => false,
+
+    "ruta" => array(
+      0 => array(
+          "nombre" => "$completeBreadCrumb",
+          "activo" => false,
+          ),
+      1 => array(
+        "nombre" => "Acreedores",
+        "activo" => false,
+        "url" => 'acreedores/listar'
+        ),
+      2=> array(
+        "nombre" => '<b>Detalle</b>',
+        "activo" => true
+        )
+      ),
+    );
+
+$data["campos"]["campos"]   = $this->acreedoresRep->getColletionCampos($acreedor);
+
+$this->template->agregar_titulo_header('Acreedores');
+$this->template->agregar_breadcrumb($breadcrumb);
+$this->template->agregar_contenido($data);
+$this->template->visualizar();
+}
+
+function ocultoformulariocomentarios() {
+
+    $data = array();
+
+    $this->assets->agregar_js(array(
+        'public/assets/js/plugins/ckeditor/ckeditor.js',
+        'public/assets/js/plugins/ckeditor/adapters/jquery.js',
+        'public/assets/js/modules/acreedores/vue.comentario.js',
+        'public/assets/js/modules/acreedores/formulario_comentario.js'
+        ));
+
+    $this->load->view('formulario_comentarios');
+    $this->load->view('comentarios');
+
+}
+
+function ajax_guardar_comentario() {
+
+    if(!$this->input->is_ajax_request()){
+        return false;
+    }
+    $model_id   = $this->input->post('modelId');
+    $comentario = $this->input->post('comentario');
+    $comentario = ['comentario'=>$comentario,'usuario_id'=>$this->userID];
+    $acreedor = $this->acreedoresRep->agregarComentario($model_id, $comentario);
+    $acreedor->load('comentario_timeline');
+
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($acreedor->comentario_timeline->toArray()))->_display();
+    exit;
+}
+
+}

@@ -56,7 +56,7 @@ $(function(){
 				{name:'C&eacute;dula', index:'cedula', width:40},
 				{name:'Tipo salario', index:'tipo_salario', width: 60 },
 		   		{name:'Estado', index:'estado_id', width: 40,  sortable:false},
- 		   		{name:'Total horas', sortable:false,  index:'total_horas', width: 40, hidden: (tipo_planilla_id==79)?false:true},
+ 		   		{name:'Total horas', sortable:false,  index:'total_horas', width: 40, hidden: false},//(tipo_planilla_id==79)?false:true},
  				{name:'link', index:'link', width:50, sortable:false, resizable:false, hidedlg:true, align:"center"},
 				{name:'options', index:'options', hidedlg:true, hidden: true},
 		   	],
@@ -79,7 +79,7 @@ $(function(){
  		    refresh: true,
 		    gridview: true,
 		    multiselect: false,
-		    subGrid: 	(tipo_planilla_id==79)?true:false,    //(permiso_editar==1 && tipo_planilla_id==79)?true:false,
+		    subGrid: 	true,    //(permiso_editar==1 && tipo_planilla_id==79)?true:false,
 		    sortname: 'nombre',
 		    sortorder: "ASC",
 
@@ -110,7 +110,7 @@ $(function(){
  						  var row = rows[i];
  						  var subGridCells = $("td.sgcollapsed",grid[0]);
  						  if (row['Tipo salario'] == 'Mensual'){
-  							  $(subGridCells[i]).unbind('click').html('');
+  							 // $(subGridCells[i]).unbind('click').html('');
  						  }
  	 	                }
 
@@ -134,18 +134,20 @@ $(function(){
 				"openicon"  : "ui-icon-arrowreturn-1-e"
 			},
 
-
+            subGridRowColapsed: function(subgrid_id, row_id){
+                $("#"+subgrid_id).closest("tr").prev().removeClass("ui-state-highlight").removeClass("borde_azul");
+			},
   			subGridRowExpanded: function(subgrid_id, row_id){
 
 
-
+                $("#"+subgrid_id).closest("tr").prev().addClass("ui-state-highlight").addClass("borde_azul");
 
    				var subgrid_table_id, pager_id;
 				var lastsel;
 				subgrid_table_id = subgrid_id+"_t";
 				pager_id = "p_"+subgrid_table_id;
 				$("#"+subgrid_id).html("<div class='table-responsive' style='overflow: auto; width: 100%;'><table id='"+subgrid_table_id+"' class='scroll'></table></div><div id='"+pager_id+"' class='scroll'></div>");
-
+				var lastData=null;
 				$.ajax(
 					    {
 					       type: "POST",
@@ -158,11 +160,12 @@ $(function(){
 					       dataType: "json",
 					       success: function(result)
 					       {
-
-									 	  var button_estado = (result.estado == 3)?false:true; //Si esta validado que deshabilte todo (Add, edit y del)
+                               $("#"+subgrid_id).closest("tr").prev().addClass("ui-state-highlight").addClass("borde_azul");
+									 	  var button_estado = true;//(result.estado == 3)?false:true; //Si esta validado que deshabilte todo (Add, edit y del)
  					            colD = result.colData;
 					            colN = result.colNombres;
 					            colM = result.colModel;
+					            console.log("result; :", result);
 
 					            var ColModel1 = [];
 
@@ -188,8 +191,11 @@ $(function(){
  								            	value: selectRecargos(),
 															width: "150px",
 															dataInit: function (elem) {
-																  select2Apply(elem);
- 							                }
+																var select=select2Apply(elem);
+                                                                if(lastData !=null && typeof lastData.rows != "undefined"  && lastData.rows.length > 0){
+                                                                	select.val(lastData.rows[0].ids.recargo_id).trigger('change');
+																}
+                                                            }
  	  					            },
   					            });
 					            ColModel1.push({name:"Cuenta_Costo",index:"cuenta_costo",width:120, editable: true,edittype:"select",editoptions:
@@ -197,7 +203,10 @@ $(function(){
 				            			value:selectCuentaCosto(),
 													width: "150px",
 													dataInit: function (elem) {
-															select2Apply(elem);
+                                                        var select=select2Apply(elem);
+                                                        if(lastData !=null && typeof lastData.rows != "undefined"  && lastData.rows.length > 0){
+                                                            select.val(lastData.rows[0].ids.cuenta_costo_id).trigger('change');
+                                                        }
 													}
 				            		},
 												editrules:{required:true}
@@ -305,7 +314,7 @@ $(function(){
 				 				    	$(this).closest("div.ui-jqgrid-view").find(grid_id+"_cb, #jqgh_"+grid_id+"_link").css("text-align", "center");
    				 		 		    },
                             loadComplete: function (data) {
-
+								lastData=data;
                                 //check if isset data
                                 if (data['total'] == 0) {
                                     $('#gbox_' + pager_id).hide();
@@ -476,7 +485,32 @@ $(function(){
           setTimeout(function () {
               $(".select2-container").width(374);
           }, 0);
+          return select;
     };
+
+    var select2SetSearch =  function select2_search ($el, term) {
+          $el.select2('open');
+
+          // Get the search box within the dropdown or the selection
+          var $search = $el.data('select2').dropdown.$search || $el.data('select2').selection.$search;
+
+          $search.val(term);
+          $search.trigger('keyup');
+			window.sele=$el;
+          console.log("drop", $el.data('select2').dropdown);
+          setTimeout(function(){
+              var data = $el.data('data');
+              console.log("data",data);
+              $search.trigger('select', {
+                  data: data
+              });
+              $search.trigger('close');
+		  },250);
+
+
+
+
+      };
 
 	var campos = function(){
 

@@ -204,14 +204,21 @@ var ramos = {
         });
 
         $(this.botones.exportar).on("click", function (e) {
-
-
-
-
-            $('form#exportarAseguradores').submit();
-            $('body').trigger('click');
-
-
+			if($('#tab_ramos').is(':visible') == true){	
+				if ($('#tab_ramos').hasClass('active')){
+					$('form#exportarAseguradores').submit();
+					$('body').trigger('click');
+					
+					/*if($("#cb_"+grid_id).is(':checked')) {
+						$("#cb_"+grid_id).trigger('click');
+					}
+					else
+					{
+						$("#cb_"+grid_id).trigger('click');
+						$("#cb_"+grid_id).trigger('click');
+					}*/
+				}
+			}
         });
 
         tablaRamos.opcionesModal.on("click", this.botones.editarCuenta, function (e) {

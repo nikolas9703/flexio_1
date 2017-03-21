@@ -17,11 +17,11 @@ $(function(){
     //ELEMENTOS DE TIPO CHOSEN
     $("#tipo, #categoria").chosen({
         width: '100%',
-        allow_single_deselect: true 
+        allow_single_deselect: true
     });
     //funcionalidad de exportacion
     var gridObj = $("#tablaPagosGrid");
-	  var aplicarPagosModal = $('#aplicarPagosModal');
+	  var aplicarPagosModal = $('#aplicarPagosModal, #optionsModal');
     var  aplicarPagosForm = $("#aplicarPagosForm");
     $("#moduloOpciones").on("click", "#exportarListaPagos", function(){
         //contiene un arreglo con los identificadores de los proveedores (uuid_proveedor)
@@ -46,7 +46,7 @@ $(function(){
         }
     });
 
-    $('#moduloOpciones').on("click", 'a[id*="generarAplicadoMultiple"]', function(e){
+    $('#optionsModal').on("click", '.generarAplicadoMultiple', function(e){
       e.preventDefault();
       e.returnValue=false;
       e.stopPropagation();
@@ -62,10 +62,16 @@ $(function(){
         var check = true;
         var aprobados = true;
 
-        $.each(seleccionados, function(indice, pago_uuid){
+
+        aplicarPagosForm.find("input").remove();
+        aplicarPagosForm.append('<input name="erptkn" value="'+tkn+'" style="display:none;" type="hidden">');
+         $.each(seleccionados, function(indice, pago_uuid){
+
            var rowinfo = gridObj.getRowData(pago_uuid);
            var estado = $.trim(rowinfo.estado_etiqueta);
-           if(!estado.match(/(por_aplicar)/gi)){
+           var forma_pago = $.trim(rowinfo.forma_pago);
+           var id = $.trim(rowinfo.id);
+           if(!estado.match(/(por_aplicar)/gi) || forma_pago.match(/(Cheque)/gi)){
              aprobados = false;
            }
            rows += '<tr><td>'+ rowinfo["codigo"] +'</td><td>'+rowinfo["forma_pago"]  +'</td></tr>';
@@ -164,7 +170,7 @@ $(function(){
           $(this).replaceWith('<label class="btn btn-primary" data-toggle="dropdown" >Acción</label>');
         }
       });
-      $(".breadcrumb").html($(".breadcrumb").html().replace("Compras","Seguros"));
+      $(".breadcrumb").html($(".breadcrumb").html().replace("Compras",'<a href="'+phost()+'#">Seguros</a>'));
       $("label").each(function(index, el) {
         if($(this).html() == "Proveedor"){
           $(this).html("Pago a");

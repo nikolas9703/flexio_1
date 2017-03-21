@@ -75,7 +75,7 @@ export default {
             select2proveedor:{
                 ajax:{
                     url: function(params){
-                        return phost() + 'proveedores/ajax-get-proveedores';
+                        return phost() + 'proveedores/ajax-get-proveedores?tipo='+ empezable.type;
                     },
                     data: function (params) {
                         return {
@@ -91,6 +91,7 @@ export default {
         if(this.config.vista == 'editar'){
             var pago = JSON.parse(JSON.stringify(window.pago));
             this.listaProveedores = [pago.proveedor];
+			
         }
     },
     computed:{
@@ -151,7 +152,6 @@ export default {
             var datos = $.extend({erptkn: tkn},{id:val, type:context.empezable.type});
 
             if(context.config.vista != 'crear' || val === '')return;
-            console.log('watch of empezable.id from detalle.vue in pagos');
 
             this.$http.post({
                 url:window.phost() + "pagos/ajax-get-empezable",
@@ -178,7 +178,7 @@ export default {
               }
 
               var context = this;
-              var datos = $.extend({erptkn: tkn},{proveedor_id:val});
+              var datos = $.extend({erptkn: tkn},{proveedor_id:val,tipo:this.empezable.type});
               this.$http.post({
                   //url: window.phost() + "proveedores/ajax-get-montos",
                   url: window.phost() + "proveedores/ajax_get_proveedor_pago",

@@ -51,12 +51,8 @@ var tablaOrdenes = (function(){
     //Mostrar en los campos de busqueda los valores guardados
     //en localStorage
     var setBusquedaDeLocalStorage = function(){
-      if (!fordenes().m.canUseLocalStorage()) {
-          return false;
-      }
 
-
-        if(multiselect)return false;
+      if(!multiselect)return false;
       if (typeof(Storage) == "undefined") {
           return false;
       }
@@ -282,15 +278,12 @@ var tablaOrdenes = (function(){
         erptkn: tkn,
         proveedor: uuid_proveedor,
         pedido_id: (typeof window.sp_pedido_id !== 'undefined') ? window.sp_pedido_id : '',//from subpanels ver pedido
-        factura_compra_id: (typeof factura_compra_id !== 'undefined') ? factura_compra_id : ''
+        factura_compra_id: (typeof factura_compra_id !== 'undefined') ? factura_compra_id : '',
+        factura_ordenes_multiple: typeof ordenes_multiple !== 'undefined' ? ordenes_multiple : ''
       };
 
       //Parametros guardados en localStorage
-      if(!fordenes().m.canUseLocalStorage()){
-          limpiarBusquedaLocalStorage();
-      }
-    if (fordenes().m.canUseLocalStorage()) {
-      if (typeof(Storage) !== "undefined") {
+      if (typeof(Storage) !== "undefined" && window.location.href.match(/ver/gi)==null) {
         if(typeof localStorage.oc_fecha_desde != "undefined" && localStorage.oc_fecha_desde != "null" && localStorage.oc_fecha_desde !=""){
           data.fecha_desde = localStorage.oc_fecha_desde;
         }
@@ -333,8 +326,6 @@ var tablaOrdenes = (function(){
           data.categoria_id = localStorage.oc_categoria_id;
         }
       }
-
-    }
       return data;
     };
 
@@ -351,6 +342,12 @@ var tablaOrdenes = (function(){
                 'Creado por',
                 'Estado',
                 '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
                 ''
             ],
             colModel:[
@@ -363,6 +360,12 @@ var tablaOrdenes = (function(){
                 {name:'Estado', index:'id_estado', width: 50,sortable:true, align:'center'},
                 {name:'link', index:'link', width:60, align:"center", sortable:true, resizable:false, hidedlg:true},
                 {name:'options', index:'options', hidedlg:true, hidden: true},
+                {name:'proveedor_id', index:'proveedor_id', hidedlg:true, hidden: true},
+                {name:'centro_id', index:'centro_id', hidedlg:true, hidden: true},
+                {name:'centro_uuid', index:'centro_uuid', hidedlg:true, hidden: true},
+                {name:'bodega_id', index:'bodega_id', hidedlg:true, hidden: true},
+                {name:'bodega_uuid', index:'bodega_uuid', hidedlg:true, hidden: true},
+                {name:'bodega_nombre', index:'bodega_nombre', hidedlg:true, hidden: true},
             ],
             mtype: "POST",
             postData: getParametrosFiltroInicial(),
@@ -550,6 +553,36 @@ var tablaOrdenes = (function(){
 
 			$('#documentosModal').modal('show');
 		});
+
+    //change state
+	$(st.optionsModal).on("click", ".change-state-btn", function (e) {
+		e.preventDefault();
+		e.returnValue = false;
+		e.stopPropagation();
+		//aplicar_credito.js
+		change_state_ordenes_compra().m.run($(this));
+	});
+
+	$(st.jqGrid).on("click", ".change-state-btn", function (e) {
+		e.preventDefault();
+		e.returnValue = false;
+		e.stopPropagation();
+		//aplicar_credito.js
+		$(st.optionsModal).modal('show');
+		change_state_ordenes_compra().m.run($(this));
+	});
+
+	$('#moduloOpciones').on("click", "#change-state-multiple-btn", function (e) {
+		//aplicar_credito.js
+		$(st.optionsModal).modal('show');
+		change_state_ordenes_compra().m.run($(this));
+	});
+
+	$(st.optionsModal).on('click', ".state-btn", function (e) {
+		e.preventDefault();
+		//aplicar_credito.js
+		change_state_ordenes_compra().m.summit($(this));
+	});
 
     //Boton de Exportar Descuento
 		$('#exportarBtn').on("click", function(e){

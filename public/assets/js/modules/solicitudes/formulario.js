@@ -1,7 +1,7 @@
 
 var colectivePeople = ['vida', 'salud', 'accidente', 'accidentes'],
 valid = 0,
-sendIndividualForm,
+sendIdividualForm,
 setting = {},
 ContVidaInd,
 tablaTipo;
@@ -656,7 +656,7 @@ function OnloadFunction(valid, tablaTipo) {
 
     });
 
-    $.validator.addMethod('validaPrima', function (e) {
+    jQuery.validator.addMethod('validaPrima', function (e) {
         try {
             if ($('#polizaDeclarativa').prop('checked')) {
                 return true;
@@ -667,9 +667,9 @@ function OnloadFunction(valid, tablaTipo) {
                     return false;
                 }
             }
-        } catch (e) {
+        }
+        catch (e) {
             console.log(e);
-            return false;
         }
     }, 'El valor de la prima anual debe ser mayor a cero.');
 
@@ -881,7 +881,7 @@ function OnloadFunction(valid, tablaTipo) {
         $(" #prima_anual").attr("readonly", "readonly");
 
         $("#planes").change(function () {
-            formularioCrear.setPrimaNeta();
+            //formularioCrear.setPrimaNeta();
         });
 
     }
@@ -1639,5 +1639,4 @@ function inicializaCamposAcreedor(){
     });
     //------------------------
 }
-
-if (id_tipo_poliza == 1 ) $(".espac,.documentos_entregados").hide();
+if (id_tipo_poliza == 1 ) $("#espac,.documentos_entregados").hide();

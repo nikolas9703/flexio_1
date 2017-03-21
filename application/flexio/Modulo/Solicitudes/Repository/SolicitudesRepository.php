@@ -46,10 +46,13 @@ class SolicitudesRepository {
         }
         }
 		
-		$query->leftjoin('seg_ramos_usuarios', 'seg_ramos_usuarios.id_ramo', '=', 'seg_solicitudes.ramo_id');
-        $query->where("seg_ramos_usuarios.id_usuario", $clause['usuario_id']);  
-		$query->groupBy('seg_solicitudes.id');
-		unset($clause['usuario_id']);
+		if(isset($clause['usuario_id'])){
+			$query->leftjoin('seg_ramos_usuarios', 'seg_ramos_usuarios.id_ramo', '=', 'seg_solicitudes.ramo_id');
+        	$query->where("seg_ramos_usuarios.id_usuario", $clause['usuario_id']);  
+			$query->groupBy('seg_solicitudes.id');
+			unset($clause['usuario_id']);
+		}
+		
 		
         if(!empty($clause['ramo'])){           
         $query->whereIn("ramo", $clause['ramo']);    
@@ -125,13 +128,16 @@ class SolicitudesRepository {
 				}
 			}
         }
+
+        $query->orderByRaw('FIELD(seg_solicitudes.estado,"Pendiente","En Trámite","Aprobada","Rechazada","Anulada")');
 		
 		if(preg_match("/(fecha_creacion1)/i", $sidx)){
-			$sidx='fecha_creacion';
-					$query->orderByRaw('FIELD(seg_solicitudes.estado,"Pendiente","En Trámite","Aprobada","Rechazada","Anulada")');
-					$query->orderBy("seg_solicitudes.fecha_creacion", 'desc');
-					$query->orderBy("seg_solicitudes.numero", 'desc');
-				}
+			$sidx='fecha_creacion';		
+			$query->orderBy("seg_solicitudes.fecha_creacion", 'desc');			
+		}
+
+		$query->orderBy("seg_solicitudes.numero", 'desc');		
+		
 		//Si existen variables de orden
         if($sidx!=NULL && $sord!=NULL){
 				if(!preg_match("/(cargo|departamento|centro_contable)/i", $sidx)){

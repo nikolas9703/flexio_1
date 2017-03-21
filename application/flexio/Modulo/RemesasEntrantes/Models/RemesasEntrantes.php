@@ -5,6 +5,7 @@ namespace Flexio\Modulo\RemesasEntrantes\Models;
 use Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Empresa\Models\Empresa;
+use Flexio\Modulo\Cobros\Models\Cobro;
 
 class RemesasEntrantes extends Model
 {
@@ -27,5 +28,9 @@ class RemesasEntrantes extends Model
 
     public static function findByUuid($uuid){
         return self::where('uuid_remesa_entrante',hex2bin($uuid))->first();
+    }
+	
+	public function datosCobro() {
+        return $this->hasOne(Cobro::class, 'num_remesa_entrante', 'no_remesa');
     }
 }

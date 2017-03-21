@@ -1,4 +1,5 @@
 <?php
+
 if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
@@ -36,7 +37,9 @@ use Flexio\Modulo\Polizas\Models\PolizasDeduccion;
 use Flexio\Modulo\Polizas\Models\PolizasParticipacion;
 use Flexio\Modulo\Polizas\Models\PolizasAcreedores;
 use Flexio\Modulo\Polizas\Models\PolizasCliente;
+use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados as InteresesAsegurados;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_cat as InteresesAsegurados_catModel;
+use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados_detalles as InteresesAsegurados_detalles;
 use Flexio\Modulo\Acreedores\Repository\AcreedoresRepository as AcreedoresRep;
 use Flexio\Modulo\Polizas\Models\PolizasArticulo;
 use Flexio\Modulo\Polizas\Models\PolizasCarga;
@@ -61,7 +64,6 @@ use Flexio\Modulo\Usuarios\Models\CentrosUsuario;
 use Flexio\Modulo\CentrosContables\Models\CentrosContables;
 use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
 
-
 class Polizas extends CRM_Controller {
 
     private $id_empresa;
@@ -80,12 +82,12 @@ class Polizas extends CRM_Controller {
     protected $PoliticasRepository;
     protected $SegInteresesAseguradosRepository;
     protected $interesesAseguradosRep;
-    
 
     function __construct() {
         parent::__construct();
         Carbon::setLocale('es');
         setlocale(LC_TIME, 'Spanish');
+
         $this->load->helper(array('file', 'string', 'util'));
         $this->polizasModel = new PolizasModel;
         $this->SegCatalogoRepository = new SegCatalogoRepository();
@@ -391,12 +393,12 @@ class Polizas extends CRM_Controller {
         $rows = (object) $rows;
         if (!empty($rows)) {
             foreach ($rows AS $i => $row) {
-               $renovationUrl=  base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas)).'/renovar');
+             $renovationUrl=  base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas)).'/renovar');
 
-               $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
+             $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
 
-               $color_factura = "";
-               switch (strtoupper($row->frecuencia_facturacion)) {
+             $color_factura = "";
+             switch (strtoupper($row->frecuencia_facturacion)) {
                 case 'MENSUAL':
                         //Calculo ultima factura no mayor a un mes
                 $ultimaFactura = $row->ultima_factura;
@@ -445,8 +447,8 @@ class Polizas extends CRM_Controller {
 
 
             $hidden_options = "<a href=" . base_url('polizas/editar/' . strtoupper(bin2hex($row->uuid_polizas))) . " class='viewOptions btn btn-block btn-outline btn-success'>Ver Póliza</a>";
-            $hidden_options .= '<a href="#" id="crearEndosoBtn" class="viewOptions btn btn-block btn-outline btn-success">Crear Endoso</a>';
-            $hidden_options .= $row->poliza_declarativa == 'si' ? '<a href="'.base_url().'endosos/crear/'.$row->id.'" id="crearDeclaracionBtn"  class="viewOptions btn btn-block btn-outline btn-success">Crear Declaración</a>' : '';
+            $hidden_options .= '<a href="#" id="crearEndosoBtn" data-id="'.$row->id.'" class="viewOptions btn btn-block btn-outline btn-success">Crear Endoso</a>';
+            $hidden_options .= $row->poliza_declarativa == 'si' ? '<a href="'.base_url().'endosos/crear/'.$row->id.'/1" id="crearDeclaracionBtn"  class="viewOptions btn btn-block btn-outline btn-success">Crear Declaración</a>' : '';
             $hidden_options .= '<a href="#" id="agregarReclamoBtn" data-id="' . $row->id . '" data-ramo="'.$row->ramo_id.'" class="viewOptions btn btn-block btn-outline btn-success">Crear Reclamo</a>';
                 //$hidden_options .= '<a href="#" id="renovarBtn" data-id="' . $row->id . '" class="viewOptions btn btn-block btn-outline btn-success renovationModal">Renovar</a>';
             if($row->estado == "Facturada"){
@@ -641,6 +643,7 @@ function guardar() {
 
         if (!$uuid) {
             echo "Error.";
+            die();
         }
 
         $data = array();
@@ -664,33 +667,33 @@ function guardar() {
                     $poliza->estado = $campo["estado"];
                     $poliza->updated_at = date("Y-m-d H:i:s");
                     if(isset($prima)){
-                     $polizaPagos = new PolizasPrima ();
-                     $polizaPagos = $polizaPagos->where("id_poliza",$poliza->id)->first(); 
-                     $poliza->frecuencia_facturacion=$prima['frecuencia_pago'];
-                     $polizaPagos->frecuencia_pago = $prima['frecuencia_pago'];
-                     $polizaPagos->metodo_pago = $prima['metodo_pago'];
-                     $primerPago = new Carbon($prima['fecha_primer_pago']);    
-                     $polizaPagos->fecha_primer_pago =  $primerPago->format('Y/m/d/');
-                     $polizaPagos->cantidad_pagos = $prima['cantidad_pagos'];
-                     $polizaPagos->sitio_pago = $prima['sitio_pago'];
-                     $polizaPagos->centro_facturacion = $prima['centro_facturacion'];
-                     $polizaPagos->direccion_pago = $prima['direccion_pago']; 
-                     $polizaPagos->prima_anual =$prima["poliza_prima_anual"];
-                     $polizaPagos->descuentos = $prima["poliza_descuentos"]; 
-                     $polizaPagos->otros = $prima["poliza_otros"];
-                     $polizaPagos->impuesto =$prima["poliza_impuesto"];
-                     $polizaPagos->total =$prima["poliza_total"]; 
-                     $polizaPagos->save();
-                 }
+                       $polizaPagos = new PolizasPrima ();
+                       $polizaPagos = $polizaPagos->where("id_poliza",$poliza->id)->first(); 
+                       $poliza->frecuencia_facturacion=$prima['frecuencia_pago'];
+                       $polizaPagos->frecuencia_pago = $prima['frecuencia_pago'];
+                       $polizaPagos->metodo_pago = $prima['metodo_pago'];
+                       $primerPago = new Carbon($prima['fecha_primer_pago']);    
+                       $polizaPagos->fecha_primer_pago =  $primerPago->format('Y/m/d/');
+                       $polizaPagos->cantidad_pagos = $prima['cantidad_pagos'];
+                       $polizaPagos->sitio_pago = $prima['sitio_pago'];
+                       $polizaPagos->centro_facturacion = $prima['centro_facturacion'];
+                       $polizaPagos->direccion_pago = $prima['direccion_pago']; 
+                       $polizaPagos->prima_anual =$prima["poliza_prima_anual"];
+                       $polizaPagos->descuentos = $prima["poliza_descuentos"]; 
+                       $polizaPagos->otros = $prima["poliza_otros"];
+                       $polizaPagos->impuesto =$prima["poliza_impuesto"];
+                       $polizaPagos->total =$prima["poliza_total"]; 
+                       $polizaPagos->save();
+                   }
 
-                 $poliza->save();
+                   $poliza->save();
 
                 //Crear Acreedores
-                 $fieldsetacre = array();
-                 $campoacreedores = $this->input->post('campoacreedores');
-                 $ids = array();
+                   $fieldsetacre = array();
+                   $campoacreedores = $this->input->post('campoacreedores');
+                   $ids = array();
                 //PolizasAcreedores::where("id_poliza", $poliza->id)->delete();
-                 if($campoacreedores!=NULL){                        
+                   if($campoacreedores!=NULL){                        
                     $porcentaje_cesion = $this->input->post('campoacreedores_por');
                     $monto_cesion = $this->input->post('campoacreedores_mon');
                     $id_acreedores = $this->input->post('campoacreedores_id');                    
@@ -885,33 +888,34 @@ function guardar() {
 
 
 if ($response) {
-   $campo = $this->input->post("campo");
-   $this->session->set_userdata('updatedPoliza', $poliza->id);
-   if ($campo["regreso"] == 'ase')
+ $campo = $this->input->post("campo");
+ $this->session->set_userdata('updatedPoliza', $poliza->id);
+						//var_dump($campo["regreso_valor"]);exit();
+ if ($campo["regreso"] == 'ase')
     redirect(base_url('aseguradoras/editar/' . $campo["regreso_valor"]));
 else if ($campo["regreso"] == 'age')
     redirect(base_url('agentes/ver/' . $campo["regreso_valor"]));
 else
     redirect(base_url('polizas/listar'));
 }else {
-                        //Establecer el mensaje a mostrar
-   $data["mensaje"]["clase"] = "alert-danger";
-   $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
-                        //$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
+						//Establecer el mensaje a mostrar
+ $data["mensaje"]["clase"] = "alert-danger";
+ $data["mensaje"]["contenido"] = "La poliza ya tiene facturas generadas";
+						//$data["mensaje"]["contenido"] = "Hubo un error al tratar de editar la aseguradora.";
 }
 }
 
-                //Introducir mensaje de error al arreglo
-                //para mostrarlo en caso de haber error
+				//Introducir mensaje de error al arreglo
+				//para mostrarlo en caso de haber error
 $data["message"] = $mensaje;
 
 $this->_css();
 $this->_js();
 
 $this->assets->agregar_js(array(
-   'public/assets/js/modules/polizas/crear.vue.js',
-   'public/assets/js/modules/intereses_asegurados/formulario.js'
-   ));
+ 'public/assets/js/modules/polizas/crear.vue.js',
+ 'public/assets/js/modules/intereses_asegurados/formulario.js'
+ ));
 
 $estado = $this->SegCatalogoRepository->listar_catalogo('estado_p', 'orden');
 $estado = $estado->whereIn('key', array('polizas_pf', 'polizas_f'));
@@ -920,11 +924,11 @@ $estado_pol = $poliza->estado;
 
 $cliente = PolizasCliente::where(['id_poliza' => $poliza->id])->first();
 if(count($cliente) == 0){
-   $cliente = '';
+ $cliente = '';
 }
 $aseguradora = Aseguradoras::where(['id' => $poliza->aseguradora_id])->get(array('id', 'nombre'));
 if (count($aseguradora) == 0) {
-   $aseguradora = '';
+ $aseguradora = '';
 }
 $plan = Planes::where(['id' => $poliza->plan_id])->get(array('nombre'));
 $coberturas = PolizasCobertura::where(['id_poliza' => $poliza->id])->get();
@@ -933,17 +937,17 @@ $deducciones = PolizasDeduccion::where(['id_poliza' => $poliza->id])->get();
 $comision = $poliza->comision;
 $vigencia = PolizasVigencia::where(['id_poliza' => $poliza->id])->first();
 if(count($vigencia) == 0){
-   $vigencia = '';
+ $vigencia = '';
 }
 $prima = PolizasPrima::where(['id_poliza' => $poliza->id])->first();
 $centroFacturacion = centroModel::where(['id' => $prima->centro_facturacion])->first();
 if ($centroFacturacion == '') {
-   $centroFacturacion = '';
+ $centroFacturacion = '';
 }
 $participacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->get();
 $totalParticipacion = PolizasParticipacion::where(['id_poliza' => $poliza->id])->sum('porcentaje_participacion');
 if ($totalParticipacion == '') {
-   $totalParticipacion = '';
+ $totalParticipacion = '';
 }
 
 $acreedores = PolizasAcreedores::where("id_poliza", $poliza->id)->get();
@@ -952,11 +956,11 @@ if (count($acreedores) == 0) {
 }
 
 if($poliza->centros != null){
-   $id_centroContable = $poliza->centros->id;
-   $nombre_centroContable = $poliza->centros->nombre;
+ $id_centroContable = $poliza->centros->id;
+ $nombre_centroContable = $poliza->centros->nombre;
 }else{
-   $id_centroContable = 0;
-   $nombre_centroContable = '';
+ $id_centroContable = 0;
+ $nombre_centroContable = '';
 }
 $ver_renovacion = 0;
 $permiso_comision = 0;
@@ -964,19 +968,19 @@ $permiso_agente = 0;
 $permiso_participacion = 0;
 
 if($this->auth->has_permission('acceso', 'polizas/crear renovación') == true){
-   $ver_renovacion = 1;
+ $ver_renovacion = 1;
 }
 
 if($this->auth->has_permission('acceso', 'polizas/editar comisión plan') == true){
-   $permiso_comision = 1;
+ $permiso_comision = 1;
 }
 
 if($this->auth->has_permission('acceso', 'polizas/editar agentes') == true){
-   $permiso_agente = 1;
+ $permiso_agente = 1;
 }
 
 if($this->auth->has_permission('acceso', 'polizas/editar participación') == true){
-   $permiso_participacion = 1;
+ $permiso_participacion = 1;
 }
 $cantidad_pagos =    $this->SegInteresesAseguradosRepository->listar_catalogo('cantidad_pagos', 'orden');
 $frecuencia_pagos = $this->SegInteresesAseguradosRepository->listar_catalogo('frecuencia_pagos', 'orden');
@@ -984,7 +988,7 @@ $metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_
 $sitio_pago =$this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
 $pagador = $this->SegInteresesAseguradosRepository->listar_catalogo('pagador_seguros', 'orden');
 if($poliza->id_tipo_int_asegurado !=5){
- unset($pagador[1]);
+   unset($pagador[1]);
 }
 $centrosFacturacion = centroModel:: where("cliente_id",$poliza->cliente)
 ->where("empresa_id",$this->empresa_id)->get();
@@ -1007,7 +1011,9 @@ $group = clienteModel::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_clien
 ->where('grp_grupo_clientes.deleted_at', '=', NULL)
 ->select('grp_grupo.nombre')
 ->get();
-
+$agentes = Agente::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+->where('id_ramo', '=', $poliza->ramo_id)
+->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
 $agenteprincipaltotal=Agente::where('principal',1)->
 where('id_empresa',$this->empresa_id)->count();
 
@@ -1062,60 +1068,62 @@ if($renovar == "renovar"){
 //---------------------------------------------------------------
 
 $this->assets->agregar_var_js(array(
-   "vista" => isset($renovar)? $renovar:"editar",
-   "agtPrincipal"=>$agenteprincipalnombre,
-   "agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
-   "estado_solicitud" => $estado,
-   "estado_pol" => $estado_pol,
-   "poliza_id" => $poliza->id,
-   "cliente" => $cliente,
-   "aseguradora" => $aseguradora,
-   "plan" => $plan,
-   "coberturas" => $coberturas,
-   "deducciones" => $deducciones,
-   "comision" => $comision,
-   "vigencia" => $vigencia,
-   "prima" => $prima,
-   "centroFacturacion" => $centroFacturacion,
-   "participacion" => $participacion,
-   "totalParticipacion" => $totalParticipacion,
-   "id_tipo_int_asegurado" => $poliza->id_tipo_int_asegurado,
-   "nombre_ramo" => $poliza->ramo, 
-   "tipo_ramo" => $poliza->tipo_ramo,
-   "ramo" => $poliza->ramo,
-   "id_tipo_poliza" => $poliza->tipo_ramo == "colectivo" ? 2 : 1,
-   "desde" => "poliza",
-   "tablaTipo" => "vida",
-   "permiso_editar" => "undefined",
-   "validarenovacion" => $validarenovacion,
-   "id_centroContable" => $id_centroContable,
-   "nombre_centroContable" => $nombre_centroContable,
-   "permiso_comision" => $permiso_comision,
-   "permiso_agente"=>    $permiso_agente,
-   "permiso_participacion" => $permiso_participacion,
-   "cantidadPagos" => $cantidad_pagos,
-   "frecuenciaPagos" => $frecuencia_pagos,
-   "sitioPago" => $sitio_pago,
-   "metodoPago" => $metodo_pago,
-   "centrosFacturacion" =>$centrosFacturacion,
-   "poliza_declarativa" => $poliza->poliza_declarativa,
-   "grupo" => $group,
-   "pagador" => $pagador,
-   "centrosContables" => $centroContable,
-   "validavida" => $validavida,
-   "acreedores" => $acreedores,
-   "contacre" => count($acreedores),
-   "categoria_poliza" => $catego,
-   "indcolec" => $indcolec
-   ));
+ "regresar_poliza" => "no",  
+ "vista" => isset($renovar)? $renovar:"editar",
+ "agtPrincipal"=>$agenteprincipalnombre,
+ "agtPrincipalporcentaje"=>$agtPrincipalporcentaje,
+ "estado_solicitud" => $estado,
+ "estado_pol" => $estado_pol,
+ "poliza_id" => $poliza->id,
+ "cliente" => $cliente,
+ "aseguradora" => $aseguradora,
+ "plan" => $plan,
+ "coberturas" => $coberturas,
+ "deducciones" => $deducciones,
+ "comision" => $comision,
+ "vigencia" => $vigencia,
+ "prima" => $prima,
+ "centroFacturacion" => $centroFacturacion,
+ "participacion" => $participacion,
+ "totalParticipacion" => $totalParticipacion,
+ "id_tipo_int_asegurado" => $poliza->id_tipo_int_asegurado,
+ "nombre_ramo" => $poliza->ramo, 
+ "tipo_ramo" => $poliza->tipo_ramo,
+ "ramo" => $poliza->ramo,
+ "id_tipo_poliza" => $poliza->tipo_ramo == "colectivo" ? 2 : 1,
+ "desde" => "poliza",
+ "tablaTipo" => "vida",
+ "permiso_editar" => "undefined",
+ "validarenovacion" => $validarenovacion,
+ "id_centroContable" => $id_centroContable,
+ "nombre_centroContable" => $nombre_centroContable,
+ "permiso_comision" => $permiso_comision,
+ "permiso_agente"=>    $permiso_agente,
+ "permiso_participacion" => $permiso_participacion,
+ "cantidadPagos" => $cantidad_pagos,
+ "frecuenciaPagos" => $frecuencia_pagos,
+ "sitioPago" => $sitio_pago,
+ "metodoPago" => $metodo_pago,
+ "centrosFacturacion" =>$centrosFacturacion,
+ "poliza_declarativa" => $poliza->poliza_declarativa,
+ "grupo" => $group,
+ "pagador" => $pagador,
+ "centrosContables" => $centroContable,
+ "validavida" => $validavida,
+ "acreedores" => $acreedores,
+ "contacre" => count($acreedores),
+ "categoria_poliza" => $catego,
+ "indcolec" => $indcolec,
+ "agentes" =>$agentes
+ ));
 
 $isRenewal  = array('Expirada','Facturada');
 $opciones   =array(
-   "polizas/bitacora/" . strtoupper(bin2hex($poliza->uuid_polizas)) => "Bitacora",
-   "#subir_documento" => "Subir Documento",
-   "#imprimir_poliza" => "Imprimir",
-   "#exportarPBtn" => "Exportar"
-   );
+ "polizas/bitacora/" . strtoupper(bin2hex($poliza->uuid_polizas)) => "Bitacora",
+ "#subir_documento" => "Subir Documento",
+ "#imprimir_poliza" => "Imprimir",
+ "#exportarPBtn" => "Exportar"
+ );
 
 foreach ($isRenewal as $key => $value) {
     if($estado_pol ==$value){
@@ -1124,26 +1132,26 @@ foreach ($isRenewal as $key => $value) {
     }
 }
 $breadcrumb = array(
-   "titulo" => '<i class="fa fa-book"></i> P&oacute;liza N° ' . $poliza->numero,
-   "ruta" => array(
+ "titulo" => '<i class="fa fa-book"></i> P&oacute;liza N° ' . $poliza->numero,
+ "ruta" => array(
     0 => array("nombre" => "Seguros", "url" => "#", "activo" => false),
     1 => array("nombre" => '<a href="' . base_url() . 'polizas/listar">Pólizas</a>', "activo" => false),
     2 => array("nombre" => '<b>P&oacute;liza N° ' . $poliza->numero . '</b>', "activo" => true),
     ),
-            "filtro" => false, //sin vista grid
-            "menu" => array(
-                'url' => 'javascipt:',
-                'nombre' => "Acción",
-                "opciones" => $opciones,
-                ),
-            "historial" => true,
-            );
+			"filtro" => false, //sin vista grid
+			"menu" => array(
+				'url' => 'javascipt:',
+				'nombre' => "Acción",
+				"opciones" => $opciones,
+             ),
+			"historial" => true,
+          );
 
 
 $data['subpanels'] = [];
 
 $data["data"] = array(
-   "campos" => array(
+ "campos" => array(
     "created_at" => $poliza->created_at,
     "uuid_polizas" => strtoupper(bin2hex($poliza->uuid_polizas)),
     "numero" => $poliza->numero,
@@ -1157,7 +1165,7 @@ $data["data"] = array(
     "politicas_general" => $this->politicas_general,
     "validar_politicas" => $this->politicasgenerales
     )
-   );
+ );
 
 $this->template->agregar_titulo_header('Polizas');
 $this->template->agregar_breadcrumb($breadcrumb);
@@ -1172,7 +1180,7 @@ public function ajax_clientes_ac() {
 
     $data = array();
     $res = $clientes->result();
-        //print($res);
+        //print_r($res);
     $id = 0;
     foreach ($res as $row_cliente) {
         $row = get_object_vars($row_cliente);
@@ -1192,7 +1200,7 @@ public function ajaxramos() {
 
     $html = '';
     $res = $ramos->result();
-        //print($res);
+        //print_r($res);
     $id = 0;
     foreach ($res as $row) {
         $html .= '<option value="' . $row["id"] . '">' . $row["nombre"] . '</option>';
@@ -1206,7 +1214,7 @@ public function ajax_ramos_ac() {
 
     $data = array();
     $res = $clientes->result();
-        //print($res);
+        //print_r($res);
     $id = 0;
     foreach ($res as $row_cliente) {
         $row = get_object_vars($row_cliente);
@@ -1431,7 +1439,7 @@ function ajax_carga_comentarios_poliza() {
         $Bitacora = new PolizasBitacora;
         $historial = $Bitacora->where(array("comentable_id" => $id_poliza, "comentable_type" => "Comentario"))->with(array('usuario'))->orderBy("created_at", "desc")->get(array("comentario", "created_at", "usuario_id"))->toArray();
         foreach ($historial as $item) {
-
+                //var_dump($item["created_at"]);die;
             $html .= '<div class="vertical-timeline-block">
             <div class="vertical-timeline-icon blue-bg">
                 <i class="fa fa-comments-o"></i>
@@ -1455,9 +1463,9 @@ function ajax_carga_comentarios_poliza() {
   $data["nid_poliza"] = $id_poliza;
 } catch (\Exception $e) {
     $msg = log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
-    
+    die("error " . $e->getMessage());
 }
-return $msg;
+die($html);
 }
 
 function ajax_guardar_comentario() {
@@ -1490,7 +1498,7 @@ function ajax_guardar_comentario() {
         $msg = log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
     }
 
-    
+    die(json_encode($msg));
 }
 
 function bitacora($uuid) {
@@ -1895,8 +1903,8 @@ function tabladetalles($data = array()) {
                   $hidden_options .= $row->estado == "Anulada" ? '' : ($row->estado == "Aprobada" ? '' : ($row->estado == "Rechazada" ? '' : '<a href="javascript:" data-id="' . $row['id'] . '" data-solicitud="' . $row->numero . '" data-cliente="' . $row->cliente->nombre . '" class="btn btn-block btn-outline btn-success anular_solicitud" data-type="' . $row['id'] . '" >Anular</a>' ));
                   $hidden_options .= '<a href="' . $urlbitacora . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success bitacora_solicitud" data-type="' . $row['id'] . '" >Bitácora</a>';
                   $hidden_options = '<a href="" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success subir_archivos_solicitudes" data-type="' . $row['id'] . '" >Subir Archivos</a>'; */
-
-                  $estado_color = $row->estado == "En Trámite" ? 'background-color: #F8AD46' : ($row->estado == "Aprobada" ? 'background-color: #5cb85c' : ($row->estado == "Rechazada" ? 'background-color: #fc0d1b' : ($row->estado == "Anulada" ? 'background-color: #000000' : 'background-color: #5bc0de')));
+                  $estado_color = $row->estado == "Por Facturar" ? 'background-color: #F0AD4E' : ($row->estado == "Facturada" ? 'background-color: #5cb85c' : ($row->estado == "Cancelada" ? 'background-color: #222222' : ($row->estado == "Expirada" ? 'background-color: #FC0D1B' : 'background-color: #00BFFF')));
+                  //$estado_color = $row->estado == "En Trámite" ? 'background-color: #F8AD46' : ($row->estado == "Aprobada" ? 'background-color: #5cb85c' : ($row->estado == "Rechazada" ? 'background-color: #fc0d1b' : ($row->estado == "Anulada" ? 'background-color: #000000' : 'background-color: #5bc0de')));
                   $modalstate = "";
 
                   $response->rows[$i]["id"] = $row->id;
@@ -1949,7 +1957,17 @@ function tabladetalles($data = array()) {
           $this->load->view('tablarenovaciones');
       }
 
-      public function ocultoTabEndosos(){
+      public function ocultoTabDeclaracion(){
+
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/polizas/tablaTabDeclaracion.js',
+            ));
+
+        $this->load->view('tablaDeclaraciones');
+
+    }
+
+    public function ocultoTabEndosos(){
 
         $this->assets->agregar_js(array(
             'public/assets/js/modules/polizas/tablaTabEndosos.js',
@@ -1958,12 +1976,11 @@ function tabladetalles($data = array()) {
         $this->load->view('tablaEndosos');
 
     }
+    
 
     public function ajax_listar_intereses($grid = NULL) {
 
-        $clause = array(
-            "empresa_id" => $this->id_empresa
-            );
+        /*$clause = array("empresa_id" => $this->id_empresa);
 
         if (isset($_POST["filters"])) {
             $filt = (array) json_decode($_POST["filters"]);
@@ -1975,27 +1992,45 @@ function tabladetalles($data = array()) {
                     }
                 }
             }
+        }*/
+
+        $id_poliza = $this->input->post('id_poliza', true);
+        $id_tipo_int_asegurado = $this->input->post('id_tipo_int_asegurado',true);
+        
+        if(!empty($id_poliza)){
+            $clause['id_poliza'] = $id_poliza;
+        }   
+
+        if($id_tipo_int_asegurado == 1){
+            $tabla = new PolizasArticulo;
+            $nombre_interes = 'Artículo';
+        }elseif($id_tipo_int_asegurado == 2){
+            $tabla = new PolizasCarga;
+            $nombre_interes = 'Carga';
+        }elseif($id_tipo_int_asegurado == 3){
+            $tabla = new PolizasAereo;
+            $nombre_interes = 'Casco aereo';
+        }elseif($id_tipo_int_asegurado == 4){
+            $tabla = new PolizasMaritimo;
+            $nombre_interes = ' Casco marítimo';
+        }elseif($id_tipo_int_asegurado == 5){
+            $tabla = new PolizasPersonas;
+            $nombre_interes = 'Persona';
+        }elseif($id_tipo_int_asegurado == 6){
+            $tabla = new PolizasProyecto;
+            $nombre_interes = 'Proyecto/Actividad';
+        }elseif($id_tipo_int_asegurado == 7){
+            $tabla = new PolizasUbicacion;
+            $nombre_interes = 'Ubicación';
+        }elseif($id_tipo_int_asegurado == 8){
+            $tabla = new PolizasVehiculo;
+            $nombre_interes = 'Vehículo';
         }
-
-        $uuid_poliza = $this->input->post('uuid_poliza', true);
-
-        $pol = $this->polizasModel->where("uuid_polizas", hex2bin($uuid_poliza))->first()->toArray();
-        $solicitud = $pol["solicitud"];
-
-        $sol = $this->solicitudesModel->where('numero', $solicitud)->first();
-        $id_sol = $sol["id"];
-
-        if (!empty($id_sol)) {
-            $clause["int_intereses_asegurados_detalles.id_solicitudes"] = array('=', $id_sol);
-        }
-
+        
         list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
-
-        $count = $this->PolizasRepository->listar_intereses_asegurados($clause, NULL, NULL, NULL, NULL)->count();
-
+        $count = $tabla->listar_intereses_asegurados($clause, NULL, NULL, NULL, NULL)->count();
         list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
-
-        $rows = $this->PolizasRepository->listar_intereses_asegurados($clause, $sidx, $sord, $limit, $start);
+        $rows = $tabla->listar_intereses_asegurados($clause, $sidx, $sord, $limit, $start);
 
         //Constructing a JSON
         $response = new stdClass();
@@ -2010,9 +2045,12 @@ function tabladetalles($data = array()) {
         $totalRuta = count($rutaAlmacenamiento)-1;
         $rutallamado = $rutaAlmacenamiento[$totalRuta-2]."/".$rutaAlmacenamiento[$totalRuta-1];
 
+        $dataPoliza = PolizasModel::find($id_poliza);
+        $uuid_poliza = bin2hex($dataPoliza->uuid_polizas);
+
         if (!empty($rows)) {
             foreach ($rows AS $i => $row) {
-                $uuid_intereses = bin2hex($row->uuid_intereses);
+
                 $now = Carbon::now();
                 $btnClass = $row->estado !== "Activo" ? "successful" : "danger";
                 $negativeState = $row->estado != "Activo" ? "Activar" : "Desactivar";
@@ -2023,10 +2061,14 @@ function tabladetalles($data = array()) {
                 $estado = $row->estado === "Activo" ? "Activo" : "Inactivo";
                 $labelClass = $row->estado === "Activo" ? "successful" : "danger";
 
-                $url = base_url("intereses_asegurados/editar/$uuid_intereses");
+                
+                $uuid_interes = AseguradosModel::where(['numero' => $row->numero])->first();
+                $uuid_interes = bin2hex($uuid_interes->uuid_intereses);
+                
 
+                $url = base_url("intereses_asegurados/editar/");
                 if ($rutallamado == "polizas/editar") {
-                    $url .= "?reg=poli&val=".$uuid_poliza;
+                    $url .= "/".strtoupper($uuid_interes)."?reg=poli&uuid=".strtoupper($uuid_poliza);
                 }
 
                 $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success editarInteres"  target="_blank">Ver interés asegurado</a>';
@@ -2036,9 +2078,9 @@ function tabladetalles($data = array()) {
                 $response->rows[$i]["cell"] = array(
                     "id" => $id,
                     "numero" => $redirect,
-                    "seg_ramos_tipo_interes.nombre" => $row->etiqueta,
-                    "int_intereses_asegurados_detalles.fecha_inclusion" => $row->fecha_inclusion,
-                    "int_intereses_asegurados_detalles.fecha_exclusion" => $row->fecha_exclusion,
+                    "nombre_interes" => $nombre_interes,
+                    "fecha_inclusion" => $row['fecha_inclusion'],
+                    "fecha_exclusion" => '',
                     "usuarios.nombre" => $row->nombre . " " . $row->apellido,
                     "estado" => "<label class='label label-$labelClass estadoInteres' data-id='$id' >$estado</label>",
                     "options" => $link_option,
@@ -2056,6 +2098,7 @@ function tabladetalles($data = array()) {
     public function exportarInteresesPolizas() {
         if (empty($_POST)) {
             exit();
+            die("fin _POST vacio");
         }
 
         $ids = $this->input->post('ids', true);
@@ -2074,13 +2117,14 @@ function tabladetalles($data = array()) {
         $sol = $this->solicitudesModel->where('numero', $solicitud)->first();
         $id_sol = $sol["id"];
         if (empty($id_sol)) {
+            die("fin id sol vacio");
             exit();
         }
         $clause["id_solicitudes"] = $id_sol;
         $id = explode(",", $ids);
         if (empty($id)) {
             return false;
-
+            die("id vacio");
         }
 
         $clause['id'] = $id;
@@ -2192,6 +2236,7 @@ function tabladetalles($data = array()) {
     public function exportarRenovacionesPolizas() {
         if (empty($_POST)) {
             exit();
+            die("fin _POST vacio");
         }
 
         $ids = $this->input->post('ids', true);
@@ -2404,11 +2449,94 @@ function ajax_get_tipointereses() {
     ->set_output(json_encode($response))->_display();
 
     exit;
+
+    /*$interes = $_POST['interes'];
+    $unico = $_POST['unico'];
+    $personVar = $this->input->post("tablaTipo");
+    $interes = str_replace("Tab", "", $interes);
+    if ($interes == "articulo") {
+        $tipo = 1;
+        $tbl = "int_articulo";
+    } else if ($interes == "carga") {
+        $tipo = 2;
+        $tbl = "int_carga";
+    } else if ($interes == "casco_aereo") {
+        $tipo = 3;
+        $tbl = "int_casco_aereo";
+    } else if ($interes == "casco_maritimo") {
+        $tipo = 4;
+        $tbl = "int_casco_maritimo";
+    } else if ($interes == "persona") {
+        $tipo = 5;
+        $tbl = "int_personas";
+    } else if ($interes == "proyecto_actividad") {
+        $tipo = 6;
+        $tbl = "int_proyecto_actividad";
+    } else if ($interes == "ubicacion") {
+        $tipo = 7;
+        $tbl = "int_ubicacion";
+    } else if ($interes == "vehiculo") {
+        $tipo = 8;
+        $tbl = "int_vehiculo";
+    } else {
+        $tipo = 0;
+        $tbl = "int_";
+    } 
+    $select = $tbl .'.*';
+    $inter = InteresesAsegurados::join('' . $tbl . '', '' . $tbl . '.id', '=', 'int_intereses_asegurados.interesestable_id')->where('int_intereses_asegurados.interesestable_type', $tipo)
+    ->where('int_intereses_asegurados.estado', 'Activo')
+    ->where('int_intereses_asegurados.empresa_id', $this->empresa_id)
+    ->where('int_intereses_asegurados.deleted', 0)
+    ->select('int_intereses_asegurados.id as mainId','int_intereses_asegurados.numero',''.$select.'')
+    ->get();
+    $tableIntereses=[];
+    if(!isset($personVar)){             
+        $intable =InteresesAsegurados_detalles::where('detalle_unico',$unico)
+        ->select("id_intereses")
+        ->get();
+        
+
+        foreach ($intable as $key => $value) {
+           $tableIntereses[] = $value->id_intereses;   
+       }
+   }
+   $response = new stdClass();
+   $response->inter = array();  
+
+    foreach ($inter as $key => $value) {
+        if ($interes == "articulo") {
+            $v = $value->nombre . " - " . $value->numero_serie . " (" . $value->numero . ")";
+        } else if ($interes == "carga") {
+            $v = $value->no_liquidacion . " (" . $value->numero . ")";
+        } else if ($interes == "casco_aereo") {
+            $v = $value->serie . " (" . $value->numero . ")";
+        } else if ($interes == "casco_maritimo") {
+            $v = $value->serie . " (" . $value->numero . ")";
+        } else if ($interes == "persona") {
+            $v = $value->nombrePersona . " - " . $value->identificacion . " (" . $value->numero . ")";
+        } else if ($interes == "proyecto_actividad") {
+            $v = $value->no_orden .'-'.$value->nombre_proyecto." (" . $value->numero . ")";
+        } else if ($interes == "ubicacion") {
+            $v = $value->nombre . " - " . $value->direccion . " (" . $value->numero . ")";
+        } else if ($interes == "vehiculo") {
+            $v = $value->motor . " (" . $value->numero . ")";
+        }
+        array_push($response->inter, array(
+            "id" => $value->id,
+            "numero" => $v,
+            "disabled"=>in_array( $value->mainId,$tableIntereses)));
+    }
+    $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+    ->set_output(json_encode($response))->_display();
+
+    exit;*/
 }
 
 function ajax_get_intereses() {
 
-    $interes = $_POST['interes'];
+    $interes = $this->input->post('interes');
+    $vista   = $this->input->post("vista");
+    $detalleUnico   = $this->input->post("detalleUnico"); 
     if ($interes == "") {
         $interes = "0";
     }
@@ -2441,7 +2569,13 @@ function ajax_get_intereses() {
         $tbl = new PolizasVehiculo();
     }
 
-    $inter = $tbl->where(['id' => $interes])->first();
+    $clause["id"] = $interes;
+    if($vista=="renovar"){
+        unset($clause["id"]);
+        $clause["id_interes"]=$interes;
+        $clause["detalle_unico"]=$detalleUnico;
+    }
+    $inter = $tbl->where($clause)->first();
 
     $response = new stdClass();
     $response->inter = array();
@@ -2459,11 +2593,11 @@ function ajax_get_intereses() {
 
     exit;
 }
-
 public function ajax_listar_articulo($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "nombre" => $this->input->post('nombre', true),
@@ -2498,8 +2632,12 @@ public function ajax_listar_articulo($grid = NULL) {
                 $spanStyle = 'label label-successful';
             else
                 $spanStyle = 'label label-warning';
-
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoArticulo' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                $vista = $this->input->post("vista");
+            }
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoArticulo' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
                 //$hidden_options .= "<a class='btn btn-block btn-outline btn-success subir_documento_solicitudes_intereses' data-int-id='" . $row["id"] . "' ' >Subir Documento</a>";
                 //$hidden_options .= "<a href='#' class='btn btn-block btn-outline btn-success quitarInteres' data-int-gr='" . $row['id_intereses'] . "'>Quitar Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
@@ -2525,7 +2663,7 @@ public function ajax_listar_articulo($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2533,7 +2671,7 @@ public function ajax_listar_carga($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "no_liquidacion" => $this->input->post('no_liquidacion', true),
@@ -2568,9 +2706,12 @@ public function ajax_listar_carga($grid = NULL) {
                 $spanStyle = 'label label-successful';
             else
                 $spanStyle = 'label label-warning';
-
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoCarga' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
-
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                
+            }
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoCarga' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
@@ -2593,7 +2734,7 @@ public function ajax_listar_carga($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2601,7 +2742,7 @@ public function ajax_listar_aereo($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "serie" => $this->input->post('serie', true),
@@ -2637,8 +2778,13 @@ public function ajax_listar_aereo($grid = NULL) {
                 $spanStyle = 'label label-successful';
             else
                 $spanStyle = 'label label-warning';
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                
+            }
 
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoAereo' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoAereo' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
 
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
@@ -2662,7 +2808,7 @@ public function ajax_listar_aereo($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2670,7 +2816,7 @@ public function ajax_listar_maritimo($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "serie" => $this->input->post('serie', true),
@@ -2703,8 +2849,13 @@ public function ajax_listar_maritimo($grid = NULL) {
                 $spanStyle = 'label label-successful';
             else
                 $spanStyle = 'label label-warning';
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                
+            }
 
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoMaritimo' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoMaritimo' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
 
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
@@ -2726,7 +2877,7 @@ public function ajax_listar_maritimo($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2734,7 +2885,7 @@ public function ajax_listar_proyecto($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "no_orden" => $this->input->post('no_orden', true),
@@ -2764,8 +2915,13 @@ public function ajax_listar_proyecto($grid = NULL) {
                 $spanStyle = 'label label-successful';
             else
                 $spanStyle = 'label label-warning';
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                
+            }
 
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoProyecto' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoProyecto' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
 
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
@@ -2785,7 +2941,7 @@ public function ajax_listar_proyecto($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2793,7 +2949,7 @@ public function ajax_listar_ubicacion($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "nombre" => $this->input->post('nombre', true),
@@ -2831,8 +2987,13 @@ public function ajax_listar_ubicacion($grid = NULL) {
             } else {
                 $acreedor = "";
             }
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                
+            }
 
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoUbicacion' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoCarga' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
@@ -2857,7 +3018,7 @@ public function ajax_listar_ubicacion($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2865,7 +3026,7 @@ public function ajax_listar_vehiculo($grid = NULL) {
 
     $estado = $this->input->post('estado', true);
     $id_poliza = $this->input->post('id_poliza', true);
-
+    $vista = $this->input->post("desde");
     $clause = array(
         "numero" => $this->input->post('numero', true),
         "detalle_certificado" => $this->input->post('detalle_certificado', true),
@@ -2902,8 +3063,13 @@ public function ajax_listar_vehiculo($grid = NULL) {
             else
                 $spanStyle = 'label label-warning';
 
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoVehiculo' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+                
+            }
 
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoVehiculo' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
                 //$hidden_options .= '<a href="#" id="cambiarEtapaConfirmBtn" class="btn btn-block btn-outline btn-success">Crear Reporte de Comisión</a>';
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
 
@@ -2928,7 +3094,7 @@ public function ajax_listar_vehiculo($grid = NULL) {
             $i++;
         }
     }
-    print(json_encode($response));
+    print_r(json_encode($response));
     exit;
 }
 
@@ -2978,7 +3144,7 @@ public function ajax_listar_personas($grid = NULL) {
                 'id_interes' => $row['id_interes'],
                 "desde"  => $vista,
                 "detalleUnico" => $detalle_unico,  
-            );
+                );
 
             $child = PolizasPersonas::listar_personas_provicional($clause, NULL, NULL, NULL, NULL,$id_poliza);
             if (count($child)) {
@@ -3000,8 +3166,12 @@ public function ajax_listar_personas($grid = NULL) {
                 $spanStyle = 'label label-successful';
             else
                 $spanStyle = 'label label-warning';
-
-            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id"] . "' data-int-id='" . $row["id"] . "' data-idint-det='" . $row["id"] . "'>Ver Inter&eacute;s</a>";
+            $numero = $row['id'];
+            if($vista=="renovar"){
+                $result=$this->interesesAseguradosRep->where("numero",$row['numero'])->first();
+                $numero=$result->interesestable_id;
+            }
+            $hidden_options = "<a href='#' class='btn btn-block btn-outline btn-success linkCargaInfoPersona' data-int-gr='" . $row["id"] . "' data-int-id='" . $numero. "' data-idint-det='" . $row["id"] . "'data-interes-rev='" . $row["id_interes"] . "'>Ver Inter&eacute;s</a>";
 
             $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="' . $row['id_interes'] . '"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
             $age = $row['fecha_nacimiento'];
@@ -3046,6 +3216,7 @@ public function ajax_listar_personas($grid = NULL) {
     exit;
 }
 
+
 public function getRenovationData() {
     $idPoliza = $this->input->post("idPoliza");
     $detalleUnico = $this->input->post("detalleUnico");
@@ -3065,15 +3236,19 @@ public function getRenovationData() {
         $genericObject = $this->factoryHelper($data->id_tipo_int_asegurado);
         $duplicateData = $genericObject->where($clause)->get()->toArray();
         foreach ($duplicateData as $key => $value) {
+            $idInteres=$this->interesesAseguradosRep->where("numero",$value["numero"])
+            ->select("id")
+            ->first();
             $value["detalle_unico"] = $detalleUnico;
             unset($value['id']);
             unset($value['id_poliza']);
+            $value["id_interes"]=$idInteres->id;
             $genericObject->create($value);
         }
         $createdAt = new carbon ($data->created_at);
         $comisionPerYear = $createdAt->diffInYears($expirationDay);
         $response->diferenciaEnAnios= $comisionPerYear;
-        $response->interesesAnteriores=$this->session->userdata("interest");
+        $response->interesesAnteriores=$idInteres;
         $response->permiso = $this->auth->has_permission('acceso', 'polizas/crear renovación');
         $comisionesMatriz=PlanesComisiones::where("id_planes",$data->plan_id)
         ->where("inicio",$comisionPerYear+1)
@@ -3090,6 +3265,7 @@ public function getRenovationData() {
 }
 print json_encode($response);
 }
+
 public function factoryHelper($objecType){
     $policyInterestModels =[
     1=>"\PolizasArticulo",
@@ -3113,7 +3289,6 @@ public function factoryHelper($objecType){
     }
     return $factoryResult;
 }
-
 public function policyRenewal() {
 
     $inf = array();
@@ -3336,7 +3511,6 @@ $this->session->set_flashdata('mensaje', $mensaje);
 print json_encode($inf);
 exit;
 }
-
 function ajax_save_individual_interest(){
     $policyType = $this->input->post("interestType");
     $camposInteres =json_decode($this->input->post("camposInteres"),TRUE);
@@ -3354,24 +3528,25 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
 
      $clause["interesestable_type"]=$policyType;
      $clause["empresa_id"] = $this->empresa_id;
+     $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
+     ->where("interesestable_id",$aditionalParam['id_interes'])
+     ->select("numero","id")
+     ->first();
+     if(!count($result)){
+        $total=$this->interesesAseguradosRep->where($clause)->count();
+        $numero= Util::generar_codigo('PER', count($total) + 1);
+    }else{
+        $numero = $result->numero;
+        $id = $result->id;
+    }
+    $genericObject =$this->factoryHelper($policyType);
 
-     $genericObject =$this->factoryHelper($policyType);
+    if($policyType == 1){
 
-     if($policyType == 1){
-        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-        ->where("interesestable_id",$aditionalParam['id_interes'])
-        ->select("numero")
-        ->first();
-
-        if(!count($result)){
-            $total=$this->interesesAseguradosRep->where($clause)->count();
-            $numero= Util::generar_codigo('ART', count($total) + 1);
-        }else{
-            $numero = $result->numero;
-        }
         $clause=[
         "uuid_articulo"=>hex2bin($camposInteres["campo[uuid]"]),
-        "id_poliza"=>$aditionalParam['id_poliza'],
+        "id_interes"=>$id,
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
         "numero"=>$numero,
         "empresa_id"=>$this->empresa_id,
         "nombre"=>$camposInteres["campo[nombre]"],
@@ -3389,25 +3564,13 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
         "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
         "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
         ];
-        PolizasArticulo::create($clause);
-        $msg="print";
 
     }elseif($policyType == 2){
 
-        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-        ->where("interesestable_id",$aditionalParam['id_interes'])
-        ->select("numero")
-        ->first();
-
-        if(!count($result)){
-            $total=$this->interesesAseguradosRep->where($clause)->count();
-            $numero= Util::generar_codigo('CGA', count($total) + 1);
-        }else{
-            $numero = $result->numero;
-        }
         $clause =[
         "empresa_id"=>$this->empresa_id,
-        "id_poliza"=>$aditionalParam['id_poliza'],
+        "id_interes"=>$id,
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
         "numero"=>$numero,
         "detalle"=>$camposInteres["campo[detalle]"],
         "no_liquidacion"=>$camposInteres["campo[no_liquidacion]"],
@@ -3431,28 +3594,13 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
         ];
 
 
-        $msg =PolizasCarga::create($clause);
-
-
-
     }elseif($policyType == 3){
 
-        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-        ->where("interesestable_id",$aditionalParam['id_interes'])
-        ->select("numero")
-        ->first();
-
-
-        if(!count($result)){
-            $total=$this->interesesAseguradosRep->where($clause)->count();
-            $numero= Util::generar_codigo('CAE', count($total) + 1);
-        }else{
-            $numero = $result->numero;
-        }
         $clause =[
 
         "empresa_id"=>$this->empresa_id,
-        "id_poliza"=>$p->id,
+        "id_interes"=>$id,
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
         "serie"=>$camposInteres["campo[serie]"],
         "marca"=>$camposInteres["campo[marca_aereo]"],
         "modelo"=>$camposInteres["campo[modelo_aereo]"],
@@ -3470,23 +3618,13 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
         "estado"=>$camposInteres["campo[estado]"],
         ]; 
 
-        PolizasAereo::create($clause);
     }elseif($policyType == 4){
-        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-        ->where("interesestable_id",$campos["interesId"])
-        ->select("numero")
-        ->first();
 
-        if(!count($result)){
-            $total=$this->interesesAseguradosRep->where($clause)->count();
-            $numero= Util::generar_codigo('CM', count($total) + 1);
-        }else{
-            $numero = $result->numero;
-        }
         $clause= [
         "uuid_casco_maritimo"=>hex2bin($camposInteres["campo[uuid]"]),
+        "id_interes"=>$id,
         "empresa_id"=>$this->empresa_id,
-        "id_poliza"=>$p->id,
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
         "numero"=>$numero,
         "serie"=>$camposInteres["campo[serie]"],
         "nombre_embarcacion"=>$camposInteres["campo[nombre_embarcacion]"],
@@ -3505,24 +3643,10 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
         "estado"=>$camposInteres["campo2[estado]"],
         ];    
 
-        PolizasMaritimo::create($clause);
-
-
 
     }elseif($policyType == 5){
 
-        $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-        ->where("interesestable_id",$aditionalParam['id_interes'])
-        ->select("numero","id")
-        ->first();
 
-        if(!count($result)){
-            $total=$this->interesesAseguradosRep->where($clause)->count();
-            $numero= Util::generar_codigo('PER', count($total) + 1);
-        }else{
-            $numero = $result->numero;
-            $id = $result->id;
-        }
     //$datosPersonas = PolizasPersonas::where(['id_poliza' => $solicitudes['id']])->get();
 
         if (!empty($camposInteres['campo[pasaporte]']) || $camposInteres['campo[letra]'] == 'PAS') {
@@ -3568,148 +3692,108 @@ function saveIndividualInterestByType($policyType,$camposInteres, $aditionalPara
         "tipo_relacion"=>$camposInteres["campodetalle[tipo_relacion]"]
         ];
 
-        $msg="success";
-        print_r($this->session->userdata("interest"));
-        $result=$genericObject->where(['numero'=>$numero,'detalle_unico'=>$aditionalParam['detalleUnico']])->count();
-        if($result){
-           $genericObject->where(['numero'=>$numero,'detalle_unico'=>$aditionalParam['detalleUnico']])->update($clause);
-       }else{
+    }elseif($policyType == 6){
 
-        $genericObject->create($clause);
+        $clause =[
+        "uuid_proyecto"=>hex2bin($camposInteres["campo[uuid]"]),
+        "id_interes"=>$id,
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
+        "empresa_id"=>$this->empresa_id,
+        "numero"=>$numero,
+        "nombre_proyecto"=>$camposInteres["campo[nombre_proyecto]"],
+        "no_orden"=>$camposInteres["campo[no_orden]"],
+        "contratista"=>$camposInteres["campo[contratista]"],
+        "representante_legal"=>$camposInteres["campo[representante_legal]"],
+        "duracion"=>$camposInteres["campo[duracion]"],
+        "fecha"=>$camposInteres["campo[fecha]"],
+        "monto"=>$camposInteres["campo[monto]"],
+        "monto_afianzado"=>$camposInteres["campo[monto_afianzado]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "porcentaje_acreedor"=>$camposInteres["campo[monto_afianzado]"],
+        "ubicacion"=>$camposInteres["campo[ubicacion]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+        "tipo_id"=>$camposInteres["campo[tipo_id]"],
+        "tipo_propuesta"=>$camposInteres["campo[tipo_propuesta]"],
+        "validez_fianza_pr"=>$camposInteres["campo[validez_fianza_pr]"],
+        "tipo_fianza"=>$camposInteres["campo[tipo_fianza]"],
+        "asignado_acreedor"=>$camposInteres["campo[acreedor]"],
+        "fecha_concurso"=>$camposInteres["campo[fecha_concurso]"],
+        "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+        "validez_fianza_opcional"=>$camposInteres["campo[validez_fianza_opcional]"],
+        "tipo_propuesta_opcional"=>$camposInteres["campo[tipo_propuesta_opcional]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"]
+        ];  
+
+    }elseif($policyType == 7){
+
+        $clause =[
+        "uuid_ubicacion"=>hex2bin($camposInteres["campo[uuid]"]),
+        "id_interes"=>$id,
+        "empresa_id"=>$this->empresa_id,
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
+        "numero"=>$numero,
+        "nombre"=>$camposInteres["campo[nombre]"],
+        "direccion"=>$camposInteres["campo[direccion]"],
+        "edif_mejoras"=>$camposInteres["campo[edif_mejoras]"],
+        "contenido"=>$camposInteres["campo[contenido]"],
+        "maquinaria"=>$camposInteres["campo[maquinaria]"],
+        "inventario"=>$camposInteres["campo[inventario]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+        "tipo_id"=>$camposInteres["campo[id]"],
+        "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        ]; 
+
+    }elseif($policyType == 8){
+
+        $clause= [
+        "id_poliza"=>isset($aditionalParam["id_poliza"]) ? $aditionalParam["id_poliza"] : 0,
+        "numero"=>$numero,
+        "id_interes"=>$id,
+        "chasis"=>$camposInteres["campo[chasis]"],
+        "uuid_vehiculo"=>hex2bin($camposInteres["campo[uuid]"]),
+        "unidad"=>$camposInteres["campo[unidad]"],
+        "marca"=>$camposInteres["campo[marca]"],
+        "modelo"=>$camposInteres["campo[modelo]"],
+        "placa"=>$camposInteres["campo[placa]"],
+        "ano"=>$camposInteres["campo[ano]"],
+        "motor"=>$camposInteres["campo[motor]"],
+        "color"=>$camposInteres["campo[color]"],
+        "capacidad"=>$camposInteres["campo[capacidad]"],
+        "uso"=>$camposInteres["campo[uso]"],
+        "condicion"=>$camposInteres["campo[condicion]"],
+        "operador"=>$camposInteres["campo[operador]"],
+        "extras"=>$camposInteres["campo[extras]"],
+        "valor_extras"=>$camposInteres["campo[valor_extras]"],
+        "acreedor"=>$camposInteres["campo[acreedor]"],
+        "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
+        "observaciones"=>$camposInteres["campo[observaciones]"],
+        "empresa_id"=>$this->empresa_id,
+        "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
+        "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
+        "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
+        "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
+        "estado"=>$camposInteres["campo2[estado]"],
+        ];
+
     }
-}elseif($policyType == 6){
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$campos["interesId"])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('PRO', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause =[
-    "uuid_proyecto"=>hex2bin($camposInteres["campo[uuid]"]),
-    "id_poliza"=>$p->id,
-    "empresa_id"=>$this->empresa_id,
-    "numero"=>$numero,
-    "nombre_proyecto"=>$camposInteres["campo[nombre_proyecto]"],
-    "no_orden"=>$camposInteres["campo[no_orden]"],
-    "contratista"=>$camposInteres["campo[contratista]"],
-    "representante_legal"=>$camposInteres["campo[representante_legal]"],
-    "duracion"=>$camposInteres["campo[duracion]"],
-    "fecha"=>$camposInteres["campo[fecha]"],
-    "monto"=>$camposInteres["campo[monto]"],
-    "monto_afianzado"=>$camposInteres["campo[monto_afianzado]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "porcentaje_acreedor"=>$camposInteres["campo[monto_afianzado]"],
-    "ubicacion"=>$camposInteres["campo[ubicacion]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "estado"=>$camposInteres["campo2[estado]"],
-    "tipo_id"=>$camposInteres["campo[tipo_id]"],
-    "tipo_propuesta"=>$camposInteres["campo[tipo_propuesta]"],
-    "validez_fianza_pr"=>$camposInteres["campo[validez_fianza_pr]"],
-    "tipo_fianza"=>$camposInteres["campo[tipo_fianza]"],
-    "asignado_acreedor"=>$camposInteres["campo[acreedor]"],
-    "fecha_concurso"=>$camposInteres["campo[fecha_concurso]"],
-    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
-    "validez_fianza_opcional"=>$camposInteres["campo[validez_fianza_opcional]"],
-    "tipo_propuesta_opcional"=>$camposInteres["campo[tipo_propuesta_opcional]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"]
-    ];  
-
+    $msg="OK";
+    $result=$genericObject->where(['numero'=>$numero,'detalle_unico'=>$aditionalParam['detalleUnico']])->count();
+    if($result){
+       $genericObject->where(['numero'=>$numero,'detalle_unico'=>$aditionalParam['detalleUnico']])->update($clause);
+   }else{
 
     $genericObject->create($clause);
-
-
-
-
-}elseif($policyType == 7){
-
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$aditionalParam['id_interes'])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('UBI', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause =[
-    "uuid_ubicacion"=>hex2bin($camposInteres["campo[uuid]"]),
-    "empresa_id"=>$this->empresa_id,
-    "id_poliza"=>$p->id,
-    "numero"=>$numero,
-    "nombre"=>$camposInteres["campo[nombre]"],
-    "direccion"=>$camposInteres["campo[direccion]"],
-    "edif_mejoras"=>$camposInteres["campo[edif_mejoras]"],
-    "contenido"=>$camposInteres["campo[contenido]"],
-    "maquinaria"=>$camposInteres["campo[maquinaria]"],
-    "inventario"=>$camposInteres["campo[inventario]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "estado"=>$camposInteres["campo2[estado]"],
-    "tipo_id"=>$camposInteres["campo[id]"],
-    "acreedor_opcional"=>$camposInteres["campo[acreedor_opcional]"],
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
-    ]; 
-
-    $msg = PolizasUbicacion::create($clause);
-
-}elseif($policyType == 8){
-
-
-    $result =$this->interesesAseguradosRep->where("interesestable_type",$policyType)
-    ->where("interesestable_id",$aditionalParam['id_interes'])
-    ->select("numero")
-    ->first();
-
-    if(!count($result)){
-        $total=$this->interesesAseguradosRep->where($clause)->count();
-        $numero= Util::generar_codigo('VEH', count($total) + 1);
-    }else{
-        $numero = $result->numero;
-    }
-    $clause= [
-    "id_poliza"=>$p->id,
-    "numero"=>$numero,
-    "chasis"=>$camposInteres["campo[chasis]"],
-    "uuid_vehiculo"=>hex2bin($camposInteres["campo[uuid]"]),
-    "unidad"=>$camposInteres["campo[unidad]"],
-    "marca"=>$camposInteres["campo[marca]"],
-    "modelo"=>$camposInteres["campo[modelo]"],
-    "placa"=>$camposInteres["campo[placa]"],
-    "ano"=>$camposInteres["campo[ano]"],
-    "motor"=>$camposInteres["campo[motor]"],
-    "color"=>$camposInteres["campo[color]"],
-    "capacidad"=>$camposInteres["campo[capacidad]"],
-    "uso"=>$camposInteres["campo[uso]"],
-    "condicion"=>$camposInteres["campo[condicion]"],
-    "operador"=>$camposInteres["campo[operador]"],
-    "extras"=>$camposInteres["campo[extras]"],
-    "valor_extras"=>$camposInteres["campo[valor_extras]"],
-    "acreedor"=>$camposInteres["campo[acreedor]"],
-    "porcentaje_acreedor"=>$camposInteres["campo[porcentaje_acreedor]"],
-    "observaciones"=>$camposInteres["campo[observaciones]"],
-    "empresa_id"=>$this->empresa_id,
-    "detalle_certificado"=>$camposInteres["campodetalle[certificado]"],
-    "detalle_suma_asegurada"=>$camposInteres["campodetalle[suma_asegurada]"],
-    "detalle_prima"=>$camposInteres["campodetalle[prima_anual]"],
-    "detalle_deducible"=>$camposInteres["campodetalle[deducible]"],
-    "estado"=>$camposInteres["campo2[estado]"],
-    ];
-
-    $msg = PolizasVehiculo::create($clause);
 }   
 Capsule::commit();
 }catch (Exception $e) {
@@ -3719,6 +3803,7 @@ Capsule::commit();
 return $msg;
 exit;
 }
+
 public function exportarPoliza($id_poliza = null) {
     $poliza = PolizasModel::where(['id' => $id_poliza])->get();
 
@@ -3842,9 +3927,14 @@ public function exportar_factura($id_poliza = null, $id_factura = null){
 
 function ajax_get_asociados() {
 
-    $poliza = $_POST['idpoliza'];
-
-    $inter = PolizasPersonas::where("id_poliza", $poliza)->where("detalle_relacion", "Principal")->select("detalle_certificado", "id_interes as id", "nombrePersona")->get();
+    $clause["id_poliza"] = $_POST['idpoliza'];
+    $vista  = $this->input->post("vista");
+    $detalleUnico = $this->input->post("detalleUnico");
+    if($vista=="renovar"){
+        unset($clause["id_poliza"]);
+        $clause["detalle_unico"]=$detalleUnico;
+    }
+    $inter = PolizasPersonas::where($clause)->where("detalle_relacion", "Principal")->select("detalle_certificado", "id_interes as id", "nombrePersona")->get();
 
     $response = new stdClass();
     $response->inter = array();
@@ -3987,3 +4077,4 @@ function ajax_carga_acreedores_vida_colectivo(){
 //
 //**************************************************************************************************
 ?>
+

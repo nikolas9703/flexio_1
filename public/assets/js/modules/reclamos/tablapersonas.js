@@ -156,14 +156,14 @@ var tablaReclamosPersonas = (function () {
             var certificado = $(this).attr("data-certificado");
             var rowINFO = $.extend({}, gridObj.getRowData(id));
             var options = rowINFO.link;
-
+            formularioCrear.getCoberturasPolizaInfo(idpoliza, id);
             formularioCrear.interesesPoliza( idpoliza,"modal", id);
             opcionesModal.modal('hide');
         }); 
 
         $(botones.modal).on("click", function (e) {
             
-            if (id_tipo_poliza == 2) {
+            if (id_tipo_poliza == 2 || validasalud == 1) {
                 if (vista == "crear" || ( vista == "editar" && permiso_editar == 1 &&  typeof formularioCrear.reclamoInfo.estado != "undefined" && formularioCrear.reclamoInfo.estado != "Cerrado" && formularioCrear.reclamoInfo.estado != "Anulado") ) {
                     recargar();
                     $('#verModalIntereses').modal('show');                

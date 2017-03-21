@@ -170,59 +170,6 @@ export default {
 				});
 			// }
 		},
-<<<<<<< HEAD
-        getPrecio(){
-            if(this.tienePrecio){
-                //mensaje de error
-            }
-            let precioActual = this.row.precios.find((q)=>q.id == this.getListaPrecio.id);
-            if(_.isUndefined(precioActual)){
-                toastr.warning("no existe para este item","precio");
-                return 0;
-            }
-            return parseFloat(precioActual.precio) || 0;
-        },
-        getCuentaDelItem(cuenta){
-            if(cuenta.length > 1 || cuenta.length ==0){
-                return '';
-            }
-            return _.head(cuenta);
-        }
-    },
-    events:{
-        'update-item': function (item){
-           //para el set de los catalogos items
-           this.$nextTick(function(){
-               this.row.items = [item]
-               this.row.unidades = item.unidades;
-               this.row.atributos = item.atributos;
-               this.row.precios = item.precios;
-               this.row.item_id = item.id;
-           });
-
-           this.$nextTick(function(){
-               this.row.impuesto_id = item.impuesto_id;
-               this.row.categoria_id = item.categoria[0].id;
-               this.categoria_id = item.categoria[0].id;
-               this.row.unidad_id = item.unidad_id;
-               this.row.cuenta_id = this.getCuentaDelItem(item.cuenta_id);
-               this.row.precio_unidad = this.getPrecio();
-               this.row.impuesto = this.getImpuestoActual;
-           });
-
-        },
-        'setNombre'(){
-            this.$broadcast('set-typeahead-nombre',this.row.nombre);
-        }
-    },
-    watch:{
-        'row.item_id'(val, oldval){
-            console.log(val, oldval);
-        }
-    }
- }
-</script>
-=======
 		changeCaret() {
 			this.fa_caret = this.fa_caret === 'fa-caret-right' ? 'fa-caret-down' : 'fa-caret-right';
 		},
@@ -335,4 +282,3 @@ export default {
 }
 </script>
 >>>>>>> master
->>>>>>> 0ef8535b3227f3f488cc644c76e2591000f9a362

@@ -35,6 +35,7 @@ $config['modulo_config'] = array(
     'permisos'		=> array(
 		'acceso' => 'Acceso',
 		'crear__validarDuplicado'          => 'Validar Duplicado',
+		'crear__validarAgente'          => 'Crear Cliente con agente',
 		'listar__convertirInteres' => 'Convertir a bien'
     	//'listar' => 'Clientes',
     	//'crear' => 'Crear'

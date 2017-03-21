@@ -206,6 +206,17 @@ var form_crear_pago = new Vue({
 		var context = this;
 
 		if (context.config.vista == 'editar') {
+			
+			var modulo = localStorage.getItem("ms-selected");
+			
+			if(modulo=='seguros')
+			{
+				context.empezable.types.push({id: 'participacion',
+				nombre: 'Participacion'});
+				
+				context.empezable.types.push({id: 'remesas_salientes',
+				nombre: 'Remesa'});
+			}
 
 			Vue.nextTick(function () {
 
@@ -226,11 +237,9 @@ var form_crear_pago = new Vue({
 		'<h2 class="hidden-xs hidden-sm" style="margin:0;">'+$("h2.hidden-xs.hidden-sm").html()+'</h2>'+                
 '<div class="col-xs-7 col-sm-8 col-md-6 col-lg-6">'+
               '<ol class="breadcrumb">'+
-           '<li>Seguros</li><li>Pagos</li><li class="active"><b>Detalle</b></li>       </ol>'+              
+           '<li><a href="'+phost()+'#">Seguros</a></li><li><a href="'+phost()+'pagos/listar">Pagos</li><li class="active"><b>Detalle</b></li>       </ol>'+              
    '</div>	</div> <div class="col-xs-12 col-sm-12 col-md-3 col-lg-4 col-xs-offset-0 col-sm-offset-0 col-md-offset-3 col-lg-offset-2"> <div id="moduloOpciones" class="btn-group btn-group-sm pull-right" style="margin:6px 12px 6px 0;"> <button class="btn btn-primary" type="button" id="http://166.78.244.188/desarrollo2/flexio/#" data-toggle="dropdown" aria-expanded="true" disabled="disabled">Acción</button> <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" disabled="disabled"> <span class="caret"></span> <span class="sr-only">Toggle Dropdown</span> </button> <ul class="dropdown-menu "> <li><a href="http://166.78.244.188/desarrollo2/flexio/pagos/historial/11E6F9125B177EC08DCFBC764E11D717">Ver bitácora</a></li>				</ul> </div> <!-- Filtro Grupal de Botones --> <div id="filtroGroupBtns" class="btn-group btn-group-sm hidden-xs pull-right" role="group" style="margin:6px 4px 6px 0;"> </div> <!-- /Filtro Grupal de Botones --> </div> </div>'); 
                     	}
-	
-					console.log("que tal todos blas");
 					toastr.info("Su rol no tiene permisos para el cambio de estado", "Mensaje");
 					setTimeout(function () {
 						$('.estado').attr('disabled', true);

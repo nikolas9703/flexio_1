@@ -1,0 +1,126 @@
+<div id="wrapper">
+    <?php
+	Template::cargar_vista('sidebar');
+    ?>
+
+    <div id="page-wrapper" class="gray-bg row">
+
+        <?php Template::cargar_vista('navbar'); ?>
+        <div class="row border-bottom"></div>
+        <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
+
+    	<div class="col-lg-12">
+            <div class="wrapper-content">
+                <div class="row">
+                  <?php $mensaje = self::$ci->session->flashdata('mensaje'); ?>
+                    <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
+                        <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                        <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
+                    </div>
+                </div>
+
+                <div role="tabpanel">
+                    <!-- Tab panes -->
+                    <div class="row tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="tabla">
+
+                            <!-- BUSCADOR -->
+                            <div class="ibox border-bottom">
+                                <div class="ibox-title">
+                                    <h5>Buscar Presupuesto</h5>
+                                    <div class="ibox-tools">
+                                        <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                                    </div>
+                                </div>
+                                <div class="ibox-content" style="display:none;">
+                                    <!-- Inicia campos de Busqueda -->
+                                    <div class="row">
+                                      <?php
+                                            $formAttr = array(
+                                                'method'        => 'POST',
+                                                  'id'            => 'buscarPresupuestoForm',
+                                                  'autocomplete'  => 'off'
+                                                  );
+                                                 echo form_open(base_url(uri_string()), $formAttr);
+                                                ?>
+                                        <div class="form-group col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                                            <label for="nombre">Centro Contable</label>
+                                            <select name="centro" class="form-control" id="centro" data-rule-required="true">
+                                              <option value="">Seleccione</option>
+                                              <?php foreach($centros_contables as $centro) {?>
+                                              <option value="<?php echo $centro->id?>"><?php echo $centro->nombre?></option>
+                                              <?php }?>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                                            <label for="nombre">Referencia</label>
+                                            <input type="text" id="referencia" class="form-control" value="" placeholder="">
+                                        </div>
+
+                                        <div class="form-group col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                                            <label for="estado">Rango de fecha de inicio</label>
+                                            <div class="form-inline">
+                                                <div class="form-group">
+                                                    <div class="input-group">
+                                                      <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                      <input type="text" name="fecha1" id="fecha1" class="form-control">
+                                                      <span class="input-group-addon">a</span>
+                                                      <input type="text" class="form-control" name="fecha2" id="fecha2">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php echo form_close(); ?>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <input type="button" id="searchBtn" class="btn btn-default btn-block" value="Filtrar" />
+                                        </div>
+                                        <div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
+                                            <input type="button" id="clearBtn" class="btn btn-default btn-block" value="Limpiar" />
+                                        </div>
+                                    </div>
+                                    <!-- Termina campos de Busqueda -->
+                                </div>
+                            </div>
+                            <!-- /BUSCADOR -->
+                            <!-- exportar -->
+                              <?php
+                                 $formAttr = array('method' => 'POST', 'id' => 'formularioExportar','autocomplete'  => 'off');
+                                 echo form_open(base_url('presupuesto/exportar'), $formAttr);
+                              ?>
+                                <input type="hidden" name="ids[]" id="presupuestoExpor" />
+                            <?php echo form_close(); ?>
+
+                            <?php
+                               $formAttr = array('method' => 'POST', 'id' => 'formularioExportarLista','autocomplete'  => 'off');
+                               echo form_open(base_url('presupuesto/exportar_presupuesto'), $formAttr);
+                            ?>
+                              <input type="hidden" name="presupuesto_exportar" id="presupuesto_exportar" />
+                          <?php echo form_close(); ?>
+                            <!-- /exportar -->
+                            <!-- JQGRID -->
+                            <?php echo modules::run('presupuesto/ocultotabla'); ?>
+
+                            <!-- /JQGRID -->
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+    	</div><!-- cierra .col-lg-12 -->
+    </div><!-- cierra #page-wrapper -->
+</div><!-- cierra #wrapper -->
+
+<?php
+
+    echo    Modal::config(array(
+                "id"    => "opcionesModal",
+                "size"  => "sm"
+            ))->html();
+
+?>

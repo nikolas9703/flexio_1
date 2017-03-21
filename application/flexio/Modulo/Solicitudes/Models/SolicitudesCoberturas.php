@@ -11,6 +11,7 @@ class SolicitudesCoberturas extends Model
 {
 	
 	protected $table = 'seg_solicitudes_coberturas'; 
+	protected $guarded = ['id'];
 	protected $fillable =["cobertura","valor_cobertura","id_solicitud"];
 	public $timestamps = false; 
 }

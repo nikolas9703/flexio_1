@@ -111,7 +111,7 @@ var tablaReclamosVehiculo = (function () {
             var certificado = $(this).attr("data-certificado");
             var rowINFO = $.extend({}, gridObj.getRowData(id));
             var options = rowINFO.link;
-
+            formularioCrear.getCoberturasPolizaInfo(idpoliza, id);
             formularioCrear.interesesPoliza( idpoliza,"modal", id);
             opcionesModal.modal('hide');
         }); 

@@ -177,7 +177,7 @@ var ramos = {
    });
   });
 
-  $(this.botones.exportar).on("click", function(e){
+  /*$(this.botones.exportar).on("click", function(e){
 
 
 
@@ -186,7 +186,7 @@ var ramos = {
     $('body').trigger('click');
 
 
-  });
+  });*/
 
   tablaRamos.opcionesModal.on("click", this.botones.editarCuenta, function(e) {
     var id = $(this).data('id');

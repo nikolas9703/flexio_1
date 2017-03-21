@@ -1,5 +1,5 @@
 <template>
-<div class="row">
+<div class="row" id="info_pago">
 	<div class="col-md-12">
 		<div class="ibox float-e-margins border-bottom">
 			<div class="ibox-title">

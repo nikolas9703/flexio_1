@@ -30,11 +30,11 @@ class FacturaCompraEstadoObserver
             $this->por_aprobar_aprobado($facturaCompra);
         }
 
-        if($original["estado"] =="14" && $cambio['estado']=="17"){
+        if($original["estado_id"] =="14" && $cambio['estado_id']=="17"){
             $this->aprobado_anulado($facturaCompra);
         }
 
-        if($original["estado"] =="14" && $cambio['estado']=="20"){
+        if($original["estado_id"] =="14" && $cambio['estado_id']=="20"){
             $this->aprobado_anulado($facturaCompra);
         }
 

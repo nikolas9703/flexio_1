@@ -65,110 +65,6 @@ var listarOrdenes = (function(){
         }).val("");
     };
 
-    /* Objeto que guarda métodos que se van a usar en cada evento definido
-      en la función suscribeEvents. */
-    var events = {
-
-        /*
-        eExportar: function(e){
-            e.preventDefault();
-            e.returnValue=false;
-            e.stopPropagation();
-
-            if(dom.tabla.is(':visible') == true){
-
-                //Desde la Tabla
-                events.eExportarjQgrid();
-
-            }else{
-
-                //Desde el Grid
-                events.eExportarGrid();
-
-            }
-        },
-        eExportarjQgrid: function(e) {
-            //Exportar Seleccionados del jQgrid
-            var registros_jqgrid = [];
-
-            registros_jqgrid = dom.jqGrid.jqGrid('getGridParam','selarrrow');
-
-            var obj = new Object();
-            obj.count = registros_jqgrid.length;
-
-            if(obj.count) {
-
-                obj.items = new Array();
-
-                for(elem in registros_jqgrid) {
-                    //console.log(proyectos[elem]);
-                    var registro_jqgrid = dom.jqGrid.getRowData(registros_jqgrid[elem]);
-
-                    //Remove objects from associative array
-                    delete registro_jqgrid['link'];
-                    delete registro_jqgrid['options'];
-
-
-                    //Push to array
-                    obj.items.push(registro_jqgrid);
-                }
-
-
-                var json = JSON.stringify(obj);
-                var csvUrl = JSONToCSVConvertor(json);
-                var filename = st.filename +'_'+ Date.now() +'.csv';
-
-                //Ejecutar funcion para descargar archivo
-                downloadURL(csvUrl, filename);
-
-                $('body').trigger('click');
-            }
-        },
-        eExportarGrid: function(e){
-            var registros_grid = [];
-
-            $("#iconGrid").find('input[type="checkbox"]:checked').filter(function(){
-                registros_grid.push(this.value);
-            });
-
-            //Verificar si ha seleccionado algun proyecto
-            if(registros_grid.length==0){
-                return false;
-            }
-            //Convertir array a srting separado por guion
-            var registros_grid_string = registros_grid.join('-');
-            var obj;
-
-            $.ajax({
-                url: phost() + st.segmento2 + "/ajax-exportar",
-                type:"POST",
-                data:{
-                    erptkn:tkn,
-                    id_registros: registros_grid_string
-                },
-                dataType:"json",
-                success: function(data){
-                    if(!data)
-                    {
-                        return;
-                    }
-                    console.log(data);
-                    var json = JSON.stringify(data);
-                    var csvUrl = JSONToCSVConvertor(json);
-                    var filename = st.filename +'_'+ Date.now() +'.csv';
-
-                    //Ejecutar funcion para descargar archivo
-                    downloadURL(csvUrl, filename);
-
-                    $('body').trigger('click');
-                }
-
-            });
-
-        } */
-    };
-
-
 
     var mostrar_mensaje = function(){
         //mensaje clase viene desde el controlador...
@@ -224,40 +120,152 @@ $(function(){
 	    }
 	});
 
+  var gridObj = $("#ordenesGrid");
 
-$("#proveedor3").select2({
+  var verificarConversion = function(){
+
+    var ordenes = gridObj.jqGrid('getGridParam','selarrrow');
+
+    if(ordenes.length<=0) {
+      return false;
+    }
+    //Validar seleccion
+    var valido = true;
+    var check_centros = [];
+    var check_bodegas = [];
+    var check_proveedores = [];
+    var i=0;
+
+    for(id in ordenes) {
+        var orden = gridObj.getRowData(ordenes[id]);
+        var estado = normalize($(orden['Estado']).text().toLowerCase());
+        var centro_id = orden['centro_id'];
+        var bodega_id = orden['bodega_id'];
+        var proveedor_id = orden['proveedor_id'];
+
+        //si el objeto es vacio continuar la iteracion
+        if($.isEmptyObject(orden)){
+          continue;
+        }
+
+        //Verificar Estados
+        if(!estado.match(/por facturar|facturada parcial/gi)){
+          toastr.warning('Por favor! seleccione s&oacute;lo ordenes en estado <strong>Por facturar</strong> o <strong>Facturada parcial</strong>.');
+          valido = false;
+          break;
+        }
+
+        //Armar array de proveedores, centros y bodegas
+        check_centros[i] = centro_id;
+        check_bodegas[i] = bodega_id;
+        check_proveedores[i] = proveedor_id;
+        i++;
+    }
+
+    //Verificar si estado valido
+    if(valido==false) {
+      $('body').trigger('click');
+      return false;
+    }
+
+    //Verificar si los pedidos son del mismo proveedor
+    if(check_proveedores.allValuesSame()==false) {
+      $('body').trigger('click');
+      toastr.warning('Por favor! seleccione s&oacute;lo ordenes con el mismo proveedor.');
+      return false;
+    }
+
+    //Verificar si los pedidos son del mismo Centro
+    if(check_centros.allValuesSame()==false) {
+      $('body').trigger('click');
+      toastr.warning('Por favor! seleccione s&oacute;lo pedidos con el mismo centro contable.');
+      return false;
+    }
+
+    //Verificar si los pedidos son de la misma bodega
+    if(check_bodegas.allValuesSame()==false) {
+      $('body').trigger('click');
+      toastr.warning('Por favor! seleccione s&oacute;lo pedidos con la misma bodega.');
+      return false;
+    }
+
+    //Convertir ordenes seleccionados
+    //a factura de compras.
+    convertirFacturaCompra();
+  };
+
+  var convertirFacturaCompra = function(){
+
+    var ordenes = gridObj.jqGrid('getGridParam','selarrrow');
+    if(ordenes.length<=0) {
+      return false;
+    }
+
+    var url = phost() + "facturas_compras/crear/ordenes";
+    var fields = "";
+    $.each(ordenes, function(i, id){
+        var orden = gridObj.getRowData(id);
+        fields += '<input type="hidden" name="ordenes_id[]" value="'+ id +'">';
+        fields += '<input type="hidden" name="centro_id" value="'+ orden['centro_id'] +'">';
+        fields += '<input type="hidden" name="bodega_id" value="'+ orden['bodega_id'] +'">';
+        fields += '<input type="hidden" name="bodega_nombre" value="'+ orden['bodega_nombre'].toString() +'">';
+        fields += '<input type="hidden" name="proveedor_id" value="'+ orden['proveedor_id'] +'">';
+        fields += '<input type="hidden" name="proveedor_nombre" value="'+ $(orden['Proveedor']).text() +'">';
+    });
+
+    var form = $(
+        '<form action="' + url + '" method="POST" style="display:none;">' +
+        fields +
+        '<input type="hidden" name="erptkn" value="' + tkn + '">' +
+        '<input type="submit">' +
+        '</form>'
+    );
+
+    $('body').trigger('click').append(form);
+    form.submit();
+  };
+
+  //Convertir a factura de compra
+  $('#moduloOpciones ul').on("click", "#convertirAFacturaBtn", function(e){
+    e.preventDefault();
+    e.returnValue=false;
+    e.stopPropagation();
+
+    //Verificar si selecciono solo
+    //pedidos en estado cotizacion.
+    verificarConversion();
+  });
+
+
+  $("#proveedor3").select2({
     width:"100%",
     theme: "bootstrap",
     language: "es",
     maximumInputLength: 10,
     ajax: {
-                url: phost() + 'proveedores/ajax_catalogo_proveedores',
-                dataType: 'json',
-                cache: true,
-                delay: 250,
-                data: function (params) {
-                    return {
-                        q: params.term, // search term
-                        erptkn: tkn
-                    };
-                },
-                processResults: function (data, params) {
-                    
-                   var resultados = data.map(function(resp){
-                       return [{'id': resp.id,'text': resp.nombre}];
-                   }).reduce(function(a,b){
-                       return a.concat(b);
-                   },[]);
-                     return {
-                          results:resultados
-                     };
-                },
-                escapeMarkup: function (markup) { return markup; },
-            }
-});
+      url: phost() + 'proveedores/ajax_catalogo_proveedores',
+      dataType: 'json',
+      cache: true,
+      delay: 250,
+      data: function (params) {
+          return {
+              q: params.term, // search term
+              erptkn: tkn
+          };
+      },
+      processResults: function (data, params) {
 
-
-
-
+         var resultados = data.map(function(resp){
+             return [{'id': resp.id,'text': resp.nombre}];
+         }).reduce(function(a,b){
+             return a.concat(b);
+         },[]);
+           return {
+                results:resultados
+           };
+      },
+      escapeMarkup: function (markup) { return markup; },
+    }
+  });
 
 });

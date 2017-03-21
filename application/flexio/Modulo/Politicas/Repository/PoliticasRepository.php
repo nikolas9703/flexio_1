@@ -21,7 +21,8 @@ class PoliticasRepository {
         'agentes' => 'Agentes',
         'intereses_asegurados' => 'Intereses asegurados',
         'solicitudes' => 'Solicitudes',
-        'polizas' => 'Pólizas'
+        'polizas' => 'Pólizas',
+        'cobros' => 'Cobros'
     ];
 
     function create($created) {

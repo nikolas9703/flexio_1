@@ -151,40 +151,43 @@ class ComisionesSegurosRepository {
 		return $comisiones;
 	}
 	
-	public function getComisionesAgentes($id_agente,$empresa)
+	public function getComisionesAgentes($id_agente,$empresa,$fecha1,$fecha2)
 	{
-		$comisiones=SegComisionesParticipacion::where('seg_comisiones.id_empresa',$empresa)->where('seg_comisiones_participacion.agente_id',$id_agente)
-		->join("seg_comisiones", "seg_comisiones.id", "=", "seg_comisiones_participacion.comision_id");
+		$comisiones=SegComisionesParticipacion::select('seg_comisiones_participacion.*')->where('seg_comisiones.id_empresa',$empresa)->where('seg_comisiones_participacion.agente_id',$id_agente)
+		->whereIn('seg_comisiones.estado',array('liquidada', 'pago_parcial'))
+		->whereNull('seg_honorarios_part.id_comision_part')
+		->leftJoin("seg_comisiones", "seg_comisiones.id", "=", "seg_comisiones_participacion.comision_id")
+		->leftJoin("seg_honorarios_part", "seg_honorarios_part.id_comision_part", "=", "seg_comisiones_participacion.comision_id");
+		
+		if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+			$fecha1=date('Y-m-d', strtotime($fecha1));
+			$comisiones->whereRaw("DATE(fecha) >= '".$fecha1."'");
+		}
+		if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+			$fecha2=date('Y-m-d', strtotime($fecha2));
+			$comisiones->whereRaw("DATE(fecha) <= '".$fecha2."'");
+		}
+		
 		
 		return $comisiones->get();
 	}
 	
-	public function getComisiones($clause)
+	public function getComisionesAgentesGuardadas($comision,$id_agente,$fecha1=NULL,$fecha2=NULL)
 	{
-		$comisiones=ComisionesSeguros::where('id_empresa',$clause['empresa_id']);
+		$comisiones=SegComisionesParticipacion::select('seg_comisiones_participacion.*')->where('seg_comisiones_participacion.agente_id',$id_agente)
+		->leftJoin("seg_comisiones", "seg_comisiones.id", "=", "seg_comisiones_participacion.comision_id")
+		->whereIn('comision_id',$comision);
 		
-		unset($clause["empresa_id"]);
+		if(isset($fecha1) && $fecha1!=NULL && !empty($fecha1) && $fecha1!=""){
+			$fecha1=date('Y-m-d', strtotime($fecha1));
+			$comisiones->whereRaw("DATE(seg_comisiones.fecha) >= '".$fecha1."'");
+		}
+		if(isset($fecha2) && $fecha2!=NULL && !empty($fecha2) && $fecha2!=""){
+			$fecha2=date('Y-m-d', strtotime($fecha2));
+			$comisiones->whereRaw("DATE(seg_comisiones.fecha) <= '".$fecha2."'");
+		}
 		
-		if($clause!=NULL && !empty($clause) && is_array($clause))
-        {
-                foreach($clause AS $field => $value)
-                {  
-                        //verificar si valor es array
-                        if(is_array($value)){
-                                $comisiones->where($field, $value[0], $value[1]);
-                        }else{
-							if($field=='id')
-							{
-								$comisiones->whereIn('id', $value);
-							}
-							else{
-								$comisiones->where($field, '=', $value);
-							}
-                        }
-                }
-        }
 		
 		return $comisiones->get();
 	}
-	
 }

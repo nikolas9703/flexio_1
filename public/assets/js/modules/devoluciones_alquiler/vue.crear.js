@@ -225,7 +225,7 @@ var ODTModel = new Vue({
 				var minDate = moment(entrega.fecha_entrega.date).format('DD/MM/YYYY H:mm:ss');
 			}
 			//CONTRATOS DE ALQUILER
-			else if(typeof entrega.entregas != 'undefined'){
+			else if(typeof entrega != 'undefined' && typeof entrega.entregas != 'undefined'){
 				var minDate = moment(entrega.entregas[0]["fecha_entrega"]["date"]).format('DD/MM/YYYY H:mm:ss');
 			}
 

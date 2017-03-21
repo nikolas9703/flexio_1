@@ -549,3 +549,19 @@ $('#opcionesModal').on('click','.AgendarCobro',function(e){
 	//'.base_url().'cobros_seguros/crear?mod=poliza&idPoliza='.$row->id.'
 });
 
+
+
+
+$('#opcionesModal').on('click','#crearEndosoBtn',function(e){
+
+	e.preventDefault();
+    e.returnValue=false;
+   	e.stopPropagation();
+   	var id_poliza = $(this).attr('data-id');
+   	$('#opcionesModal').modal('hide');
+   	window.open('../endosos/crear/'+id_poliza);
+
+});
+
+
+

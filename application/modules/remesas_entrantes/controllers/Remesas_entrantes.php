@@ -58,8 +58,8 @@ class Remesas_entrantes extends CRM_Controller
         parent::__construct();
 
         $this->load->helper(array('file', 'string', 'util'));
-        //$this->load->model('remesas/Remesas_orm');
-
+        $this->load->model('movimiento_monetario/Movimiento_monetario_orm');
+		$this->load->model('movimiento_monetario/Items_recibos_orm');
 
         $this->load->dbutil();
         $uuid_empresa = $this->session->userdata('uuid_empresa');
@@ -106,6 +106,17 @@ class Remesas_entrantes extends CRM_Controller
             ));
 
         }
+
+        $this->load->view('tabla');
+    }
+	
+	public function tablatabremesasentrantes($id_cliente = NULL)
+    {
+
+        // If ajax request
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/remesas_entrantes/tablatab.js',
+        ));
 
         $this->load->view('tabla');
     }
@@ -191,6 +202,14 @@ class Remesas_entrantes extends CRM_Controller
 		$fin_fecha= $this->input->post('fin_fecha', true);
 		$usuario= $this->input->post('usuario', true);
 		$estado= $this->input->post('estado', true);
+		$pagos_remesados= $this->input->post('pagos_remesados', true);
+		$aseguradora= $this->input->post('aseguradora_id', true);
+		$monto= $this->input->post('seg_remesas_entrantes_monto', true);
+		$fecha= $this->input->post('seg_remesas_entrantes_fecha', true);
+		$usuario_nombre=$this->input->post('usuario_id', true);		
+		$estado = $this->input->post('estado', true);
+		
+		$uuid_aseguradora=$this->input->post('uuid_aseguradora', true);
 		
 		if(!empty($no_remesa)){
     		$clause["no_remesa"] = array('LIKE', "%$no_remesa%");
@@ -209,6 +228,36 @@ class Remesas_entrantes extends CRM_Controller
 		if(!empty($usuario)){
     		$clause["usuario_id"] = $usuario;
     	}
+		if(!empty($estado)){
+    		$clause["seg_remesas_entrantes.estado"] = $estado;
+    	}
+		
+		if(!empty($uuid_aseguradora)){
+			$aseguradora_id=$this->aseguradoras->where('uuid_aseguradora',hex2bin($uuid_aseguradora))->first()->id;
+    		$clause["seg_remesas_entrantes.aseguradora_id"] = $aseguradora_id;
+    	}
+		
+		if(!empty($pagos_remesados)){
+			$clause["seg_remesas_entrantes.pagos_remesados"] = $pagos_remesados;
+    	}
+		
+		if(!empty($aseguradora)){
+			$clause["seg_aseguradoras.nombre"] = array('LIKE','%'.$aseguradora.'%');
+    	}
+		
+		if(!empty($monto)){
+			$clause["seg_remesas_entrantes.monto"] = $monto;
+    	}
+		
+		if(!empty($fecha)){
+			$fecha1=date('Y-m-d', strtotime($fecha));
+    		$clause["fecha1"] = $fecha1;
+    	}
+		
+		if(!empty($usuario_nombre)){
+    		$clause["usuarios.nombre"] = array('LIKE','%'.$usuario_nombre.'%');
+    	}
+		
 		if(!empty($estado)){
     		$clause["seg_remesas_entrantes.estado"] = $estado;
     	}
@@ -311,7 +360,10 @@ class Remesas_entrantes extends CRM_Controller
 			"codigo" => '',
 			"borrador"=>'',
 			"estado_remesa"=>'',
-			"ver"=>''
+			"ver"=>'',
+			"no_recibo"=>'',
+			"monto_recibo"=>'',
+			"nombre_recibo"=>''
 		));
 
         $data['aseguradoras'] = Aseguradoras::where(['empresa_id' =>$this->id_empresa])->get();
@@ -384,6 +436,7 @@ class Remesas_entrantes extends CRM_Controller
 
 		$this->assets->agregar_js(array(
 			'public/assets/js/modules/remesas_entrantes/plugins.js',
+			//'public/assets/js/modules/remesas_entrantes/crear.vue.js',
 		));
 
 		$data = array();
@@ -403,12 +456,28 @@ class Remesas_entrantes extends CRM_Controller
 		
 		$fecha_desde='';
 		if($Remesas->fecha_desde!='0000-00-00' && $Remesas->fecha_desde!=null && $Remesas->fecha_desde!='')
-			$fecha_desde = date('m/d/Y', strtotime($Remesas->fecha_desde));
+			$fecha_desde = $Remesas->fecha_desde;
 		
 		$fecha_hasta='';
 		if($Remesas->fecha_hasta!='0000-00-00' && $Remesas->fecha_hasta!=null && $Remesas->fecha_hasta!='')
-			$fecha_hasta = date('m/d/Y', strtotime($Remesas->fecha_hasta));  
+			$fecha_hasta = $Remesas->fecha_hasta;  
 
+		$no_recibo='';
+		$monto_recibo='';
+		$nombre_recibo='';
+		if($Remesas->estado=='por_liquidar')
+		{
+			if($Remesas->id_recibo!='')
+			{
+				$no_recibo=$Remesas->id_recibo;
+				
+				$datosrecibo=Movimiento_monetario_orm::find($no_recibo);
+				$montorecibo=Items_recibos_orm::where('id_recibo',$no_recibo)->sum('credito');
+				
+				$monto_recibo=$montorecibo;
+				$nombre_recibo=$datosrecibo->codigo.' '.$datosrecibo->narracion;
+			}
+		}
 		$this->assets->agregar_var_js(array(
 			"vista" => 'editar',
 			"fecha_desde" => $fecha_desde ,
@@ -418,9 +487,16 @@ class Remesas_entrantes extends CRM_Controller
 			"codigo" => $codigo,
 			"borrador" => $borrador,
 			"estado_remesa"=>$Remesas->estado,
-			"ver"=>$ver
+			"ver"=>$ver,
+			"no_recibo"=>$no_recibo,
+			"monto_recibo"=>$monto_recibo,
+			"nombre_recibo"=>$nombre_recibo,
 		));
 		$data['aseguradoras'] = Aseguradoras::where(['empresa_id' =>$this->id_empresa])->get();
+		
+		$data['recibos'] = Movimiento_monetario_orm::select('mov_recibo_dinero.*')->leftJoin("seg_remesas_entrantes", "seg_remesas_entrantes.id_recibo", "=", "mov_recibo_dinero.id")->where(['mov_recibo_dinero.empresa_id' =>$this->id_empresa])
+		->whereNull('seg_remesas_entrantes.id_recibo')
+		->orWhere('seg_remesas_entrantes.id',$Remesas->id)->get();
 
         $clause = array('empresa_id' => $this->id_empresa);
         $data['menu_crear'] = $this->ramoRepository->listar_cuentas($clause);
@@ -461,6 +537,12 @@ class Remesas_entrantes extends CRM_Controller
 			);
 
 		$menuOpciones["#imprimirRemesaBtn"] = "Imprimir";
+		
+		if($Remesas->estado=='por_liquidar')
+		{
+			$menuOpciones["#eliminarRemesaBtn"] = "Eliminar";
+		}
+		
 		$breadcrumb["menu"]["opciones"] = $menuOpciones;
 
 		$this->template->agregar_titulo_header('Ver remesa entrante');
@@ -625,6 +707,9 @@ class Remesas_entrantes extends CRM_Controller
 	
 	public function ajax_get_remesa_entrantes_procesar() {
 		
+		$response = new stdClass();
+        $response->inter = array();
+		
 		$facturas_id=array();
 		$montos=array();
 		$id_montos=array();
@@ -703,6 +788,10 @@ class Remesas_entrantes extends CRM_Controller
 						$valor_real=$valor;
 					}
 				}
+				else
+				{
+					$valor_real=0;
+				}
 				
 				if($value->estado!='cobrado_completo')
 				{
@@ -773,10 +862,10 @@ class Remesas_entrantes extends CRM_Controller
 					$comision['updated_at']=date('Y-m-d H:i:s');
 					$comision['id_empresa']=$this->id_empresa;
 					
-					if($value->polizas->des_comision=='si')
+					if($value->polizas->desc_comision=='si')
 					{
-						$comision['comision_descontada']=($valor_real*($value->polizas->comision/100));
-						$comision['scomision_descontada']=($valor_real*($value->polizas->porcentaje_sobre_comision/100));
+						$comision['comision_descontada']=($comision['pago_sobre_prima']*($value->polizas->comision/100));
+						$comision['scomision_descontada']=($comision['pago_sobre_prima']*($value->polizas->porcentaje_sobre_comision/100));
 					}
 					else
 					{
@@ -797,7 +886,7 @@ class Remesas_entrantes extends CRM_Controller
 					
 					//obtener los agentes de participacion de la poliza y crearlos para la comision
 					$agentespolizas=$this->agenteParticipacion->where('id_poliza',$value->polizas->id)->get();
-					
+					$totalmontoagentes=0;
 					foreach($agentespolizas as $agente)
 					{
 						$datosagentecomision=array();
@@ -810,10 +899,11 @@ class Remesas_entrantes extends CRM_Controller
 						if($comision_creada->comision_pagada>0)
 							$datosagentecomision['monto']=$comision_creada->comision_pagada*($agente->porcentaje_participacion/100);
 						else
-							$datosagentecomision['monto']=$comision_creada->comision_descontada*($agente->porcentaje_participacion/100);
+							$datosagentecomision['monto']=($comision_creada->comision_descontada+$comision_creada->monto_scomision)*($agente->porcentaje_participacion/100);
 						
 						$partcomisioncreada=$this->SegComisionesParticipacion->create($datosagentecomision);
 						
+						$totalmontoagentes+=$partcomisioncreada->monto;
 					}
 					
 					//obtener el porcentaje del agente principal y guardarlo en la comision
@@ -833,10 +923,30 @@ class Remesas_entrantes extends CRM_Controller
 						if($comision_creada->comision_pagada>0)
 							$datosagentepcomision['monto']=$comision_creada->comision_pagada*($agentespolizasprincipal->comision/100);
 						else
-							$datosagentepcomision['monto']=$comision_creada->comision_descontada*($agentespolizasprincipal->comision/100);
+							$datosagentepcomision['monto']=($comision_creada->comision_descontada+$comision_creada->monto_scomision)*($agentespolizasprincipal->comision/100);
 						
 						$partcomisioncreadap=$this->SegComisionesParticipacion->create($datosagentepcomision);
 						
+						$totalmontoagentes+=$partcomisioncreadap->monto;
+						
+						
+						if(number_format($totalmontoagentes,2)>(number_format(($comision_creada->comision_descontada+$comision_creada->monto_scomision + $comision_creada->comision_pagada),2)) || number_format($totalmontoagentes,2)<(number_format(($comision_creada->comision_descontada+$comision_creada->monto_scomision + $comision_creada->comision_pagada),2)))
+						{
+							$totalfinalcom=number_format($totalmontoagentes,2) - (number_format(($comision_creada->comision_descontada+$comision_creada->monto_scomision + $comision_creada->comision_pagada),2));
+							
+							if($totalfinalcom<0)
+							{
+								$final=$partcomisioncreadap->monto - $totalfinalcom;
+							}
+							else
+							{
+								$final=$partcomisioncreadap->monto + $totalfinalcom;
+							}
+							
+							$datosactu=array();
+							$datosactu['monto']=$final;
+							$partcomisionactp=$this->SegComisionesParticipacion->find($partcomisioncreadap->id)->update($datosactu);
+						}
 					}
 				}
 				
@@ -896,9 +1006,7 @@ class Remesas_entrantes extends CRM_Controller
 			
 			$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesLiquidada($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa)->get();
 		}
-	
-        $response = new stdClass();
-        $response->inter = array();
+		
 		$var=0;
 		$total= $consultaComisionestotal;
 		$comision_pagada_total=0;
@@ -1056,6 +1164,8 @@ class Remesas_entrantes extends CRM_Controller
 		
 		$uuid_remesa=bin2hex($remesa->uuid_remesa_entrante);
 		
+		$response->uuid=$uuid_remesa;
+		
 		array_push($response->inter, array("remesa_creada"=>$uuid_remesa,"aseguradora_id"=>$aseguradora_id,"link_poliza"=>"","link_factura"=>"","id" => '', "final"=>1,"prima_neta_final"=>number_format($prima_neta_final, 2),"pago_final"=>number_format($pago_final, 2),"com_esp_final"=>number_format($com_esp_final, 4),"com_des_final"=>number_format($com_des_final, 2),"scom_esp_final"=>number_format($scom_esp_final, 2),"scom_des_final"=>number_format($scom_des_final, 2),"com_paga_final"=>number_format($com_paga_final, 2),"total_sob_descontada"=>"","total_sob_esperada"=>"","total_com_descontada"=>"","total_com_descontada"=>"","total_com_esperada"=>"","comision_pagada_total"=>"","comision_pagada"=>"","sobcomision_descontada"=>"","sobcomision_esperada"=>"","porcentaje_sobre_comision"=>"","comision_descontado"=>"","comision_esperada"=>"","porcentaje_comision"=>"","prima_neta"=>"","fecha_operacion"=>'',"uuid_poliza"=>'',"uuid_factura"=>'',"numero_factura" => '', "numero_poliza" => '' , 'ramo_id'=>'','nombre_ramo' => $nombre_ramo_anterior, 'inicio_vigencia' => '', 'fin_vigencia' => '', 'nombre_cliente' => '', 'fecha_factura' => '', 'monto' => '' ,'estado' => '', 'estilos' => $estilo ));
 				
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
@@ -1193,6 +1303,7 @@ class Remesas_entrantes extends CRM_Controller
 		$montos=$_POST['monto_final'];
 		$com_pagada=$_POST['com_pagada'];
 		$boton=$_POST['guardar'];
+		$no_recibo=$_POST['no_recibo_guardar'];
 		
 		if($_POST['remesa_creada']!='')
 		{
@@ -1210,6 +1321,7 @@ class Remesas_entrantes extends CRM_Controller
 		$campo["fecha"] =date('Y-m-d');
 		$campo["usuario_id"] =$this->usuario_id;
 		$campo["estado"] ='por_liquidar';
+		$campo["id_recibo"] =$no_recibo;
 		$campo["empresa_id"] =$this->id_empresa;
 		$campo["updated_at"] =date('Y-m-d H:i:s');
 		
@@ -1276,13 +1388,16 @@ class Remesas_entrantes extends CRM_Controller
 		}
 		if($fecha_inicial!="")
 		{
-			$clause['fecha1']=date('Y-m-d', strtotime($fecha_inicial));
+			//$fecha_inicial = new Carbon($fecha_inicial);
+			//$fecha_inicial->format('Y-m-d');
+			$clause['fecha1']=$fecha_inicial;
 		}
 		if($fecha_final!="")
 		{
-			$clause['fecha2']=date('Y-m-d', strtotime($fecha_final));
+			//$fecha_final = new Carbon($fecha_final);
+			//$fecha_final->format('Y-m-d');
+			$clause['fecha2']=$fecha_final;
 		}
-		
 		
 		$id_remesa=$this->RemesasEntrantes->where('no_remesa',$codigo_remesa)->first();
 		$id_ramos = explode(",", $id_remesa->ramos_id);
@@ -1378,8 +1493,7 @@ class Remesas_entrantes extends CRM_Controller
 			{
 				$consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa->id,$id_aseguradora,$id_ramos,$fecha_inicial,$fecha_final,$this->id_empresa)->count();
 				
-				$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa->id,$id_aseguradora,$id_ramos,$fecha_final,$fecha_inicial,$this->id_empresa)->get();
-				
+				$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa->id,$id_aseguradora,$id_ramos,$fecha_inicial,$fecha_final,$this->id_empresa)->get();
 			}
 			else
 			{
@@ -1523,7 +1637,10 @@ class Remesas_entrantes extends CRM_Controller
 				$ramo=$value->id_ramo;
 			}
 		
-			$nombre_ramo_anterior=$this->Ramos->find($ramo)->nombre;
+			if($ramo!="")
+				$nombre_ramo_anterior=$this->Ramos->find($ramo)->nombre;
+			else
+				$nombre_ramo_anterior='';
 			
 			if($comision_esperada_comparar_total!=$comision_pagada_total)
 				$estilo='font-weight: bold; background-color:#efefef; color:#ff0000;';
@@ -1558,11 +1675,33 @@ class Remesas_entrantes extends CRM_Controller
 				array_push($nombreRamos, array('nombre' => $value['nombre']));
 			}
 		}
+		if(in_array('todos', $id_ramos))
+		{
+			array_push($nombreRamos, array('nombre' => 'Todos'));
+		}
 		
 		$nombre = $codigo_remesa;
 		$aseguradora = Aseguradoras::where(['id' => $id_aseguradora])->first();
 		
-		$data = ['datos'=>$id_remesa,'nombreRamos'=>$nombreRamos,'aseguradora' => $aseguradora, 'fecha_inicial' => $fecha_inicial, 'fecha_final' => $fecha_final, 'datosRemesa' => $datosRemesa];
+		$no_recibo='';
+		$monto_recibo='';
+		$nombre_recibo='';
+		if($id_remesa->estado=='por_liquidar')
+		{
+			if($id_remesa->id_recibo!='')
+			{
+				$no_recibo=$id_remesa->id_recibo;
+				
+				$datosrecibo=Movimiento_monetario_orm::find($no_recibo);
+				$montorecibo=Items_recibos_orm::where('id_recibo',$no_recibo)->sum('credito');
+				
+				$monto_recibo=$montorecibo;
+				$nombre_recibo=$datosrecibo->codigo.' '.$datosrecibo->narracion;
+			}
+		}
+		
+		$data = ['datos'=>$id_remesa,'monto_recibo'=>$monto_recibo,'nombre_recibo'=>$nombre_recibo,'nombreRamos'=>$nombreRamos,'aseguradora' => $aseguradora, 'fecha_inicial' => $fecha_inicial, 'fecha_final' => $fecha_final, 'datosRemesa' => $datosRemesa];
+		
 		$dompdf = new Dompdf();
 		$html = $this->load->view('pdf/' . $formulario, $data, true);
 		$dompdf->loadHtml($html);
@@ -1629,6 +1768,38 @@ class Remesas_entrantes extends CRM_Controller
 		$csv->output("remesas_entrantes-". date('ymd') .".csv");
 		exit();
     }
+	
+	function ajax_get_eliminar_comisiones()
+	{
+		$remesa=$this->input->post('remesa');
+		$comisiones=$this->input->post('comisiones');
+		
+		$datosremesa=$this->RemesasEntrantes->where('no_remesa',$remesa)->first();
+		$id_remesa=$datosremesa->id;
+		
+		$actualizardatos['id_remesa']=NULL;
+		$actualizar=$this->ComisionesSeguros->whereIn('id',$comisiones)->update($actualizardatos);
+		
+		$eliminar=$this->COmisionesSegurosRemesas->whereIn('id_comision',$campos['comisiones'])->where('id_remesa',$id_remesa)->delete();
+		
+		$response='si';
+		
+		echo json_encode($response);
+        exit;
+	}
+	
+	function ajax_get_datos_mov_dinero()
+	{
+		$no_recibo=$this->input->post('recibo');
+		
+		$datosrecibo=Movimiento_monetario_orm::find($no_recibo);
+		$montorecibo=Items_recibos_orm::where('id_recibo',$no_recibo)->sum('credito');
+		
+		$monto_recibo=number_format($montorecibo,2);
+		
+		echo json_encode($monto_recibo);
+        exit;
+	}
 	
      private function _css() {
         $this->assets->agregar_css(array(

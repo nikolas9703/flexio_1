@@ -16,7 +16,7 @@ class Empresa extends CRM_Controller
     {
       $uuid_usuario = $this->session->userdata('huuid_usuario');
       $uuid_empresa = $this->session->userdata('uuid_empresa');
-      
+
       if(empty($uuid_usuario) || empty($uuid_empresa)){
          $this->server_response([]);
       }
@@ -46,8 +46,19 @@ class Empresa extends CRM_Controller
     public function cambio()
     {
         $data = array();
-        $uuid_empresa = $this->input->post('uuid_empresa');
-        $data['uuid_empresa'] = $uuid_empresa;
+        $buscarEmpresa = Empresa_orm::findByUuid($this->input->post('uuid_empresa'));//1
+        //$uuid_empresa = $this->input->post('uuid_empresa');
+        $data['uuid_empresa'] = $buscarEmpresa->uuid_empresa;
+        $data['nombre_empresa'] = $buscarEmpresa->nombre;
+        /**
+         * Agregado datos de no-reply
+         */
+        if(isset($buscarEmpresa->no_replay_email))
+        {
+            $data['no_reply_email'] = $buscarEmpresa->no_reply_email;
+            $data['no_reply_name'] = $buscarEmpresa->no_reply_name;
+        }
+
         $this->session->set_userdata($data);
         $this->cache->delete("usuario-roles-". $this->session->userdata('huuid_usuario'));
 

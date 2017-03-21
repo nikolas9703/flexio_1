@@ -1,7 +1,10 @@
 var multiselect = window.location.pathname.match(/facturas_compras/g) ? true : false;
 var operacion_type = window.location.pathname.match(/subcontratos/g) ? '' : 18;
 operacion_type = window.location.pathname.match(/facturas_compras_contratos/g) ? 19 : operacion_type;
-
+ prefix = "";
+if (typeof prex != 'undefined') {
+		 prefix = prex;
+}
 var tablaFacturasCompras = (function () {
 
 	var tablaUrl = phost() + 'facturas_compras/ajax-listar';
@@ -21,6 +24,9 @@ var tablaFacturasCompras = (function () {
 		aplicarCreditoFavor: ".aplicar-credito-favor",
 		confirmarCreditoFavor: ".confirmar-credito-favor",
 		guardarCreditoFavor: ".guardar-credito-favor",
+        aplicarNotaCreditoFavor: ".aplicar-nota-credito-favor",
+		confirmarNotaCreditoFavor: ".confirmar-nota-credito-favor",
+		guardarNotaCreditoFavor: ".guardar-nota-credito-favor",
 		changeStateBtn: ".change-state-btn",
 		changeStateMultipleBtn: "#change-state-multiple-btn"
 	};
@@ -54,44 +60,70 @@ var tablaFacturasCompras = (function () {
 
 		//Parametros guardados en localStorage
 		if (typeof (Storage) !== "undefined") {
-			if (typeof localStorage.fc_numero_factura != "undefined" && localStorage.fc_numero_factura != "null" && localStorage.fc_numero_factura != "") {
-				data.numero_factura = localStorage.fc_numero_factura;
-			}
-			if (typeof localStorage.fc_fecha1 != "undefined" && localStorage.fc_fecha1 != "null" && localStorage.fc_fecha1 != "") {
-				data.fecha1 = localStorage.fc_fecha1;
-			}
-			if (typeof localStorage.fc_fecha2 != "undefined" && localStorage.fc_fecha2 != "null" && localStorage.fc_fecha2 != "") {
-				data.fecha2 = localStorage.fc_fecha2;
-			}
-			if (typeof localStorage.fc_proveedor != "undefined" && localStorage.fc_proveedor != "null" && localStorage.fc_proveedor != "") {
-				data.proveedor = localStorage.fc_proveedor;
-			}
-			if (typeof localStorage.fc_centro_contable != "undefined" && localStorage.fc_centro_contable != "null" && localStorage.fc_centro_contable != "") {
-				data.centro_contable = localStorage.fc_centro_contable;
-			}
-			if (typeof localStorage.fc_estado != "undefined" && localStorage.fc_estado != '' && localStorage.fc_estado != "null") {
+			if (typeof localStorage[prefix+ '_numero_factura'] != "undefined" && localStorage[prefix+ '_numero_factura'] != "null" && localStorage[prefix+ '_numero_factura'] != "") {
 
-				if (localStorage.fc_estado.match(/,/gi)) {
+				console.log(localStorage[prefix+ '_numero_factura']);
+				data.numero_factura = localStorage[prefix+ '_numero_factura'];
+			}
+			if (typeof localStorage[prefix+ '_numero_dias'] != "undefined" && localStorage[prefix+ '_numero_dias'] != "null" && localStorage[prefix+ '_numero_dias'] != "") {
+				data.numero_dias = localStorage[prefix+ '_numero_dias'];
+			}
+			if (typeof localStorage[prefix+ '_fecha1'] != "undefined" && localStorage[prefix+ '_fecha1'] != "null" && localStorage[prefix+ '_fecha1'] != "") {
+				data.fecha1 = localStorage[prefix+ '_fecha1'];
+			}
+			if (typeof localStorage[prefix+ '_creacion_min'] != "undefined" && localStorage[prefix+ '_creacion_min'] != "null" && localStorage[prefix+ '_creacion_min'] != "") {
+				data.creacion_min = localStorage[prefix+ '_creacion_min'];
+			}
+			if (typeof localStorage[prefix+ '_creacion_max'] != "undefined" && localStorage[prefix+ '_creacion_max'] != "null" && localStorage[prefix+ '_creacion_max'] != "") {
+				data.creacion_max = localStorage[prefix+ '_creacion_max'];
+			}
+			if (typeof localStorage[prefix+ '_fecha2'] != "undefined" && localStorage[prefix+ '_fecha2'] != "null" && localStorage[prefix+ '_fecha2'] != "") {
+				data.fecha2 = localStorage[prefix+ '_fecha2'];
+			}
+			if (typeof localStorage[prefix+ '_proveedor'] != "undefined" && localStorage[prefix+ '_proveedor'] != "null" && localStorage[prefix+ '_proveedor'] != "") {
+				data.proveedor = localStorage[prefix+ '_proveedor'];
+			}
+			if (typeof localStorage[prefix+ '_pagos'] != "undefined" && localStorage[prefix+ '_pagos'] != "null" && localStorage[prefix+ '_pagos'] != "") {
+				data.pagos = localStorage[prefix+ '_pagos'];
+			}
+			if (typeof localStorage[prefix+ '_centro_contable'] != "undefined" && localStorage[prefix+ '_centro_contable'] != "null" && localStorage[prefix+ '_centro_contable'] != "") {
+				data.centro_contable = localStorage[prefix+ '_centro_contable'];
+			}
+			if (typeof localStorage[prefix+ '_estado'] != "undefined" && localStorage[prefix+ '_estado'] != '' && localStorage[prefix+ '_estado'] != "null") {
+
+				if (localStorage[prefix+ '_estado'].match(/,/gi)) {
 					data.estado = [];
-					$.each(localStorage.fc_estado.split(","), function (i, estado) {
+					$.each(localStorage[prefix+ '_estado'].split(","), function (i, estado) {
 						data.estado[i] = estado;
 					});
 
 				} else {
-					data.estado = localStorage.fc_estado;
+					data.estado = localStorage[prefix+ '_estado'];
 				}
 			}
-			if (typeof localStorage.fc_monto1 != "undefined" && localStorage.fc_monto1 != "null" && localStorage.fc_monto1 != "") {
-				data.monto1 = localStorage.fc_monto1;
+			if (typeof localStorage[prefix+ '_termino_pago'] != "undefined" && localStorage[prefix+ '_termino_pago'] != '' && localStorage[prefix+ '_termino_pago'] != "null") {
+
+				if (localStorage[prefix+ '_termino_pago'].match(/,/gi)) {
+					data.termino_pago = [];
+					$.each(localStorage[prefix+ '_termino_pago'].split(","), function (i, termino_pago) {
+						data.estado[i] = termino_pago;
+					});
+
+				} else {
+					data.termino_pago = localStorage[prefix+ '_termino_pago'];
+				}
 			}
-			if (typeof localStorage.fc_monto2 != "undefined" && localStorage.fc_monto2 != "null" && localStorage.fc_monto2 != "") {
-				data.monto2 = localStorage.fc_monto2;
+			if (typeof localStorage[prefix+ '_monto1'] != "undefined" && localStorage[prefix+ '_monto1'] != "null" && localStorage[prefix+ '_monto1'] != "") {
+				data.monto1 = localStorage[prefix+ '_monto1'];
 			}
-			if (typeof localStorage.fc_creado_por != "undefined" && localStorage.fc_creado_por != "null" && localStorage.fc_creado_por != "") {
-				data.creado_por = localStorage.fc_creado_por;
+			if (typeof localStorage[prefix+ '_monto2'] != "undefined" && localStorage[prefix+ '_monto2'] != "null" && localStorage[prefix+ '_monto2'] != "") {
+				data.monto2 = localStorage[prefix+ '_monto2'];
 			}
-			if (typeof localStorage.fc_categoria_id != "undefined" && localStorage.fc_categoria_id != '' && localStorage.fc_categoria_id != "null") {
-				data.categoria_id = localStorage.fc_categoria_id;
+			if (typeof localStorage[prefix+ '_creado_por'] != "undefined" && localStorage[prefix+ '_creado_por'] != "null" && localStorage[prefix+ '_creado_por'] != "") {
+				data.creado_por = localStorage[prefix+ '_creado_por'];
+			}
+			if (typeof localStorage[prefix+ '_categoria_id'] != "undefined" && localStorage[prefix+ '_categoria_id'] != '' && localStorage[prefix+ '_categoria_id'] != "null") {
+				data.categoria_id = localStorage[prefix+ '_categoria_id'];
 			}
 		}
 
@@ -113,61 +145,86 @@ var tablaFacturasCompras = (function () {
 		}
 		var haybusqueda = 0;
 
-		if (typeof localStorage.fc_numero_factura != "undefined" && localStorage.fc_numero_factura != '') {
-			$('#numero_factura').val(localStorage.fc_numero_factura);
+		if (typeof localStorage[prefix+ '_numero_factura'] != "undefined" && localStorage[prefix+ '_numero_factura'] != '') {
+			$('#numero_factura').val(localStorage[prefix+ '_numero_factura']);
 			haybusqueda += 1;
 		}
-		if (typeof localStorage.fc_fecha1 != "undefined" && localStorage.fc_fecha1 != '') {
-			$('#fecha1').prop('value', localStorage.fc_fecha1);
+		if (typeof localStorage[prefix+ '_fecha1'] != "undefined" && localStorage[prefix+ '_fecha1'] != '') {
+			$('#fecha1').prop('value', localStorage[prefix+ '_fecha1']);
 			haybusqueda += 1;
 		}
-		if (typeof localStorage.fc_fecha2 != "undefined" && localStorage.fc_fecha2 != '') {
-			$('#fecha2').prop('value', localStorage.fc_fecha2);
+		if (typeof localStorage[prefix+ '_creacion_min'] != "undefined" && localStorage[prefix+ '_creacion_min'] != '') {
+			$('#creacion_min').prop('value', localStorage[prefix+ '_creacion_min']);
 			haybusqueda += 1;
 		}
-		if (typeof localStorage.fc_centro_contable != "undefined" && localStorage.fc_centro_contable != '') {
-			$('#centro_contable').find('option[value="' + localStorage.fc_centro_contable + '"]').attr("selected", "selected");
+		if (typeof localStorage[prefix+ '_creacion_max'] != "undefined" && localStorage[prefix+ '_creacion_max'] != '') {
+			$('#creacion_max').prop('value', localStorage[prefix+ '_creacion_max']);
 			haybusqueda += 1;
 		}
-		if (typeof localStorage.fc_estado != "undefined" && localStorage.fc_estado != '') {
+		if (typeof localStorage[prefix+ '_fecha2'] != "undefined" && localStorage[prefix+ '_fecha2'] != '') {
+			$('#fecha2').prop('value', localStorage[prefix+ '_fecha2']);
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_centro_contable'] != "undefined" && localStorage[prefix+ '_centro_contable'] != '') {
+			$('#centro_contable').find('option[value="' + localStorage[prefix+ '_centro_contable'] + '"]').attr("selected", "selected");
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_estado'] != "undefined" && localStorage[prefix+ '_estado'] != '') {
 			//verificar si hay varios estados seleccionados
-			if (localStorage.fc_estado.match(/,/gi)) {
-				$.each(localStorage.fc_estado.split(","), function (i, estado) {
+			if (localStorage[prefix+ '_estado'].match(/,/gi)) {
+				$.each(localStorage[prefix+ '_estado'].split(","), function (i, estado) {
 					$('#estado').find('option[value="' + estado + '"]').attr("selected", "selected");
 				});
 
 			} else {
-				$('#estado').find('option[value="' + localStorage.fc_estado + '"]').attr("selected", "selected");
+				$('#estado').find('option[value="' + localStorage[prefix+ '_estado'] + '"]').attr("selected", "selected");
 			}
 
 			haybusqueda += 1;
 		}
-		if (typeof localStorage.fc_monto1 != "undefined" && localStorage.fc_monto1 != '') {
-			$('#monto1').val(localStorage.fc_monto1);
-			haybusqueda += 1;
-		}
-		if (typeof localStorage.fc_monto2 != "undefined" && localStorage.fc_monto2 != '') {
-			$('#monto2').val(localStorage.fc_monto2);
-			haybusqueda += 1;
-		}
-		if (typeof localStorage.fc_creado_por != "undefined" && localStorage.fc_creado_por != '') {
-			$('#creado_por').find('option[value="' + localStorage.fc_creado_por + '"]').attr("selected", "selected");
-			haybusqueda += 1;
-		}
-		if (typeof localStorage.fc_categoria_id != "undefined" && localStorage.fc_categoria_id != '') {
+		if (typeof localStorage[prefix+ '_termino_pago'] != "undefined" && localStorage[prefix+ '_termino_pago'] != '') {
 			//verificar si hay varios estados seleccionados
-			if (localStorage.fc_categoria_id.match(/,/gi)) {
-				$.each(localStorage.fc_categoria_id.split(","), function (i, estado) {
+			if (localStorage[prefix+ '_termino_pago'].match(/,/gi)) {
+				$.each(localStorage[prefix+ '_termino_pago'].split(","), function (i, termino_pago) {
+					$('#termino_pago').find('option[value="' + termino_pago + '"]').attr("selected", "selected");
+				});
+
+			} else {
+				$('#estado').find('option[value="' + localStorage[prefix+ '_termino_pago'] + '"]').attr("selected", "selected");
+			}
+
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_monto1'] != "undefined" && localStorage[prefix+ '_monto1'] != '') {
+			$('#monto1').val(localStorage[prefix+ '_monto1']);
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_monto2'] != "undefined" && localStorage[prefix+ '_monto2'] != '') {
+			$('#monto2').val(localStorage[prefix+ '_monto2']);
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_creado_por'] != "undefined" && localStorage[prefix+ '_creado_por'] != '') {
+			$('#creado_por').find('option[value="' + localStorage[prefix+ '_creado_por'] + '"]').attr("selected", "selected");
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_pagos'] != "undefined" && localStorage[prefix+ '_pagos'] != '') {
+			$('#pagos').find('option[value="' + localStorage[prefix+ '_pagos'] + '"]').attr("selected", "selected");
+			haybusqueda += 1;
+		}
+		if (typeof localStorage[prefix+ '_categoria_id'] != "undefined" && localStorage[prefix+ '_categoria_id'] != '') {
+			//verificar si hay varios estados seleccionados
+			if (localStorage[prefix+ '_categoria_id'].match(/,/gi)) {
+				$.each(localStorage[prefix+ '_categoria_id'].split(","), function (i, estado) {
 					$('#categoria_id').find('option[value="' + estado + '"]').attr("selected", "selected");
 				});
 
 			} else {
-				$('#categoria_id').find('option[value="' + localStorage.fc_categoria_id + '"]').attr("selected", "selected");
+				$('#categoria_id').find('option[value="' + localStorage[prefix+ '_categoria_id'] + '"]').attr("selected", "selected");
 			}
 			haybusqueda += 1;
 		}
-		if (typeof localStorage.fc_proveedor != "undefined" && localStorage.fc_proveedor != '') {
-			$("#proveedor3").append('<option value="' + localStorage.fc_proveedor + '" selected="selected">' + localStorage.fc_proveedor_nombre + '</option>');
+		if (typeof localStorage[prefix+ '_proveedor'] != "undefined" && localStorage[prefix+ '_proveedor'] != '') {
+			$("#proveedor3").append('<option value="' + localStorage[prefix+ '_proveedor'] + '" selected="selected">' + localStorage[prefix+ '_proveedor_nombre'] + '</option>');
 			haybusqueda += 1;
 		}
 
@@ -182,34 +239,44 @@ var tablaFacturasCompras = (function () {
 	};
 
 	var guardarBusquedaLocalStorage = function (dom) {
-		localStorage.setItem("fc_fecha1", $('#fecha1').val());
-		localStorage.setItem("fc_fecha2", $('#fecha2').val());
-		localStorage.setItem("fc_centro_contable", $('#centro_contable').val());
-		localStorage.setItem("fc_estado", $('#estado').val());
-		localStorage.setItem("fc_proveedor", $('#proveedor3').val());
-		localStorage.setItem("fc_proveedor_nombre", $("#proveedor3").find('option:selected').text());
-		localStorage.setItem("fc_monto1", $('#monto1').val());
-		localStorage.setItem("fc_monto2", $('#monto2').val());
-		localStorage.setItem("fc_creado_por", $('#creado_por').val());
-		localStorage.setItem("fc_categoria_id", $('#categoria_id').val());
-		localStorage.setItem("fc_numero_factura", $('#numero_factura').val());
+		localStorage.setItem(prefix+ '_fecha1', $('#fecha1').val());
+		localStorage.setItem(prefix+ '_fecha2', $('#fecha2').val());
+		localStorage.setItem(prefix+ '_centro_contable', $('#centro_contable').val());
+		localStorage.setItem(prefix+ '_estado', $('#estado').val());
+		localStorage.setItem(prefix+ '_proveedor', $('#proveedor3').val());
+		localStorage.setItem(prefix+ '_proveedor_nombre', $("#proveedor3").find('option:selected').text());
+		localStorage.setItem(prefix+ '_monto1', $('#monto1').val());
+		localStorage.setItem(prefix+ '_monto2', $('#monto2').val());
+		localStorage.setItem(prefix+ '_creado_por', $('#creado_por').val());
+		localStorage.setItem(prefix+ '_categoria_id', $('#categoria_id').val());
+		localStorage.setItem(prefix+ '_numero_factura', $('#numero_factura').val());
+		localStorage.setItem(prefix+ '_numero_dias', $('#numero_dias').val());
+		localStorage.setItem(prefix+ '_creacion_min', $('#creacion_min').val());
+		localStorage.setItem(prefix+ '_creacion_max', $('#creacion_max').val());
+		localStorage.setItem(prefix+ '_termino_pago', $('#termino_pago').val());
+		localStorage.setItem(prefix+ '_pagos', $('#pagos').val());
 	};
 
 	var limpiarBusquedaLocalStorage = function () {
 		if (typeof (Storage) == "undefined") {
 			return false;
 		}
-		localStorage.removeItem("fc_fecha1");
-		localStorage.removeItem("fc_fecha2");
-		localStorage.removeItem("fc_centro_contable");
-		localStorage.removeItem("fc_estado");
-		localStorage.removeItem("fc_proveedor");
-		localStorage.removeItem("fc_proveedor_nombre");
-		localStorage.removeItem("fc_monto1");
-		localStorage.removeItem("fc_monto2");
-		localStorage.removeItem("fc_creado_por");
-		localStorage.removeItem("fc_categoria_id");
-		localStorage.removeItem("fc_numero_factura");
+		localStorage.removeItem(prefix+ '_fecha1');
+		localStorage.removeItem(prefix+ '_fecha2');
+		localStorage.removeItem(prefix+ '_centro_contable');
+		localStorage.removeItem(prefix+ '_estado');
+		localStorage.removeItem(prefix+ '_proveedor');
+		localStorage.removeItem(prefix+ '_proveedor_nombre');
+		localStorage.removeItem(prefix+ '_monto1');
+		localStorage.removeItem(prefix+ '_monto2');
+		localStorage.removeItem(prefix+ '_creado_por');
+		localStorage.removeItem(prefix+ '_categoria_id');
+		localStorage.removeItem(prefix+ '_numero_dias');
+		localStorage.removeItem(prefix+ '_creacion_min');
+		localStorage.removeItem(prefix+ '_creacion_max');
+		localStorage.removeItem(prefix+ '_termino_pago');
+		localStorage.removeItem(prefix+ '_pagos');
+		localStorage.removeItem(prefix+ '_numero_factura');
 	};
 
 	var tabla = function () {
@@ -363,12 +430,17 @@ var tablaFacturasCompras = (function () {
 
 		//limpiar localStorage
 		limpiarBusquedaLocalStorage();
-
+		gridObj.setGridParam({
+				postData: null
+			});
 		$('#buscarFacturasComprasForm').find('input[type="text"]').prop("value", "");
 		$('#buscarFacturasComprasForm').find('select.chosen-select').prop("value", "");
 		$('#buscarFacturasComprasForm').find('select').prop("value", "");
 		$('#buscarFacturasComprasForm').find('select[id="categoria_id"]').find('option').removeAttr("selected");
 		$("#buscarFacturasComprasForm").find('#categoria_id').chosen({
+			width: '100%'
+		}).trigger('chosen:updated');
+		$("#buscarFacturasComprasForm").find('#termino_pago').chosen({
 			width: '100%'
 		}).trigger('chosen:updated');
 		$(".chosen-select").trigger("chosen:updated");
@@ -391,8 +463,14 @@ var tablaFacturasCompras = (function () {
 		//var tipo = $('#tipo').val();
 		var creado_por = $('#creado_por').val();
 		var categoria_id = $('#categoria_id').val();
+		//nuevos campos
+		var creacion_min = $('#creacion_min').val();
+		var creacion_max = $('#creacion_max').val();
+		var termino_pago = $('#termino_pago').val();
+		var pagos = $('#pagos').val();
+		var numero_dias = $('#numero_dias').val();
 
-		if (numero_factura !== "" || fecha1 !== "" || fecha2 !== "" || proveedor !== "" || estado !== "" || monto1 !== "" || monto2 !== "" || centro_contable !== "" || creado_por !== "" || categoria_id !== "") {
+		if (numero_factura !== "" || fecha1 !== "" || fecha2 !== "" || proveedor !== "" || estado !== "" || monto1 !== "" || monto2 !== "" || centro_contable !== "" || creado_por !== "" || categoria_id !== "" || creacion_min !== "" || creacion_max !== "" || termino_pago !== "" || pagos !== "" || numero_dias !== "") {
 			//Reload Grid
 
 			if (typeof (Storage) !== "undefined") {
@@ -417,6 +495,11 @@ var tablaFacturasCompras = (function () {
 					centro_contable: centro_contable,
 					categoria_id: categoria_id,
 					creado_por: creado_por,
+					creacion_min: creacion_min,
+					creacion_max: creacion_max,
+					termino_pago: termino_pago,
+					pagos: pagos,
+					numero_dias: numero_dias,
 					erptkn: tkn
 				}
 			}).trigger('reloadGrid');
@@ -445,6 +528,31 @@ var tablaFacturasCompras = (function () {
 		e.preventDefault();
 		//aplicar_credito.js
 		aplicar_credito().m.summit($(this));
+	});
+
+    //...apply credit note to invoice
+    opcionesModal.on("click", botones.aplicarNotaCreditoFavor, function (e) {
+		e.preventDefault();
+		e.returnValue = false;
+		e.stopPropagation();
+		//aplicar_credito.js
+		aplicar_nota_credito().m.run($(this));
+	});
+
+	mdModal.on("click", botones.confirmarNotaCreditoFavor, function (e) {
+		e.preventDefault();
+		//aplicar_credito.js
+		aplicar_nota_credito().m.showSummit();
+	});
+
+	mdModal.on("change", '.total', function (e) {
+		aplicar_nota_credito().m.updateTotal($(this));
+	});
+
+	mdModal.on('submit', "#aplicarNotaCreditoForm", function (e) {
+		e.preventDefault();
+		//aplicar_credito.js
+		aplicar_nota_credito().m.summit($(this));
 	});
 
 	//change state
@@ -614,6 +722,9 @@ var tablaFacturasCompras = (function () {
 	var campos = function () {
 		$('#buscarFacturasComprasForm').find('select[name="tipo"]').prop("value", "18");
 		$("#buscarFacturasComprasForm").find('#categoria_id').chosen({
+			width: '100%'
+		}).trigger('chosen:updated');
+		$("#buscarFacturasComprasForm").find('#termino_pago').chosen({
 			width: '100%'
 		}).trigger('chosen:updated');
 

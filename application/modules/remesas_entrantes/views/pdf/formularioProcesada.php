@@ -37,7 +37,17 @@
             <th class='columnasnombres'>Aseguradora :</th>
             <td><?php echo strtoupper($aseguradora->nombre);?></td>
         </tr>
-        
+
+		<tr>
+            <th class='columnasnombres'>No. Recibo :</th>
+            <td><?php echo strtoupper($nombre_recibo);?></td>
+        </tr>
+		
+		<tr>
+            <th class='columnasnombres'>Monto pago :</th>
+            <td><?php echo strtoupper($monto_recibo);?></td>
+        </tr>
+		
         <tr>
             <th class='columnasnombres'>Fecha inicial : </th>
             <td><?php echo strtoupper($fecha_inicial);?></td>

@@ -79,6 +79,8 @@ use Flexio\Modulo\Polizas\Models\PolizasProyecto;
 use Flexio\Modulo\Polizas\Models\PolizasUbicacion;
 use Flexio\Modulo\Polizas\Models\PolizasVehiculo;
 use Flexio\Modulo\Polizas\Models\PolizasAcreedores_detalles;
+use Flexio\Modulo\Polizas\Models\PolizasCobertura;
+use Flexio\Modulo\Polizas\Models\PolizasDeduccion;
 use Flexio\Modulo\Catalogos\Models\RamosDocumentos as RamosDocumentos;
 use Flexio\Modulo\Documentos\Models\Documentos as Documentos;
 use Flexio\Modulo\Usuarios\Models\CentrosUsuario;
@@ -531,7 +533,8 @@ class Solicitudes extends CRM_Controller {
         "centros_contables" => $centroContable,
         "id_centro_contable" => $solicitudes->centro_contable,
         "validavida" => $validavida,
-        "contacre" => count($acreedores)
+        "contacre" => count($acreedores),
+        "regresar_poliza" => 'no',
         ));
 
      $titulo = $solicitudes->numero;
@@ -584,10 +587,11 @@ public function ocultotabla() {
 public function ajax_listar($grid = NULL) {
 
 
-    $clause = array(
+    /*$clause = array(
         "usuario_id" => $this->usuario_id
-        );
+        );*/
 
+    
     $clause['empresa_id'] = $this->empresa_id;
 
 
@@ -690,7 +694,7 @@ public function ajax_listar($grid = NULL) {
     list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
 
     $count = $this->solicitudesRepository->listar_solicitudes($clause, NULL, NULL, NULL, NULL)->count();
-
+    
     list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
 
     $rows = $this->solicitudesRepository->listar_solicitudes($clause, $sidx, $sord, $limit, $start);
@@ -1067,21 +1071,21 @@ public function ajax_cambioestado_bitacora() {
         } else {
             $motivo = "";
         }
-        if (isset($campos['solicitud'])) {
-            $solicitud = $campos['solicitud'];
+        if (isset($campos['id'])) {
+            $solicitud = $campos['id'];
         } else {
             $solicitud = "";
         }
         $usuario = $this->usuario_id;
 
         $now = Carbon::now();
-        $datosSolicitud = $this->solicitudesModel->where(['numero' => $solicitud])->first();
+        $datosSolicitud = $this->solicitudesModel->where(['id' => $solicitud])->first();
 
         if ($estado == "Aprobada") {
 
             $solicitudes = $this->solicitudesModel->join('seg_solicitudes_vigencia', 'seg_solicitudes.id', '=', 'seg_solicitudes_vigencia.id_solicitudes')
             ->join('seg_solicitudes_prima', 'seg_solicitudes.id', '=', 'seg_solicitudes_prima.id_solicitudes')
-            ->where('seg_solicitudes.numero', $solicitud)
+            ->where('seg_solicitudes.id', $solicitud)
             ->select('seg_solicitudes.id AS id', 'seg_solicitudes.cliente_id AS cliente', "seg_solicitudes.ramo as ramo", 'seg_solicitudes.ramo_id as ramo_id', 'seg_solicitudes.usuario_id AS usuario', 'seg_solicitudes.plan_id AS plan_id', 'seg_solicitudes.comision AS comision', 'seg_solicitudes.porcentaje_sobre_comision AS sobre_comision', 'seg_solicitudes.impuesto AS impuesto', 'seg_solicitudes.numero AS numero', 'seg_solicitudes.centro_contable AS centro_contable', "seg_solicitudes_vigencia.vigencia_desde AS desde", "seg_solicitudes_vigencia.vigencia_hasta AS hasta", "seg_solicitudes_vigencia.poliza_declarativa AS poliza_declarativa", "seg_solicitudes_prima.frecuencia_pago AS frecuencia", "seg_solicitudes.aseguradora_id AS aseguradora_id")->first()->toArray();
 
             $ramo = Ramos::where(['id' => $solicitudes['ramo_id']])->first();
@@ -1170,6 +1174,7 @@ public function ajax_cambioestado_bitacora() {
 
             $poliza4 = new Flexio\Modulo\Polizas\Models\PolizasCobertura;
             $coberturas = $this->solicitudesCoberturas->where(['id_solicitud' => $solicitudes['id']])->get();
+            
             foreach ($coberturas AS $value) {
                 $solCoberturas = [
                 'cobertura' => $value->cobertura,
@@ -1300,7 +1305,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosArticulo["detalle_deducible"] = $value->detalle_deducible;
                     $datosArticulo["estado"] = $interes_id->estado;
                     $datosArticulo["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasArticulo::create($datosArticulo);
+                    $datosArticulo["creado_por"] = $interes_id->creado_por;
+                    $articuloPol = PolizasArticulo::create($datosArticulo);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$articuloPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$articuloPol->id);
                 } elseif ($ramo->id_tipo_int_asegurado == 2) {
                     $datoscarga = CargaModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datoscarga["id"]);
@@ -1314,7 +1323,11 @@ public function ajax_cambioestado_bitacora() {
                     $datoscarga["detalle_deducible"] = $value->detalle_deducible;
                     $datoscarga["estado"] = $interes_id->estado;
                     $datoscarga["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasCarga::create($datoscarga);
+                    $datoscarga["creado_por"] = $interes_id->creado_por;
+                    $cargaPol = PolizasCarga::create($datoscarga);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$cargaPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$cargaPol->id);
                 } elseif ($ramo->id_tipo_int_asegurado == 3) {
                     $datosAereo = AereoModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datosAereo["id"]);
@@ -1327,7 +1340,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosAereo["detalle_deducible"] = $value->detalle_deducible;
                     $datosAereo["estado"] = $interes_id->estado;
                     $datosAereo["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasAereo::create($datosAereo);
+                    $datosAereo["creado_por"] = $interes_id->creado_por;
+                    $aereoPol = PolizasAereo::create($datosAereo);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$aereoPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$aereoPol->id);
                 } elseif ($ramo->id_tipo_int_asegurado == 4) {
                     $datosMaritimo = MaritimoModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datosMaritimo["id"]);
@@ -1340,7 +1357,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosMaritimo["detalle_deducible"] = $value->detalle_deducible;
                     $datosMaritimo["estado"] = $interes_id->estado;
                     $datosMaritimo["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasMaritimo::create($datosMaritimo);
+                    $datosMaritimo["creado_por"] = $interes_id->creado_por;
+                    $maritimoPol = PolizasMaritimo::create($datosMaritimo);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$maritimoPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$maritimoPol->id);
                 } elseif ($ramo->id_tipo_int_asegurado == 5) {
                     $datosPersonas = PersonasModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datosPersonas["id"]);
@@ -1359,7 +1380,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosPersonas["detalle_participacion"] = $value->detalle_participacion;
                     $datosPersonas["detalle_suma_asegurada"] = $value->detalle_suma_asegurada;
                     $datosPersonas["tipo_relacion"] = $value->tipo_relacion;
+                    $datosPersonas["creado_por"] = $interes_id->creado_por;
                     $pper = PolizasPersonas::create($datosPersonas);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$pper->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$pper->id);
 
                     $detalles = SolicitudesAcreedores_detalles::where("idinteres_detalle", $value->id)->get();
                     foreach ($detalles as $val) {
@@ -1388,7 +1413,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosProyecto["detalle_deducible"] = $value->detalle_deducible;
                     $datosProyecto["estado"] = $interes_id->estado;
                     $datosProyecto["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasProyecto::create($datosProyecto);
+                    $datosProyecto["creado_por"] = $interes_id->creado_por;
+                    $proyectoPol = PolizasProyecto::create($datosProyecto);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$proyectoPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$proyectoPol->id);
                 } elseif ($ramo->id_tipo_int_asegurado == 7) {
                     $datosUbicacion = UbicacionModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datosUbicacion["id"]);
@@ -1402,7 +1431,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosUbicacion["detalle_deducible"] = $value->detalle_deducible;
                     $datosUbicacion["estado"] = $interes_id->estado;
                     $datosUbicacion["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasUbicacion::create($datosUbicacion);
+                    $datosUbicacion["creado_por"] = $interes_id->creado_por;
+                    $ubicacionPol = PolizasUbicacion::create($datosUbicacion);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$ubicacionPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$ubicacionPol->id);
                 } elseif ($ramo->id_tipo_int_asegurado == 8) {
                     $datosVehiculo = VehiculoModel::where(['id' => $interes_id->interesestable_id])->first()->toArray();
                     unset($datosVehiculo["id"]);
@@ -1416,7 +1449,11 @@ public function ajax_cambioestado_bitacora() {
                     $datosVehiculo["detalle_deducible"] = $value->detalle_deducible;
                     $datosVehiculo["estado"] = $interes_id->estado;
                     $datosVehiculo["fecha_inclusion"] = $value->fecha_inclusion;
-                    PolizasVehiculo::create($datosVehiculo);
+                    $datosVehiculo["creado_por"] = $interes_id->creado_por;
+                    $vehiculoPol = PolizasVehiculo::create($datosVehiculo);
+
+                    $this->coberturas($interes_id->id,$solicitudes['id'],$p->id,$vehiculoPol->id);
+                    $this->deducibles($interes_id->id,$solicitudes['id'],$p->id,$vehiculoPol->id);
                 }
             }
 
@@ -1426,13 +1463,13 @@ public function ajax_cambioestado_bitacora() {
             $inf["uuid"] = strtoupper(bin2hex($sel_uuid["uuid_polizas"]));
         } elseif ($estado == "Anulada") {
             $datos['dias_transcurridos'] = ($datosSolicitud->created_at->diff($now)->days < 1) ? '1' : $datosSolicitud->created_at->diff($now)->days;
-            $this->solicitudesModel->where(['numero' => $solicitud])->update($datos);
+            $this->solicitudesModel->where(['id' => $solicitud])->update($datos);
             $comentario = "Estado Actual: " . $estado . "<br>Estado Anterior: " . $estado_anterior . "<br>Motivo: " . $motivo . "<br>";
         } elseif ($estado == "Rechazada") {
 
             $datosSolicitud = $this->solicitudesModel->where(['numero' => $solicitud])->first();
             $datos['dias_transcurridos'] = ($datosSolicitud->created_at->diff($now)->days < 1) ? '1' : $datosSolicitud->created_at->diff($now)->days;
-            $this->solicitudesModel->where(['numero' => $solicitud])->update($datos);
+            $this->solicitudesModel->where(['id' => $solicitud])->update($datos);
             $comentario = "Estado Actual: " . $estado . "<br>Estado Anterior: " . $estado_anterior . "<br>Motivo: " . $motivo . "<br>";
         } else {
             $comentario = "Estado Actual: " . $estado . "<br>Estado Anterior: " . $estado_anterior;
@@ -1523,11 +1560,6 @@ public function crear($id_ramo = null, $id_interes = null) {
 
     $ram1 = Ramos::where('id', $id_ramo)->first();
     $nombrepadre = $ram1->nombre;
-    /*echo $ram1->nombre;
-    echo "<br>".$id_ramo;
-    //echo "<br>".serialize($solicitudes_titulo);
-    echo "<br>".$id_ramo;
-    echo "<br>".$solicitudes_id;*/
 
     if (strpos($ramocadena, "Vida")>-1) {
         $validavida = 1;
@@ -1595,7 +1627,7 @@ public function crear($id_ramo = null, $id_interes = null) {
         }
     }
 
-    if(count($centroContable) == 1 && isset($centroContable[0])){
+    if(count($centroContable) == 1){
         $id_centro_contable = $centroContable[0]->id;
     }else{
         $id_centro_contable = 0;
@@ -1667,7 +1699,8 @@ public function crear($id_ramo = null, $id_interes = null) {
     "editar_asignado" => 1,
     "centros_contables" => $centroContable,
     "id_centro_contable" => $id_centro_contable,
-    "validavida" => $validavida
+    "validavida" => $validavida,
+    "regresar_poliza" => 'no',
     ));
 
 
@@ -1877,8 +1910,8 @@ function ajax_get_clientes() {
         $clause['tipo_identificacion'] = 'cedula';
     }
     $limite = !empty($_REQUEST['limite']) ? $_REQUEST['limite'] : 10 ; 
-    if (!empty($_GET['q']) &&  $_GET['q']) {
-        $clause['nombre'] = $_GET['q'];
+    if (!empty($_REQUEST['q']) &&  $_REQUEST['q']) {
+        $clause['nombre'] = $_REQUEST['q'];
     }
 
     $clientes = $this->clienteRepository->getClientesPorTipo($clause)
@@ -2266,7 +2299,7 @@ function ajax_get_comision() {
                 if (empty($campo['uuid'])) {
                     //Crear en Solicitudes
                     $campo["uuid_solicitudes"] = Capsule::raw("ORDER_UUID(uuid())");
-                    //$clause['empresa_id'] = $this->empresa_id;
+                    $clause['empresa_id'] = $this->empresa_id;
                     $total = $this->solicitudesRepository->listar($clause);
                     $year = Carbon::now()->format('y');
                     $codigo = Util::generar_codigo($_POST['codigo_ramo'] . "-" . $year, count($total) + 1);
@@ -2331,8 +2364,10 @@ function ajax_get_comision() {
                     $int_ase = array();
                     $int_ase['id_solicitudes'] = $solicitudes->id;
                     $int_ase['fecha_inclusion'] = $campovigencia['vigencia_desde'];
-                    $det = InteresesAsegurados_detalles::where('detalle_unico', $_POST['detalleunico'])->update($int_ase);
-
+                    $detalleunico = $_POST["detalleunico"];
+                    $det = InteresesAsegurados_detalles::where('detalle_unico',$detalleunico)->update($int_ase);
+                    IndCoverage::where('detalle_unico',$detalleunico)->update(['id_solicitud'=>$solicitudes->id]);
+                    IndDeductible::where('detalle_unico',$detalleunico)->update(['id_solicitud'=>$solicitudes->id]);
                     //Crear Acreedores
                     $fieldsetacre = array();
                     $campoacreedores = $this->input->post('campoacreedores');
@@ -2686,6 +2721,8 @@ function ajax_get_comision() {
             $interesase = $this->bitacoraModel->where('comentable_type','Creacion')
             ->where('comentable_id',$soli->id)->update($fieldsetupdate);
         }
+
+        $url_solicitud = empty($campo_uuid) ? 'solicitudes/editar/'.bin2hex($soli->uuid_solicitudes) : 'solicitudes/listar' ;
         
         $this->session->set_flashdata('mensaje', $mensaje);
         if (!empty($reg) && $reg == "age" ) 
@@ -2693,7 +2730,7 @@ function ajax_get_comision() {
         else if (!empty($reg) && $reg == "aseg" ) 
             redirect(base_url('aseguradoras/editar/'.$_POST['val']));
         else
-            redirect(base_url( empty($campo_uuid) ? 'solicitudes/editar/'.bin2hex($soli->uuid_solicitudes) : 'solicitudes/listar' ));//redirect(base_url('solicitudes/listar'));  redirect(base_url('solicitudes/listar'));//redirect(base_url('solicitudes/editar/'.strtoupper(bin2hex($id_soli))));//redirect(base_url('solicitudes/editar/'.$campo['uuid']));//redirect(base_url('solicitudes/listar'));  
+            redirect(base_url($url_solicitud));//redirect(base_url('solicitudes/listar'));  redirect(base_url('solicitudes/listar'));//redirect(base_url('solicitudes/editar/'.strtoupper(bin2hex($id_soli))));//redirect(base_url('solicitudes/editar/'.$campo['uuid']));//redirect(base_url('solicitudes/listar'));  
 
         
     }
@@ -3264,6 +3301,37 @@ function ajax_get_invidualCoverage() {
         exit;
 
 
+    }
+
+    function coberturas($id_interes,$id_solicitud,$id_poliza,$id_poliza_interes){
+        $intereses_coberturas = IndCoverage::where(['id_interes' => $id_interes,'id_solicitud' => $id_solicitud])->get();
+        
+        foreach($intereses_coberturas as $value){
+
+            $datosCoberturas = array();
+            $datosCoberturas['cobertura'] = $value['nombre'];
+            $datosCoberturas['valor_cobertura'] = $value['cobertura_monetario'];
+            $datosCoberturas['id_poliza'] = $id_poliza;
+            $datosCoberturas['id_poliza_interes'] = $id_poliza_interes;
+
+            PolizasCobertura::create($datosCoberturas);
+        }        
+    }
+
+    function deducibles($id_interes,$id_solicitud,$id_poliza,$id_poliza_interes){
+
+        $intereses_deducibles = IndDeductible::where(['id_interes' => $id_interes,'id_solicitud' => $id_solicitud])->get();
+        //var_dump($intereses_deducibles);
+        foreach($intereses_deducibles as $value){
+            
+            $datosDeducibles = array();
+            $datosDeducibles['deduccion'] = $value['nombre'];
+            $datosDeducibles['valor_deduccion'] = $value['deducible_monetario'];
+            $datosDeducibles['id_poliza'] = $id_poliza;
+            $datosDeducibles['id_poliza_interes'] = $id_poliza_interes;
+
+            PolizasDeduccion::create($datosDeducibles);
+        }        
     }
 
 }

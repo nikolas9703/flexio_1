@@ -234,15 +234,27 @@
             opcionesModal.on("click", ".modal-std", function (e) {
                 if(count===0){
                     var previusState = $(this).attr("data-estado");
+                    var estado_anterior = $(this).attr("data-estado-anterior");
                     var remesaId = [];
                     remesaId.push(id);
-                    var datos = {campo: {"estado": previusState, "ids": remesaId}};
+                    var datos = {campo: {"estado": previusState, "campo_anterior":estado_anterior ,"ids": remesaId}};
                     var cambio = moduloRemesa.cambiarEstadoRemesa(datos);
                     cambio.done(function (response) {
-                        opcionesModal.modal('hide');
-                        toastr.success('Se ha efectuado Cambio de Estado correctamente.');
-                        $("#mensaje").hide();
-                        reloadGrid();
+                        
+                        if(response == 0){
+                            console.log(response);
+                            opcionesModal.modal('hide');
+                            $('#opcionesModalAnulado').find('.modal-title').empty().append('Opciones: ' + rowINFO.remesa);
+                            $('#opcionesModalAnulado').find('.modal-body').empty().append("<button class='btn btn-block btn-outline btn-danger'><p>No se puede anular la remesa</p> <p>el pago ya esta aplicado <i class='fa fa-exclamation-triangle'></p></button>");
+                            $('#opcionesModalAnulado').find('.modal-footer').empty();
+                            $('#opcionesModalAnulado').modal('show');
+                        }else{
+                            opcionesModal.modal('hide');
+                            toastr.success('Se ha efectuado Cambio de Estado correctamente.');
+                            $("#mensaje").hide();
+                            reloadGrid();
+                        }
+                        
                     });
                 }
                 count =1;
@@ -325,10 +337,10 @@
             ],
             sameValue=0; 
             for (var i = arrayStates.length - 1; i >= 0; i--) {
-             if(arrayStates[i].ids.length>0){
-                sameValue ++;
-            }
-        }   
+                if(arrayStates[i].ids.length>0){
+                    sameValue ++;
+                }
+            }   
             //Verificar si hay seleccionados
             if (ids.length > 0) {
                if (sameValue===1) {
@@ -341,27 +353,22 @@
                             permisos.push(filename);
                         });
 
-                        if (permisos.indexOf(19, 0) != -1 || permisos.indexOf(20, 0) != -1)
-                        {
-                            if (ids_Proceso.length > 0)
-                            {
-                                if (permisos.indexOf(19, 0) != -1)
-                                {
+                        if (permisos.indexOf(19, 0) != -1 || permisos.indexOf(20, 0) != -1){
+                            if (ids_Proceso.length > 0){
+                                if (permisos.indexOf(19, 0) != -1){
                                        // updateState(ids_inactivos,ids_activos);
 
-                                   } else {
+                                } else {
                                     opcionesModal.modal('hide');
                                     $("#mensaje").show();
                                     $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
                                 }
-                            } else if (ids_pagada.length > 0)
-                            {
+                            } else if (ids_pagada.length > 0){
 
-                                if (permisos.indexOf(20, 0) != -1)
-                                {
+                                if (permisos.indexOf(20, 0) != -1){
                                        // updateState(ids_inactivos,ids_activos);
 
-                                   } else {
+                                }else {
                                     opcionesModal.modal('hide');
                                     $("#mensaje").show();
                                     $("#mensaje").html('<div id="mensaje" class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Usted no tiene permisos para cambiar a este estado</div>');
@@ -371,10 +378,7 @@
 
                             }
                         } else {
-
                            updateState(arrayStates);
-
-
                        }
                        return permisos;
                    });

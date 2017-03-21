@@ -19,6 +19,15 @@ var formularioProveedor = (function(){
 
     };
 
+    var mostrarOcultarCamposAch = function(){
+      var selected = dom.iFormaPago.find('option:selected').text();
+      if(selected.match(/ach/gi)){
+        $('.campos_metodo_ach').removeClass('hide');
+      }else{
+        $('.campos_metodo_ach').addClass('hide');
+      }
+    };
+
     var mejorasVisuales = function(){
         var colTituloBalance = dom.iTituloBalance.parent();
 
@@ -30,6 +39,12 @@ var formularioProveedor = (function(){
         dom.iFormaPago.find('option[value=""]').remove();
         dom.iFormaPago.trigger("chosen:updated");
 
+        //Evento:
+        dom.iFormaPago.on('change', function(evt, params) {
+          mostrarOcultarCamposAch();
+        });
+
+        mostrarOcultarCamposAch();
     };
 
     // Función que inicializará los funciones decritas anteriormente.

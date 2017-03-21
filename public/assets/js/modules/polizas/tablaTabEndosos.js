@@ -11,11 +11,11 @@ function removeA(arr) {
 var tablaEndosos = (function () {
 
     var tablaUrl = phost() + 'endosos/ajax_listar_endosos';
-    var gridId = "tablaEndososGrid";
-    var gridObj = $("#tablaEndososGrid");
-    var opcionesModal = $('#opcionesEndososModal');
+    var gridId = "tablaEndosoGrid";
+    var gridObj = $("#tablaEndosoGrid");
+    var opcionesModal = $('#opcionesEndosoModal');
     var formularioBuscar = '';
-    var grid_obj = $("#tablaEndososGrid");
+    var grid_obj = $("#tablaEndosoGrid");
 	
 	var id_poliza = $('input[name="campo[id]').val();
 	
@@ -54,7 +54,7 @@ var tablaEndosos = (function () {
             rowList: [10, 20, 50, 100],
             rowNum: 10,
             page: 1,
-            pager: "#EndososPager",
+            pager: "#EndosoPager",
             loadtext: '<p>Cargando...</p>',
             hoverrows: false,
             viewrecords: true,
@@ -72,7 +72,7 @@ var tablaEndosos = (function () {
             },
             loadBeforeSend: function () {//propiedadesGrid_cb
                 $(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
-                $(this).closest("div.ui-jqgrid-view").find("#tablaEndososGrid_cb, #jqgh_tablaEndososGrid_link").css("text-align", "center");
+                $(this).closest("div.ui-jqgrid-view").find("#tablaEndosoGrid_cb, #jqgh_tablaEndosoGrid_link").css("text-align", "center");
             },
             beforeRequest: function (data, status, xhr) {},
             loadComplete: function (data, status, xhr) {
@@ -149,9 +149,9 @@ var tablaEndosos = (function () {
 			//Verificar si hay seleccionados
 			if (ids.length > 0) {
 
-                $("#ids_endosos").val(ids);
+                $("#ids_endoso").val(ids);
                 console.log(ids);
-                $("form#exportarEndosos").submit();
+                $("form#exportarEndoso").submit();
                 $('body').trigger('click');
 
 				
@@ -202,8 +202,8 @@ var tablaEndosos = (function () {
 
 $(function () {
     tablaEndosos.init();
-    $("#jqgh_tablaEndososGrid_cb span").removeClass("s-ico");
-    $('#jqgh_tablaEndososGrid_options span').removeClass("s-ico");
+    $("#jqgh_tablaEndosoGrid_cb span").removeClass("s-ico");
+    $('#jqgh_tablaEndosoGrid_options span').removeClass("s-ico");
 	
 });
 

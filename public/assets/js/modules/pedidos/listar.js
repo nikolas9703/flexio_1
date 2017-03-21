@@ -8,37 +8,6 @@ $(function() {
       allow_single_deselect: true
   });
 
-  var normalize = (function() {
-    var from = "ÃÀÁÄÂÈÉËÊÌÍÏÎÒÓÖÔÙÚÜÛãàáäâèéëêìíïîòóöôùúüûÑñÇç",
-        to   = "AAAAAEEEEIIIIOOOOUUUUaaaaaeeeeiiiioooouuuunncc",
-        mapping = {};
-
-    for(var i = 0, j = from.length; i < j; i++ )
-        mapping[ from.charAt( i ) ] = to.charAt( i );
-
-    return function( str ) {
-        var ret = [];
-        for( var i = 0, j = str.length; i < j; i++ ) {
-            var c = str.charAt( i );
-            if( mapping.hasOwnProperty( str.charAt( i ) ) )
-                ret.push( mapping[ c ] );
-            else
-                ret.push( c );
-        }
-        return ret.join( '' );
-    }
-
-  })();
-
-  Array.prototype.allValuesSame = function() {
-
-    for(var i = 1; i < this.length; i++){
-        if(this[i] !== this[0])
-            return false;
-    }
-    return true;
-  }
-
   var verificarConversion = function(){
 
     var pedidos = gridObj.jqGrid('getGridParam','selarrrow');
@@ -52,8 +21,8 @@ $(function() {
     var check_bodegas = [];
     var i=0;
 
-    for(pedido_id in pedidos) {
-        var pedido = gridObj.getRowData(pedidos[pedido_id]);
+    for(pedido_uuid in pedidos) {
+        var pedido = gridObj.getRowData(pedidos[pedido_uuid]);
         var estado = normalize($(pedido['Estado']).text().toLowerCase());
         var centro_id = pedido['centro_id'];
         var bodega_id = pedido['bodega_id'];
@@ -84,16 +53,17 @@ $(function() {
 
     //Verificar si los pedidos son del mismo Centro
     if(check_centros.allValuesSame()==false) {
+      $('body').trigger('click');
       toastr.warning('Por favor! seleccione s&oacute;lo pedidos con el mismo centro contable.');
       return false;
     }
 
     //Verificar si los pedidos son de la misma bodega
     if(check_bodegas.allValuesSame()==false) {
+      $('body').trigger('click');
       toastr.warning('Por favor! seleccione s&oacute;lo pedidos con la misma bodega.');
       return false;
     }
-    console.log('check bodegas', check_bodegas);
 
     //Convertir pedidos seleccionados
     //a orden de compras.
@@ -107,22 +77,25 @@ $(function() {
       return false;
     }
 
-    $.ajax({
-        url: phost() + "pedidos/ajax-convetir-a-orden",
-        type:"POST",
-        data:{
-            erptkn:tkn,
-            pedido_id: pedidos
-        },
-        dataType:"json",
-        success: function(data){
-          if(!data){
-            return;
-          }
-
-          $('body').trigger('click');
-        }
+    var url = phost() + "ordenes/crear/pedidos";
+    var fields = "";
+    $.each(pedidos, function(i, pedido_uuid){
+        var pedido = gridObj.getRowData(pedido_uuid);
+        fields += '<input type="hidden" name="pedidos_id[]" value="'+ pedido['pedido_id'] +'">';
+        fields += '<input type="hidden" name="centro_uuid" value="'+ pedido['centro_uuid'] +'">';
+        fields += '<input type="hidden" name="bodega_uuid" value="'+ pedido['bodega_uuid'] +'">';
     });
+
+    var form = $(
+        '<form action="' + url + '" method="POST" style="display:none;">' +
+        fields +
+        '<input type="hidden" name="erptkn" value="' + tkn + '">' +
+        '<input type="submit">' +
+        '</form>'
+    );
+
+    $('body').trigger('click').append(form);
+    form.submit();
   };
 
   //Convertir orden de compra
@@ -130,7 +103,7 @@ $(function() {
       e.preventDefault();
       e.returnValue=false;
       e.stopPropagation();
-      console.log('aqui.....');
+
       //Verificar si selecciono solo
       //pedidos en estado cotizacion.
       verificarConversion();

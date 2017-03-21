@@ -1,6 +1,6 @@
 var listarFacturasCompras = (function(){
     var st = {
-        cFechas: "#fecha1, #fecha2",
+        cFechas: "#fecha1, #fecha2, #creacion_min, #creacion_max",
         cChosens: ".chosen-select",
         iExportar: "#exportarListaFacturasCompras",
         iGrid: "#tablaFacturasComprasGrid"
@@ -33,8 +33,22 @@ var listarFacturasCompras = (function(){
         //no se debe formatear campo fecha de buscador si existe valor en localStorage
         //author: @josecoder
         //date: 14/02/2017
-        if (typeof localStorage.fc_fecha1 == "undefined") {
-          dom.cFechas.daterangepicker(config.dateRangePicker).val("");
+        var prefix = "";
+        if (typeof prex != 'undefined') {
+            var prefix = prex;
+        }
+        dom.cFechas.daterangepicker(config.dateRangePicker)
+        if (typeof localStorage[prefix+ '_fecha1'] == "undefined" || _.isEmpty(localStorage[prefix+ '_fecha1'])) {
+          $('#fecha1').val("");
+        }
+        if (typeof localStorage[prefix+ '_fecha2'] == "undefined" || _.isEmpty(localStorage[prefix+ '_fecha2'])) {
+          $('#fecha2').val("");
+        }
+        if (typeof localStorage[prefix+ '_creacion_min'] == "undefined" || _.isEmpty(localStorage[prefix+ '_creacion_min'])) {
+          $('#creacion_min').val("");
+        }
+        if (typeof localStorage[prefix+ '_creacion_max'] == "undefined" || _.isEmpty(localStorage[prefix+ '_creacion_max'])) {
+          $('#creacion_max').val("");
         }
         dom.cChosens.chosen(config.chosen);
         $("#moduloOpciones").on("click", st.iExportar, events.eExportar);
@@ -106,4 +120,5 @@ $(document).ready(function() {
                 escapeMarkup: function (markup) { return markup; },
             }
 });
+
 });

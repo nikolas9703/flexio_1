@@ -1,4 +1,5 @@
 var tablaSubContratosVentas = (function() {
+    var multiselect = window.location.pathname.match(/subcontratos/g) ? true : false;
     if (typeof proveedor_id === 'undefined') {
         proveedor_id = "";
     }
@@ -21,7 +22,131 @@ var tablaSubContratosVentas = (function() {
         estadoCuenta: ".imprimir-estado-cuenta",
         guardarBtn: "#guardarBtn"
     };
+    var guardarBusquedaLocalStorage = function(dom) {
+        localStorage.setItem("sub_numero_subcontrato", $('#numero_subcontrato').val());
+        localStorage.setItem("sub_proveedor", $('#proveedor').val());
+        localStorage.setItem("sub_proveedor_nombre", $("#proveedor").find('option:selected').text());
+        localStorage.setItem("sub_tipo_subcontrato_id", $('#tipo_subcontrato_id').val());
+        localStorage.setItem("sub_tipo_subcontrato_nombre", $("#tipo_subcontrato_id").find('option:selected').text());
+        localStorage.setItem("sub_monto1", $('#monto1').val());
+        localStorage.setItem("sub_monto2", $('#monto2').val());
+        localStorage.setItem("sub_centro", $('#centro').val());
+        localStorage.setItem("sub_centro_nombre", $("#centro").find('option:selected').text());
+        localStorage.setItem("sub_estado", $('#estado').val());
+        localStorage.setItem("sub_estado_nombre", $("#estado").find('option:selected').text());
+    };
+    var limpiarBusquedaLocalStorage = function() {
+        if (typeof(Storage) == "undefined") {
+            return false;
+        }
+        localStorage.removeItem("sub_numero_subcontrato");
+        localStorage.removeItem("sub_proveedor");
+        localStorage.removeItem("sub_proveedor_nombre");
+        localStorage.removeItem("sub_tipo_subcontrato_id");
+        localStorage.removeItem("sub_tipo_subcontrato_nombre");
+        localStorage.removeItem("sub_monto1");
+        localStorage.removeItem("sub_monto2");
+        localStorage.removeItem("sub_centro");
+        localStorage.removeItem("sub_centro_nombre");
+        localStorage.removeItem("sub_estado");
+        localStorage.removeItem("sub_estado_nombre");
+    };
+    var getParametrosFiltroInicial = function() {
+        //Parametros default
+        var data = {
+            erptkn: tkn,
+            proveedor_id: proveedor_id,
+            campo: typeof window.campo !== 'undefined' ? window.campo : {},
+        };
+        var campo ={campo:{
+            proveedor: '',
+            tipo_subcontrato: '',
+            monto_min: '',
+            monto_max: '',
+            codigo: '',
+            centro_contable: '',
+            estado: ''
+        } };
+        if(multiselect && typeof(Storage) !== "undefined" && window.location.href.match(/ver/gi)==null){
+            if(typeof localStorage.sub_numero_subcontrato != "undefined" && localStorage.sub_numero_subcontrato != "null" && localStorage.sub_numero_subcontrato !=""){
+                campo.campo.codigo = localStorage.sub_numero_subcontrato;
+            }
+            if(typeof localStorage.sub_proveedor != "undefined" && localStorage.sub_proveedor != "null" && localStorage.sub_proveedor !=""){
+                campo.campo.proveedor = localStorage.sub_proveedor;
+            }
+            if(typeof localStorage.sub_tipo_subcontrato_id != "undefined" && localStorage.sub_tipo_subcontrato_id != "null" && localStorage.sub_tipo_subcontrato_id !=""){
+                campo.campo.tipo_subcontrato = localStorage.sub_tipo_subcontrato_id;
+            }
+            if(typeof localStorage.sub_monto1 != "undefined" && localStorage.sub_monto1 != "null" && localStorage.sub_monto1 !=""){
+                campo.campo.monto_min = localStorage.sub_monto1;
+            }
+            if(typeof localStorage.sub_monto2 != "undefined" && localStorage.sub_monto2 != "null" && localStorage.sub_monto2 !=""){
+                campo.campo.monto_max = localStorage.sub_monto2;
+            }
+            if(typeof localStorage.sub_centro != "undefined" && localStorage.sub_centro != "null" && localStorage.sub_centro !=""){
+                campo.campo.centro_contable = localStorage.sub_centro;
+            }
+            if(typeof localStorage.sub_estado != "undefined" && localStorage.sub_estado != "null" && localStorage.sub_estado !=""){
+                campo.campo.estado = localStorage.sub_estado;
+            }
+        }
 
+        return Object.assign(data, campo);
+    };
+    //Mostrar en los campos de busqueda los valores guardados
+    //en localStorage
+    var setBusquedaDeLocalStorage = function(){
+        if (typeof(Storage) == "undefined") {
+            return false;
+        }
+        var haybusqueda = 0;
+
+        if(typeof localStorage.sub_numero_subcontrato != "undefined" && localStorage.sub_numero_subcontrato != "null" && localStorage.sub_numero_subcontrato !=""){
+            $('#numero_subcontrato').val(localStorage.sub_numero_subcontrato);
+            haybusqueda += 1;
+        }
+        if(typeof localStorage.sub_proveedor != "undefined" && localStorage.sub_proveedor != "null" && localStorage.sub_proveedor !=""){
+            $("#proveedor").append('<option value="' + localStorage.sub_proveedor + '" selected="selected">' + localStorage.sub_proveedor_nombre + '</option>');
+            haybusqueda += 1;
+        }
+        if(typeof localStorage.sub_tipo_subcontrato_id != "undefined" && localStorage.sub_tipo_subcontrato_id != "null" && localStorage.sub_tipo_subcontrato_id !=""){
+
+            $("#tipo_subcontrato_id").append('<option value="' + localStorage.sub_tipo_subcontrato_id + '" selected="selected">' + localStorage.sub_tipo_subcontrato_nombre + '</option>');
+
+            haybusqueda += 1;
+        }
+        if(typeof localStorage.sub_monto1 != "undefined" && localStorage.sub_monto1 != "null" && localStorage.sub_monto1 !=""){
+            $('#monto1').val(localStorage.sub_monto1);
+            haybusqueda += 1;
+        }
+        if(typeof localStorage.sub_monto2 != "undefined" && localStorage.sub_monto2 != "null" && localStorage.sub_monto2 !=""){
+            $('#monto2').val(localStorage.sub_monto2);
+            haybusqueda += 1;
+        }
+        if(typeof localStorage.sub_centro != "undefined" && localStorage.sub_centro != "null" && localStorage.sub_centro !=""){
+
+            $("#centro").append('<option value="' + localStorage.sub_centro + '" selected="selected">' + localStorage.sub_centro_nombre + '</option>');
+
+            haybusqueda += 1;
+        }
+        if(typeof localStorage.sub_estado != "undefined" && localStorage.sub_estado != "null" && localStorage.sub_estado !=""){
+
+            $("#estado").append('<option value="' + localStorage.sub_estado + '" selected="selected">' + localStorage.sub_estado_nombre + '</option>');
+
+            haybusqueda += 1;
+        }
+        //si existe parametros en localStorage
+        //mostrar el panel de busqueda abierto.
+        if(haybusqueda > 0){
+            $('#centro').closest('.ibox-content').removeAttr("style");
+        }
+
+        $("select").trigger("chosen:updated");
+        $("#proveedor").trigger('change');
+        $("#tipo_subcontrato_id").trigger('change');
+        $("#centro").trigger('change');
+        $("#estado").trigger('change');
+    };
     var tabla = function() {
         gridObj.jqGrid({
             url: tablaUrl,
@@ -43,11 +168,7 @@ var tablaSubContratosVentas = (function() {
                 { name: 'options', index: 'options', width: 40 },
                 { name: 'link', index: 'link', width: 50, align: "center", sortable: false, resizable: false, hidden: true, hidedlg: true },
             ],
-            postData: {
-                erptkn: tkn,
-                proveedor_id: proveedor_id,
-                campo: typeof window.campo !== 'undefined' ? window.campo : {},
-            },
+            postData: getParametrosFiltroInicial(),
             height: "auto",
             autowidth: true,
             rowList: [10, 20, 50, 100],
@@ -123,8 +244,12 @@ var tablaSubContratosVentas = (function() {
             formularioBuscar.find('input[type="text"]').prop("value", "");
             formularioBuscar.find('select.select2').val('').change();
             formularioBuscar.find('select').prop("value", "");
+            limpiarBusquedaLocalStorage();
             recargar();
         });
+        //Al cargar, mostrar resultados guardados
+        //en localStorage si existen
+        setBusquedaDeLocalStorage();
         //boton Buscar
         $(botones.buscar).click(function(e) {
             e.preventDefault();
@@ -141,6 +266,7 @@ var tablaSubContratosVentas = (function() {
 
             if (proveedor !== "" || tipo_subcontrato_id != "" || monto1 !== "" || monto2 !== '' || numero_subcontrato !== "" || centro !== "" || estado !== '') {
                 //Reload Grid
+                guardarBusquedaLocalStorage();
                 gridObj.setGridParam({ postData: null });
                 gridObj.setGridParam({
                     url: tablaUrl,

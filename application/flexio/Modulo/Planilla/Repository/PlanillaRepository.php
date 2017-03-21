@@ -102,6 +102,16 @@ class PlanillaRepository{
                 $lista_pagos[$m]['tipo_planilla'] = $info_planilla['tipo_id'];
     	  				$lista_pagos[$m]['pagos'][0]['nombre'] = 'Salario Regular';
     	  				$lista_pagos[$m]['pagos'][0]['monto'] =  $lista_pagos[$m]['salario_devengado_no_pagado'];
+
+                    $salario_horas_list = $this->salarios_pagos_horas($info);
+                    foreach ($salario_horas_list as $item) {
+                        $lista_pagos[$m]['pagos'][] = [
+                            'nombre'=>$item['detalle'],
+                            'monto'=>$item['calculo'],
+                            'rata'=>$item['rata'],
+                            'cantidad_horas'=>$item['cantidad_horas'],
+                        ];
+                    }
                 $lista_pagos[$m]['colaborador']['salario_devengado_no_pagado'] = $lista_pagos[$m]['salario_devengado_no_pagado'];
   	  					$ded_cont = $des_cont = 0;
   	  					$descuentos_directos = $lista_pagos[$m]['colaborador']['descuentos_directos'];
@@ -600,8 +610,8 @@ class PlanillaRepository{
                        foreach($pago['pagos'] as $info){
                            $ingresos[] = array(
                              "detalle" => $info['nombre'],
-                             "cantidad_horas" => 0,
-                             "rata" =>0,
+                             "cantidad_horas" => isset($info['cantidad_horas'])?$info['cantidad_horas']:0,
+                             "rata" =>isset($info['rata'])?$info['rata']:0,
                              "calculo" =>$info['monto']
                          );
                        }
@@ -752,7 +762,8 @@ class PlanillaRepository{
 
              if($ObjetoPlanilla['tipo_id'] == 79) //Regular
              {
-               if($ObjetoColaborador['colaborador']['tipo_salario'] == 'Mensual'){ //Menusal
+                 $salario_bruto=0;
+                 if($ObjetoColaborador['colaborador']['tipo_salario'] == 'Mensual'){ //Menusal
                      if($ObjetoPlanilla['ciclo_id'] == 64){ //Quincenal
                            $salario_bruto = $ObjetoColaborador['colaborador']['salario_mensual']/2;
                      }
@@ -818,6 +829,21 @@ class PlanillaRepository{
 
               return $salarios;
           }
+
+        public function salarios_pagos_horas($ObjetoColaborador)
+        {
+            $salarios = [];
+            $rata = $ObjetoColaborador['colaborador']['rata_hora'];
+            if (!empty($ObjetoColaborador)) {
+                //dd($ObjetoColaborador['ingreso_horas'] );
+                foreach ($ObjetoColaborador['ingreso_horas'] as $value) {
+                    $result=$this->formula_calculo($value, $rata);
+                    if(count($result)>0)
+                        array_push($salarios, $result[0]);
+                }
+            }
+            return $salarios;
+        }
 
           private function _calculo_prima_productividad($acumulado_salario_bruto, $suma_horas_prima ) {
 

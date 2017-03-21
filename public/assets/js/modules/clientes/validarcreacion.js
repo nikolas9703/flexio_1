@@ -28,6 +28,19 @@ $('#formClienteCrear').validate({
 					
                 }else{  
 					console.log('por aqui pasa');
+
+					$(".iniramo").each(function(){
+                        var id = $(this).attr("id");
+                        var idx = id.split("_");
+                        var valor = $(this).val();
+                        var valorf = "";
+                        $.each(valor,function(index, value){
+                            valorf = valorf+value+",";
+                        });
+                        $("#ramos_h_"+idx[1]+"_"+idx[2]).val(valorf);
+                        console.log(id, valorf);
+                    });
+
 					$('input, select, input:text').prop('disabled', false);
 					$('input:text,input:hidden, select:hidden, textarea, select').removeAttr('disabled');
 					$('input,input:text,input:hidden, select:hidden, textarea, select').attr('disabled',false);
@@ -101,8 +114,9 @@ $(window).load(function(){
 });
 
 
+
+
 $(document).ready(function(){
-	
 	if(interes==='si')
 	{
 		$('select[name="campo[tipo_identificacion]"]').attr('disabled', 'disabled');

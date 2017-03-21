@@ -44,7 +44,7 @@ var tablaSolicitudes = (function(){
 				'Aseguradora',
 				'Ramo',
 				'Tipo',
-				'',
+				'Dias transcurridos',
 				'Fecha de creaci&oacute;n',
 				'Usuario',
 				'Estado',			
@@ -65,7 +65,7 @@ var tablaSolicitudes = (function(){
 				searchoptions: { 
 				value: "0:Todo;2:Colectivo;1:Individual", 
 								}},
-				{name:'Dias transcurridos', index:'transcurridos', width: 40, hidden: true },
+				{name:'Dias transcurridos', index:'transcurridos', width: 40, hidden: false },
 		   		{name:'Fecha creación', index:'fecha_creacion', width: 44},
 		   		{name:'Usuario', index:'usuario_id', width: 40},
 		   		{name:'Estado', index:'estado', width: 40,editable: true, stype:"select", 

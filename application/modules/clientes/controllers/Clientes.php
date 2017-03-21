@@ -34,7 +34,8 @@ use Flexio\Modulo\Modulos\Repository\ModulosRepository;
 use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados as AseguradosModel;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesPersonas as PersonasModel;
-
+use Flexio\Modulo\Agentes\Models\Agentes;
+use Flexio\Modulo\Ramos\Models\Ramos;
 //utils
 use Flexio\Library\Util\FlexioAssets;
 use Flexio\Library\Util\FlexioSession;
@@ -487,6 +488,12 @@ class Clientes extends CRM_Controller {
         //permisos
         $acceso = $this->auth->has_permission('acceso', 'clientes/crear/(:any)');
         $this->Toast->runVerifyPermission($acceso);
+
+        if ($this->auth->has_permission('crear__validarAgente', 'clientes/crear/(:any)') ==  true) {
+            $validaagente = 1;
+        }else{
+            $validaagente = 0;
+        }
 		
 		//assets
         $this->FlexioAssets->run();//css y js generales
@@ -495,7 +502,7 @@ class Clientes extends CRM_Controller {
             "acceso" => $acceso ? 1 : 0,
             "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0',
             "desde_modal_cliente_ref" => $this->input->get("ref") ? $this->input->get("ref") : '0',
-
+            "validaagente" => $validaagente
         ]);
 		
 		if(isset($_GET['datint']))
@@ -596,6 +603,10 @@ class Clientes extends CRM_Controller {
         $catalogo_cliente = Flexio\Modulo\Cliente\Models\ClienteCatalogo::get();
         $precios = $this->PreciosRepository->get($clause);
 
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/clientes/agentes_ramos.js'
+        ));
+
         $this->FlexioAssets->add('js', ['public/resources/compile/modulos/clientes/formulario.js']);
         $this->FlexioAssets->add('vars', [
             "tomas_contacto" => Flexio\Modulo\Cliente\Models\CatalogoTomaContacto::get(),
@@ -606,9 +617,12 @@ class Clientes extends CRM_Controller {
             "lista_precios_alquiler" =>  $precios->filter(function($row){return $row->tipo_precio == 'alquiler';}),
             "terminos_pago" => $this->ModulosRepository->getTerminosDePago(),
             "usuarios" => $this->UsuariosRepository->getCollectionUsuarios($this->UsuariosRepository->get($clause)),
+            "agentes" => Agentes::where("id_empresa", $clause['empresa_id'])->get(),
             "provincias" => Flexio\Modulo\Geo\Models\Provincia::orderBy('nombre', 'asc')->get(),
             "distritos" => Flexio\Modulo\Geo\Models\Distrito::orderBy('nombre', 'asc')->get(),
             "corregimientos" => Flexio\Modulo\Geo\Models\Corregimiento::orderBy('nombre', 'asc')->get(),
+            "detalle_unico" => strtotime('now'),
+            "ramos" => Ramos::where('padre_id','<>','0')->select("id", "nombre")->get()
         ]);
         $this->load->view('formulario', $data);
     }
@@ -635,20 +649,53 @@ class Clientes extends CRM_Controller {
             //de manera de inactivarlo -> pendiente de integrar en el refactory
 
             $campos = $_POST['campo'];
+            $camposagente = $_POST['agentesCliente'];
+            $camposramos = $_POST['ramos_agentes'];
+            $camposporcentajes = $_POST['porcentajes_agentes'];
 
             $tipoidentificacion = $campos['tipo_identificacion'];
             $identificacion = $campos['identificacion'];
             $empresa = $this->id_empresa;
 
             if ($this->auth->has_permission('crear__validarDuplicado', 'clientes/crear/(:any)') ==  true) {
-                $cli = ClienteModel::where("tipo_identificacion", $tipoidentificacion)->where("identificacion", $identificacion)->where("empresa_id", $empresa)->count();
+                if (!isset($campos['id'])) { 
+                    $cli = ClienteModel::where("tipo_identificacion", $tipoidentificacion)->where("identificacion", $identificacion)->where("empresa_id", $empresa)->count();
+                }else{
+                    $cli = ClienteModel::where("tipo_identificacion", $tipoidentificacion)->where("identificacion", $identificacion)->where("empresa_id", $empresa)->where("id", $campos['id'])->count();
+                }
+                
+                if ($cli>0) {
+                    $clien = 1;
+                }else{
+                    $clien = 0;
+                }
             }else{
                 $cli=0;
             }
 
-            if ($cli>0) {
-                $registro = " ";
-                $cliente = "con_identificacion";
+            if ($cli>0) {                
+
+                if ($clien == 1) {
+                    $cp_id = $this->input->post('id_cp', true);
+                    if (!empty($cp_id)) {
+                        Clientes_potenciales_orm::upDateClientePotencial($cp_id);
+                    }
+
+                    try {
+                        $total = Cliente_orm::where('empresa_id', '=', $this->id_empresa)->count();
+                        $cliente_request = new ClienteRequest;
+                        $codigo = $total + 1;
+                        $registro = $cliente_request->guardar($this->id_empresa, $codigo, $this->id_usuario);
+                    } catch (\Exception $e) {
+                        log_message('error', $e);
+                        $this->Toast->setUrl('clientes/listar')->run("exception",[$e->getMessage()]);
+                    }
+                    $cliente == "";
+                }else{
+                    $registro = " ";
+                    $cliente = "con_identificacion";
+                }
+
             }else{
                 $cp_id = $this->input->post('id_cp', true);
                 if (!empty($cp_id)) {
@@ -696,6 +743,12 @@ class Clientes extends CRM_Controller {
         //variables
         $cliente = $this->clienteRepo->findByUuid($uuid);
 
+        if ($this->auth->has_permission('crear__validarAgente', 'clientes/crear/(:any)') ==  true) {
+            $validaagente = 1;
+        }else{
+            $validaagente = 0;
+        }
+
         //assets
         $this->FlexioAssets->run();//css y js generales
         $this->FlexioAssets->add('css',['public/assets/css/modules/stylesheets/clientes.css']);
@@ -703,7 +756,8 @@ class Clientes extends CRM_Controller {
             "vista" => 'ver',
             "acceso" => $acceso ? 1 : 0,
             'cliente' => $this->clienteRepo->getCollectionClienteCampo($cliente),
-            "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0'
+            "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0',
+            "validaagente" => $validaagente
         ]);
 
         $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
@@ -765,6 +819,23 @@ class Clientes extends CRM_Controller {
         if ($clientePot != null) {
             $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
                     ->set_output(json_encode($clientePot->toarray()))->_display();
+        }
+        exit;
+    }
+
+
+    public function ajax_get_agente() {
+        //ID cliente potencial.
+
+        $agente_id = $this->input->post('agente', true);
+        if ($agente_id == "") {
+            $agente_id = 0;
+        }
+        $agt = Agentes::where("id", $agente_id)->get();
+
+        if ($agt != null) {
+            $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
+                    ->set_output(json_encode($agt->toarray()))->_display();
         }
         exit;
     }

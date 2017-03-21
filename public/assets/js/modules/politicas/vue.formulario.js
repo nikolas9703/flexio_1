@@ -25,7 +25,7 @@ var form_politicas = new Vue({
             return this.formulario.modulo ==='';
         },
         showCategorias:function(){
-            return !_.includes(['pago','anticipo','aseguradora','ramos','ajustadores','agentes','intereses_asegurados','solicitudes','polizas'], this.formulario.modulo);
+            return !_.includes(['pago','anticipo','aseguradora','ramos','ajustadores','agentes','intereses_asegurados','solicitudes','polizas','cobros'], this.formulario.modulo);
 
         },
         catalogoDinamicoEstados:function(){

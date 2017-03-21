@@ -662,6 +662,7 @@ class Intereses_asegurados extends CRM_Controller {
             $uuid = "";
             $vehiculo = null;
             $vehiculoObj = null;
+            $comentario = "";
             Capsule::beginTransaction();
             try {
                 if (empty($campo['uuid'])) {
@@ -767,7 +768,7 @@ class Intereses_asegurados extends CRM_Controller {
                             if ($det->detalle_suma_asegurada != "") {
                                 $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                             }
-                            if($campodesde['indcolec']==2)
+                            if( !empty($campodesde['indcolec']) && $campodesde['indcolec']==2)
                                 {
                                     if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
                                         $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
@@ -809,81 +810,81 @@ class Intereses_asegurados extends CRM_Controller {
                         $vehiculoObj = $this->VehiculoModel->find($intereses_asegurados->vehiculo->id);
 
                         $cambio = 'no';
-                        if ($vehiculoObj->chasis != $campo['chasis']) {
+                        if ( !empty($campo['chasis']) && $vehiculoObj->chasis != $campo['chasis']) {
                             $comentario .= "<b>Campo: N°. Chasis o serie</b><br>Valor Actual: " . $campo['chasis'] . "<br>Valor Anterior:" . $vehiculoObj->chasis . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->unidad != $campo['unidad']) {
+                        if ( !empty($campo['unidad']) && $vehiculoObj->unidad != $campo['unidad']) {
                             $cambio = 'si';
                             $comentario .= "<b>Campo: N°. Unidad</b><br>Valor Actual:" . $campo['unidad'] . "<br>Valor Anterior:" . $vehiculoObj->unidad . "<br><br>";
                         }
-                        if ($vehiculoObj->marca != $campo['marca']) {
+                        if ( !empty($campo['marca']) && $vehiculoObj->marca != $campo['marca']) {
                             $comentario .= "<b>Campo: Marca</b><br>Valor Actual:" . $campo['marca'] . "<br>Valor Anterior:" . $vehiculoObj->marca . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->modelo != $campo['modelo']) {
+                        if ( !empty($campo['modelo']) && $vehiculoObj->modelo != $campo['modelo']) {
                             $comentario .= "<b>Campo: Modelo</b><br>Valor Actual:" . $campo['modelo'] . "<br>Valor Anterior:" . $vehiculoObj->modelo . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->placa != $campo['placa']) {
+                        if ( !empty($campo['placa']) && $vehiculoObj->placa != $campo['placa']) {
                             $comentario .= "<b>Campo: Placa</b><br>Valor Actual:" . $campo['placa'] . "<br>Valor Anterior:" . $vehiculoObj->placa . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->ano != $campo['ano']) {
+                        if ( !empty($campo['ano']) && $vehiculoObj->ano != $campo['ano']) {
                             $comentario .= "<b>Campo: Año</b><br>Valor Actual:" . $campo['ano'] . "<br>Valor Anterior:" . $vehiculoObj->ano . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->motor != $campo['motor']) {
+                        if ( !empty($campo['motor']) && $vehiculoObj->motor != $campo['motor']) {
                             $comentario .= "<b>Campo: Motor</b><br>Valor Actual:" . $campo['motor'] . "<br>Valor Anterior:" . $vehiculoObj->motor . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->color != $campo['color']) {
+                        if ( !empty($campo['color']) && $vehiculoObj->color != $campo['color']) {
                             $comentario .= "<b>Campo: Color</b><br>Valor Actual:" . $campo['color'] . "<br>Valor Anterior:" . $vehiculoObj->color . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->capacidad != $campo['capacidad']) {
+                        if ( !empty($campo['capacidad']) && $vehiculoObj->capacidad != $campo['capacidad']) {
                             $comentario .= "<b>Campo: Capacidad</b><br>Valor Actual:" . $campo['capacidad'] . "<br>Valor Anterior:" . $vehiculoObj->capacidad . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->uso != $campo['uso']) {
+                        if ( !empty($campo['uso']) && $vehiculoObj->uso != $campo['uso']) {
                             $uso_anterior = SegCatalogo::find($campo['uso']);
                             $comentario .= "<b>Campo: Uso</b><br>Valor Actual:" . $uso_anterior->etiqueta . "<br>Valor Anterior:" . $vehiculoObj->datosUso->etiqueta . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->condicion != $campo['condicion']) {
+                        if ( !empty($campo['condicion']) && $vehiculoObj->condicion != $campo['condicion']) {
                             $condicion_anterior = SegCatalogo::find($campo['condicion']);
                             $comentario .= "<b>Campo: Condición</b><br>Valor Actual:" . $condicion_anterior->etiqueta . "<br>Valor Anterior:" . $vehiculoObj->datosCondicion->etiqueta . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->operador != $campo['operador']) {
+                        if ( !empty($campo['operador']) && $vehiculoObj->operador != $campo['operador']) {
                             $comentario .= "<b>Campo: Operador</b><br>Valor Actual:" . $campo['operador'] . "<br>Valor Anterior:" . $vehiculoObj->operador . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->extras != $campo['extras']) {
+                        if ( !empty($campo['extras']) && $vehiculoObj->extras != $campo['extras']) {
                             $comentario .= "<b>Campo: Extras</b><br>Valor Actual:" . $campo['extras'] . "<br>Valor Anterior:" . $vehiculoObj->extras . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->valor_extras != $campo['valor_extras']) {
+                        if ( !empty($campo['valor_extras']) && $vehiculoObj->valor_extras != $campo['valor_extras']) {
                             $comentario .= "<b>Campo: Valor Extras</b><br>Valor Actual:" . $campo['valor_extras'] . "<br>Valor Anterior:" . $vehiculoObj->valor_extras . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->acreedor != $campo['acreedor']) {
-                            $acreedor_anterior = Proveedores::find($campo['acreedor']);
+                        if ( !empty($campo['acreedor']) && $vehiculoObj->acreedor != $campo['acreedor']) {
+                            $acreedor_anterior = !empty(Proveedores::find($campo['acreedor'])) ? Proveedores::find($campo['acreedor']) : '' ;
                             $comentario .= "<b>Campo: Acreedor</b><br>Valor Actual:" . $acreedor_anterior->nombre . "<br>Valor Anterior:" . $vehiculoObj->datosAcreedor->nombre . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->porcentaje_acreedor != $campo['porcentaje_acreedor']) {
+                        if ( !empty($campo['porcentaje_acreedor']) && $vehiculoObj->porcentaje_acreedor != $campo['porcentaje_acreedor']) {
                             $comentario .= "<b>Campo: Porcentaje Acreedor</b><br>Valor Actual:" . $campo['porcentaje_acreedor'] . "<br>Valor Anterior:" . $vehiculoObj->porcentaje_acreedor . "<br><br>";
                             $cambio = 'si';
                         }
-                        if ($vehiculoObj->observaciones != $campo['observaciones']) {
+                        if ( !empty($campo['observaciones']) && $vehiculoObj->observaciones != $campo['observaciones']) {
                             $comentario .= "<b>Campo: Observaciones</b><br>Valor Actual:" . $campo['observaciones'] . "<br>Valor Anterior:" . $vehiculoObj->observaciones . "<br><br>";
                             $cambio = 'si';
                         }
                         $vehiculoObj->update($campo);
 
                         $intereses_asegurados->identificacion = $vehiculoObj->chasis;
-                        if ($intereses_asegurados->estado != $campo2['estado']) {
+                        if ( !empty($campo2['estado']) && $intereses_asegurados->estado != $campo2['estado']) {
                             $comentario .= "<b>Campo: Estado</b><br>Valor Actual:" . $campo2['estado'] . "<br>Valor Anterior:" . $intereses_asegurados->estado . "<br><br>";
                             $cambio = 'si';
                         }
@@ -939,7 +940,7 @@ class Intereses_asegurados extends CRM_Controller {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor Actual:" . $det->detalle_suma_asegurada . "<br><br>";
                                     $cambio = 'si';
                                 }
-                                if($campodesde['indcolec']==2)
+                                if(!empty($campodesde['indcolec']) && $campodesde['indcolec']==2)
                                 {
                                     if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
                                         $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
@@ -954,12 +955,14 @@ class Intereses_asegurados extends CRM_Controller {
 
                             $usuario_registro = Usuario_orm::find($this->session->userdata['id_usuario']);
 
-                            $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $$usuario_registro->apellido;
+                            if (!empty($usuario_registro->nombre) && !empty($usuario_registro->apellido)) 
+                                $comentario .= "Registrado Por: " . $fieldset['creado_por'] = $usuario_registro->nombre . " " . $usuario_registro->apellido;
 
                             $comentario2 = "<b>Interés Vehículo</b><br>Motor: " . $vehiculoObj->motor . "<br><br>";
                             $fieldset["comentario"] = $comentario2 . "" . $comentario;
                             $fieldset["comentable_type"] = "Actualizacion_interes_solicitudes";
-                            if ($num1->id_solicitudes == '') {
+                            
+                            if ( empty($num1->id_solicitudes) ) {
                                 $solicitud = $_POST['detalleunico'];
                             } else
                                 $solicitud = $num1->id_solicitudes;
@@ -996,7 +999,6 @@ class Intereses_asegurados extends CRM_Controller {
         } else {
             $mensaje = array('class' => 'alert-warning', 'contenido' => '<strong>¡Error!</strong> Su solicitud no fue procesada');
         }
-        echo serialize($_POST);
 
         $this->session->set_flashdata('mensaje', $mensaje);
         if ($campodesde['desde'] != "solicitudes") {
@@ -1526,8 +1528,16 @@ class Intereses_asegurados extends CRM_Controller {
                         $total = $this->interesesAseguradosRep->listar_intereses_asegurados($clause);
                         $codigo = Util::generar_codigo('PRO', count($total) + 1);
                         $campo["numero"] = $codigo;
-                        $campo['tipo_propuesta_opcional']=$campo['tipo_propuesta_opcional'];
-                        $campo['validez_fianza_opcional']= $campo['validez_fianza_opcional'];
+                        /*$campo['tipo_propuesta_opcional']=$campo['tipo_propuesta_opcional'];
+                        $campo['validez_fianza_opcional']= $campo['validez_fianza_opcional'];*/
+                        if (isset($campo['tipo_propuesta'])) {
+                            if ($campo['tipo_propuesta'] == "otro") $campo['tipo_propuesta_opcional'] = $campo['tipo_propuesta_opcional'];
+                            $campo['tipo_propuesta'] = $campo['tipo_propuesta'];
+                        }
+                        if (isset($campo['validez_fianza_pr'])) {
+                            if ($campo['validez_fianza_pr'] == "otro")  $campo['validez_fianza_opcional'] = $campo['validez_fianza_opcional'];
+                            $campo['validez_fianza_pr'] = $campo['validez_fianza_pr'];
+                        }
 
                         $proyecto_actividad = $this->ProyectoModel->create($campo);
 
@@ -2016,6 +2026,14 @@ class Intereses_asegurados extends CRM_Controller {
         } else {
             $mensaje = [];
         }
+        if(isset($_GET['reg']) && $_GET['reg'] == 'poli' ){
+            $regresar_poliza = "si";
+            $uuid_poliza = $_GET['uuid'];
+        }else{
+            $regresar_poliza = "no";
+            $uuid_poliza = '';
+        }   
+        
 
         //if (!$this->auth->has_permission('acceso', 'intereses_asegurados/ver/(:any)') && !$this->auth->has_permission('acceso', 'aseguradoras/ver')) {
         if (!$this->auth->has_permission('acceso', 'intereses_asegurados/ver/(:any)') && !$this->auth->has_permission('acceso', 'intereses_asegurados/editar/(:any)')) {
@@ -2129,6 +2147,8 @@ class Intereses_asegurados extends CRM_Controller {
             "data" => json_encode($intereses_data),
             "datos_cliente"=>'',
             "cliente"=>'no',
+            "regresar_poliza" => $regresar_poliza,
+            "uuid_poliza" => $uuid_poliza,
         ));
 
         if ($this->auth->has_permission('acceso', 'intereses_asegurados/editar/(:any)')) {
@@ -3006,7 +3026,7 @@ class Intereses_asegurados extends CRM_Controller {
                             if ($ubicacion->acreedor == 'otro')
                                 $acree = 'Otro';
                             else
-                                $acree = $ubicacion->datosAcreedor->nombre;
+                                $acree = !empty($ubicacion->datosAcreedor->nombre) ? $ubicacion->datosAcreedor->nombre : '';
                             $comentario .= "<b>Campo: Acreedor</b><br>Valor: " . $acree . "<br><br>";
                         }
                         if ($ubicacion->acreedor_opcional != '')
@@ -3070,7 +3090,7 @@ class Intereses_asegurados extends CRM_Controller {
                                 if ($det->detalle_suma_asegurada != "") {
                                     $comentario .= "<b>Campo: Suma Asegurada</b><br>Valor: " . $det->detalle_suma_asegurada . "<br><br>";
                                 }
-                                if($campodesde['indcolec']==2)
+                                if(!empty($campodesde['indcolec']) && $campodesde['indcolec']==2)
                                 {
                                     if ($det->detalle_prima != "" || $det->detalle_prima != "0.00" || $det->detalle_prima != 0) {
                                         $comentario .= "<b>Campo: Prima neta</b><br>Valor Actual:" . $det->detalle_prima . "<br><br>";
@@ -3172,7 +3192,7 @@ class Intereses_asegurados extends CRM_Controller {
                                     if ($ubicacionObj->acreedor == 'otro')
                                         $acreedor_viejo = 'Otro';
                                     else
-                                        $acreedor_viejo = $ubicacionObj->datosAcreedor->nombre;
+                                        $acreedor_viejo = !empty($ubicacionObj->datosAcreedor->nombre) ?  $ubicacionObj->datosAcreedor->nombre : '';
 
                                     if ($campo['acreedor'] == 'otro')
                                         $acreedor_nuevo = 'Otro';

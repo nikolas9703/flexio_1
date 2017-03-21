@@ -56,7 +56,10 @@ class PagosObserver
         $cambio = $pagos->getDirty();
         $original = $pagos->getOriginal();
         //dd($cambio, $original);
-        $clause = ['modulo' => 'pagos', 'tipo' => 'etapa', 'etiqueta' => $cambio['estado']];
+		if(isset($cambio['estado']))
+			$clause = ['modulo' => 'pagos', 'tipo' => 'etapa', 'etiqueta' => $cambio['estado']];
+		else
+			$clause = ['modulo' => 'pagos', 'tipo' => 'etapa', 'etiqueta' => 'Por aplicar'];
         $clause2 = ['modulo' => 'pagos', 'tipo' => 'etapa', 'etiqueta' => $original['estado']];
         $catalogo = new CatalogoRepository();
         $estado_1 = $catalogo->get($clause2);

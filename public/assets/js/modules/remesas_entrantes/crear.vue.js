@@ -3,9 +3,11 @@ var formularioCrear = new Vue({
 	el: ".wrapper-content",
 	data:{
 		informacionRemesas: [],
+		informacionRemesas2: [],
 	},
 	methods: {
         getRemesas: function () {
+			
             //polula el segundo select del header
             var self = this;
             var id_aseguradora = $('#aseguradora').val();
@@ -104,7 +106,6 @@ var formularioCrear = new Vue({
 			$('input[name="factura_id[]"]:checked').map(function(index,dato) {
 				monto=$('#'+dato.value+'').val();
 				monto_total+=parseFloat(monto);
-				console.log(dato.value);
 			});
 			
 			var total_final=0;
@@ -125,7 +126,6 @@ var formularioCrear = new Vue({
 			$('input[name="factura_id[]"]:checked').map(function(index,dato) {
 				monto=$('#'+dato.value+'').val();
 				monto_total+=parseFloat(monto);
-				console.log(dato.value);
 			});
 			var total_final=0;
 			total_final=(parseFloat(monto_total) + parseFloat(valor_final)).toFixed(2);
@@ -238,6 +238,8 @@ var formularioCrear = new Vue({
 			
 			$("#com_paga_final_final").html('$'+ valor_final.toFixed(2));
 			
+			$("#com_final_comision").val(valor_final.toFixed(2));
+			
 			var com_final_esperada=parseFloat($('#com_final_esperada').val());
 			
 			if(parseFloat(com_final_esperada).toFixed(2)!=parseFloat(valor_final).toFixed(2))
@@ -339,7 +341,6 @@ var formularioCrear = new Vue({
 		
 		getRemesasProcesadas: function () {
             //polula el segundo select del header
-			
 			$("#procesar_remesa").attr('disabled',true);
 			$("#procesar_remesa").prop('disabled',true);
 			
@@ -358,9 +359,10 @@ var formularioCrear = new Vue({
 			$("input[name='monto[]']").map(function (index,dato) {
 				if(dato.value>0)
 				{
-					monto[index]=parseFloat((dato.value)).toFixed(2);
 					id_monto[index]=(dato.id);
 					facturas_id[index]=(dato.id);
+					monto[index]=parseFloat((dato.value)).toFixed(2);
+					
 				}
 			}).get();
 			
@@ -392,10 +394,17 @@ var formularioCrear = new Vue({
                 }
 
                 if (!_.isEmpty(response.data)) {
+					console.log(response.data);
 					$('#tabla_remesas').addClass('hidden');
                     $('#tabla_remesas_procesadas').removeClass('hidden');
 					
-                    self.$set('informacionRemesas', response.data.inter)
+					self.$set('informacionRemesas', '');
+					self.$set('informacionRemesas', response.data.inter);
+					
+					if(vista=='crear')
+					{
+						window.location.assign(phost() + 'remesas_entrantes/editar/'+ response.data.uuid);
+					}
                 }
 				
 				$('#aseguradora').prop("disabled",true);
@@ -410,6 +419,7 @@ var formularioCrear = new Vue({
             });
         },
 		getRemesasProcesadasGuardar: function () {
+			
             //polula el segundo select del header
 			var aseguradora_id;
 			var monto=[];
@@ -460,6 +470,9 @@ var formularioCrear = new Vue({
 });
 
 $(document).ready(function(){
+	
+	$('#datos_por_liquidar').hide();
+	
 	$("body").on("click", "#formRemesaEntranteCrear", function () {
 		$(".formatomoneda").inputmask('currency',{
 			prefix: "",
@@ -477,6 +490,17 @@ $(document).ready(function(){
 	});
 	
 	$("#selectAll").click( function(){
+		if($(this).is(':checked')) {
+			$(".checkboxcompletos").prop('checked', true);
+		}
+		else
+		{
+			$(".checkboxcompletos").prop('checked', false);
+		}
+
+	});
+	
+	$("#selectAllPorLiquidar").click( function(){
 		if($(this).is(':checked')) {
 			$(".checkboxcompletos").prop('checked', true);
 		}
@@ -513,7 +537,17 @@ $(document).ready(function(){
     }
 	
 	if(vista == "editar" && borrador=='no'){
-		console.log(borrador);
+		$('#datos_por_liquidar').show();
+		
+		if(no_recibo!="")
+		{
+			//$('#no_recibo').append('<option value="'+ no_recibo +'" selected="selected">'+nombre_recibo+'</option>');
+			$('#no_recibo').val(no_recibo).prop("selected","selected");
+			$('#monto_recibo').val(parseFloat((monto_recibo)).toFixed(2));
+			
+			$('#no_recibo_guardar').val(no_recibo);
+		}
+		
 		if(ver==1)
 		{
 			$("body").on("click", "#formRemesaEntranteProcesadasCrear", function () {
@@ -565,28 +599,87 @@ $(document).ready(function(){
 			});
 		}
     }
+	
+	$("#liquidar_remesa").unbind().click(function(){
+		
+		var valor_final=$('#com_final_comision').val();
+		
+		var valor_recibo=$('#monto_recibo').val();
+		
+		if(parseFloat((valor_final)).toFixed(2) !== parseFloat((valor_recibo)).toFixed(2))
+		{
+			toastr.error('No se pueden liquidar la remesa, el valor de total de las comisiones debe ser igual al monto del recibo');
+			
+			return false;
+		}
+		else
+			return true;
+	});
+	
+	$("#guardar_remesa_pro").unbind().click(function(){
+		
+		if(vista == "editar" && borrador=='no'){
+			var recibo=$('#no_recibo_guardar').val();
+			if(recibo=="")
+			{
+				$('#no_recibo_guardar').val(no_recibo);
+			}
+		}
+		
+		return true;
+	});
+	
+	$("#eliminarRemesaBtn").unbind().click(function(){
+		var facturas_chequeadas = [];
+		//recorremos todos los checkbox seleccionados con .each
+		$('input[name="factura_check_id[]"]:checked').map(function(index,dato) {
+			facturas_chequeadas[index]=(dato.value);
+		});
+		
+		var facturas_no_chequeadas = [];
+		//recorremos todos los checkbox seleccionados con .each
+		$('input[name="factura_check_id[]"]:unchecked').map(function(index,dato) {
+			facturas_no_chequeadas[index]=(dato.value);
+		});
+		
+		if(facturas_no_chequeadas.length==0)
+		{
+			toastr.error('No se pueden eliminar todas las comisiones de la remesa, debe dejar por lo menos una');
+			return false;
+		}
+		else{
+			if(facturas_chequeadas.length>0)
+			{				
+				var remesa=$('#codigo_remesa_procesado').val();
+				  $.post(phost()+'remesas_entrantes/ajax_get_eliminar_comisiones', {comisiones: facturas_chequeadas, remesa: remesa, erptkn: window.tkn}, function(response){
+					console.log(response);
+					formularioCrear.getRemesas();
+					formularioCrear.getRemesasProcesadas();
+						
+				});
+			}
+			else
+			{
+				toastr.error('Debe seleccionar por lo menos una comision para poder eliminarla');
+				return false;
+			}
+		}
+	});	
 });
-
+	
 $("#imprimirRemesaBtn").click(function(){
+    fecha_desde = fecha_desde.replace("/", "-").replace("/", "-");
+    fecha_hasta = fecha_hasta.replace("/", "-").replace("/", "-");
 	
 	window.open('../imprimirRemesasProcesadas/'+codigo+'/'+aseguradora_id+'/'+fecha_desde+'/'+fecha_hasta); 
 });
 
-/*$('#ramos').on("change", function(){  
-    if($(this).val()=="todos"){
-		$('#ramos').val('');
-		$('#ramos').val('todos').prop("selected",true);
-      $("#ramos > option").each(function() {
-        if (this.value!="todos"){
-          $(this).prop("selected","selected");
-        }
-		else
-		{
-			$(this).prop("selected",false);
-		}
-		//$('#ramos').val('todos').prop("selected",false);
-		
-        $('#ramos').trigger('chosen:updated');
-      });
-    }
-});*/
+$("#no_recibo").unbind().change(function(){
+		var recibo=$('#no_recibo').val();
+		$.post(phost()+'remesas_entrantes/ajax_get_datos_mov_dinero', {recibo: recibo, erptkn: window.tkn}, function(response){
+			console.log(response);
+			var dato=$.parseJSON(response);
+			$('#monto_recibo').val(dato);
+			$('#no_recibo_guardar').val(recibo);
+		});
+});	

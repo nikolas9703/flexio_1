@@ -90,7 +90,7 @@ var formularioCrear = new Vue({
             this.$http.post({
                 url: phost() + 'solicitudes/ajax-get-clientes',
                 method: 'POST',
-                data: {tipo_cliente: cliente_tipo, erptkn: tkn ,limite : 10}
+                data: {tipo_cliente: cliente_tipo, erptkn: tkn,limite : 10 }
             }).then(function (response) {
                 if (_.has(response.data, 'session')) {
                     window.location.assign(phost());
@@ -108,6 +108,41 @@ var formularioCrear = new Vue({
                     } else {
                         self.$set('disabledEstados', false);
                     }
+                    $("#cliente_seleccionado").select2({
+                        ajax: {
+                            url: phost() + "solicitudes/ajax-get-clientes",
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return {
+                                    tipo_cliente: $('#formulario_tipo').val(),
+                                    limite: 100,
+                                    q: params.term, // search term
+                                    page: params.page
+                                };
+                            },
+                            processResults: function (data, params) {
+                                formularioCrear.clientes = data;
+                                var datos= new Array ();
+                                $.each( data, function( key, value ) {
+                                    var objt = new Object();
+                                    objt.id = value.id;
+                                    objt.text = value.nombre;
+                                    datos.push(objt);
+                                }) ;
+                                return {
+                                    results: datos,
+                                    pagination: {
+                                        more: (params.page * 30) < data.total_count
+                                    }
+                                };
+                            },
+                            cache: true
+                        },
+                        escapeMarkup: function (markup) { return markup; }, // let our custom formatter work
+                        //templateSelection: formatRepoSelection // omitted for brevity, see the source of this page
+                    });
+
                 }
             });
             this.getPagadorCampo();
@@ -359,18 +394,19 @@ var formularioCrear = new Vue({
                         }
                         if (!_.isEmpty(response.data)) {
 
-                        if (interes == 1) {
-                        } else if (interes == 2) {
-                        } else if (interes == 3) {
-                        } else if (interes == 4) {
-                        } else if (interes == 5) {
-                        } else if (interes == 6) {
-                        } else if (interes == 7) {
-                        } else if (interes == 8) {
+                            if (interes == 1) {
+                            } else if (interes == 2) {
+                            } else if (interes == 3) {
+                            } else if (interes == 4) {
+                            } else if (interes == 5) {
+                            } else if (interes == 6) {
+                            } else if (interes == 7) {
+                            } else if (interes == 8) {
+                            }
+                            console.log(response.data.inter);
+                            self.$set('sIntereses', response.data.inter);
                         }
-                        self.$set('sIntereses', response.data.inter);
-                    }
-                });
+                    });
                 }
 
             },
@@ -528,7 +564,7 @@ var formularioCrear = new Vue({
                                     $("#asiento").val(splitIden[3]);
                                     $("#provincia").prop("disabled", false);
                                     $('#id_letras').val(splitIden[1]);
-                                   
+
                                 } else if(splitIden.length == 3) {
                                     if(isNaN(splitIden[0])){
 
@@ -538,7 +574,7 @@ var formularioCrear = new Vue({
                                         $("#tomo").val(splitIden[1]);
                                         $("#asiento").val(splitIden[2]);
                                     }else{
-                                        
+
                                         $("#provincia").prop("disabled", false);
                                         $("#provincia").val(splitIden[0]);   
                                         $("#letra").val("0");
@@ -546,7 +582,7 @@ var formularioCrear = new Vue({
                                         $("#asiento").val(splitIden[2]);
                                     }
                                 }
-                                 $('#id_letras').val(splitIden[0]);
+                                $('#id_letras').val(splitIden[0]);
 
                             } else {
                                 $("#identificacion").val("pasaporte");
@@ -810,15 +846,15 @@ getAsociado: function () {
 },
 coberturasModal: function (e) {
             //Inicializar opciones del Modal
-            debugger;
-            formularioCrear.getCoberturasPlanEditar();
+            if(window.vista!="crear"){
+                formularioCrear.getCoberturasPlanEditar();
+            }
             $('#verCoberturas').modal({
                 backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
                 show: false
             });
             //Cerrar modal de opciones        
             var pantalla = $('.div_coberturas');
-            
             var botones_coberturas = $('.botones_coberturas');
 
             pantalla.css('display', 'block');
@@ -827,7 +863,6 @@ coberturasModal: function (e) {
             opcionesModal.find('.modal-body').empty().append(pantalla);
             opcionesModal.find('.modal-footer').empty().append(botones_coberturas);
             opcionesModal.modal('show');
-
         },
         getComisionesInfo: function (e) {
 
@@ -851,8 +886,7 @@ coberturasModal: function (e) {
                         self.$set('impuestoMonto', response.data.planes.impuesto.impuesto);
                         self.$set('sobreComision', response.data.planes.sobre_comisiones.sobre_comision);
                         permisos_editar == true ? self.$set('isEditable', false) : '';
-                        console.log(permisos_editar_comison);
-                        permisos_editar_comison == true ? $(".comision_solicitud").removeAttr('disabled') : $(".comision_solicitud").attr('disabled', 'disabled');
+                        permisos_editar_comison == true ? $("#comision_solicitud").removeAttr('disabled') : $("#comision_solicitud").attr('disabled', 'disabled');
                     }
                 }
             });
@@ -970,8 +1004,14 @@ coberturasModal: function (e) {
             this.sumatotal();
             this.agentesArray.push({value: ''});
 
+            setTimeout(function() {
+                verificaagente();
+            }, 300); 
+            
+
         },
         removeAgente: function (agt) {
+
             var divList = $("div > #total_agentes_participantes");
             var total = parseInt(divList.length) - parseInt(1);
             $('#cantidad').val(total);
@@ -982,6 +1022,10 @@ coberturasModal: function (e) {
             }
             this.sumatotal();
             this.agentesArray.$remove(agt);
+
+            setTimeout(function() {
+                verificaagente();
+            }, 300); 
         },
         addAgenteEditar: function () {
             var divList = $("div > #total_agentes_participantes");
@@ -989,6 +1033,10 @@ coberturasModal: function (e) {
             $('#cantidad').val(total);
             this.sumatotal();
             this.participacion.push({value: ''});
+
+            setTimeout(function() {
+                verificaagente();
+            }, 300); 
 
         },
         removeAgenteEditar: function (agt) {
@@ -1002,6 +1050,10 @@ coberturasModal: function (e) {
             }
             this.sumatotal();
             this.participacion.$remove(agt);
+
+            setTimeout(function() {
+                verificaagente();
+            }, 300);  
         },
         documenteshion: function (n_check, nombre, obligatorio, modulo) {
             var id_intereses = localStorage.getItem("id_intereses");
@@ -1061,65 +1113,65 @@ sumatotal: function () {
     var divList = $("div > #total_agentes_participantes");
     var total = divList.length;
 
-            var suma = 0;
-            var agente = "";
-            var porcentaje = "";
-            var cantidad = $('#cantidad').val();
+    var suma = 0;
+    var agente = "";
+    var porcentaje = "";
+    var cantidad = $('#cantidad').val();
 
 
-            for (var i = 0; i < cantidad; i++) {
-                suma = parseFloat(suma) + parseFloat($('#agentes_participacion_' + i).val());
-                if (i === 0) {
-                    agente = $('#agentes_' + i).val();
-                    porcentaje = $('#agentes_participacion_' + i).val();
-                } else {
-                    agente = agente + "," + $('#agentes_' + i).val();
-                    porcentaje = porcentaje + "," + $('#agentes_participacion_' + i).val();
-                }
-            }
-            
-            if(agtPrincipal!="")
-            {
-                $('#participacionTotal').val(parseFloat(100));
-            }
-            else
-            {
-                $('#participacionTotal').val(parseFloat(suma));
-            }
-            
-            $('#agente').val(agente);
-            $('#porcentaje').val(porcentaje);
-            
-            
-            if(isNaN(suma))
-                    $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
-            else
-                $('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(suma)).toFixed(2));  
-            
-        },
-        limpiarDetalle: function () {
-            $(" #sumaaseguradadetalle_articulo, #primadetalle_articulo, #certificadodetalle_articulo, #deducibledetalle_articulo, #sumaaseguradadetalle_carga, #primadetalle_carga, #certificadodetalle_carga, #deducibledetalle_carga, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #certificadodetalle_aereo, #deducibledetalle_aereo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #certificadodetalle_maritimo, #deducibledetalle_maritimo, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #certificadodetalle_proyecto, #deducibledetalle_proyecto, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #certificadodetalle_ubicacion, #deducibledetalle_ubicacion, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #certificadodetalle_vehiculo, #deducibledetalle_vehiculo").val("");
-        },
-        setPrimaNeta: function () {
-            if (id_tipo_int_asegurado == 1) {
-                this.getPrimaNeta("primadetalle_articulo");
-            } else if (id_tipo_int_asegurado == 2) {
-                this.getPrimaNeta("primadetalle_carga");
-            } else if (id_tipo_int_asegurado == 3) {
-                this.getPrimaNeta("primadetalle_aereo");
-            } else if (id_tipo_int_asegurado == 4) {
-                this.getPrimaNeta("primadetalle_maritimo");
-            } else if (id_tipo_int_asegurado == 5) {
-                this.getPrimaNeta("primadetalle_persona");
-            } else if (id_tipo_int_asegurado == 6) {
-                this.getPrimaNeta("primadetalle_proyecto");
-            } else if (id_tipo_int_asegurado == 7) {
-                this.getPrimaNeta("primadetalle_ubicacion");
-            } else if (id_tipo_int_asegurado == 8) {
-                this.getPrimaNeta("primadetalle_vehiculo");
-            }
-        },
-        cargaAcreedores: function (id) {
+    for (var i = 0; i < cantidad; i++) {
+        suma = parseFloat(suma) + parseFloat($('#agentes_participacion_' + i).val());
+        if (i === 0) {
+            agente = $('#agentes_' + i).val();
+            porcentaje = $('#agentes_participacion_' + i).val();
+        } else {
+            agente = agente + "," + $('#agentes_' + i).val();
+            porcentaje = porcentaje + "," + $('#agentes_participacion_' + i).val();
+        }
+    }
+
+    if(agtPrincipal!="")
+    {
+        $('#participacionTotal').val(parseFloat(100));
+    }
+    else
+    {
+        $('#participacionTotal').val(parseFloat(suma));
+    }
+
+    $('#agente').val(agente);
+    $('#porcentaje').val(porcentaje);
+
+
+    if(isNaN(suma))
+        $('#porcAgentePrincipal').val(parseFloat(100).toFixed(2));
+    else
+        $('#porcAgentePrincipal').val(parseFloat(parseFloat(100).toFixed(2)-parseFloat(suma)).toFixed(2));  
+
+},
+limpiarDetalle: function () {
+    $(" #sumaaseguradadetalle_articulo, #primadetalle_articulo, #certificadodetalle_articulo, #deducibledetalle_articulo, #sumaaseguradadetalle_carga, #primadetalle_carga, #certificadodetalle_carga, #deducibledetalle_carga, #sumaaseguradadetalle_aereo, #primadetalle_aereo, #certificadodetalle_aereo, #deducibledetalle_aereo, #sumaaseguradadetalle_maritimo, #primadetalle_maritimo, #certificadodetalle_maritimo, #deducibledetalle_maritimo, #sumaaseguradadetalle_proyecto, #primadetalle_proyecto, #certificadodetalle_proyecto, #deducibledetalle_proyecto, #sumaaseguradadetalle_ubicacion, #primadetalle_ubicacion, #certificadodetalle_ubicacion, #deducibledetalle_ubicacion, #sumaaseguradadetalle_vehiculo, #primadetalle_vehiculo, #certificadodetalle_vehiculo, #deducibledetalle_vehiculo").val("");
+},
+setPrimaNeta: function () {
+    if (id_tipo_int_asegurado == 1) {
+        this.getPrimaNeta("primadetalle_articulo");
+    } else if (id_tipo_int_asegurado == 2) {
+        this.getPrimaNeta("primadetalle_carga");
+    } else if (id_tipo_int_asegurado == 3) {
+        this.getPrimaNeta("primadetalle_aereo");
+    } else if (id_tipo_int_asegurado == 4) {
+        this.getPrimaNeta("primadetalle_maritimo");
+    } else if (id_tipo_int_asegurado == 5) {
+        this.getPrimaNeta("primadetalle_persona");
+    } else if (id_tipo_int_asegurado == 6) {
+        this.getPrimaNeta("primadetalle_proyecto");
+    } else if (id_tipo_int_asegurado == 7) {
+        this.getPrimaNeta("primadetalle_ubicacion");
+    } else if (id_tipo_int_asegurado == 8) {
+        this.getPrimaNeta("primadetalle_vehiculo");
+    }
+},
+cargaAcreedores: function (id) {
             //polula el segundo select del header
             var self = this;
             var idinteres_detalle = id;
@@ -1161,23 +1213,24 @@ sumatotal: function () {
              var imp = 7;
              if ((cadena.indexOf("Auto Individual") > -1) || (cadena.indexOf("Auto Colectivo/Flota") > -1)) {
              imp = 6;
-             }*/
-             if (this.exoneradoImpuestos == null || this.exoneradoImpuestos == "" || this.exoneradoImpuestos == false) {
-                this.exoneradoImpuestos = false;
-            }
-            var impuesto = this.exoneradoImpuestos == false ? this.impuestoPlan : 0;
-            var impuesto_monto = (parseFloat(this.primaAnual) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima)) * (impuesto / 100);
-
-            return parseFloat(impuesto_monto);
-        },
-        totalPrima: function () {
-            this.primaAnual = this.primaAnual == '' ? '0.00' : this.primaAnual;
-            this.otrosPrima = this.otrosPrima == '' ? '0.00' : this.otrosPrima;
-            this.descuentosPrima = this.descuentosPrima == '' ? '0.00' : this.descuentosPrima;
-            var impuesto_monto = this.impuestoMonto;
-            var total = parseFloat(this.primaAnual) + parseFloat(impuesto_monto) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima);
-            return parseFloat(total);
-        },
+         }*/
+         if (this.exoneradoImpuestos == null || this.exoneradoImpuestos == "" || this.exoneradoImpuestos == false) {
+            this.exoneradoImpuestos = false;
+        }
+        var impuesto = this.exoneradoImpuestos == false ? this.impuestoPlan : 0;
+        console.log("impuesto="+this.impuestoPlan);
+        var impuesto_monto = (parseFloat(this.primaAnual) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima)) * (impuesto / 100);
+        console.log("impuestomonto="+impuesto_monto);
+        return parseFloat(impuesto_monto);
+    },
+    totalPrima: function () {
+        this.primaAnual = this.primaAnual == '' ? '0.00' : this.primaAnual;
+        this.otrosPrima = this.otrosPrima == '' ? '0.00' : this.otrosPrima;
+        this.descuentosPrima = this.descuentosPrima == '' ? '0.00' : this.descuentosPrima;
+        var impuesto_monto = this.impuestoMonto;
+        var total = parseFloat(this.primaAnual) + parseFloat(impuesto_monto) + parseFloat(this.otrosPrima) - parseFloat(this.descuentosPrima);
+        return parseFloat(total);
+    },
 
 }
 
@@ -1275,7 +1328,6 @@ var coberturasForm = new Vue({
         clearFields: function () {
 
             //clearFields(validateFields);
-            //opcionesModal.find('.modal-body').empty();
             $(".error").remove();
             $("#verCoberturas").modal("hide");
 
@@ -1297,6 +1349,30 @@ if (vista == "crear") {
     var counter_acre = contacre+2;
     var counter_acre2 = contacre+2;
     $('#del_acre').hide();
+}
+
+function verificaagente(){
+    var ids = [];
+    //Recorrer Selects y Obtener ids
+    $('.id_agentes').each(function () {
+        var x = $(this).val();
+        if (x != "") {ids.push(x);}
+    });
+    console.log(ids);
+    //Recorrer Selects y Bloquear opciones
+    $('.id_agentes').each(function () {
+        var x = $(this).val();
+        $(this).find('option').each(function () {
+            if ( $(this).val() != x ) {
+                var v = $.inArray( $(this).val() , ids);
+                if (v >= 0) {
+                    $(this).attr("disabled", "true");
+                }else{
+                    $(this).removeAttr("disabled");
+                }
+            }                    
+        });
+    });
 }
 
 
@@ -1337,8 +1413,6 @@ $(document).ready(function () {
         //templateSelection: formatRepoSelection // omitted for brevity, see the source of this page
     });
 
-
-    
     if (vista === 'editar') {
         $('#documentos_editar').show();
         $('#docentregados_crear').hide();
@@ -1386,14 +1460,14 @@ $(document).ready(function () {
         {
             $('.agentePrincipal').hide();
         }
-       
+
         if (localStorage.getItem('ml-selected') == "Solicitudes" && id_tipo_poliza == 1) 
         {
             $(".docentregado,.documentos_entregados,#espac").css('display', 'none');
         }
     }
     var counter = 2;
-    $('#del_file_solicitudes_adicionales').hide();
+
     $('#add_file_solicitudes_adicionales').click(function () {
 
         $('#add_file_solicitudes_adicionales').before('<br><br><div class="file_upload_solicitudes_adicionales " id="h' + counter + '"><input name="nombre_documento[]" type="text" style="width: 300px!important; float: left; " '+
@@ -1436,11 +1510,11 @@ $(document).ready(function () {
             f = "";
         }
         $(this).daterangepicker({ //
-           locale: { format: 'MM/DD/YYYY' },
-           showDropdowns: true,
-           defaultDate: '',
-           singleDatePicker: true
-        }).val(f);
+         locale: { format: 'MM/DD/YYYY' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val(f);
     });
     $('.fechas_acreedores_fin').each(function () {
         var f = $(this).val();
@@ -1461,11 +1535,11 @@ $(document).ready(function () {
             f = "";
         }
         $(this).daterangepicker({ //
-           locale: { format: 'MM/DD/YYYY' },
-           showDropdowns: true,
-           defaultDate: '',
-           singleDatePicker: true
-        }).val(f);
+         locale: { format: 'MM/DD/YYYY' },
+         showDropdowns: true,
+         defaultDate: '',
+         singleDatePicker: true
+     }).val(f);
     });
 
     
@@ -1483,13 +1557,13 @@ $(document).ready(function () {
          singleDatePicker: true
      }).val('');*/
     $('#fechafin_1').daterangepicker({ //
-         locale: { format: 'MM/DD/YYYY' },
-         showDropdowns: true,
-         defaultDate: '',
-         singleDatePicker: true
-     }).val('');
+       locale: { format: 'MM/DD/YYYY' },
+       showDropdowns: true,
+       defaultDate: '',
+       singleDatePicker: true
+   }).val('');
 
-     $(".fechas_acreedores_inicio").change(function () {
+    $(".fechas_acreedores_inicio").change(function () {
         var vigini = $("#vigencia_desde").val();
         var vigfin = $("#vigencia_hasta").val();
         var actual = $(this).val();
@@ -1609,10 +1683,10 @@ $(document).ready(function () {
             var y = id.split('_');
             var x = $(this).val();
             if (x != "") {
-               var monto = (parseFloat(total) * parseFloat(x))/100 ;
-               $("#montocesion_"+y[1]).val(monto);
-            }                
-        });
+             var monto = (parseFloat(total) * parseFloat(x))/100 ;
+             $("#montocesion_"+y[1]).val(monto);
+         }                
+     });
     });
 
     $('#suma_asegurada_persona').keyup(function(){
@@ -1622,10 +1696,10 @@ $(document).ready(function () {
             var y = id.split('_');
             var x = $(this).val();
             if (x != "") {
-               var monto = (parseFloat(total) * parseFloat(x))/100 ;
-               $("#montocesion_"+y[1]).val(monto);
-            }                
-        });
+             var monto = (parseFloat(total) * parseFloat(x))/100 ;
+             $("#montocesion_"+y[1]).val(monto);
+         }                
+     });
     });
 
     //Agregar Acreedores a la Vigencia    
@@ -1766,7 +1840,7 @@ $(document).ready(function () {
     });*/
     // Fin Acreedores
     
-   
+
 
     if (validavida == 1 && id_tipo_int_asegurado == 5) {
         if (id_tipo_poliza == 1) {
@@ -1782,9 +1856,14 @@ $(document).ready(function () {
     }
         //-------------------------------------------------------------------------------
 
+        if (vista == "editar") {
+            verificaagente();
+        }
+        
 
-});
- 
+    });
+
+
 
 function agregaracre(){
     $(".add_file_acreedores_adicionales").hide();
@@ -1800,17 +1879,17 @@ function agregaracre(){
         $(".porcentaje_cesion_acreedor").inputmask('Regex', { regex: "^[1-9][0-9][.][0-9][0-9]?$|^100[.]00?$|^[0-9][.][0-9][0-9]$" });
         //$(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
         $('#fechainicio_'+counter_acre2+'').daterangepicker({ //
-         locale: { format: 'MM/DD/YYYY' },
-         showDropdowns: true,
-         defaultDate: '',
-         singleDatePicker: true
-     }).val('');
+           locale: { format: 'MM/DD/YYYY' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+       }).val('');
         $('#fechafin_'+counter_acre2+'').daterangepicker({ //
-         locale: { format: 'MM/DD/YYYY' },
-         showDropdowns: true,
-         defaultDate: '',
-         singleDatePicker: true
-     }).val('');
+           locale: { format: 'MM/DD/YYYY' },
+           showDropdowns: true,
+           defaultDate: '',
+           singleDatePicker: true
+       }).val('');
 
         $(".fechas_acreedores_inicio").change(function () {
             var vigini = $("#vigencia_desde").val();
@@ -1921,77 +2000,77 @@ function agregaracre(){
         });
         counter_acre++;
 
-    counter_acre2++;
-}
+        counter_acre2++;
+    }
 
-function eliminaracre(d){
-    $('#a' + d +'').remove(); 
-}
+    function eliminaracre(d){
+        $('#a' + d +'').remove(); 
+    }
 
-function customModalValidation(type) {
+    function customModalValidation(type) {
 
 
-    var mensaje = "",
-    msgErrors = [],
-    errType = 0,
-    isValid = true,
-    error = "";
+        var mensaje = "",
+        msgErrors = [],
+        errType = 0,
+        isValid = true,
+        error = "";
 
-    for (var i = 0; i < type.length; i++) {
+        for (var i = 0; i < type.length; i++) {
 
-        $(type[i].field.input).each(function () {
-            var element = $(this).val(),
-            error = "";
-            elementType = type[i].field.type,
-            id = elementType + "-" + errType++;
+            $(type[i].field.input).each(function () {
+                var element = $(this).val(),
+                error = "";
+                elementType = type[i].field.type,
+                id = elementType + "-" + errType++;
 
-            $(this).attr('id', "");
-            if ($.trim(element).length <= 0) {
-                mensaje = "Campo obligatorio";
-                error = "<label class='error'>" + mensaje + "</label>";
-
-            }
-            if (type[i].field.valiation == "numeric" && ($.trim(element).length !== 0)) {
-                if (!validateNumbers(element)) {
-
-                    mensaje = "Campo númerico";
+                $(this).attr('id', "");
+                if ($.trim(element).length <= 0) {
+                    mensaje = "Campo obligatorio";
                     error = "<label class='error'>" + mensaje + "</label>";
 
                 }
-            }
+                if (type[i].field.valiation == "numeric" && ($.trim(element).length !== 0)) {
+                    if (!validateNumbers(element)) {
 
-            if (type[i].field.valiation == "alfanúmerico") {
+                        mensaje = "Campo númerico";
+                        error = "<label class='error'>" + mensaje + "</label>";
 
-                if (!validateAlphaNumeric(element) && ($.trim(element).length !== 0)) {
-
-                    mensaje = "Campo alfanúmerico";
-                    error = "<label class='error'>" + mensaje + "</label>";
-
+                    }
                 }
-            }
-            $(".error").remove();
 
-            $(this).attr('id', id);
-            msgErrors.push({pair: {id: id, error: error}});
-            isValid = addMessages(msgErrors);
+                if (type[i].field.valiation == "alfanúmerico") {
+
+                    if (!validateAlphaNumeric(element) && ($.trim(element).length !== 0)) {
+
+                        mensaje = "Campo alfanúmerico";
+                        error = "<label class='error'>" + mensaje + "</label>";
+
+                    }
+                }
+                $(".error").remove();
+
+                $(this).attr('id', id);
+                msgErrors.push({pair: {id: id, error: error}});
+                isValid = addMessages(msgErrors);
 
 
-        }).get();
+            }).get();
 
+
+        }
+        return isValid;
+    }
+
+    function validateAlphaNumeric(text) {
+
+        var exp = new RegExp(/^[A-Za-z\d\s]+$/);
+
+        return  exp.test(text);
 
     }
-    return isValid;
-}
 
-function validateAlphaNumeric(text) {
-
-    var exp = new RegExp(/^[A-Za-z\d\s]+$/);
-
-    return  exp.test(text);
-
-}
-
-function validateNumbers(text) {
+    function validateNumbers(text) {
 
     //var exp = new RegExp(/^[0-9]$/);
     var exp = new RegExp(/^[0-9]+([.][0-9]+)?$/);
@@ -2268,25 +2347,25 @@ function saveInvidualCoverage(interesId,interesNumero){
           {    
 
             if ($.isEmptyObject(data.session) == false) {
-                    window.location = phost() + "login?expired";
-                }
-                else if(data==="success"){
-                  $("#IndCoberturas").modal("hide");  
-                  toastr.success('Se han Guardado los cambios correctamente para Interés <b>'+interesNumero);
-              }else{
-                toastr.error('Ocurrio un error al Guardar las coberturas para Interés <b>'+interesNumero);
-              }                 
-               
-          }
-      });   
+                window.location = phost() + "login?expired";
+            }
+            else if(data==="success"){
+              $("#IndCoberturas").modal("hide");  
+              toastr.success('Se han Guardado los cambios correctamente para Interés <b>'+interesNumero);
+          }else{
+            toastr.error('Ocurrio un error al Guardar las coberturas para Interés <b>'+interesNumero);
+        }                 
+
+    }
+});   
     }
 }
 
 function getValuesFromArrayInput(inputsName){
 
     return $("input[name='"+inputsName+"[]']").map(function () {
-                return $(this).val();
-            }).get();
+        return $(this).val();
+    }).get();
 
 }
 
@@ -2297,15 +2376,15 @@ function constructJSONArray(jsonName1,jsonName2,namesArray,valuesArray){
         nombre= namesArray[i];
         valor = valuesArray[i];
         json.push( {[jsonName1] : nombre,
-         [jsonName2] :valor});
+           [jsonName2] :valor});
     }
     return json;
 }
 
 function drawInputsInCoverageInModal(id,btnAdd,stringId,del_row){
- var wrapper = $("#"+id); 
- var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
- $("#"+btnAdd).unbind().click(function(e){
+   var wrapper = $("#"+id); 
+   var parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+   $("#"+btnAdd).unbind().click(function(e){
     e.preventDefault();
     appendHtmlTag(wrapper,parameters,stringId,del_row,undefined);
     $(".moneda").inputmask('currency',{
@@ -2338,9 +2417,9 @@ function appendHtmlTag(wrapper,parameters,stringId,del_row,inputValue){
   $(wrapper).append(text);   
 }
 function  populateStoredCovergeData(id,stringId,del_row,coverage,nombre,monetario){
-   wrapper = $("#"+id); 
-   parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
-   for (var i = coverage.length - 1; i >= 0; i--) {
+ wrapper = $("#"+id); 
+ parameters = "'"+id+"','"+del_row+"','"+stringId+"'";
+ for (var i = coverage.length - 1; i >= 0; i--) {
     var value = coverage[i];
     var attribute={
         nombre: value[nombre],

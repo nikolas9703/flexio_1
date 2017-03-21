@@ -36,5 +36,11 @@ $config['subpanels'] = [
         'view' => 'ocultotabla',
         'nombre' => 'Documentos',
         'icono' => ''
+    ],
+    'agentes' => [
+        'modulo' => 'agentes',
+        'view' => 'ocultotablatab',
+        'nombre' => 'Agentes',
+        'icono' => ''
     ]
 ];

@@ -262,7 +262,7 @@ private function _getDeducciones($deducciones)
         {
             if(isset($clause['empresa_id']) and !empty($clause['empresa_id'])){$query->whereEmpresaId($clause['empresa_id']);}
             if(isset($clause['centro_contable_id']) and !empty($clause['centro_contable_id'])){$query->whereCentroContableId($clause['centro_contable_id']);}
-            if(isset($clause['estado_id']) and !empty($clause['estado_id'])){$query->whereEstado($clause['estado_id']);}
+            if(isset($clause['estado_id']) and !empty($clause['estado_id'])){$query->whereEstadoId($clause['estado_id']);}
         }
 
         public function count($clause = array())

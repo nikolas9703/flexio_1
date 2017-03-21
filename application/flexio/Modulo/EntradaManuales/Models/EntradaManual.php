@@ -64,7 +64,8 @@ class EntradaManual extends Model
         return $this->hasMany('Comentario_orm','entrada_id');
     }
 
-    public function landing_comments() {
+    public function landing_comments()
+    {
         return $this->morphMany('Flexio\Modulo\Comentario\Models\Comentario', 'comentable');
     }
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class AgentesRamos extends Model
 {
     protected $table = 'agt_agentes_ramos';
-    protected $fillable = ['id_agente','id_ramo', 'participacion'];
+    protected $fillable = ['id_agente','id_ramo', 'participacion', 'id_cliente', 'detalle_unico'];
     protected $guarded = ['id'];
     public $timestamps = false;
 

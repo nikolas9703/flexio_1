@@ -18,11 +18,12 @@ $(function(){
         erptkn: tkn,
         orden_compra_id: (typeof orden_compra_id !== 'undefined') ? _.toString(orden_compra_id) : '',
         factura_compra_id: (typeof factura_compra_id !== 'undefined') ? _.toString(factura_compra_id) : '',
-        item_id: (typeof sp_item_id !== 'undefined') ? _.toString(sp_item_id) : ''
+        item_id: (typeof sp_item_id !== 'undefined') ? _.toString(sp_item_id) : '',
+        orden_pedidos_multiple: typeof pedidos_multiple !== 'undefined' || typeof ordenes_multiple !== 'undefined' ? 1 : ''
       };
 
       //Parametros guardados en localStorage
-      if (multiselect && typeof(Storage) !== "undefined") {
+      if (multiselect && typeof(Storage) !== "undefined" && window.location.href.match(/ver/gi)==null) {
         if(typeof localStorage.pd_fecha1 != "undefined" && localStorage.pd_fecha1 != "null" && localStorage.pd_fecha1 !=""){
           data.fecha1 = localStorage.pd_fecha1;
         }
@@ -139,6 +140,9 @@ $(function(){
             '',
             '',
             '',
+            '',
+            '',
+            '',
             ''
         ],
         colModel:[
@@ -150,7 +154,10 @@ $(function(){
             {name:'link', index:'link', width:50, align:"center", sortable:true, resizable:false, hidedlg:true},
             {name:'options', index:'options', hidedlg:true, hidden: true},
             {name:'centro_id', index:'centro_id', hidedlg:true, hidden: true},
+            {name:'centro_uuid', index:'centro_uuid', hidedlg:true, hidden: true},
             {name:'bodega_id', index:'bodega_id', hidedlg:true, hidden: true},
+            {name:'bodega_uuid', index:'bodega_uuid', hidedlg:true, hidden: true},
+            {name:'pedido_id', index:'pedido_id', hidedlg:true, hidden: true},
         ],
         mtype: "POST",
         postData: getParametrosFiltroInicial(),
@@ -339,8 +346,8 @@ $(function(){
     e.returnValue=false;
     e.stopPropagation();
     var pedido_id = $(this).attr("data-id");
-    var html = '';       
-    _.each(estados, function(index) { 
+    var html = '';
+    _.each(estados, function(index) {
         html += '<a href="#" id="por_enviar" data-id="'+ pedido_id +'" data-estado="'+ index.id_cat +'" class="btn btn-block btn-outline btn-default cambiandoEstado estadop-modal'+ index.id_cat +'">'+ index.etiqueta +'</a>';
     });
     $("#optionsModal").find('.modal-title').empty().append('Cambiar estado');
@@ -354,8 +361,8 @@ $(function(){
     e.returnValue=false;
     e.stopPropagation();
     var pedido_id = $(this).attr("data-id");
-    var html = '';       
-    _.each(estados, function(index) {      
+    var html = '';
+    _.each(estados, function(index) {
         html += '<a href="#" id="por_enviar" data-id="'+ pedido_id +'" data-estado="'+ index.id_cat +'" class="btn btn-block btn-outline btn-default cambiandoEstado estadop-modal'+ index.id_cat +'">'+ index.etiqueta +'</a>';
     });
     $("#optionsModal").find('.modal-title').empty().append('Cambiar estado');
@@ -371,9 +378,9 @@ $(function(){
     e.stopPropagation();
     console.log("guajaaMULTI");
     var pedido_id = [];
-    pedido_id = $("#pedidosGrid").jqGrid('getGridParam','selarrrow');    
-    var html = '';       
-    _.each(estados, function(index) {      
+    pedido_id = $("#pedidosGrid").jqGrid('getGridParam','selarrrow');
+    var html = '';
+    _.each(estados, function(index) {
         html += '<a href="#" id="por_enviar" data-id="'+ pedido_id +'" data-estado="'+ index.id_cat +'" class="btn btn-block btn-outline btn-default cambiandoEstado estadop-modal'+ index.id_cat +'">'+ index.etiqueta +'</a>';
     });
     $("#optionsModal").find('.modal-title').empty().append('Cambiar estado');
@@ -385,12 +392,12 @@ $(function(){
     //Cambiar estado desde modal
     $("#optionsModal").on("click", ".cambiandoEstado", function(e){
         var pedido_id = $(this).attr("data-id");
-        var estado_id = $(this).attr("data-estado");    
+        var estado_id = $(this).attr("data-estado");
         cambiar_estado(pedido_id, estado_id);
         setTimeout(function () {
             $("#optionsModal").modal('hide');
         }, 500);
-    }); 
+    });
         //-------------------------
 	// Boton de opciones - ANULAR
 	//-------------------------
@@ -428,7 +435,7 @@ $(function(){
             var nombre = '';
             var uuid = $(this).attr("data-uuid");
             var rowINFO = $("#pedidosGrid").getRowData(uuid);
-	    var options = confirmacion;
+	          var options = confirmacion;
 
 
             nombre = rowINFO["numero"];
@@ -442,6 +449,20 @@ $(function(){
             $(".modal_aceptar").data("url","pedidos/ajax-reabrir");
             $(".modal_aceptar").data("uuid",uuid);
 	});
+
+        //-------------------------
+  // Boton de opciones - IMPRIMIR
+  //-------------------------
+  $("#optionsModal").on("click", ".imprimir-pedido", function(e){
+            e.preventDefault();
+            e.returnValue=false;
+            e.stopPropagation();
+
+            var id = $(this).attr("data-id");
+            $("#pedido").val(id);
+            $("#formImprimirPedido").submit();
+            $("#optionsModal").modal('hide');
+  });
 
         //-------------------------
 	// Boton de opciones - MODAL CANCELAR CONFIRMACION
@@ -585,7 +606,7 @@ console.log(numero);
   setBusquedaDeLocalStorage();
 });
 
-var cambiar_estado = function (pedido_id, estado_id) {  
+var cambiar_estado = function (pedido_id, estado_id) {
         $.ajax({
             url: phost() + "pedidos/ajax-cambiar-estado",
             type:"POST",
@@ -595,12 +616,12 @@ var cambiar_estado = function (pedido_id, estado_id) {
                 estado_id: estado_id
             },
             dataType:"json",
-            success: function(data){                    
+            success: function(data){
     				if (!_.isEmpty(data)) {
-    					toastr[data.response ? 'success' : 'error'](data.mensaje);  
-              recargar();           
+    					toastr[data.response ? 'success' : 'error'](data.mensaje);
+              recargar();
     				}
-    			
+
             }
 
         });

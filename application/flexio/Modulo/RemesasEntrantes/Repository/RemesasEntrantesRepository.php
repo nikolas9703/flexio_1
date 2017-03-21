@@ -48,7 +48,9 @@ class RemesasEntrantesRepository {
 						}
 						if($sidx=='usuario_id')
 						{
-							$remesas_entrantes->orderBy('usuarios.nombre','usuarios.apellido', $sord);
+							$remesas_entrantes->orderBy('usuarios.nombre', $sord)
+							->orderBy('usuarios.apellido',$sord);
+							//$remesas_entrantes->orderBy('usuarios.nombre','usuarios.apellido', $sord);
 						}
 						else{
 							$remesas_entrantes->orderBy($sidx, $sord);

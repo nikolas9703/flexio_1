@@ -16,6 +16,8 @@ use Flexio\Modulo\Pagos\Transacciones\PagosProveedor;
 use Flexio\Modulo\Pagos\Validators\PagoValidator;
 use Flexio\Modulo\Politicas\Models\Politicas;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
+use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
+use Flexio\Modulo\Pagos\Models\PagosPagables;
 
 class GuardarPagos{
     protected $request;
@@ -31,34 +33,69 @@ class GuardarPagos{
         $this->AuthUser = new AuthUser();
     }
 
-    function save($data){
-
+    function save($data,$metodo_pago_reg=null,$pagables=null){
         $data['campo']['empresa_id'] = $this->session->empresaId();
+		
         if(array_get($data, 'campo.id', '') !=''){
             return $this->actualizar($data);
         }
-         return $this->crear($data);
+         return $this->crear($data,$metodo_pago_reg,$pagables);
     }
 
-    function crear($campo){
-
-        return  Capsule::transaction(function() use($campo){
+    function crear($campo,$metodo_pago_reg=null,$pagables=null){
+	
+        return  Capsule::transaction(function() use($campo, $metodo_pago_reg, $pagables){
             $this->PagoValidator->post_validate($campo);
             $campo["campo"]['codigo'] = Pagos::whereEmpresaId($campo["campo"]['empresa_id'])->count() + 1;
             $pago = Pagos::create($campo["campo"]);
             if($pago->empezable_type == "anticipo"){
                 $anticipo = Anticipo::find($pago->empezable_id);
                 $this->saveAnticipo($pago,$campo,$anticipo);
-            }else{
+            }
+			else if($pago->empezable_type == "participacion")
+			{
+				$metodo_pago_hon['tipo_pago']=$metodo_pago_reg['tipo_pago'];
+				$metodo_pago_hon['total_pagado']=$metodo_pago_reg['total_pagado'];
+			}
+			else{
                 $pago->facturas()->sync($this->_getSyncFacturas($campo));
             }
 
             //validate creating...
             $campo["campo"]["estado"] = 'creado';
             $this->PagoValidator->change_state_validate($pago, $campo);
-
-            $metodo_pago = $pago->metodo_pago()->firstOrNew($campo['metodo_pago'][0]);
-            $metodo_pago->save();
+			
+			if($pago->empezable_type !== "participacion")
+			{
+				$metodo_pago = $pago->metodo_pago()->firstOrNew($campo['metodo_pago'][0]);
+				$metodo_pago->save();
+			}
+			else
+			{
+				$metodo_pago = $pago->metodo_pago()->firstOrNew($metodo_pago_hon);
+				$metodo_pago->save();
+				
+				$totalmontopago=0;
+				foreach($pagables as $pag)
+				{
+					//consulto el monto de cada agente de participacion
+					$monto=ComisionesSeguros::find($pag);
+					
+					$paga['pago_id']=$pago->id;
+					$paga['pagable_id']=$monto->id;
+					$paga['pagable_type']='Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros';
+					$paga['monto_pagado']=$monto->monto_recibo;
+					$paga['empresa_id']=$campo["campo"]['empresa_id'];
+					
+					$pagospagables=PagosPagables::create($paga);
+					
+					$totalmontopago+=$monto->monto_recibo;
+				}
+				
+				/*$pagoupdate['monto_pagado']=$totalmontopago;
+				$pagoupdate['estado']='por_aplicar';
+				$pago=Pagos::find($pago->id)->update($pagoupdate);*/
+			}
 
             return $pago;
         });

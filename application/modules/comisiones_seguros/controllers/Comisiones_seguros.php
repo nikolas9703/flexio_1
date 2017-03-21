@@ -52,7 +52,7 @@ class Comisiones_seguros extends CRM_Controller
 		$this->SegComisionesParticipacion=new SegComisionesParticipacion();
     }
 	
-	 public function ocultotabla($id_cliente = NULL)
+	public function ocultotabla($id_cliente = NULL)
     {
 
         // If ajax request
@@ -122,15 +122,25 @@ class Comisiones_seguros extends CRM_Controller
 			$estado='Por liquidar';
 		else if($comision->estado=='liquidada')
 			$estado='Liquidada';
+		else if($comision->estado=='pagada')
+			$estado='Pagada';
+		else if($comision->estado=='pagada_parcial')
+			$estado='Pagada parcial';
 		else
 			$estado='Con diferencia';
 		
 		if($comision->id_remesa!="")
 		{
 			$remesa=$comision->datosRemesa->no_remesa;
+			$fecha_liqui=$comision->datosRemesa->fecha_liquidada;
 		}
 		else
+		{
 			$remesa='';
+			$fecha_liqui='';
+		}
+		
+		
 		
 		$participacioncomision=$this->SegComisionesParticipacion->where('comision_id',$comision->id)->get();
 		$data["campos"] = array(
@@ -140,7 +150,7 @@ class Comisiones_seguros extends CRM_Controller
 				"no_recibo" => $comision->datosCobro->codigo,
 				"cliente" => $comision->cliente->nombre,
 				"ramo" => $comision->datosRamos->nombre,
-				"impuesto_pago" => $comision->impuesto_pago,
+				"impuesto_pago" => number_format($comision->impuesto_pago,2),
 				"pago_sobre_prima" => number_format($comision->pago_sobre_prima,2),
 				"sobre_comision" => $comision->sobre_comision,
 				"monto_scomision" => number_format($comision->monto_scomision,2),
@@ -157,7 +167,7 @@ class Comisiones_seguros extends CRM_Controller
 				"estado" => $estado,
 				"comision_recibir"=>number_format(($comision->monto_comision + $comision->monto_scomision),2),
 				"comision_descontada"=>number_format($comision->comision_descontada,2),
-				"fecha_liquidacion" => $comision->datosRemesa->fecha_liquidada,
+				"fecha_liquidacion" => $fecha_liqui,
 				"comision_pagada" => number_format($comision->comision_pagada,2),
 				"participacioncomision"=>$participacioncomision
 			),
@@ -310,10 +320,16 @@ class Comisiones_seguros extends CRM_Controller
 					$clase_estado='background-color: #fc0d1b';
 					$estado='Con diferencia';
 				}
-				else if($row->estado=='pagado')
+				else if($row->estado=='pagada')
 				{
 					$clase_estado='background-color: #5cb85c';
 					$estado='Pagada';
+				}
+				
+				else if($row->estado=='pagada_parcial')
+				{
+					$clase_estado='background-color: #6ede6e';
+					$estado='Pagada parcial';
 				}
 				
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'. $row->id .'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
@@ -370,8 +386,12 @@ class Comisiones_seguros extends CRM_Controller
 				$estado='Con diferencia';
 			else if($row->estado=='por_liquidar')
 				$estado='Por liquidar';
-			if($row->estado=='liquidada')
+			else if($row->estado=='liquidada')
 				$estado='Liquidada';
+			else if($row->estado=='pagada')
+				$estado='Pagada';
+			else if($row->estado=='pagada_parcial')
+				$estado='Pagada parcial';
 			
 			$csvdata[$i]['no_comision'] = $row->no_comision;
 			$csvdata[$i]["no_recibo"] = $row->codigo_cobro;
@@ -408,6 +428,10 @@ class Comisiones_seguros extends CRM_Controller
 			$estado='Por liquidar';
 		else if($comision->estado=='liquidada')
 			$estado='Liquidada';
+		else if($comision->estado=='pagada')
+			$estado='Pagada';
+		else if($comision->estado=='pagada_parcial')
+			$estado='Pagada parcial';
 		else
 			$estado='Con diferencia';
 		

@@ -1,5 +1,5 @@
 <template>
-<div class="row">
+<div class="row" id="agentes_otros">
 	<div class="col-md-12">
 		<div class="ibox float-e-margins border-bottom">
 			<div class="ibox-title">
@@ -17,7 +17,7 @@
 							<thead>
 								<tr>
 									<th width="50%">Línea de negocio o Centro contable</th>
-									<th width="50%">Asigando a</th>
+									<th width="50%">Asignado a</th>
 									<th width="1%"></th>
 								</tr>
 							</thead>

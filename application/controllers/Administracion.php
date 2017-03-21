@@ -62,7 +62,7 @@ class Administracion extends CRM_Controller{
   function guardar_password(){
     $usuario = AuthUser::getUser();
     $current_password = $this->input->post('campo[current_password]');
-    $password = $this->input->post('campo[current_password]');
+    $password = $this->input->post('campo[password]');
     $this->encrypt->set_cipher(MCRYPT_RIJNDAEL_256);
     if($this->encrypt->decode($usuario->password) != $current_password) {
       $mensaje = array('titulo' =>'cambiar contrase&ntilde;a','tipo' => 'error', 'mensaje' => '<b>¡Error!</b> Las Contrase&ntilde;a no coinciden con la anterior');

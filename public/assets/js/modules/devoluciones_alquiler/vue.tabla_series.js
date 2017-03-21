@@ -1,10 +1,10 @@
 
 var entrega_item = Vue.component('tabla_series',{
-    
+
     template:'#tabla_series',
-    
+
     props: ['parent_index','parent_entregas'],
-    
+
       events:{
          refrescarEntregaItem:function(){
              var context = this;
@@ -14,10 +14,10 @@ var entrega_item = Vue.component('tabla_series',{
              var context = this;
             context.myReadyContrato();
          }
-         
-        
+
+
     },
-    
+
     data: function()
     {
         return {
@@ -26,10 +26,10 @@ var entrega_item = Vue.component('tabla_series',{
              bodegas: JSON.parse(bodegasArray),
              articulos:[],
          };
-        
+
     },
-    
-    methods: 
+
+    methods:
     {
     	myReadyContrato:function()
         {
@@ -37,9 +37,9 @@ var entrega_item = Vue.component('tabla_series',{
             var item = _.find(context.parent_entregas.items, function(item){
                return item.id == context.parent_entregas.item_id;
             });
-            
+
             var devolucion_alquiler_json = (context.vista == 'editar')?JSON.parse(devolucion_alquiler):[];
-           
+
             var cantidad_restante = context.parent_entregas.cantidad_restante;
             var serializable = (item.tipo_id == '5' || item.tipo_id == '8');
             context.articulos = [];
@@ -50,7 +50,7 @@ var entrega_item = Vue.component('tabla_series',{
             }
           if(context.vista == 'editar')
           {
-       	    
+
                 _.forEach(context.parent_entregas.detalles, function(detalle){
                	 if(detalle.operacion_id == devolucion_alquiler_json.id){
                		 context.articulos.push({
@@ -63,15 +63,15 @@ var entrega_item = Vue.component('tabla_series',{
                             estado_item_devuelto: detalle.estado_item_devuelto,
                             ubicacion_id: detalle.bodega_id,
                             disabledAddRow:true
-                             
+
                          });
                	 }
-                      
-               });  
+
+               });
           }
           else if(serializable)
            {
-       	   	    
+
 	        	   var contador = 0;
 	    		   var cantidad_restante = context.parent_entregas.cantidad_alquiler;
  	        	   _.forEach(context.parent_entregas.detalles, function(detalle){
@@ -86,23 +86,23 @@ var entrega_item = Vue.component('tabla_series',{
 			                           estado_item_devuelto: detalle.estado_item_devuelto,
 			                           ubicacion_id: detalle.bodega_id,
 			                           disabledAddRow:true
-			                       });   
-		 	                   
+			                       });
+
 			                    contador = contador + 1;
-		
+
 		  	        	   }
- 	           });   
+ 	           });
 
            }
            else
            {
-           	 
+
             	 _.forEach(context.parent_entregas.detalles, function(detalle){
-            		 
-             		 
-            		 
+
+
+
             		if(context.parent_entregas.entrega_id == detalle.operacion_id){
-            			
+
             			context.articulos.push({
 		                       serializable: false,
 		                       serie: detalle.serie,
@@ -114,25 +114,24 @@ var entrega_item = Vue.component('tabla_series',{
 		                       estado_item_devuelto:  '',
 		                       ubicacion_id:  '',
 		                       disabledAddRow:true
-		                   }); 
+		                   });
             		}
- 			               	  
+
              	});
-            	 
+
            }
         },
         myReady:function()
         {
-            
              var context = this;
              var item = _.find(context.parent_entregas.items, function(item){
-                return item.id == context.parent_entregas.item_id;
+                return typeof item != 'undefined' && item.id == context.parent_entregas.item_id;
              });
-             
+
              var devolucion_alquiler_json = (context.vista == 'editar')?JSON.parse(devolucion_alquiler):[];
-            
+
              var cantidad_restante = context.parent_entregas.cantidad_restante;
-             var serializable = (item.tipo_id == '5' || item.tipo_id == '8');
+             var serializable = typeof item != 'undefined' ? (item.tipo_id == '5' || item.tipo_id == '8') : false;
              context.articulos = [];
               if(devolucion_alquiler_json.estado_id > 1){
             	 context.estadoDevuelto =  true;
@@ -141,7 +140,7 @@ var entrega_item = Vue.component('tabla_series',{
              }
            if(context.vista == 'editar')
            {
-        	    
+
                  _.forEach(context.parent_entregas.detalles, function(detalle){
                 	 if(detalle.operacion_id == devolucion_alquiler_json.id){
                 		 context.articulos.push({
@@ -154,19 +153,19 @@ var entrega_item = Vue.component('tabla_series',{
                              estado_item_devuelto: detalle.estado_item_devuelto,
                              ubicacion_id: detalle.bodega_id,
                              disabledAddRow:true
-                              
+
                           });
                 	 }
-                       
-                });  
+
+                });
            }
            else if(serializable)
             {
-        	   	    
+
 	        	   var contador = 0;
 	    		   var cantidad_restante = context.parent_entregas.cantidad_alquiler;
   	        	   _.forEach(context.parent_entregas.detalles, function(detalle){
-  	        		 //if(detalle.operacion_id == devolucion_alquiler_json.id){  
+  	        		 //if(detalle.operacion_id == devolucion_alquiler_json.id){
 		 	        		 if(contador < cantidad_restante){
 			        			   context.articulos.push({
 			                           serializable: serializable,
@@ -178,18 +177,18 @@ var entrega_item = Vue.component('tabla_series',{
 			                           estado_item_devuelto: detalle.estado_item_devuelto,
 			                           ubicacion_id: detalle.bodega_id,
 			                           disabledAddRow:true
-			                       });   
-		 	                   
+			                       });
+
 			                    contador = contador + 1;
-		
+
 		  	        	   }
   	        		 //}
-	           });   
+	           });
 
             }
             else
             {
-            	 
+
              	 _.forEach(context.parent_entregas.detalles, function(detalle){
               		  if(detalle.operacion_id == context.parent_entregas.id_empezable){
 			               	  context.articulos.push({
@@ -203,15 +202,15 @@ var entrega_item = Vue.component('tabla_series',{
 			                       estado_item_devuelto:  '',
 			                       ubicacion_id:  '',
 			                       disabledAddRow:true
-			                   }); 
+			                   });
              		  }
              	});
-             	 
+
             }
-             	 
+
          },
-        
-        
+
+
         addRow:function(e)
         {
             var context = this;
@@ -220,7 +219,7 @@ var entrega_item = Vue.component('tabla_series',{
             });
             var serializable = (item.tipo_id == '5' || item.tipo_id == '8');
             e.preventDefault();
-            
+
             context.articulos.push({
                 serializable: serializable,
                 serie:'',
@@ -229,18 +228,18 @@ var entrega_item = Vue.component('tabla_series',{
                 fecha_devolucion_estimada:'',
                 disabledAddRow:true
             });
-            
+
             context.verificaCantidad();
             context.activarDatepicker();
         },
-        
+
         removeRow:function(index, e)
         {
             e.preventDefault();
             this.articulos.splice(index,1);
             this.verificaCantidad();
         }
-        
+
     }
-    
+
 });

@@ -33,7 +33,9 @@ class PagosRepository implements PagosInterface{
     public function findByUuid($uuid){
         return Pagos::where("uuid_pago",hex2bin($uuid))->first();
     }
-
+    function find($id) {
+   		return Pagos::find($id);
+  	}
     public function anular_pago($pago_id)
     {
         $pago = Pagos::find($pago_id);
@@ -152,13 +154,15 @@ class PagosRepository implements PagosInterface{
 
     public function getColletionPago($pago)
     {
-
-        if($pago->empezable_type == "anticipo"){
+		if($pago->empezable_type == "anticipo"){
             return $this->pago_anticipo($pago);
         }else if($pago->formulario == "retenido"){
             return $this->pago_retenido($pago);
         }else if($pago->formulario == "movimiento_monetario"){
             return $this->pago_movimiento_monetario($pago);
+        }
+		else if($pago->empezable_type == "participacion"){
+            return $this->pago_participacion($pago);
         }
         $proveedor = is_null($pago->proveedor)? []: $this->formatProveedor($pago->proveedor);
         return collect(array_merge(
@@ -287,8 +291,8 @@ class PagosRepository implements PagosInterface{
             $apellido = !empty($pago->colaborador) && !empty($pago->colaborador->apellido) ? $pago->colaborador->apellido : '';
             $nombre_pago ="$nombre $apellido";
         }
-        
-        
+
+
         return [
             $pago->numero_documento,
             $pago->created_at,
@@ -358,6 +362,31 @@ class PagosRepository implements PagosInterface{
                         'monto_pagado' => $anticipo->pivot->monto_pagado,
                         'pagable_id' => $anticipo->pivot->pagable_id,
                         'pagable_type' => $pagable_type
+                    ];
+                }),
+                'metodos_pago' => $pago->metodo_pago
+            ]
+        ));
+    }
+	
+	function pago_participacion($pago){
+        $pagable_id = $pago->empezable_id;
+        $pagable_type = 'Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros';
+        $proveedor = is_null($pago->proveedor)? []: $this->formatProveedor($pago->proveedor);
+		
+		return collect(array_merge(
+            $pago->toArray(),
+            [   'proveedor' => $proveedor,
+                'pagables' => $pago->honorario->map(function($comision){
+                    return [
+                        'numero_documento' => $comision->no_comision,
+                        'fecha_emision' => $comision->fecha,
+                        'total' => $comision->monto_recibo,
+                        'pagado' => $comision->monto_recibo,
+                        'saldo' => $comision->monto_recibo,
+                        'monto_pagado' => $comision->pivot->monto_pagado,
+                        'pagable_id' => $comision->pivot->pagable_id,
+                        'pagable_type' => $comision->pivot->pagable_type
                     ];
                 }),
                 'metodos_pago' => $pago->metodo_pago

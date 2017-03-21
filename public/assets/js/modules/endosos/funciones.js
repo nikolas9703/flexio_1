@@ -7,7 +7,8 @@ function getPoliza(estado){
         $('#subPanels').addClass('hidden');
         $('#subPanelPoliza').removeClass('hidden');
         $('#fecha_afectacion').attr('data-rule-required','true');
-        formularioCrear.habilitarPoliza();
+        formularioCrear.getIntereses();
+        formularioCrearEndosos.habilitarPoliza();
     }else{
 
         $('#cancelar_endoso').removeClass('hidden');
@@ -15,17 +16,15 @@ function getPoliza(estado){
         $('#subPanels').removeClass('hidden');
         $('#subPanelPoliza').addClass('hidden');
     }
-
 }
 
-
 $(document).ready(function(){
-
+    var interesesEndosos;
 	$('#CrearEndososForm').validate({
 
         submitHandler: function (form) {
-            $('#id_ramo').attr('disabled',false);
-            $('#cliente_id').attr('disabled',false);
+            $('#id_ramo_endoso').attr('disabled',false);
+            $('#cliente_id_endoso').attr('disabled',false);
             $('#id_poliza').attr('disabled',false);
             $('#tipo_endoso').attr('disabled',false);
             $('#motivo_endoso').attr('disabled',false);
@@ -51,11 +50,7 @@ $(document).ready(function(){
         $('#fendoso'+counter).remove();
     });
 
-    $('#id_ramo,#cliente_id,#id_poliza,#motivo_endoso').select2();
-
-    if(vista == "editar"){
-    	$('#documentos_endosos').empty();
-    }
+    $('#id_ramo_endoso,#cliente_id_endoso,#id_poliza,#motivo_endoso').select2();
 
     $('#imprimirEndososBtn').on('click', function(){
 
@@ -82,16 +77,24 @@ $(document).ready(function(){
 
     if(vista == "crear" && id_poliza != "" && tipo_endoso != "" && id_motivo != ""){
 
-        $('#id_ramo').attr('disabled',true);
-        $('#cliente_id').attr('disabled',true);
+        $('#id_ramo_endoso').attr('disabled',true);
+        $('#cliente_id_endoso').attr('disabled',true);
         $('#id_poliza').attr('disabled',true);
         $('#tipo_endoso').attr('disabled',true);
         $('#motivo_endoso').attr('disabled',true);
         verModificaPrima();
+
+    }else if(vista == "crear" && id_poliza != "" && tipo_endoso == "" && id_motivo == ""){
+
+        $('#id_ramo_endoso').attr('disabled',true);
+        $('#cliente_id_endoso').attr('disabled',true);
+        $('#id_poliza').attr('disabled',true);
     }
 
 
     if(vista == "editar"){
+
+        $('#documentos_endosos').empty();
 
         if(agtPrincipal != ""){
             $('.agentePrincipal').show();
@@ -102,9 +105,12 @@ $(document).ready(function(){
         }
 
         if( estado_endoso == "Aprobado" && tipo_endoso != 'Cancelación' ){
-
             getPoliza(estado_endoso);
         }
+
+        $('#id_ramo_endoso').attr('disabled',true);
+        $('#cliente_id_endoso').attr('disabled',true);
+        $('#id_poliza').attr('disabled',true);
 
     }
 

@@ -18,7 +18,7 @@ var tablaCatalogoTipoSubcontrato = (function(){
  		 datatype: "json",
  		 colNames:['Tipo de subcontrato','Confidencial','Estado','','','',''],
  		 colModel:[
-   		 {name:'valor', index:'valor', width:30, sortable:true},
+   		 {name:'nombre', index:'nombre', width:30, sortable:true},
    		 {name:'con_acceso', index:'con_acceso', width:50,  sortable:false, },
    		 {name:'estado', index:'estado', width:50,  sortable:false, },
    		 {name:'options', index:'options',width: 40, align:'center'},
@@ -93,7 +93,7 @@ var tablaCatalogoTipoSubcontrato = (function(){
         var rowINFO = gridObj.getRowData(id);
         var options = rowINFO.link;
         //Init Modal
-        opcionesModal.find('.modal-title').empty().append('Opciones: '+ rowINFO.valor +'');
+        opcionesModal.find('.modal-title').empty().append('Opciones: '+ rowINFO.nombre +'');
         opcionesModal.find('.modal-body').empty().append(options);
         opcionesModal.find('.modal-footer').empty();
         opcionesModal.modal('show');
@@ -108,7 +108,7 @@ var tablaCatalogoTipoSubcontrato = (function(){
   			var id = $(this).attr("data-id");
         var rowINFO = gridObj.getRowData(id);
         var activo = rowINFO.estado_value==true?'1':'0';
-        window.subcontratoConfiguracion.$broadcast('llenarFormulario', {id: id, valor: rowINFO.valor, con_acceso: rowINFO.con_acceso_value.toString(), activo: activo, guardarBtn: 'Guardar'});
+        window.subcontratoConfiguracion.$broadcast('llenarFormulario', {id: id, valor: rowINFO.nombre, con_acceso: rowINFO.con_acceso_value.toString(), activo: activo, guardarBtn: 'Guardar'});
         opcionesModal.modal('hide');
       });
 	};

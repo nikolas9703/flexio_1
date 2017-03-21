@@ -212,6 +212,6 @@ class NotaDebito extends Model
 
     public function getSaldoAttribute()
     {
-        return $this->total - $this->creditos_aplicados->sum('total');
+        return $this->total - $this->retenido - $this->creditos_aplicados->sum('total');
     }
 }

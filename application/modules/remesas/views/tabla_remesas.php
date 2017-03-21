@@ -6,10 +6,11 @@
     );
 ?>
 <?php echo form_open(base_url('remesas/guardar'), $formAttr); ?>
-<div class="row hidden" style="overflow:auto;" id="tabla_remesas"> <!-- style="margin-top:-50px;"  -->
+<div class="row hidden" id="tabla_remesas"> <!-- style="margin-top:-50px;" style="overflow:auto;" -->
     <table class="table" id="facturaItems" >
         <thead>
             <tr>
+            <th width="5%" style="text-align:center"><input type="checkbox" id="todos_recibos" name="todos_recibos" ></th>
             <th width="14%">No. Recibo</th>
             <th width="14%">No. Póliza</th>
             <th width="14%">Ramo</th>
@@ -28,6 +29,7 @@
         </thead>
         <tbody>
             <tr v-for="remesas in informacionRemesas" id="items{{$index}}" class="item-listing" style="background-color:#ffffff">
+                <td style="{{remesas.estilos}}; text-align:center"><input type="checkbox" value="{{remesas.id}}" name="recibos[]" id="recibo_{{remesas.id}}" class="recibos_check {{remesas.check}}"></td>
                 <td style="{{remesas.estilos}}">{{remesas.codigo}}</td>
                 <td style="{{remesas.estilos}}">{{remesas.numero_poliza}}</td>
                 <td style="{{remesas.estilos}}">{{remesas.nombre_ramo}}</td>
@@ -45,12 +47,11 @@
             </tr>
         </tbody>
     </table>
-
+    <input type="hidden" name="remesas[id_remesa]" id="id_remesa" value="{{id_remesa}}">
     <input v-for="cobro in cobros" type="hidden" name="id_cobros[]" id="id_cobros" value="{{cobro.id_cobro}}">
-    <input type="hidden" name="remesas[codigo_remesa]" id="codigo_remesa" value="{{codigo_remesa}}">
+    <input v-for="valor in valor_cobro" type="hidden" name="valor_cobro[]" id="valor_cobro" value="{{valor.valor_cobro}}">
     <input type="hidden" name="remesas[id_aseguradora]" id="id_aseguradora" value="">
     <input type="hidden" name="remesas[monto_remesa]" id="monto_remesa" value="">
-
     <input type="hidden" name="fecha_desde" id="fecha_desde_formulario" value="">
     <input type="hidden" name="fecha_hasta" id="fecha_hasta_formulario" value="">
     <input type="hidden" name="remesas[ramos]" id="id_ramos" value="">
@@ -68,6 +69,7 @@
         </div>
     </div>
 <?php echo form_close(); ?>
-    
+</div>
+<div class="row hidden" style="overflow:auto;" id="error">
 </div>
 

@@ -12,6 +12,9 @@ var centro = {
     limpiar: $("#clearBtn"),
     habilDestarCuentaBtn: 'a.habilDestarCuentaBtn',
     exportar: $("#exportarBtn"),
+    deshabilitar: $('#moduloOpciones').find('#deshabilitarBtn'),
+    habilitar: $('#moduloOpciones').find('#habilitarBtn')
+
   },
 
   init: function() {
@@ -197,6 +200,80 @@ var centro = {
 
       $("#formExportarCuentasContables").submit();
 
+    });
+
+    this.botones.deshabilitar.click(function(e) {
+
+      toastr.error('Se estan deshabilitando las cuentas...');
+      $.ajax({
+        url: phost() + 'contabilidad/ajax-deshabilitar-cuentas-total',
+        data: {
+          erptkn: tkn,
+        },
+        type: "POST",
+        dataType: "json",
+        cache: false,
+      }).done(function(json) {
+        //Check Session
+        if( $.isEmptyObject(json.session) == false){
+          window.location = phost() + "login?expired";
+        }
+        //If json object is empty.
+        if($.isEmptyObject(json) == true){
+          return false;
+        }
+        //Mostrar Mensaje
+        if(json.response == false){
+          toastr.error(json.mensaje);
+        }else {
+          //$(this).remove();
+          window.setTimeout(
+              $('#moduloOpciones').find('#deshabilitarBtn').empty().append('Habilitar').attr('id', '#habilitarBtn'),
+              1000);
+          window.location.reload();
+         // $("#moduloOpciones").hide().fadeIn('fast');
+         //$( "#moduloOpciones" ).load(window.location.href + " #moduloOpciones" );
+         // centro.recargar();
+
+        }
+      });
+    });
+
+    this.botones.habilitar.click(function(e) {
+
+      toastr.success('Se estan habilitando las cuentas...');
+      $.ajax({
+        url: phost() + 'contabilidad/ajax-habilitar-cuentas-total',
+        data: {
+          erptkn: tkn,
+          uuid_cuenta: window.uuid_cuenta
+        },
+        type: "POST",
+        dataType: "json",
+        cache: false,
+      }).done(function(json) {
+        //Check Session
+        if( $.isEmptyObject(json.session) == false){
+          window.location = phost() + "login?expired";
+        }
+        //If json object is empty.
+        if($.isEmptyObject(json) == true){
+          return false;
+        }
+        //Mostrar Mensaje
+        if(json.response == false){
+          toastr.error(json.mensaje);
+        }else {
+          //$(this).remove();
+          window.setTimeout(
+              $('#moduloOpciones').find('#habilitarBtn').empty().append('Deshabilitar').attr('id','#deshabilitarBtn'),
+              1000);
+          window.location.reload();
+          //$( "#moduloOpciones" ).load(window.location.href + " #moduloOpciones" );
+          //centro.recargar();
+
+        }
+      });
     });
   },
   recargar: function() {

@@ -1,10 +1,10 @@
 
-if (desde=="solicitudes" || desde=="poliza") {
+if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
       
     var tablaSolicitudesUbicacion = (function () {
 
     var unico = $("#detalleunico").val();
-    if(desde == "poliza"){
+    if(desde == "poliza" || desde == "endosos"){
         var id_poliza = $("#idPoliza").val();
         console.log(id_poliza);
         var tablaUrl = phost() + 'polizas/ajax_listar_ubicacion';
@@ -222,7 +222,7 @@ if (desde=="solicitudes" || desde=="poliza") {
         e.returnValue=false;
         e.stopPropagation();
 
-        if(desde == "poliza"){
+        if(desde == "poliza" || desde == "endosos"){
             var selInteres = $(this).attr("data-int-id");
             $("#selInteres").val(selInteres);
             $("#selInteres").trigger('change'); 

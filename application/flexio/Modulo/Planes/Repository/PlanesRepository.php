@@ -58,7 +58,10 @@ class PlanesRepository {
      function getPlanes($clause) {
         $query = Planes::with(array('comisiones' => function($query){     
                 }));
-        $query->where('id_ramo', '=', $clause['id_ramo']);       
+        if (!empty($clause['id_ramo']))
+            $query->where('id_ramo', '=', $clause['id_ramo']);       
+        if (!empty($clause['id_aseguradora']))
+            $query->where('id_aseguradora', '=', $clause['id_aseguradora']);     
         return $query;                
     }
 

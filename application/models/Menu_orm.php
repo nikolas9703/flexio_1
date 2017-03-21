@@ -107,6 +107,7 @@ class Menu_orm extends Model
 	 * y se agrupa en base a la columna grupo.
 	 */
 	public static function lista_menu_lateral($agrupador=NULL) {
+		error_log("pasa por hay");
 		if($agrupador==NULL){
 			return false;
 		}
@@ -143,12 +144,13 @@ class Menu_orm extends Model
 
 				//Verificar si es un arreglo de links
 				if(Util::is_two_dimensional($menu_data["link"]))
-				{               
+				{          
+					$posicion = 0;   
 					foreach($menu_data["link"] AS $menudata)
 					{
 						$nombre = !empty($menudata["nombre"]) ? $menudata["nombre"] : $result->nombre;
 						$url = !empty($menudata["url"]) && !empty($menudata["url"]) ? $menudata["url"] : "";
-						$orden = !empty($menudata["link"]) && !empty($menudata["orden"]) ? $menudata["orden"] : 0;
+						$orden = !empty($menudata["link"]) && !empty($menudata["orden"]) ? $menudata["orden"] : $posicion;
 							
 						$key = Util::multiarray_buscar_valor($controlador, "controlador", $menu);
 							
@@ -161,10 +163,10 @@ class Menu_orm extends Model
 								"orden" => $orden
 							);
 						}
+						$posicion++;
 					}
 					
 				}else {
-					
 					$nombre = !empty($menu_data["link"]["nombre"]) && !empty($menu_data["link"]["nombre"]) ? $menu_data["link"]["nombre"] : $result->nombre;
 					$url = !empty($menu_data["link"]) && !empty($menu_data["link"]["url"]) ? $menu_data["link"]["url"] : "";
 					$orden = !empty($menu_data["link"]) && !empty($menu_data["link"]["orden"]) ? $menu_data["link"]["orden"] : 0;

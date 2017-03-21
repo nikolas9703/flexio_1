@@ -171,11 +171,11 @@ var cuentas = {
 				var datos_cuenta = $.parseJSON(data);
 				$("#idEdicion").remove();
 				tablaPlanContable.formId.append('<input type="hidden" name="id" id="idEdicion" value="' + datos_cuenta.id + '">');
-				tablaPlanContable.formId.find('#nombre').val(datos_cuenta.nombre);
+				tablaPlanContable.formId.find('#nombre1').val(datos_cuenta.nombre);
 				$('#padre_id').val(datos_cuenta.padre_id);
 				$('#descripcion').val(datos_cuenta.detalle);
 				$('#codigo').val(datos_cuenta.codigo);
-				tablaPlanContable.formId.find('#impuesto').val(datos_cuenta.impuesto_id);
+				//tablaPlanContable.formId.find('#impuesto').val(datos_cuenta.impuesto_id);
 				tablaPlanContable.opcionesModal.modal("hide");
 			});
 
@@ -230,8 +230,7 @@ var cuentas = {
 						    var codigo = $.parseJSON(result);
 						    $('#codigo').val(codigo.codigo);
 						  });
-						}*/
-
+						*/
 					});
 					//$("#plan_cuentas").jstree(true).select_node(datos_cuenta.id.toString());
 					$('#addCuentaModal').find('.modal-title').empty().html('Editar: Cuenta Contable');

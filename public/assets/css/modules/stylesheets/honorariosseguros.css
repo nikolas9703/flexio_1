@@ -1,0 +1,86 @@
+/* line 4, ../sass/clientes.scss */
+
+table#honorariossegurosGrid label.totales-success {
+    border: #5cb85c solid 2px;
+    color: #5cb85c;
+    width:100px!important;
+} 
+    
+a.link { 
+  color: blue;
+  text-decoration: underline;
+}
+/* line 7, ../sass/clientes.scss */
+a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+
+/* line 13, ../sass/clientes.scss */
+table#honorariossegurosGrid a.link {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 16, ../sass/clientes.scss */
+table#honorariossegurosGrid a.link:visited {
+  color: blue;
+  text-decoration: underline;
+}
+/* line 21, ../sass/clientes.scss */
+table#honorariossegurosGrid .totales, table#honorariossegurosGrid label.totales-success, table#honorariossegurosGrid label.totales-warning, table#honorariossegurosGrid label.totales-danger, table#honorariossegurosGrid form#crearComisionesForm label.label-success-text, form#crearComisionesForm table#honorariossegurosGrid label.label-success-text, table#honorariossegurosGrid form#crearComisionesForm label.label-warning-text, form#crearComisionesForm table#honorariossegurosGrid label.label-warning-text, table#honorariossegurosGrid form#crearComisionesForm label.label-danger-text, form#crearComisionesForm table#honorariossegurosGrid label.label-danger-text {
+  width:  88% !important;
+  background: transparent;
+  padding: 2px 7px;
+  text-align: center;
+  font-weight: bold;
+}
+/* line 28, ../sass/clientes.scss */
+table#honorariossegurosGrid label.totales-success {
+  border: #5BB85C solid 2px;
+  color: #5BB85C;
+}
+/* line 34, ../sass/clientes.scss */
+table#honorariossegurosGrid label.totales-warning {
+  border: #F8AC59 solid 2px;
+  color: #F8AC59;
+}
+/* line 39, ../sass/clientes.scss */
+table#honorariossegurosGrid label.totales-danger {
+  border: #ED5565 solid 2px;
+  color: #ED5565;
+}
+
+/* line 47, ../sass/clientes.scss */
+form#crearComisionesForm p.middle-text {
+  vertical-align: middle;
+  height: 100%;
+  line-height: 100%;
+  padding-top: 46px;
+  font-weight: bold;
+}
+/* line 54, ../sass/clientes.scss */
+form#crearComisionesForm .totales, form#crearComisionesForm table#honorariossegurosGrid label.totales-success, table#honorariossegurosGrid form#crearComisionesForm label.totales-success, form#crearComisionesForm table#honorariossegurosGrid label.totales-warning, table#honorariossegurosGrid form#crearComisionesForm label.totales-warning, form#crearComisionesForm table#honorariossegurosGrid label.totales-danger, table#honorariossegurosGrid form#crearComisionesForm label.totales-danger, form#crearComisionesForm label.label-success-text, form#crearComisionesForm label.label-warning-text, form#crearComisionesForm label.label-danger-text {
+  width: 88% !important;
+  color: #FFFFFF;
+  padding: 5px 7px;
+  margin-top: 5px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+/* line 64, ../sass/clientes.scss */
+form#crearComisionesForm label.label-success-text {
+  border: #5BB85C solid 1px;
+  background-color: #5BB85C;
+}
+/* line 70, ../sass/clientes.scss */
+form#crearComisionesForm label.label-warning-text {
+  border: #F8AC59 solid 1px;
+  background-color: #F8AC59;
+}
+/* line 75, ../sass/clientes.scss */
+form#crearComisionesForm label.label-danger-text {
+  border: #ED5565 solid 1px;
+  background-color: #ED5565;
+}

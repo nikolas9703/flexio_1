@@ -284,11 +284,13 @@ class FacturaSeguroRepository implements FacturaSeguroInterface {
                             if(isset($clause['fecha_vencimiento_desde']))$query->where('fac_facturas.fecha_hasta','>=',$clause['fecha_vencimiento_desde']);
                             if(isset($clause['fecha_vencimiento_hasta']))$query->where('fac_facturas.fecha_hasta','<=',$clause['fecha_vencimiento_hasta']);
                             $query->where("fac_facturas.formulario", "facturas_seguro");
-                            
+                           
                         });
 
         $facturas->select("fac_facturas.id","fac_facturas.uuid_factura", "fac_facturas.codigo", "fac_facturas.fecha_desde", "fac_facturas.fecha_hasta", "fac_facturas.total", "cli_clientes.nombre", "fac_facturas.estado", "fac_facturas.centro_contable_id", "fac_facturas.cliente_id", "pol_polizas.numero", "pol_polizas.ramo", "pol_poliza_prima.sitio_pago");
         if ($sidx != NULL && $sord != NULL)
+            $facturas->orderByRaw('FIELD(fac_facturas.estado,"por_cobrar","cobrado_parcial","cobrado_completo","anulada")');
+            $facturas->orderBy('cli_clientes.nombre','asc');
             $facturas->orderBy($sidx, $sord);
         if ($limit != NULL)
             $facturas->skip($start)->take($limit);

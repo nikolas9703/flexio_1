@@ -15,7 +15,7 @@ class NotaCreditoProveedorAprobada
     function hacer(){
         $nota_debito = $this->notaCredito;
         $proveedor = Proveedores::find($nota_debito->proveedor_id);
-        $proveedor->credito += $nota_debito->total;
+        $proveedor->credito += $nota_debito->saldo;
         $proveedor->save();
     }
 }

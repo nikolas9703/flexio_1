@@ -138,38 +138,35 @@ class FacturaCompra extends Model
         return $this->refactura->count() > 0;
     }
 
+    public function debeRetener()
+    {
+        if(!count($this->proveedor))throw new \Exception('No se logro determinar el proveedor del registro (Requerido)');
+        return $this->empresa->retiene_impuesto == 'si' && $this->proveedor->retiene_impuesto == 'no' && $this->total > 0;
+    }
+
+    public function getTotalARetener()
+    {
+        if($this->debeRetener())
+        {
+            return round_up(round_up($this->impuestos) * 0.5);
+        }
+        return 0;
+    }
+
     /*Este saldo es utilizado para calculo de del total factura dinamico
       una vez que se paga la factura el saldo va disminuyendo
     */
     public function getSaldoAttribute()
     {
-        $nota_debito_total = $this->nota_debito()->where('compra_nota_debitos.estado', 'aprobado')->sum('compra_nota_debitos.total');
-        if ($this->empresa->retiene_impuesto == 'si' && $this->proveedor->retiene_impuesto == 'no' && $this->total > 0) {
+        $nota_debito_total = $this->nota_debito_aprobada->sum('total') - $this->nota_debito_aprobada->sum('retenido');
+        $aux = round_up($this->total)
+        - $this->getTotalARetener()
+        - $this->pagos_aplicados_suma
+        - $nota_debito_total
+        - $this->retencion// it is from subcontrato....
+        - $this->creditos_aplicados->sum('total');
 
-        // $aux = $this->total - number_format(($this->facturas_items->sum('retenido') + $this->pagos_aplicados_suma),2) - $nota_debito_total - $this->retencion; ORIGINAL
-        /*$retenido_itbm = round($this->facturas_items->sum('retenido'),2,PHP_ROUND_HALF_UP) + round($this->pagos_aplicados_suma,2) - round($nota_debito_total);
-
-         $aux = round($this->total,2,PHP_ROUND_HALF_UP) - round($retenido_itbm,2,PHP_ROUND_HALF_UP) - round($this->retencion,2,PHP_ROUND_HALF_UP);*/
-
-         $aux = round($this->total, 2, PHP_ROUND_HALF_UP)
-         - (round(round($this->impuestos, 2, PHP_ROUND_HALF_UP) * 0.5, 2, PHP_ROUND_HALF_UP) + $this->pagos_aplicados_suma)
-         - $nota_debito_total
-         - $this->retencion
-         - $this->creditos_aplicados->sum('total');
-
-            return $aux < 0 ? 0 : round($aux, 2, PHP_ROUND_HALF_UP);
-        }
-
-      // round(float,2,PHP_ROUND_HALF_UP) redondea a 2 digitos y 0.5 hacia arriba devuleve float
-      $total = round($this->total, 2, PHP_ROUND_HALF_UP);
-        $pagos_aplicados = round($this->pagos_aplicados_suma, 2, PHP_ROUND_HALF_UP);
-        $aux = $total
-      - $pagos_aplicados
-      - $nota_debito_total
-      - $this->retencion
-      - $this->creditos_aplicados->sum('total');
-
-        return $aux < 0 ? 0 : $aux;
+        return $aux < 0 ? 0 : round_up($aux);
     }
 
     //muestra siempre el saldo real de la factura
@@ -382,6 +379,11 @@ class FacturaCompra extends Model
     public function nota_debito()
     {
         return $this->hasMany(NotaDebito::class, 'factura_id');
+    }
+
+    public function nota_debito_aprobada()
+    {
+        return $this->hasMany(NotaDebito::class, 'factura_id')->where('compra_nota_debitos.estado', 'aprobado');
     }
 
     public function contrato()

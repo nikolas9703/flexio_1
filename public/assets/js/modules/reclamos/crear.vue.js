@@ -32,6 +32,7 @@ var formularioCrear = new Vue({
         reclamoInfoAcc: typeof reclamosAccidentes != 'undefined' ? $.parseJSON(reclamosAccidentes) : [],
         reclamoInfoCob: typeof reclamosCoberturas != 'undefined' ? $.parseJSON(reclamosCoberturas) : [],
         reclamoInfoDed: typeof reclamosDeduccion != 'undefined' ? $.parseJSON(reclamosDeduccion) : [],
+        valorSaludDed: typeof saludDeduccion != 'undefined' ? $.parseJSON(saludDeduccion) : [],
         polizas: [],
         reclamantes: [],
         documentacion: [],
@@ -42,6 +43,7 @@ var formularioCrear = new Vue({
         listaContactos: [],
         listaCausa: causa,
         listaAccidente: accidente,
+        listaSalud: tiposalud,
         comisionPlanInfo: '',
         exoneradoImpuestos: '',
         primaAnual: 0,
@@ -136,7 +138,14 @@ var formularioCrear = new Vue({
                         conta1=1;                        
                     } 
                     this.getReclamantes(response.data.idpoliza);
-                    this.coberturasPoliza(response.data.idpoliza);
+                    if (id_tipo_poliza == 1 && id_tipo_int_asegurado != 5) {
+                        console.log("acaaa");
+                        this.coberturasPoliza(response.data.idpoliza);
+                    }else{
+                        if (vista == "editar") {
+                            this.getCoberturasPolizaInfo(response.data.idpoliza, this.reclamoInfo.id_interes_asegurado);
+                        }
+                    }                    
                     if (response.data.idpoliza=="") { 
                         $("#ver_coberturas").attr("disabled", "disabled");
                     }else{
@@ -147,7 +156,7 @@ var formularioCrear = new Vue({
                     }else if (vista=="editar" && contadorreclamo<2) {
                         this.interesesReclamo( this.reclamoid );
                         contadorreclamo++;
-                    }                 
+                    }                
                 }
             });
 
@@ -192,6 +201,7 @@ var formularioCrear = new Vue({
                     self.tablaError = "";
                     if (!_.isEmpty(response.data)) {
                         localStorage.setItem("id_intereses", response.data.inter.id); 
+
                         //Se asigna el ID interes asegurado cuando es Individual
                         if ((id_tipo_poliza == 1  && tipo == "selector" && typeof response.data.inter != "undefined") || (id_tipo_poliza == 2  && tipo == "modal" && typeof response.data.inter != "undefined" )) {$("#reclamoidinteres").val(response.data.inter.id);}                        
                         var tipoint = id_tipo_int_asegurado;
@@ -362,8 +372,9 @@ var formularioCrear = new Vue({
                                 $("#observa").hide();
                             }
 
-                        } else if (tipoint == 5 && typeof response.data.inter != "undefined" && ( (id_tipo_poliza == 1  && tipo == "selector") || (id_tipo_poliza == 2  && tipo == "modal")  ) ) {
+                        } else if (tipoint == 5 && typeof response.data.inter != "undefined" && ( (id_tipo_poliza == 1  && tipo == "selector") || (id_tipo_poliza == 1  && tipo == "modal" && validasalud == 1) || (id_tipo_poliza == 2  && tipo == "modal")  ) ) {
                             $("#reclamointeres").val(response.data.inter.identificacion);
+                            if (validasalud == 1) { tablaReclamosSalud.init(); tablaReclamosSalud.recargar(); $(".agregar_detalle_salud").show();}
                             $(".uuid").val(response.data.inter.uuid_intereses);
                             $("#nombrePersona").val(response.data.inter.nombrePersona);
                             $("#nombrePersona").attr('disabled',true);
@@ -422,7 +433,7 @@ var formularioCrear = new Vue({
                             $("#fecha_nacimiento").val(response.data.inter.fecha_nacimiento);
                             $("#fecha_nacimiento").attr('disabled',true);
                             var today = new Date();
-                            console.log(today);
+                            
                             var format = response.data.inter.fecha_nacimiento.split("-");
                             var dob = new Date(format[0], format[1], format[2]);
                             var diff = (today - dob ) ;
@@ -560,7 +571,7 @@ var formularioCrear = new Vue({
                             $("#porcentaje_acreedor_ubicacion").attr('disabled',true);
                             $("#observaciones_ubicacion").val(response.data.inter.observaciones);
                             $("#observaciones_ubicacion").attr('disabled',true);
-                            console.log(response.data.inter.acreedor);
+                            //console.log(response.data.inter.acreedor);
                             $("#acreedor_ubicacion").val(response.data.inter.acreedor);  //option[value='" + response.data.inter.acreedor + "']
                             $("#acreedor_ubicacion").attr('disabled',true);
                             $(".estado_ubicacion").empty();
@@ -708,7 +719,7 @@ var formularioCrear = new Vue({
             $('#direccionInfo').val(direccion_val);
         },
         coberturasPoliza: function (e) {
-            this.getCoberturasPolizaInfo(e);
+            this.getCoberturasPolizaInfo(e, 0);
         },
         clienteDireccion: function () {
             this.getClienteDireccion();
@@ -731,19 +742,27 @@ var formularioCrear = new Vue({
             });
 
         },
-        getCoberturasPolizaInfo: function (pol) {
+        getCoberturasPolizaInfo: function (pol, polinteres) {
             //polula el segundo select del header
+            console.log("Ingresooo");
+            console.log(pol, polinteres);
             var self = this;
             var poliza = pol;
+            if (id_tipo_poliza == 1 && id_tipo_int_asegurado != 5) {
+                var interes = 0;
+            }else{
+                var interes = polinteres;
+            }
             this.$http.post({
                 url: phost() + 'reclamos/ajax_get_coberturas',
                 method: 'POST',
-                data: {poliza: poliza, erptkn: tkn}
+                data: {poliza: poliza, poliza_interes: interes, erptkn: tkn}
             }).then(function (response) {
                 if (_.has(response.data, 'session')) {
                     window.location.assign(phost());
                 }
                 if (!_.isEmpty(response.data)) {
+                    console.log(response.data);
                     coberturasForm.$set('coberturasInfo', response.data);
                     self.$set('disabledCoberturas', false);
                     self.$set('disabledSubmit', false);
@@ -936,7 +955,13 @@ var formularioCrear = new Vue({
                     }                    
                 });
                 contacoberturas++;
-            }         
+            }  
+
+            if (validasalud == 1) {
+                $('.deduccion_poliza').on('change', function() {
+                    $('.deduccion_poliza').not(this).prop('checked', false);  
+                });
+            }   
 
             $("#closeModalCoberturas").click(function () {
                 $("#verCoberturas").modal('hide');
@@ -950,14 +975,24 @@ var formularioCrear = new Vue({
                         cober+=this.value+",";
                     }                    
                 });
+                var t = 0;
+                var t1 = 0;
                 $('input[name="deduccion_poliza[]').each(function( index ) {
                     if (this.checked == true) {
                         deduc+=this.value+",";
-                    }                    
+                        t1=t;
+                    } 
+                    t++;                   
                 });
                 $("#campocoberturas").val(cober);
                 $("#campodeducciones").val(deduc);
                 $("#verCoberturas").modal('hide');
+                if (validasalud) {
+                    var valor_s = $("#valor_deduccion_"+t1).val();
+                    $("#campodeduccionsalud").val(valor_s);
+                }
+
+                tablaReclamosSalud.recargar();
             });
         },
         interesesModal: function (e) {
@@ -1005,45 +1040,45 @@ var formularioCrear = new Vue({
             var cont = 1;
             var cont2 = 0;
 
-            console.log(n_check, nombre, obligatorio, modulo);
+            //console.log(n_check, nombre, obligatorio, modulo);
 
             for (var x = 0; x <= $('#cantidad_check').val(); x++) {
                 if ($('#documentacion_' + x).prop('checked') === true) {
-                    console.log("x="+x);
+                    //console.log("x="+x);
                     cont = cont + 1;
                 }
 
             }
-            console.log(cont);
+            //console.log(cont);
 
             if ($('#documentacion_' + n_check).prop('checked') === false && obligatorio === "Si") {
                 mensaje = "Campo requerido";
                 $('#error_check').val("<label class='error'>" + mensaje + "</label>");
-                console.log("aqui1");
+                //console.log("aqui1");
             }
 
-            console.log($('#documentacion_' + n_check).prop('checked'));
+            //console.log($('#documentacion_' + n_check).prop('checked'));
             if ($('#documentacion_' + n_check).prop('checked') === true) {
-                console.log("aqui2");
+                //console.log("aqui2");
                 $('#requerido_chek_' + n_check).val(nombre);
                 //$('#file_tools_solicitudes_' + n_check).before('<div class="file_upload_solicitudes" id="f' + n_check + '"><input readonly="readonly" value="' + nombre + '" name="nombre_documento[]" id="nombre_documento" type="text" style="width: 300px!important; float: left;" class="form-control"><input data-rule-required="true" name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><input type="hidden" value="' + nombre + '"  v-model="modulo" id="nombre'+ n_check +'" name="campodocumentacion[nombre_'+ n_check +']" class="modulo"><input type="hidden" value="' + modulo + '"  v-model="modulo" id="opcion'+ n_check +'" name="campodocumentacion[modulo_'+ n_check +']" class="modulo"><br><br><br></div>');
                 $('#file_tools_solicitudes_' + n_check).before('<div class="file_upload_solicitudes" id="f' + n_check + '"><input readonly="readonly" value="' + nombre + '" name="nombre_documento[]" id="nombre_documento" type="text" style="width: 300px!important; float: left;" class="form-control"><input data-rule-required="true" name="file[]" class="form-control" style="width: 300px!important; float: left;" type="file"><input type="hidden" value="" id="opcion' + n_check + '" name="campomodulo[]" class="modulo"><input type="hidden" value="list" name="campotipodoc[]"><input type="hidden" value="' + id_cliente + '" name="campoidcliente[]"><br><br><br></div>');
 
             } else if ($('#documentacion_' + n_check).prop('checked') === false) {
-                console.log("aqui3");
-                console.log(n_check);
+                //console.log("aqui3");
+                //console.log(n_check);
                 $('#requerido_chek_' + n_check).val("");
                 //$('#del_file_solicitudes').hide();
                 $('#f' + n_check).remove();
             } else {
-                console.log("aqui4");
+                //console.log("aqui4");
                 $('#f' + n_check).remove();
             }
             
             for (var x = 0; x <= $('#cantidad_check').val(); x++) {
                 if ($('#f' + x).length) {
-                    console.log(x);
-                    console.log("aqui6");
+                    //console.log(x);
+                    //console.log("aqui6");
                     cont2 = cont2 + 1;
                 }
             }
@@ -1079,6 +1114,7 @@ var formularioCrear = new Vue({
             var self = this;
             var reclamo = rec;
             if(rec==""){reclamo = 0;}
+            console.log(id_tipo_int_asegurado, reclamo);
             this.$http.post({
                 url: phost() + 'reclamos/ajax_get_intereses_reclamo',
                 method: 'POST',
@@ -1088,12 +1124,14 @@ var formularioCrear = new Vue({
                     window.location.assign(phost());
                 }
                 if (!_.isEmpty(response.data)) {
-                    self.tablaError = "";
-                    if (!_.isEmpty(response.data)) {
+                    console.log("interes_reclamo");
+                    console.log(response.data);
                         //Se asigna el ID interes asegurado cuando es Individual
                         if (typeof response.data.inter != "undefined") {
                             $("#reclamointeres").val(response.data.inter.no_certificado);
-                            $("#reclamoidinteres").val(response.data.inter.id);
+                            $("#reclamoidinteres").val(response.data.inter.id_interes_asegurado);
+                            console.log("eleccion1");
+                            console.log(response.data.inter.id_interes_asegurado);                            
                         }          
                         localStorage.setItem("id_intereses", response.data.inter.id);              
                         var tipoint = id_tipo_int_asegurado;
@@ -1266,6 +1304,7 @@ var formularioCrear = new Vue({
 
                         } else if (tipoint == 5 && typeof response.data.inter != "undefined" ) {
                             $("#reclamointeres").val(response.data.inter.identificacion);
+                            if (validasalud == 1) { tablaReclamosSalud.recargar(); $(".agregar_detalle_salud").show();}
                             $(".uuid").val(response.data.inter.uuid_intereses);
                             $("#nombrePersona").val(response.data.inter.nombrePersona);
                             $("#nombrePersona").attr('disabled',true);
@@ -1324,7 +1363,7 @@ var formularioCrear = new Vue({
                             $("#fecha_nacimiento").val(response.data.inter.fecha_nacimiento);
                             $("#fecha_nacimiento").attr('disabled',true);
                             var today = new Date();
-                            console.log(today);
+                            //console.log(today);
                             var format = response.data.inter.fecha_nacimiento.split("-");
                             var dob = new Date(format[0], format[1], format[2]);
                             var diff = (today - dob ) ;
@@ -1462,7 +1501,7 @@ var formularioCrear = new Vue({
                             $("#porcentaje_acreedor_ubicacion").attr('disabled',true);
                             $("#observaciones_ubicacion").val(response.data.inter.observaciones);
                             $("#observaciones_ubicacion").attr('disabled',true);
-                            console.log(response.data.inter.acreedor);
+                            //console.log(response.data.inter.acreedor);
                             $("#acreedor_ubicacion").val(response.data.inter.acreedor);  //option[value='" + response.data.inter.acreedor + "']
                             $("#acreedor_ubicacion").attr('disabled',true);
                             $(".estado_ubicacion").empty();
@@ -1538,9 +1577,7 @@ var formularioCrear = new Vue({
                              $(".estado option[value='" + response.data.inter.estado + "']").attr("selected", "selected");*/
 
                         }
-                    }else{
-                        
-                    }
+                    
                 }
             });
         }
@@ -1619,15 +1656,15 @@ $(document).ready(function () {
         $("#nombre_doc_titulo_editar").hide();
         $('#cantidad_check').val(documentaciones.length);
 
-        console.log(vista);
     } else {
         $("#documentos_editar").hide();
         $('#docentregados_crear').show();
         $("#nombre_doc_titulo").hide();
         $("#nombre_doc_titulo_editar").hide();
 
-        console.log(vista);
-        console.log(ramoscadena);
+        if (validasalud == 1) {
+            $(".agregar_detalle_salud").hide();
+        }
     }
     var counter = 2;
     $('#del_file_solicitudes_adicionales').hide();
@@ -1648,6 +1685,12 @@ $(document).ready(function () {
     if (editar_asignado != 1) {
         $("#usuario_id").attr("disabled", "disabled");
     }
+
+
+    if (validasalud == 1) {
+        $("#no_certif").text("N° de Identificación de Bien asegurado");
+    }
+    
 
 });
 

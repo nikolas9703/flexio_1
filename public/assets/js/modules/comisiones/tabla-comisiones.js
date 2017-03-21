@@ -43,7 +43,7 @@ var tablaComisiones = (function(){
 				''
 			],
 		   	colModel:[
-				{name:'Codigo', index:'nombre', width:50},
+				{name:'Codigo', index:'numero', width:50},
 				{name:'Centro contable', index:'centro_contable', width:50},
 				{name:'Detalle', index:'Descripcion', width:70},
 				{name:'Fecha programada de pago', index:'fecha_programada_pago', width:50},
@@ -71,7 +71,7 @@ var tablaComisiones = (function(){
 		    gridview: true,
 		    multiselect: true,
 		    sortname: 'id',
-		    sortorder: "ASC",
+		    sortorder: "desc",
 		    beforeProcessing: function(data, status, xhr){
 		    	//Check Session
 				if( $.isEmptyObject(data.session) == false){

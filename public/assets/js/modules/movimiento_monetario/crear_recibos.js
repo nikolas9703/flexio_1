@@ -312,7 +312,7 @@ $(document).ready(function () {
         if (typeof cliente_proveedor != 'undefined') {
 
             //Seleccionar categoria
-            //	$('#categoria').prop('disabled', 'disabled').find('option[value=' + cliente_proveedor + ']').attr('selected', 'selected');
+            //  $('#categoria').prop('disabled', 'disabled').find('option[value=' + cliente_proveedor + ']').attr('selected', 'selected');
             $('#categoria').trigger("chosen:updated");
 
             // $('#cancelarFormBoton').css('display', 'none');

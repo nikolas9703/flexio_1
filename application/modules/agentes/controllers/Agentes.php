@@ -298,6 +298,92 @@ class Agentes extends CRM_Controller
         echo json_encode($response);
         exit;
     }
+
+    public function ajax_listar_agentes() {
+        //$uuid_usuario = $this->session->userdata('huuid_usuario');
+        //$usuario = AgentesModel::findByUuid($uuid_usuario);
+        /*$usuario_org = $usuario->organizacion;
+
+        $orgid = $usuario_org->map(function($org){
+            return $org->id;
+        });*/
+
+        $clause = array(
+            "nombre"    => $this->input->post("nombre"),
+            "apellido"  => $this->input->post("nombre"),
+            "telefono"  => $this->input->post("telefono"),
+            "correo"    => $this->input->post("correo"),
+            "identificacion"    => $this->input->post("identificacion"),
+            "porcentaje_participacion"    => $this->input->post("porcentaje_participacion"),
+            "id_cliente"    => $this->input->post("id_cliente"),
+            'id_empresa' => $this->id_empresa,
+        );
+
+
+        list($page, $limit, $sidx, $sord) = Jqgrid::inicializar();
+        $count = AgentesModel::listar_agentes($clause, NULL, NULL, NULL, NULL)->count();
+        list($total_pages, $page, $start) = Jqgrid::paginacion($count, $limit, $page);
+        $rows = AgentesModel::listar_agentes($clause, $sidx, $sord, $limit, $start);
+
+
+        //Constructing a JSON
+        $response = new stdClass();
+        $response->page     = $page;
+        $response->total    = $total_pages;
+        $response->records  = $count;
+        $i=0;
+
+        if(!empty($rows->toArray())){
+            foreach ($rows->toArray() AS $i => $row){
+
+                $agtram = AgentesRamosModel::where('id_agente', $row['id'])->where("id_cliente", $this->input->post("id_cliente") )->groupBy("participacion")->get();
+                $agtramos = $agtram->toArray();
+
+                $partramos="";
+                foreach ($agtramos as $ar) {
+                    $partramos.=$ar['participacion'].", ";
+                }
+                $partramos=trim($partramos,', ');
+
+                if($row['estado'] == 'Inactivo')
+                    $spanStyle='label label-danger';
+                else if($row['estado'] == 'Activo')
+                    $spanStyle='label label-successful';
+                else
+                    $spanStyle='label label-warning';
+                
+                if($row['principal']==1)
+                {
+                    $principal="<label class='label label-warning'>Principal</label>";
+                }
+                else{
+                    $principal="";
+                }
+
+                $hidden_options = "<a href=". base_url('agentes/ver/'.strtoupper($row['uuid_agente'])) ." class='btn btn-block btn-outline btn-success'>Ver Agente</a>";
+                $hidden_options .= '<a href="#" id="cambiarAgentePrincipal" class="btn btn-block btn-outline btn-success cambiarAgentePrincipal" data-id="'.$row['id'].'">Asignar como principal</a>';
+                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'.$row['id'].'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
+                $response->rows[$i]["id"] = $row['id'];
+                $nombre_agente =  $row["nombre"] ." ".$row["apellido"];
+                $response->rows[$i]["cell"] = array(
+                    //$row['id'],
+                    "<a href='" . base_url('agentes/ver/'.($row['uuid_agente'])) . "'>" . $nombre_agente  . "</a> ".$principal,
+                    $row['identificacion'],
+                    $row['telefono'],
+                    $row['correo'],
+                    //$row['porcentaje_participacion'].'%',
+                    $partramos.'%',
+                    "<label class='".$spanStyle." cambiarestadoseparado' data-id='".$row['id']."'>".$row['estado']."</label>",
+                    $link_option,
+                    $hidden_options
+                );
+            $i++;    
+            }
+        }
+
+        echo json_encode($response);
+        exit;
+    }
     
     public function exportar() {        
         if(empty($_POST)){
@@ -413,7 +499,18 @@ class Agentes extends CRM_Controller
         ));
         
         $this->load->view('tabla');
-    }    
+    } 
+
+    public function ocultotablatab() {
+        //If ajax request
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/agentes/tablatab.js'
+        ));
+        
+        $this->load->view('tabla');
+    }   
+
+
 
     function crear() {
         $data = array();

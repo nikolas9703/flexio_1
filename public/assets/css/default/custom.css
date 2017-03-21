@@ -1104,3 +1104,12 @@ div#empresaMenu div#menu_dropdown ul.dropdown-menu{
 .ui-jqdialog{
     min-height: 110px;
 }
+
+
+.borde_azul{
+    border: 1px solid #0076BE !important;
+}
+
+.ui-state-highlight, .ui-widget-content .ui-state-highlight, .ui-widget-header .ui-state-highlight {
+    background-color: rgb(255, 239, 154) !important;
+}

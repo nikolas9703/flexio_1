@@ -21,7 +21,7 @@ Vue.component('tabla_entregas', {
  			disabledCategoria:true,
  			disabledItem:true,
 			listaCategoriasOptions: typeof categoriasArray != 'undefined' ? categoriasArray : [],
-	    	listaEntregasOptions: typeof entregasArray != 'undefined' ? $.parseJSON(entregasArray) : [],
+	    	listaEntregasOptions: typeof entregasArray != 'undefined' ? entregasArray : [],
 	    	listaCategoriasServicioOptions: typeof listaCategoriasServiciosArray != 'undefined' ? $.parseJSON(listaCategoriasServiciosArray) : [],
 	    	listaEquiposTrabajoOptions: typeof listaEquiposTrabajoArray != 'undefined'  ? $.parseJSON(listaEquiposTrabajoArray) : [],
  	    	entregas: servicioValue,
@@ -48,12 +48,16 @@ Vue.component('tabla_entregas', {
         {
               var context = this;
              context.entregas = [];
-            _.forEach(entregas, function(entrega){
 
-            	console.log("==>"+entrega);
+            _.forEach(entregas, function(entrega){
+								if(entrega==undefined){
+									return;
+								}
+
                    var categoria = _.find(context.listaCategoriasOptions, function(categoria){
                      return categoria.id==entrega.categoria_id;
-                 });
+                   });
+									 console.log('CATEGORIA', categoria);
                   if(entrega.en_alquiler > 0 || context.vista == 'editar')
                   {
 
@@ -61,7 +65,7 @@ Vue.component('tabla_entregas', {
                 	  context.entregas.push(
                               {
                               	categoria_id:entrega.categoria_id,
-                              	items:categoria.items_contratos_alquiler,
+                              	items: typeof categoria != 'undefined' ? categoria.items_contratos_alquiler : [],
                               	item_id:entrega.item_id,
 								atributo_id:entrega.atributo_id,
 								atributo_text:entrega.atributo_text,

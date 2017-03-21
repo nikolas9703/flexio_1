@@ -19,6 +19,7 @@ var tablaColaboradores = (function(){
 	var campo_colaborador= $(formulario).find('#colaborador');
 	var campo_departamento= $(formulario).find('#departamento');
 	var campo_centro_contable= $(formulario).find('#centro_contable_id');
+    var filesList = [], filesNames = [], paramNames = [];
 
 	var botones = {
 		guardar: "#guardarFormBtn",
@@ -294,6 +295,8 @@ var tablaColaboradores = (function(){
 						$("#pantallaAgregarColaborador").modal('hide');
 		   	   });
 		 	});
+         initFileUpload();
+
 	};
 
 	$(botones.cancelar).on("click", function(e){
@@ -309,7 +312,28 @@ var tablaColaboradores = (function(){
 		e.returnValue=false;
 		e.stopPropagation();
 
-		editarComision();
+		//editarComision();
+
+        //Submit datos
+        //$scope.uploadform();
+        if(formulario.validate().form() != true) {
+            return;
+        }
+        $(botones.guardar).attr("disabled", "disabled").html("<i class='fa fa-spin fa-cog'></i> Guardando..");
+
+        if (filesList.length > 0) {
+
+            $('#documento').fileupload('send', {
+                files: filesList,
+                paramName: paramNames,
+                formData: {
+                    erptkn: tkn,
+                    comision_id: comision_id
+                }
+            });
+        } else {
+            editarComision();
+        }
 	});
 	var removerColaboradoresComision = function(){
 
@@ -340,6 +364,9 @@ var tablaColaboradores = (function(){
  	var editarComision = function(){
 		if(formulario.validate().form() == true )
 		{
+
+
+
 			$.ajax({
 				url: phost() + 'comisiones/ajax-editar-comision',
 				data: formulario.serialize()+'&comision_id='+comision_id,
@@ -395,6 +422,67 @@ var tablaColaboradores = (function(){
 			cache: false,
 		});
   	};
+
+    var initFileUpload = function()
+    {
+
+		var file = $('#documento');
+		file.parent("span").addClass("btn-block");
+
+        file.fileupload({
+            url: phost() + 'comisiones/ajax-guardar-documento',
+            type: 'POST',
+            dataType: 'json',
+            autoUpload: false,
+            singleFileUploads: false,
+           // dropZone: document.getElementById('dropTarget'),
+            //acceptFileTypes: /(\.|\/)(gif|jpe?g|png|mp4|mp3)$/i,
+            add: function (e, data) {
+                filesList = []; filesNames = []; paramNames = [];
+                $.each(data.files, function (index, file) {
+                    //verificar si existe el archivo en el arreglo
+                    var found = filesNames.indexOf(file.name);
+                    filesNames.push(file.name);
+
+                    //para evitar duplicidad de archivos
+                    if(found<0){
+                        var fieldname = $(e.delegatedEvent.currentTarget).find('input').attr('name') !== undefined ? $(e.delegatedEvent.currentTarget).find('input').attr('name') : $(e.delegatedEvent.currentTarget).attr('name');
+                        filesList.push(file);
+                        paramNames.push(fieldname);
+                    }
+                });
+
+                $(".fileinput-button label").html('<i class="fa fa-upload"></i> 1 archivo seleccionado');
+                $("input:checkbox").attr("checked", true);
+            },
+            done: function(e, json) {
+
+                //mostrar mensaje
+                //toastr.success(data.result.mensaje);
+
+
+                //Check Session
+                if( $.isEmptyObject(json.session) == false){
+                    window.location = phost() + "login?expired";
+                }
+
+                editarComision();
+            }
+        });
+    };
+
+    var destroyFileUpload = function()
+    {
+        $('#documento').fileupload('destroy');
+        filesList = [], filesNames = [], paramNames = [];
+    };
+
+    //filesList = [], filesNames = [], paramNames
+    var getFilesList = function(){
+        return filesList;
+    };
+
+
 
 
 	return{

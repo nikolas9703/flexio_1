@@ -338,6 +338,18 @@ private function  collection_tabla_ingresos($info, $tipo_planilla){
 					 					 		 $ingresos[] 				= new PagadasIngresos($ingreso);
 					 			 }
          }else{
+
+                    $salario_horas_list = $this->planillaRepository->salarios_pagos_horas($info);
+                    foreach ($salario_horas_list as $item) {
+                        $info['pagos'][] = [
+                            'nombre' => $item['detalle'],
+                            'monto' => $item['calculo'],
+                            'rata' => $item['rata'],
+                            'cantidad_horas' => $item['cantidad_horas'],
+                        ];
+                    }
+
+
            foreach($info['pagos'] as $pago){
                   $ingresos_fila = array(
                    "detalle" => $pago['nombre'],
