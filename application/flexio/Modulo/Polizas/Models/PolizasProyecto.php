@@ -2,6 +2,7 @@
 namespace Flexio\Modulo\Polizas\Models;
 
 use Illuminate\Database\Eloquent\Model as Model;
+use Flexio\Modulo\Usuarios\Models\Usuarios;
 
 class PolizasProyecto extends Model
 {
@@ -41,13 +42,27 @@ class PolizasProyecto extends Model
 		"detalle_suma_asegurada",
 		"detalle_prima",
 		"detalle_deducible",
-		"fecha_inclusion"
+		"fecha_inclusion",
+		"fecha_exclusion",
+		"creado_por",
+		"detalle_unico",
+		"id_interes"
 	]; 
 	public $timestamps = false;
 
 	
-	public static function listar_proyecto_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL, $id_poliza=NULL) {
-        $proyecto = self::where("id_poliza", $id_poliza)->where(function($query) use($clause,$sidx,$sord,$limit,$start){     
+	public static function listar_proyecto_provicional($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL, $id_poliza=NULL) 
+	{
+
+		$mainQuery['id_poliza'] =$id_poliza;
+		 $mainQuery['id_poliza'] =$id_poliza;
+        if(isset($clause['desde'])){
+            if($clause['desde']=="renovar"){
+                $mainQuery=[];
+                $mainQuery['detalle_unico'] =$clause['detalleUnico'];
+            }
+        }
+        $proyecto = self::where($mainQuery)->where(function($query) use($clause,$sidx,$sord,$limit,$start){     
         	if($limit!=NULL) $query->skip($start)->take($limit);           
         });
 
@@ -64,6 +79,19 @@ class PolizasProyecto extends Model
         if($sidx!=NULL && $sord!=NULL){ $proyecto->orderBy($sidx, $sord); }
 
         return $proyecto->get();
+    }
+
+    public function listar_intereses_asegurados($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
+
+        $proyecto = self::select('pol_poliza_proyecto.*','usuarios.nombre','usuarios.apellido')->join('usuarios','usuarios.id','=','pol_poliza_proyecto.creado_por')->where('id_poliza',$clause['id_poliza'])->where(function($query) use($clause,$sidx,$sord,$limit,$start){
+            if($limit!=NULL) $query->skip($start)->take($limit);
+        });
+        if($sidx!=NULL && $sord!=NULL) $proyecto->orderBy($sidx, $sord);
+        return $proyecto->get();
+    }
+
+    public function usuario(){
+        $this->hasOne(Usuarios::class, 'id', 'creado_por');
     }
 
 }

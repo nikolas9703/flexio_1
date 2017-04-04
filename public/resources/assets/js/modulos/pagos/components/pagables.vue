@@ -19,7 +19,14 @@
 
       <tbody>
           <tr class="item-listing" v-for="pagable in getPagables">
-              <td v-text="pagable.numero_documento" style="font-weight: bold;vertical-align: middle;"></td>
+			  <template v-if="pagable.ruta_url!==''">
+				 <td style="font-weight: bold;vertical-align: middle;">
+					<a href='{{pagable.ruta_url}}' target='_blank'>{{pagable.numero_documento}}</a>
+				 </td>
+			  </template>
+			  <template v-else>
+				 <td v-text="pagable.numero_documento" style="font-weight: bold;vertical-align: middle;"></td>
+			  </template>
               <td v-text="pagable.fecha_emision" style="font-weight: bold;vertical-align: middle;"></td>
               <td v-text="pagable.total | currency" style="text-align: right;font-weight: bold;vertical-align: middle;"></td>
               <td v-text="pagable.pagado | currency" style="text-align: right;font-weight: bold;vertical-align: middle;"></td>

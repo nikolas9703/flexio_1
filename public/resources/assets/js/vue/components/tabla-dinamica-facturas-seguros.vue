@@ -1,0 +1,544 @@
+
+<template>
+
+    <table class="table table-noline tabla-dinamica">
+        <thead>
+            <tr>
+                <th v-for="columna in columnas" width="{{columna.width}}%" colspan="{{columna.colspan}}">{{{columna.nombre}}}</th>
+            </tr>
+        </thead>
+        <tbody :id="'itemventa' + $index" v-for="item in items" track-by="$index">
+            <tr>
+                <td style="width: 1%;">
+                    <h3><a hrfe="#" @click="toggle($event)"><i class="fa fa-caret-right"></i></a></h3>
+                </td>
+                <td>
+                    <input type="text" class="form-control ramo" id="ramo" value="{{poliza.ramo}}" disabled>
+                </td>
+                <td>
+                    <input type="text" class="form-control ramo" id="numeropoliza" value="{{poliza.numeropoliza}}" disabled>
+                </td>
+                <td>
+                    <input type="text" class="form-control ramo" id="aseguradora" value="{{poliza.aseguradora}}" disabled>
+                </td>
+                <td>
+                    <input type="text" class="form-control iniciovigencia" id="iniciovigencia" value="{{poliza.iniciovigencia}}" disabled>
+                </td>
+                <td>
+                    <input type="text" class="form-control iniciovigencia" id="finvigencia" value="{{poliza.finvigencia}}" disabled>
+                </td>
+                <td>
+                    <input type="text" class="form-control asociado" id="asociado" value="{{factura.formulario}}" disabled>
+                </td>
+                <td>
+                    <input type="text" class="form-control cuota" id="cuota" value="{{cuotaactual}} de {{poliza.cantidadpagos}}" disabled>
+                </td>
+                <td>
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span>
+                        <input type="text" id="precio_total{{$index}}" name="items[{{$index}}][precio_total]" value="{{poliza.primaneta}}" class="form-control precio_total" disabled="disabled">
+                    </div>
+                </td>
+                <td>
+                    <div class="input-group">                  
+                        <span class="input-group-addon">$</span>
+                        <input type="text" id="precio_total{{$index}}" name="items[{{$index}}][precio_total]" value="{{poliza.primabruta}}" class="form-control precio_total" disabled="disabled">
+                    </div>            
+                </td>
+            </tr>
+            <tr id="itemsDatos{{$index}}">
+                <td colspan="12" class="hide">
+                    <table style="width: 100%;background-color: #A2C0DA">
+                        <tbody>
+                            <tr>
+                                <td style="padding: 15px !important;" width="33%">
+                                    <b>Impuesto</b>
+                                    <!-- change="impuestoSeleccionado(item.impuesto,$index)" -->
+                                    <select id="impuesto_id{{$index}}" name="items[{{$index}}][impuesto_id]" v-on:change="recomputeimpuesto($index)" v-model="item.impuesto_uuid" class="form-control item-impuesto" data-rule-required="true" disabled>
+                                        <option value="">Seleccione</option>
+                                        <option value="{{option.uuid_impuesto}}" v-for="option in item.impuestos" selected="{{option.id == factura.impuestoplan}}">{{option.nombre}}</option>
+                                    </select>
+                                </td>
+                                <td style="padding: 15px !important;" width="33%">
+                                    <b>Descuento</b>
+                                    <div class="input-group">
+                                        <!-- ng-blur="descuentoCambio(item.descuento,$index)" -->
+                                        <input type="text" id="descuento"  name="items[{{$index}}][descuento]" class="form-control item-descuent" data-rule-required="true"  value="{{porcentaje_descuento}}" disabled>
+                                        <span class="input-group-addon">%</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 15px !important;" width="33%">
+                                    <b>Cuenta</b>
+                                    <select id="cuenta_id0" name="items[{{$index}}][cuenta_id]" data-rule-required="true" v-model="item.cuenta_uuid" class="form-control" disabled >
+                                        <option value="">Seleccione</option>
+                                        <option value="{{option.uuid}}" v-for="option in item.cuenta_transaccionales" selected="{{option.nombre == factura.cuenta_tipo}}">{{option.codigo}} {{option.nombre}}</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        <input type="hidden" id="factura_item_id{{$index}}" name="items[{{$index}}][factura_item_id]" :disable="factura_id===''" v-model="item.id" />
+        </tbody>
+    </table>
+
+</template>
+
+<script>
+
+var deleteItems = [];
+//var poliza = $.parseJSON(infopoliza);
+//items_venta
+export default {
+    template: '#items_venta',
+    props: {
+        categorias: Array,
+        impuestos: Array,
+        cuenta_transaccionales: Array,
+        factura: Object,
+        cuotaactual: cuotaactual,
+        poliza: $.parseJSON(infopoliza),
+        porcentaje_descuento: ''
+    },
+
+    components:{
+        'typeahead':require('./typeahead.vue')
+    },
+
+    ready: function () {
+
+        var scope = this;
+        scope.poliza = $.parseJSON(infopoliza);
+        scope.cuotaactual = cuotaactual;
+        porcentaje_descuento = porcentaje_descuento;
+
+        scope.cuenta_transaccionales = "undefined" != typeof cuenta_transaccionales ? $.parseJSON(cuenta_transaccionales) : [];
+        console.log(cuenta_transaccionales);
+        //si existe variable infofactura
+        if (typeof infofactura != 'undefined') {
+
+            // popular items
+            // vista de editar factura
+            scope.$nextTick(function () {
+                scope.$emit('popularTablaItems', infofactura.items);
+            });
+        }
+        if(editar_precio == 0)this.$set('disabledPrecio',true);
+    },
+    data: function () {
+
+        return {
+
+            //typeahead
+            item_url:'inventarios/ajax_get_typehead_items?ventas=1',
+            disabledPrecio: false,
+
+            columnas: [
+                {nombre: 'Ramo', width: '12', colspan: '2'},
+                {nombre: 'Numero de Poliza', width: '12', colspan: '1'},
+                {nombre: 'Aseguradora', width: '12', colspan: '1'},
+                {nombre: 'Inicio de Vigencia', width: '10', colspan: '1'},
+                {nombre: 'Fin Vigencia', width: '10', colspan: '1'},
+                {nombre: 'Asociado a', width: '10', colspan: '1'},
+                {nombre: 'No de Cuota', width: '10', colspan: '1'},
+                {nombre: 'Prima neta', width: '10', colspan: '1'},
+                {nombre: 'Prima Bruta', width: '10', colspan: '1'},
+                //{nombre: '', width: '1', colspan: '2'}
+            ],
+            items: [{
+                    id: '',
+                    categoria_id: '',
+                    item_id: '',
+                    atributo_id: '',
+                    cantidad: 1,
+                    unidad_id: '',
+                    precio_unidad: '',
+                    precio_total: '',
+                    descuento: '0',
+                    impuesto_uuid: '',
+                    impuesto_porcentaje: '',
+                    cuenta_uuid: '',
+                    itemsList: [],
+                    atributos: [],
+                    unidades: [],
+                    impuestos: this.impuestos,
+                    cuenta_transaccionales: this.cuenta_transaccionales,
+                    factura_item_id: '',
+                    exonerado: null,
+                    precio_permiso:editar_precio,
+                    iteminfo: []
+                }],
+                //poliza: $.parseJSON(infopoliza)
+        };
+    },
+    events: {
+
+        'update-precio_unidad':function() {
+
+            var context = this;
+            _.forEach(context.items, function(articulo, key){
+                try {
+
+
+                var precio_unidad = typeof articulo != 'undefined' && typeof articulo.precios != 'undefined' ? _.find(articulo.precios == undefined ? articulo.itemsList[key].precios : articulo.precios, function(precio){
+                    return precio.id == context.factura.lista_precio_id;
+                }) : '';
+                articulo.precio_unidad = !_.isEmpty(precio_unidad) ? roundNumber(precio_unidad.pivot.precio, 2) : 0;
+                context.$parent.calcularPrecioTotal(key);
+                }
+                catch(err) {
+                  console.log(err)
+                }
+            });
+        },
+
+        //se ejecuta cuando se selecciona un item de la lista desplegable
+        'update-item':function(item) {
+
+            var context = this;
+            context.items[item.parent_index].itemsList=[item];
+
+            context.enableWatch = false;
+
+            var selected_categoria = _.head(item.categoria);
+            context.items[item.parent_index].categoria_id = selected_categoria.id;
+            context.items[item.parent_index].item_id = item.id;
+            context.items[item.parent_index].atributos = item.atributos;
+            context.items[item.parent_index].atributo_id = item.atributo_id;
+            context.items[item.parent_index].cantidad = '';
+            context.items[item.parent_index].cuenta_uuid = item.cuenta_id;
+            context.items[item.parent_index].cuentas = item.cuentas;//string con json para el filtro de cuentas
+            //#case 1499 verificar si tiene solo una cuenta para seleccionarla por defualt
+                  var cuentas = JSON.parse(item.cuentas);
+                  var i = 0;
+                  for (i = 0; i < cuentas.length; ++i) {
+                        var entry = cuentas[i];
+                        if (entry.match('ingreso') == "ingreso") {
+                            var ids = entry.split(':');
+                            if (entry.split(':').length == 2) {
+                                this.items[item.parent_index].cuenta_uuid = entry.split(':')[1];
+                            }
+                            break;
+                        }
+                    }
+            context.items[item.parent_index].cuenta_transaccionales = context.filtrarCuentas(item).length > 0 ? context.filtrarCuentas(item) : context.cuenta_transaccionales,
+            context.items[item.parent_index].unidades = item.unidades;
+            context.items[item.parent_index].tipo_id = item.tipo_id;
+            Vue.nextTick(function(){
+                var precio_unidad = _.find(item.precios, function(precio){
+                    return precio.id == context.factura.lista_precio_id;
+                });
+                context.items[item.parent_index].unidad_id = item.unidad_id;
+                context.items[item.parent_index].precios = item.precios;
+                context.items[item.parent_index].precio_unidad = !_.isEmpty(precio_unidad) ? roundNumber(precio_unidad.pivot.precio, 2) : 0;
+                context.items[item.parent_index].impuesto_id = item.impuesto_id;
+                var impuesto = _.find(context.impuestos,function(impuesto){
+                    return impuesto.impuesto == 0.00;
+                });
+                if($('#cliente_ID').val() != "" && $('#cliente_ID').val() != null && impuesto != null){
+                  $('.item-impuesto option')
+                  .filter(function() { return $.trim( $(this).val() ) == impuesto.uuid_impuesto; })
+                  .attr('selected',true).trigger('change');
+                }else{
+                context.items[item.parent_index].impuesto_uuid = item.impuesto_uuid;
+                }
+            });
+        },
+
+        //
+        // Popular tabla de items
+        // al seleccionar, empezar factura desde
+        // (orden venta, contrato venta, etc)
+        //
+        popularTablaItems: function (items) {
+            var scope = this;
+            console.log('populando items');
+            if (typeof items === 'undefined' || items.length === 0) {
+                this.resetItems();
+                return false;
+            }
+
+            scope.items = [];
+            $.each(items, function (index, item) {
+                console.log('item'+index);
+                //Lista de Items
+                var categoria = _.find(scope.categorias, function (categoria) {
+                    return categoria.id == item.categoria_id;
+                });
+
+                var datos = $.extend({erptkn: tkn},categoria,{'ventas': 1, item_id:item.item_id});
+                scope.$http.post({
+                    url: window.phost() + "inventarios/ajax-get-items-categoria",
+                    method:'POST',
+                    data:datos
+                }).then(function(response){
+
+                    if(!_.isEmpty(response.data)){
+
+                        //context.$broadcast('fill-typeahead',response.data.items);
+
+                        var itemsList = !_.isEmpty(categoria) ? JSON.parse(JSON.stringify(response.data.items)) : [];
+
+                        //Item Info
+                        var iteminfo = _.find(itemsList, function (iteminfo) {
+                            return iteminfo.id == item.item_id;
+                        });
+
+                        //Lista atributos
+                        var atributosList = !_.isEmpty(iteminfo) ? iteminfo.atributos : [];
+
+                        //Lista unidades
+                        var unidadesList = !_.isEmpty(iteminfo) && iteminfo.unidades.length > 0 ? iteminfo.unidades : [];
+                        var cuentas_trans = scope.filtrarCuentas(iteminfo)
+                        if (cuentas_trans.length == 0){
+                            cuentas_trans = this.cuenta_transaccionales;
+                        }
+                        scope.items.push({
+                            id: item.id,
+                            categoria_id: item.categoria_id,
+                            item_id: item.item_id,
+                            atributo_id: item.atributo_id,
+                            atributo_text: item.atributo_text,
+                            cantidad: item.cantidad,
+                            unidad_id: item.unidad_id,
+                            precio_unidad: roundNumber(item.precio_unidad, 2),
+                            precio_total: item.precio_total,
+                            descuento: item.descuento,
+                            impuesto_uuid: typeof item.impuesto != 'undefined' && item.impuesto != null ? item.impuesto.uuid_impuesto : '',
+                            impuesto_porcentaje: typeof item.impuesto != 'undefined' && item.impuesto != null ? item.impuesto.impuesto : '',
+                            cuenta_uuid: typeof item.cuenta != 'undefined' && item.cuenta != null ? item.cuenta.id : '',
+                            factura_item_id: '',
+                            itemsList: itemsList,
+                            atributos: atributosList,
+                            unidades: unidadesList,
+                            impuestos: scope.impuestos,
+                            cuenta_transaccionales: cuentas_trans,
+                            comentario: item.comentario
+                        });
+
+                        Vue.nextTick(function(){
+                            //Asigno el nombre al typeahead luego ver como asigno el nombre
+                            scope.$children[scope.items.length - 1].$emit('set-typeahead-nombre',iteminfo.nombre);
+                            _.forEach(scope.items, function (value, key) {
+                                scope.$parent.calcularPrecioTotal(key);
+                            });
+                        });
+
+                    }
+
+                });
+
+            });
+
+        }
+    },
+    methods: {
+
+        filtrarCuentas: function(item){
+
+            var context = this;
+            if(item.cuentas.length > 2){
+                return _.filter(context.cuenta_transaccionales, function(cuenta){
+
+                    return item.cuentas.indexOf("ingreso:"+ cuenta.id +"\"") > -1
+                });
+            }
+            return context.cuenta_transaccionales;
+
+        },
+        recomputeimpuesto: function(index) {
+            var newimpuesto_uuid = '';
+            var newimpuesto_id = '';
+            $.each(JSON.parse(impuestos), function (e, value) {
+                if (event.target.value == value.uuid_impuesto) {
+                    newimpuesto_uuid = value.uuid_impuesto;
+                    newimpuesto_id = value.id;
+
+                }
+            });
+           this.items[index].impuesto_id = newimpuesto_id;
+           this.items[index].impuesto_uuid = newimpuesto_uuid;
+           this.$parent.calcularPrecioTotal(index);
+        },
+
+        calcularPrecioTotal: function (index) {
+            this.$parent.calcularPrecioTotal(index);
+        },
+        toggle: function (e) {
+            this.$root.toggleSubTabla(e);
+        },
+        // Popular campo Items
+        // segun categoria seleccionada
+        // se ejecuta al cambiar la categoria
+        limpiarFila: function (e, index, item, items) {
+            e.preventDefault();
+            item.item_id = "";
+            item.unidad_id = "";
+            item.unidades = [];
+            item.precio_unidad = 0;
+            item.cantidad = 1;
+            //no se usa en el refactory typeahead
+            //this.$parent.popularItems(e, index, item, items);
+        },
+        //
+        // Popular Campo de Unidad y Atributo
+        // segun Item Seleccionado
+        //
+        popularUnidadAtributo: function (e, item, index) {
+
+            e.preventDefault();
+
+            this.$parent.popularUnidadAtributo(e, item, index);
+        },
+        calcularPrecioSegunUnidad: function (e, item, index) {
+            e.preventDefault();
+            this.$parent.calcularPrecioSegunUnidad(e, item, index);
+        },
+        //
+        // A gregar un nuevo Item a la tabla
+        //
+        agregarItemOrden: function (e) {
+            if (typeof e == 'undefined') {
+                e.preventDefault();
+                e.returnValue = false;
+                e.stopPropagation();
+            }
+
+            this.items.push({
+                id: '',
+                categoria_id: '',
+                item_id: '',
+                atributo_id: '',
+                cantidad: '1',
+                unidad_id: '',
+                precio_unidad: '',
+                precio_total: '',
+                descuento: '0',
+                impuesto_uuid: '',
+                impuesto_porcentaje: '',
+                cuenta_uuid: '',
+                itemsList: [],
+                atributos: [],
+                unidades: [],
+                impuestos: this.impuestos,
+                cuenta_transaccionales: this.cuenta_transaccionales,
+                factura_item_id: '',
+                exonerado: null,
+                precio_permiso:editar_precio,
+                iteminfo: []
+            });
+        },
+        resetItems: function () {
+
+            //reset tabla items
+            this.items = [{
+                    id: '',
+                    categoria_id: '',
+                    item_id: '',
+                    atributo_id: '',
+                    cantidad: '1',
+                    unidad_id: '',
+                    precio_unidad: '',
+                    precio_total: '',
+                    descuento: '0',
+                    impuesto_uuid: '',
+                    impuesto_porcentaje: '',
+                    cuenta_uuid: '',
+                    itemsList: [],
+                    atributos: [],
+                    unidades: [],
+                    impuestos: this.impuestos,
+                    cuenta_transaccionales: this.cuenta_transaccionales,
+                    factura_item_id: '',
+                    exonerado: null,
+                    precio_permiso:editar_precio,
+                    iteminfo: []
+                }];
+        },
+        eliminarItemOrden: function (index, e) {
+            e.preventDefault();
+
+            var modal = $('#opcionesModal');
+            var id = this.items[index]['id'];
+
+            if (typeof id != 'undefined' && id != '') {
+
+                var botones = [
+                    '<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>',
+                    '<button class="btn btn-w-m btn-danger" type="button" id="eliminarServicioBtn">Aceptar</button>'
+                ].join('\n');
+
+                //Modal
+                this.$root.modal.titulo = 'Confirme';
+                this.$root.modal.contenido = '<h3>&#191;Esta seguro que desea eliminar?</h3><p>El item sera eliminado al hacer clic en Guardar!</p>';
+                this.$root.modal.footer = botones;
+
+                modal.modal('show');
+                modal.on('click', '#eliminarServicioBtn', {id: id, index: index}, this.eliminarItem);
+
+            } else {
+                //eliminar fila
+                this.items.splice(index, 1);
+            }
+        },
+        // Al hacer clic en el boton del modal
+        // Elminar item de la tabla
+        // y poner en array delete_items
+        eliminarItem: function (e) {
+            e.preventDefault();
+            e.returnValue = false;
+            e.stopPropagation();
+
+            var id = typeof e.data.id != 'undefined' ? e.data.id : '';
+            var index = typeof e.data.index != 'undefined' ? e.data.index : '';
+            var modal = $('#opcionesModal');
+            modal.modal('hide');
+
+            //verificar si existe id
+            if (id == '') {
+                return false;
+            }
+
+            //verificar si item ya existe en items a eliminar
+            var existe = _.find(deleteItems, function (item) {
+                return item == id;
+            });
+
+            if (typeof existe != 'undefined') {
+                return;
+            }
+
+            //agregar a array de items a eliminar
+            deleteItems.push(id);
+            this.$parent.delete_items = deleteItems;
+
+            //eliminar fila
+            this.items.splice(index, 1);
+
+            // verificar si ya no existen items en la tabla
+            // insertar un item con campos en blancos
+            if (this.items.length == 0) {
+                this.resetItems();
+            }
+        }
+    },
+    watch:{
+        'items':{
+            handler:function(val ,old){
+                var tipos = _.map(this.items,'tipo_id');
+
+                if(_.includes(tipos,4) || _.includes(tipos,5)){
+                    $("#bodega_id").prop('disabled',false);
+                    return;
+                }
+                $("#bodega_id").prop('disabled',true);
+                return;
+
+            },
+            deep:true
+        }
+    }
+};
+
+</script>

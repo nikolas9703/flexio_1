@@ -10,7 +10,7 @@ use Flexio\Modulo\Remesas\Models\Remesa;
 class Remesas_cobros extends Model
 {
   protected $table = 'seg_remesas_cobros';
-  protected $fillable = ['uuid_remesas_cobros','id_remesa','id_cobro'];
+  protected $fillable = ['uuid_remesas_cobros','id_remesa','id_cobro','valor_cobro'];
   protected $guarded = ['id'];
   public $timestamps = false;
 

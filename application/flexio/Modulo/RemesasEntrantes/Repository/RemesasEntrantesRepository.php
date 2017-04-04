@@ -39,6 +39,13 @@ class RemesasEntrantesRepository {
                 }
         }
 		
+		if(preg_match("/(fecha1)/i", $sidx)){
+				$sidx='fecha';
+				$remesas_entrantes->orderByRaw('FIELD(seg_remesas_entrantes.estado,"por_liquidar","con_diferencia","liquidada","anulada")');
+				$remesas_entrantes->orderBy("seg_remesas_entrantes.fecha", 'desc');
+				$remesas_entrantes->orderBy("seg_remesas_entrantes.no_remesa", 'desc');
+			}
+		
 		//Si existen variables de orden
         if($sidx!=NULL && $sord!=NULL){
                 if(!preg_match("/(cargo|departamento|centro_contable)/i", $sidx)){

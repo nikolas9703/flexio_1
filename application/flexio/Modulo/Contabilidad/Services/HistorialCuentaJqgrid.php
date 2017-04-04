@@ -23,6 +23,8 @@ class HistorialCuentaJqgrid extends JqgridAbstract{
       $clause = array_filter(array_merge($clause, $this->camposBuscar()));
       $count = $this->registros($clause)->count();
 
+      //dd($this->registros($clause)->get());
+
       list($total_pages, $page, $start) = $this->paginacion($count, $limit, $page);
 
       $anticipos = $this->registros($clause,$sidx, $sord, $limit, $start)->get();

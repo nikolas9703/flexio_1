@@ -63,6 +63,8 @@ class FormGuardar{
 		//estado
 	
 		$factura_ids = array_get($facturas,'cobrable_id');
+
+		
 		
 		//print_r('convertir a ids');
 		//print_r($facturas);
@@ -95,9 +97,12 @@ class FormGuardar{
 			if($campos['depositable_type']=='caja'){
 				ActualizarSaldoCaja::nuevoSaldo($cobro->depositable_id, $cobro->monto_pagado);
 			}
-			//realizar transaccion
-			$transaccion = new Transaccion;
-			$transaccion->hacerTransaccion($cobro, new TransaccionCobro);
+			
+			if ($campos['estado'] == "aplicado") {
+				//realizar transaccion
+				$transaccion = new Transaccion;
+				$transaccion->hacerTransaccion($cobro, new TransaccionCobro);
+			}
 			
 			if($cobro->cliente_id > 0){
 
@@ -131,8 +136,8 @@ class FormGuardar{
 							$datosCobros = Cobro::where(['id' => $cobro->id])->first();
 							foreach ($datosCobros->cobros_facturas as $key => $cobFact) {
 								if($cobFact['cobrable_id'] == $facInfo["id"]){
-									$bus = Polizas::find($id_poliza);
-									if($bus->count()!=0){
+									$bus = Polizas::where(['id'=>$id_poliza])->first();
+									if(count($bus)!=0){
 										$tipo = "Cobro_seguros";
 										if($cobro->estado == "agendado" || $cobro->estado == "por_aplicar" ){
 
@@ -173,6 +178,12 @@ class FormGuardar{
             }else{
             	$cobro->update(['estado'=>$campos['estado'],'num_remesa'=>$campos['num_remesa']]);
             }
+
+            if ($campos['estado'] == "aplicado") {
+				//realizar transaccion
+				$transaccion = new Transaccion;
+				$transaccion->hacerTransaccion($cobro, new TransaccionCobro);
+			}
             
             return $cobro;
         });

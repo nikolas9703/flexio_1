@@ -206,7 +206,9 @@ class PagosProveedor {
 
     private function _getCuentaIdDebito($pago)
     {
-        return $pago->empresa->cuenta_por_pagar_proveedores->first()->cuenta_id;
+		if($pago->formulario != 'honorario' || $pago->formulario != 'remesa'){
+			return $pago->empresa->cuenta_por_pagar_proveedores->first()->cuenta_id;
+        }
 
     }
 

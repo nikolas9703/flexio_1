@@ -18,7 +18,9 @@ class PolizasRepository{
 		return $polizas->get();
 	}
 	
+	/*
 	public function listar_intereses_asegurados($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
+
 		$query = InteresesAsegurados::select("int_intereses_asegurados.*","int_intereses_asegurados_detalles.fecha_inclusion","int_intereses_asegurados_detalles.fecha_exclusion","int_intereses_asegurados_detalles.id as id_detalle","usuarios.nombre","usuarios.apellido","seg_ramos_tipo_interes.nombre as etiqueta")->join("int_intereses_asegurados_detalles","int_intereses_asegurados_detalles.id_intereses","=","int_intereses_asegurados.id")->join("usuarios","usuarios.id","=","int_intereses_asegurados.creado_por")->join("seg_ramos_tipo_interes","seg_ramos_tipo_interes.id","=","int_intereses_asegurados.interesestable_type");
 		if($clause!=NULL && !empty($clause) && is_array($clause))
 		{
@@ -46,12 +48,12 @@ class PolizasRepository{
 		}
 
 		//Si existen variables de limite
-		if($limit!=NULL) $query->skip($start)->take($limit);
-
-		//var_dump($query->get());
+		if($limit!=NULL){
+			$query->skip($start)->take($limit);
+		}
 		return $query->get();
 	}
-	
+	*/
 	
 	public function exportarInteresesPolizas($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
 		$query = InteresesAsegurados::select("int_intereses_asegurados.*","int_intereses_asegurados_detalles.fecha_inclusion","int_intereses_asegurados_detalles.fecha_exclusion","int_intereses_asegurados_detalles.id as id_detalle")->join("int_intereses_asegurados_detalles","int_intereses_asegurados_detalles.id_intereses","=","int_intereses_asegurados.id");			

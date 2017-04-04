@@ -226,17 +226,19 @@ class Cargos implements CargosInterface{
 				}
 
 				//Verificar si el cargo ya fue ejcutado
+				unset($itm["esdevolucion"]);
 				$check = CargosAlquiler::clauseFiltro($itm)->first();
 
 				//Verificar si ya fue devuelto
-				$clause_devuleto = $itm;
+
 				$clause_devuleto["devuelto"] = 1;
-				unset($clause_devuleto["fecha_cargo"]);
-				unset($clause_devuleto["fecha_devolucion"]);
+				$clause_devuleto["empresa_id"] = $itm["empresa_id"];
+				$clause_devuleto["contrato_id"] = !empty($itm["contrato_id"]) ? $itm["contrato_id"] : "";
+				$clause_devuleto["item_id"] = !empty($itm["item_id"]) ? $itm["item_id"]: "";
+				$clause_devuleto["serie"] = !empty($itm["serie"]) ? $itm["serie"] : "";
+
 				$check_devuelto = CargosAlquiler::clauseFiltro($clause_devuleto)->first();
-				/*echo "HERE SI SI<pre>";
-				print_r($itm);
-				echo "</pre>";*/
+
 				//continuar siguiente si ya existe o fue devuelto
 				if(!empty($check) && !empty($check->toArray())
 				|| !empty($check_devuelto) && !empty($check_devuelto->toArray())){
@@ -255,7 +257,6 @@ class Cargos implements CargosInterface{
 					Capsule::rollback();
 				}
 				Capsule::commit();
-				
 			}
 
 	}

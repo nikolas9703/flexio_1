@@ -7,6 +7,6 @@ class PolizasDeduccion extends Model
 {
 	
 	protected $table = 'pol_poliza_deduccion'; 
-	protected $fillable =["deduccion","valor_deduccion","id_poliza", "id_poliza_interes"]; 
+	protected $fillable =["deduccion","valor_deduccion","id_poliza", "id_poliza_interes", "detalle_unico"]; 
 	public $timestamps = false;
 }

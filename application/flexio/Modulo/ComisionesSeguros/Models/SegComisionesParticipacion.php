@@ -5,11 +5,12 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Eloquent\Model as Model;
 use Flexio\Modulo\Agentes\Models\Agentes;
 use Flexio\Modulo\Polizas\Models\Polizas;
+use Flexio\Modulo\Pagos\Models\Pagos;
 
 class SegComisionesParticipacion extends Model
 {
     protected $table        = 'seg_comisiones_participacion';    
-    protected $fillable     = ['agente_id', 'porcentaje', 'monto','no_recibo','comision_id','created_at','updated_at','fecha_pago'];
+    protected $fillable     = ['agente_id', 'porcentaje', 'monto','no_recibo','id_pago','comision_id','created_at','updated_at','fecha_pago'];
     protected $guarded      = ['id'];
     
     //scopes
@@ -22,4 +23,7 @@ class SegComisionesParticipacion extends Model
 	public function datosComision(){
         return $this->hasOne(ComisionesSeguros::class, 'id', 'comision_id');
     }
+    public function datosPago(){
+        return $this->hasOne(Pagos::class, 'id','no_recibo');
+    }   
 }   
