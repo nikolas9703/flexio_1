@@ -56,6 +56,7 @@ var tablaReclamos = (function () {
             {colname: 'Fecha siniestro', index: 'rec_reclamos.fecha_siniestro', width: 50, },
             {colname: 'Usuario', index: 'usunombre', width: 40, moveTo: setting.moveTo},
             {colname: 'Actualización', index: 'rec_reclamos.updated_at', width: 40},
+            {colname: 'Fecha_seguimiento', index: 'rec_reclamos.fecha_seguimiento', width: 40, align: "center"},
             {colname: 'Estado', index: 'estado', width: 40},
             {colname: '', index: 'link', width: 50, sortable: false, resizable: false, hidedlg: true, align: "center"},
             {colname: '', index: 'options', hidedlg: true, hidden: true},
@@ -578,6 +579,7 @@ var tablaReclamos = (function () {
                     aseguradora: aseguradora,
                     ramo: ramo,
                     usuario: usuario,
+                    fecha_seguimiento: '',
                     estado: estado,
                     erptkn: tkn
                 }

@@ -8,8 +8,8 @@ $route['planes/ajax_listar']= 'planes/ajax_listar';
 $route['planes/ocultotabla']   = 'planes/ocultotabla';
 $route['planes/ocultoformulario']   = 'planes/ocultoformulario';
 $route['planes/ajax-listar-ramos-tree'] = 'planes/ajax_listar_ramos_tree';
-$route['planes/crear']         = 'planes/crear';
-$route['planes/guardar']         = 'planes/guardar';
+//$route['planes/crear']         = 'planes/crear';
+//$route['planes/guardar']         = 'planes/guardar';
 
 //$route['planes/configuracion'] = 'planes/configuracion';
 $route['planes/ajax-listar-planes'] = 'planes/ajax_listar_planes';

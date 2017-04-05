@@ -50,6 +50,6 @@ class Rol_orm extends Model
   	//Si existen variables de limite
   	if($limit!=NULL) $query->skip($start)->take($limit);
 
-  	return $query->get(array('id', 'nombre', 'descripcion', 'superuser', 'default', Capsule::raw("IF(estado=1, 'Activo', 'Inactivo') AS estado"), Capsule::raw("IF(superuser=1, 'Si', 'No') AS superuserValue")));
+  	return $query->get(array('id', 'empresa_id', 'nombre', 'descripcion', 'superuser', 'default', Capsule::raw("IF(estado=1, 'Activo', 'Inactivo') AS estado"), Capsule::raw("IF(superuser=1, 'Si', 'No') AS superuserValue")));
   }
 }

@@ -2,7 +2,7 @@ if(desde=="solicitudes" || desde=="poliza" || desde == "endosos"){
 
 var tablaSolicitudesAereo = (function () {
 
-    var unico = $("#detalleunico").val();
+   var unico = $("input[name='detalleunico']").val();
 
     if(desde == "poliza" || desde == "endosos"){
         var id_poliza = $("#idPoliza").val();
@@ -37,7 +37,7 @@ var tablaSolicitudesAereo = (function () {
             mtype: "POST",
             datatype: "json",
             colNames: ['No. Interés', 'Serie', 'Marca','Modelo','Matricula','Valor','Pasajeros','Tripulacion','Fecha de inclusión','Fecha de exclusión','Estado','',''],
-            colModel: desde == "poliza" ?
+            colModel: desde == "poliza" || desde == "endosos" ?
             [
                 {name:'numero', index:'numero', width:30},
                 {name:'serie', index:'serie', width:40},
@@ -50,7 +50,6 @@ var tablaSolicitudesAereo = (function () {
                 {name:'fecha_inclusion', index:'created_at', width: 40},
                 {name:'fecha_exclusion', index:'created_at', width: 40},
                 {name:'estado', index:'estado', width: 40},
-                
                 {name:'options', index:'options', width:50, sortable:false, resizable:false, hidedlg:true, align:"center"},
                 {name:'link', index:'link', hidedlg:true, hidden: true}
 
@@ -77,7 +76,8 @@ var tablaSolicitudesAereo = (function () {
                 detalle_unico: unico,
                 desde: vista,
                 erptkn: tkn,
-                id_poliza: id_poliza,
+                id_poliza: desde == "endosos" ? id_poliza_endoso : id_poliza,
+                renovar: window.vista=="renovar" ? 1 : 0
             },
             height: "auto",
             autowidth: true,
@@ -90,7 +90,7 @@ var tablaSolicitudesAereo = (function () {
             viewrecords: true,
             refresh: true,
             gridview: true,
-            sortname: desde == "poliza" ? "estado" : "int_intereses_asegurados.estado",
+            sortname: desde == "poliza" || desde == "endosos" ? "estado" : "int_intereses_asegurados.estado",
             sortorder: "ASC",
 
             beforeProcessing: function (data, status, xhr) {
@@ -106,13 +106,11 @@ var tablaSolicitudesAereo = (function () {
             beforeRequest: function (data, status, xhr) {},
             loadComplete: function (data, status, xhr) {
 
-                /*if (gridObj.getGridParam('records') === 0) {
-                    $('#gbox_' + gridId).hide();
-                    $('#' + gridId + 'NoRecords').empty().append('No se han agregado intereses asegurados.').css({"color": "#868686", "padding": "30px 0 0"}).show();
+                if (gridObj.getGridParam('records') === 0) {
+                   sendIndividualForm =false;
                 } else {
-                    $('#gbox_' + gridId).show();
-                    $('#' + gridId + 'NoRecords').empty();
-                }*/
+                   sendIndividualForm =true;
+                }
 
                 //---------
                 // Cargar plugin jquery Sticky Objects
@@ -236,7 +234,19 @@ var tablaSolicitudesAereo = (function () {
             var selInteres = $(this).attr("data-int-id");
             $("#selInteres").val(selInteres);
             $("#selInteres").trigger('change');
-            formularioCrear.getInteres();       
+            if(window.vista=="renovar"){
+               selInteres = $(this).attr("data-interes-rev"); 
+               var selI = $(this).attr("data-int-id");
+               $("#idintertabla").val(selI); 
+               formularioCrear.getInteres(selInteres);  
+               setTimeout(function() {
+                    $("#selInteres").trigger('change');
+                }, 500);
+            } else{
+                $("#selInteres").trigger('change');
+                formularioCrear.getInteres(selInteres);  
+
+            }       
             $("#opcionesModalIntereses").modal("hide");
         }else{
 
@@ -326,6 +336,67 @@ var tablaSolicitudesAereo = (function () {
 
               saveInvidualCoverage(id,numeroArticulo);  
           });  
+        }else{
+            $(this).text("Seleccione un plan");
+        }
+    });
+
+       $(opcionesModal).on("click", ".setIndividualCoverageAereoPoliza", function (e) {
+
+        e.preventDefault();
+        e.returnValue=false;
+        e.stopPropagation();
+        var poliza = vista==="crear"?vista:(desde == "endosos" ? id_poliza : poliza_id);
+        var planes = $("#planes");
+        if($(planes).val()!==""){
+            var id = $(this).attr("data-int-gr");
+            var idFromTable = $(this).attr("data-id");
+            var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
+            var options = rowINFO.link;
+            var numeroArticulo =rowINFO.numero;
+            //Init Modal data-int-gr 
+            $(opcionesModal).modal("hide");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  poliza :poliza,
+                  desde: 'poliza',
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+                },
+                url: phost() + 'polizas/ajax_get_invidualCoverage',
+                success: function(data){    
+                    if ($.isEmptyObject(data.session) == false) {
+                        window.location = phost() + "login?expired";
+                    }else{  
+
+                        var temporalArrayArt = [];
+                        temporalArrayArt.coberturas=constructJSONArray("cobertura","valor_cobertura",getValuesFromArrayInput("coverageName"),getValuesFromArrayInput("coverageValue"));
+                        temporalArrayArt.deducion  =constructJSONArray("deduccion","valor_deduccion",getValuesFromArrayInput("deductibleName"),getValuesFromArrayInput("deductibleValue"));    
+                        $(".coverageIntereses").remove();
+                        $(".deductibleIntereses").remove();
+                        if(data.coberturas.length || data.deducion.length){
+                            temporalArrayArt.coberturas = data.coberturas;
+                            temporalArrayArt.deducion = data.deducion;
+                        }    
+                        populateStoredCovergeData('indCoveragefieldsIntereses','coverageIntereses','removecoverageIntereses',temporalArrayArt.coberturas,"cobertura","valor_cobertura");
+                        populateStoredCovergeData('indDeductiblefieldsIntereses','deductibleIntereses','removeDeductibleIntereses',temporalArrayArt.deducion,"deduccion","valor_deduccion");
+
+                        $(".moneda").inputmask('currency',{
+                              prefix: "",
+                              autoUnmask : true,
+                              removeMaskOnSubmit: true
+                        }); 
+                    }
+                }
+            });  
+
+            $("#saveIndividualCoveragebtn").click(function(){
+                saveInvidualCoverage(id,numeroArticulo);  
+            });  
         }else{
             $(this).text("Seleccione un plan");
         }
@@ -426,7 +497,7 @@ var tablaSolicitudesAereo = (function () {
 
 
 
-$(function () {
+$(document).ajaxStop (function() {  
     tablaSolicitudesAereo.init();
     $("#jqgh_tablaSolicitudesAereoGrid_cb span").removeClass("s-ico");
     $('#jqgh_tablaSolicitudesAereoGrid_options span').removeClass("s-ico");

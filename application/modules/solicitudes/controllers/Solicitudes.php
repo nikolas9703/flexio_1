@@ -3,8 +3,6 @@
 if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
-
-
 /**
  * Colaboradores
  * 
@@ -45,6 +43,7 @@ use Flexio\Modulo\SegCatalogo\Repository\SegCatalogoRepository as SegCatalogoRep
 use Flexio\Modulo\SegInteresesAsegurados\Repository\SegInteresesAseguradosRepository as SegInteresesAseguradosRepository;
 use Flexio\Modulo\CatalogoTPoliza\Models\CatalogoTPoliza as CatalogoTPoliza;
 use Flexio\Modulo\Agentes\Models\Agentes;
+use Flexio\Modulo\Agentes\Models\AgentesRamos;
 use Flexio\Modulo\Planes\Models\Planes;
 use Flexio\Modulo\Planes\Repository\PlanesRepository;
 use Flexio\Modulo\Planes\Models\PlanesComisiones;
@@ -392,7 +391,6 @@ class Solicitudes extends CRM_Controller {
             $vigencias['vigencia_desde'] = date("d-m-Y",strtotime($vigencias['vigencia_desde']));
             $vigencias['vigencia_hasta'] = date("d-m-Y",strtotime($vigencias['vigencia_hasta']));
         }
-
         $prima = $this->solicitudesRepository->verPrima($solicitudes->id);
         if (count($prima) == 0) {
             $prima = 'undefined';
@@ -417,9 +415,23 @@ class Solicitudes extends CRM_Controller {
         $metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_pago', 'orden');
         $sitio_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
 //        $agentes = Agentes::orderBy("nombre")->get(array('id', 'nombre'));
+        
+        /*$agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+        ->where('id_ramo', '=', $solicitudes->ramo_id)->distinct("nombre", "id")
+        ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));*/
+
         $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
-        ->where('id_ramo', '=', $solicitudes->ramo_id)
+        ->where('id_cliente', '=', $clientes->id)->distinct("agt_agentes.nombre", "agt_agentes.id")
         ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
+        $agtclinum = $agentes->count();
+
+        if ($agtclinum == 0) {
+            $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+            ->where('agt_agentes_ramos.id_ramo', '=', $solicitudes->ramo_id)->distinct("agt_agentes.nombre", "agt_agentes.id")
+            ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
+        }
+
+
         $estado = $this->SegCatalogoRepository->listar_catalogo('estado_s', 'orden');
 
         $solicitudes_titulo = Ramos::find($solicitudes->ramo_id);
@@ -1601,10 +1613,16 @@ public function crear($id_ramo = null, $id_interes = null) {
     $metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_pago', 'orden');
     $sitio_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
         //$centro_facturacion = Catalogos_orm::where('identificador', 'like', 'centro_facturacion')->orderBy("orden")->get(array('valor', 'etiqueta'));    
+    
+    /*$agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+    ->where('id_ramo', '=', $solicitudes_id)->distinct("agt_agentes.nombre", "agt_agentes.id")
+    ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));*/
     $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
-    ->where('id_ramo', '=', $solicitudes_id)
+    ->where('agt_agentes_ramos.id', '=', 0)->distinct("agt_agentes.nombre", "agt_agentes.id")
     ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
+
     $estado = $this->SegCatalogoRepository->listar_catalogo('estado_s', 'orden');
+    
 
     if (!empty($id_interes)) {
         $selInteres = $id_interes;
@@ -1637,7 +1655,7 @@ public function crear($id_ramo = null, $id_interes = null) {
         }
     }
 
-    if(count($centroContable) == 1){
+    if($centroContable != ''){
         $id_centro_contable = $centroContable[0]->id;
     }else{
         $id_centro_contable = 0;
@@ -1856,9 +1874,9 @@ exit;
 
 function ajax_get_intereses() {
 
-    $interes = $_POST['interes'];
-    if ($interes == "") {
-        $interes = "0";
+    $interes = $this->input->post('interes');
+    if ($interes == "" || $interes == null) {
+        $interes = 0 ;
     }
     $tipointeres = $_POST['tipointeres'];
     $tipointeres = str_replace("Tab", "", $tipointeres);
@@ -1895,14 +1913,17 @@ function ajax_get_intereses() {
 
     $response = new stdClass();
     $response->inter = array();
-    $response->inter = $inter->toArray();
-    if ($tipo != 2 && $tipo != 3 && $tipo != 5) {
-            //$response->inter ['uuid_'.$tipointeres] = bin2hex($response->inter ['uuid_'.$tipointeres]);
-        $tipointeres = str_replace("_actividad", "", $tipointeres);
-        $response->inter ['uuid_' . $tipointeres] = "";
+    if (count($inter)) {
+        $response->inter = $inter->toArray();
+        if ($tipo != 2 && $tipo != 3 && $tipo != 5) {
+                //$response->inter ['uuid_'.$tipointeres] = bin2hex($response->inter ['uuid_'.$tipointeres]);
+            $tipointeres = str_replace("_actividad", "", $tipointeres);
+            $response->inter ['uuid_' . $tipointeres] = "";
+        }
+        $response->inter ['tipointeres'] = $tipo;
+        $response->inter ['uuid_intereses'] = bin2hex($response->inter ['uuid_intereses']);
     }
-    $response->inter ['tipointeres'] = $tipo;
-    $response->inter ['uuid_intereses'] = bin2hex($response->inter ['uuid_intereses']);
+    
 
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
     ->set_output(json_encode($response))->_display();
@@ -1966,6 +1987,7 @@ function ajax_get_cliente() {
 
     $clause['cli_clientes.empresa_id'] = $this->empresa_id;
     $clause['cli_clientes.id'] = $_POST['cliente_id'];
+    $ramo_id = $_POST['id_ramo'];
     $clienteUuid = $this->clienteModel->where($clause)->select('uuid_cliente')->first();
     $uuid = hex2bin(strtolower($clienteUuid->uuid_cliente));
 
@@ -1993,6 +2015,17 @@ function ajax_get_cliente() {
     $direccion = centroModel::where('cliente_id', $_POST['cliente_id'])
     ->where('empresa_id', $this->empresa_id)
     ->get();
+    $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+        ->where('id_cliente', '=', $_POST['cliente_id'])->distinct("agt_agentes.nombre", "agt_agentes.id")
+        ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
+    $agtclinum = $agentes->count();
+
+    if ($agtclinum == 0) {
+        $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+        ->where('agt_agentes_ramos.id_ramo', '=', $ramo_id)->where("agt_agentes_ramos.id_cliente", 0)->distinct("agt_agentes.nombre", "agt_agentes.id")
+        ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
+    }
+
     if (!count($cliente)) {
         $cliente = $this->clienteModel->where($clause)->first();
     }
@@ -2000,6 +2033,7 @@ function ajax_get_cliente() {
     $cliente['group2'] = $group2;
     $cliente['direccion'] = $direccion;
     $cliente['direccion2'] = $direccion2;
+    $cliente['agentes'] = $agentes;
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
     ->set_output(json_encode($cliente))->_display();
 
@@ -2167,10 +2201,21 @@ function ajax_get_comision() {
     function ajax_get_porcentaje() {
         $clause['agt_agentes_ramos.id_ramo'] = $_POST['ident_ramo'];
         $clause['agt_agentes.id'] = $_POST['agente_id'];
-        $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+        /*$agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
         ->where($clause)
-        ->get()->toArray();
-//        $agentes = Agentes::where($clause)->get()->toArray();
+        ->get()->toArray();*/
+
+        $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+        ->where('id_cliente', '=', $_POST['cliente_id'])->where('agt_agentes.id', '=', $_POST['agente_id'])
+        ->orderBy("nombre")->get();
+        $agtclinum = $agentes->count();
+
+        if ($agtclinum == 0) {
+            $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
+            ->where('agt_agentes_ramos.id_ramo', '=', $_POST['ident_ramo'])->where('agt_agentes.id', '=', $_POST['agente_id'])->where("agt_agentes_ramos.id_cliente", 0)->orderBy("nombre")->get();
+        }
+//       
+        $agentes->toArray();
         $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')
         ->set_output(json_encode($agentes))->_display();
         exit;
@@ -2486,7 +2531,7 @@ function ajax_get_comision() {
                     $IInteres['comentable_id'] = $solicitudes->id;
                     //$IInteres['created_at'] = date('Y-m-d H:i:s');
                     $IInteres["comentable_type"] = "Creacion_interes_solicitudes";
-                    $bitacora = $this->bitacoraModel->where('comentable_id', $_POST['detalleunico'])->update($IInteres);
+                    $bitacora = $this->bitacoraModel->where('comentable_id', $_POST["detalleunico"])->update($IInteres);
                     
                     $agenteprincipaltotal=Agentes::where('principal',1)->
                     where('id_empresa',$this->empresa_id)->count();
@@ -2692,6 +2737,12 @@ function ajax_get_comision() {
                             }
                         }
                     }
+                    $IInteres = array();
+                    $IInteres['comentable_id'] = $id_solicitud;
+                    $IInteres["comentable_type"] = "Creacion_interes_solicitudes";
+                    //var_dump($_POST["detalleunico"]);
+                    
+                    $bitacora = $this->bitacoraModel->where('comentable_id', $_POST["detalleunico"])->update($IInteres);
 
                     $solicitudes2 = $this->solicitudesModel->where(['id' => $id_solicitud])->first();
                     $codigo = $solicitudes2->numero;
@@ -2943,6 +2994,7 @@ function ajax_get_comision() {
         $decodingHeaders = array_map("utf8_decode", $headers);
         $csv->insertOne($decodingHeaders);
         $csv->insertAll($csvdata);
+        //$csv->setOutputBOM(Writer::BOM_UTF8);
         $csv->output("Solicitudes-" . date('y-m-d') . ".csv");
         exit();
     }
@@ -3100,6 +3152,7 @@ function ajax_get_comision() {
         ->join('cli_centros_facturacion', 'cli_centros_facturacion.cliente_id', '=', 'cli_clientes.id')
         ->join('cli_clientes_correos', 'cli_clientes_correos.cliente_id', '=', 'cli_clientes.id')
         ->join('cli_clientes_telefonos', 'cli_clientes_telefonos.cliente_id', '=', 'cli_clientes.id')
+        ->select('cli_clientes.*','cli_clientes_correos.correo as correo', 'cli_clientes_telefonos.telefono as telefono')
         ->first();
 
 
@@ -3117,6 +3170,7 @@ function ajax_get_comision() {
         $provincias = $this->SegCatalogoRepository->listar_catalogo('provincias', 'orden');
         $centro_facturacion = $this->centroModel->where(['id' => $solicitudes->prima->centro_facturacion])->first();
         $i = 0;
+        $agentes = "";
         foreach ($solicitudes->participacion as $key => $value) {
             $agentes[$i] = Agentes::where(['id' => $value->agente])->first();
             $i++;

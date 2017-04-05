@@ -47,7 +47,7 @@
 						<input type='hidden' name='facturas_id[]' value="{{remesas.id}}" />
 					</template>
 					<template v-if="remesas.aseguradora_id !== ''">
-						<input type='hidden' name='aseguradora_id' value="{{remesas.aseguradora_id}}" />
+						<input type='hidden' name='aseguradora_id' if="aseguradora_id" value="{{remesas.aseguradora_id}}" />
 					</template>
 					<td style="{{remesas.estilos}}">
 					<template v-if="remesas.id!==''">

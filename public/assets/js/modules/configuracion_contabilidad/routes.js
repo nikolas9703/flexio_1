@@ -75,6 +75,9 @@ var moduloConfiguracionContabilidad = (function() {
 		getCuentaPasivo:function(){
 		  return $.post(phost() + 'configuracion_contabilidad/ajax-cuenta-pasivo', {erptkn: tkn});
 	  },
+	  getCuentaIngresos:function(){
+		  return $.post(phost() + 'configuracion_contabilidad/ajax_cuenta_ingresos', {erptkn: tkn});
+	  },
 		getCuentaPorPagar:function(parametros){
 			return $.post(phost() + 'configuracion_contabilidad/ajax-get-cuenta-por-pagar', $.extend({
 				erptkn: tkn

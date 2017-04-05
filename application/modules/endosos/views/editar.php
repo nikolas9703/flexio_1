@@ -9,7 +9,7 @@
         <?php Template::cargar_vista('breadcrumb'); ?>
 
         <div class="col-lg-12">
-            <div class="wrapper-content">
+            <div class="wrapper-content-1">
                 <div class="row">
                     <div id="mensaje">
                     </div>
@@ -30,7 +30,7 @@
                         <div class="row">
                             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                 <label>Ramo:</label>
-                                <select id="id_ramo_endoso" name="campos[id_ramo]" class="form-control" onchange="verpolizas()">
+                                <select id="id_ramo" name="campos[id_ramo]" class="form-control" onchange="verpolizas()">
                                     <option value="">Seleccione</option>
                                     <?php
                                         if(!empty($menu_crear)){
@@ -60,7 +60,7 @@
                             </div>
                             <div class="form-group col-xs-12 col-sm-6 col-md-5 col-lg-5">
                                 <label>Cliente: </label>
-                                <select id="cliente_id_endoso" name="campos[cliente_id]" class="form-control" onchange="verpolizas()">
+                                <select id="cliente_id" name="campos[cliente_id]" class="form-control" onchange="verpolizas()">
                                     <option value="">Seleccione</option>
                                     <?php
                                        if(!empty($clientes)){
@@ -87,29 +87,21 @@
                                 </select>
                             </div>
                         </div>
-
-                        
-
-                        <?php echo modules::run('endosos/ocultoformulario')?>
+                        <?php echo modules::run('endosos/ocultoformulario',$data)?>
                     </div>
                 </div>    
                 <?php echo form_close(); ?>
-
+            </div>
+            <div class="wrapper-content">
                 <div class="row" id="subPanels">
                     <?php
                         SubpanelTabs::visualizar($subpanels);
                     ?>
                 </div>
-
-                <div class="row hidden" id="subPanelPoliza">
-                    <?php 
-                        $data["campos"]["uuid_polizas"] = $uuid_poliza;
-                        echo modules::run('polizas/editoformulario', $data);  //,'11E6F2BC607FA7D5B521BC764E11D717'
-                    ?>
-                </div>
-
-
             </div>
+            <div class="row">
+                <?php echo modules::run('endosos/comentaformulario',$campos); ?>
+            </div>    
         </div><!-- cierra .col-lg-12 -->
     </div><!-- cierra #page-wrapper -->
 </div><!-- cierra #wrapper -->

@@ -229,6 +229,8 @@ $formAttr = array(
                     <input type="hidden" name="reg" id="reg" value="<?php echo !empty($_GET['reg']) ? $_GET['reg'] : ''; ?>"> 
                     <input type="hidden" name="val" id="val" value="<?php echo !empty($_GET['val']) ? $_GET['val'] : ''; ?>"> 
 
+                    
+
                     <!-- Vigencia y detalle de solicitud -->    
                     <div class="row">
                         <?php

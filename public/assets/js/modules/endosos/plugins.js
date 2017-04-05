@@ -9,7 +9,7 @@ $(function(){
 		}).val('');
     }else if(vista == "crear"){
    		$('#fecha_afectacion').daterangepicker({ 
-		    locale:{ format: 'DD-MM-YYYY'},
+		    locale: {format: 'DD-MM-YYYY'},
 		    showDropdowns: true,
 		    defaultDate: '',
 		    singleDatePicker: true
@@ -21,10 +21,10 @@ $(function(){
     	}
 
    		$('#fecha_afectacion').daterangepicker({ 
-		    locale:{ format: 'DD-MM-YYYY'},
+		    locale: {format: 'DD-MM-YYYY'},
+		    starDate: fecha,
 		    showDropdowns: true,
 		    defaultDate: '',
-			startDate: fecha,
 		    singleDatePicker: true
 		}).val(fecha);
     }

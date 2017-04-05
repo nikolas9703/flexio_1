@@ -52,12 +52,13 @@
 </div> 
 <div class="row">
     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
-        <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
-        <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true">
+        <label>Sitio de pago <span required="" aria-required="true">*</span> </label>
+        <select  name="campoprima[sitio_pago]" class="form-control" id="sitiopago" data-rule-required="true">
             <option value="">Seleccione</option>
-            <option v-for="frecuencia in catalogoFrecuenciaPagos" v-bind:value="frecuencia.valor" :selected="frecuencia.valor == prima.frecuencia_pago">{{frecuencia.etiqueta}}</option>
+            <option v-for="sitio in catalogoSitioPago" v-bind:value="sitio.valor" :selected="sitio.valor == prima.sitio_pago">{{{sitio.etiqueta}}}</option>
         </select>
     </div>
+    
     <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-4 plan">
         <label>M&eacute;todo de pago <span required="" aria-required="true">*</span> </label>
         <select  name="campoprima[metodo_pago]" class="form-control" id="metodopago" data-rule-required="true">
@@ -84,10 +85,10 @@
     </div>
 
     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
-        <label>Sitio de pago <span required="" aria-required="true">*</span> </label>
-        <select  name="campoprima[sitio_pago]" class="form-control" id="sitiopago" data-rule-required="true">
+        <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
+        <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true">
             <option value="">Seleccione</option>
-            <option v-for="sitio in catalogoSitioPago" v-bind:value="sitio.valor" :selected="sitio.valor == prima.sitio_pago">{{{sitio.etiqueta}}}</option>
+            <option v-for="frecuencia in catalogoFrecuenciaPagos" v-bind:value="frecuencia.valor" :selected="frecuencia.valor == prima.frecuencia_pago">{{frecuencia.etiqueta}}</option>
         </select>
     </div>
     <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">

@@ -27,7 +27,7 @@ public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NU
 	$query = self::with(array('cliente', 'proveedor', 'aseguradora','items' => function($query){
             
     		}));
-    
+                
     if($clause!=NULL && !empty($clause) && is_array($clause))
     {
         $query->where("estado", "1")->where("empresa_id", $clause['id_empresa']); 

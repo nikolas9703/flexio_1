@@ -608,7 +608,8 @@ class Cobros_seguros extends CRM_Controller {
 		
 		$response =  $faturas->map(function($fac){
 			return collect([
-				'id'=> $fac->idPoliza,
+				'id'=> $fac->id,
+				'id_poliza' => $fac->idPoliza,
 				'nombre'=> $fac->cliente_nombre." - ".$fac->ramo_aso." - No. ".$fac->numero_poliza,
 				'codigo'=> $fac->codigo,
 				'numero_poliza' => $fac->numero_poliza,
@@ -687,7 +688,7 @@ class Cobros_seguros extends CRM_Controller {
 				'numero_poliza' => $fac->numero_poliza,
 				'fecha_desde' => $fac->fecha_desde,
 				'fecha_hasta' => $fac->fecha_hasta,
-				'total' => $fac->saldo,
+				'total' => $fac->total,//$fac->saldo,
 				'cobros'=> $fac->cobros,
 				'cliente'=> $fac->cliente,
 				'ordenes_ventas' => $fac->ordenes_ventas->where('estado','facturado_completo')

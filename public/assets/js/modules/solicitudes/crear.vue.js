@@ -1858,14 +1858,41 @@ $(document).ready(function () {
         $("#vigencia_vida_individual").remove();
         $("#vigencia_vida_colectivo").remove();
     }
-        //-------------------------------------------------------------------------------
+    
+    //-------------------------------------------------------------------------------
 
-        if (vista == "editar") {
-            verificaagente();
+    if (vista == "editar") {
+        verificaagente();
+    }
+
+    //--------------------------------------------------------------------------------
+
+    if ($("#estado").val() != "Aprobado" ) {
+        $("#prima_anual").removeAttr("data-rule-required");
+        $("#vigencia_desde").removeAttr("data-rule-required");
+        $("#vigencia_hasta").removeAttr("data-rule-required");
+        $("#fecha_primer_pago").removeAttr("data-rule-required");
+        $("#fecha_primerPago").removeAttr("data-rule-required");    
+    }
+
+    $("#estado").change(function(){
+        if ($(this).val() == "Aprobada") {
+            $("#prima_anual").attr("data-rule-required", "true");
+            $("#vigencia_desde").attr("data-rule-required", "true");
+            $("#vigencia_hasta").attr("data-rule-required", "true");
+            $("#fecha_primer_pago").attr("data-rule-required", "true");
+            $("#fecha_primerPago").attr("data-rule-required", "true");                    
+        }else{
+            $("#prima_anual").removeAttr("data-rule-required");
+            $("#vigencia_desde").removeAttr("data-rule-required");
+            $("#vigencia_hasta").removeAttr("data-rule-required");
+            $("#fecha_primer_pago").removeAttr("data-rule-required");
+            $("#fecha_primerPago").removeAttr("data-rule-required");    
         }
+    });
         
 
-    });
+});
 
 
 

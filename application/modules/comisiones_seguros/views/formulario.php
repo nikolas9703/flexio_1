@@ -169,11 +169,11 @@
 						</div>
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
 							<label>N. Recibo de pago</label>
-							<input type="text" name="campo[recibo]" class="form-control" id="campo[recibo]" value="<?php echo $participacion->no_recibo?>" disabled />
+							<input type="text" name="campo[recibo]" class="form-control" id="campo[recibo]" value="<?php if($participacion->no_recibo != ''){echo $participacion->datosPago->codigo;}else{echo '';} ?>" disabled />
 						</div>
 						<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-2" >
 							<label>Fecha de pago</label>
-							<input type="text" name="campo[created_at]" class="form-control" id="campo[created_at]" value="<?php if($participacion->fecha_pago!="") echo date_format(date_create($participacion->fecha_pago),'Y-m-d') ?>" disabled />
+							<input type="text" name="campo[created_at]" class="form-control" id="campo[created_at]" value="<?php if($participacion->no_recibo != ''){echo $participacion->datosPago->fecha_pago;}else{echo '';} /*if($participacion->fecha_pago!="") date('d-m-Y', $participacion->datosPago->fecha_pago); date_format(date_create($participacion->datosPago->fecha_pago),'Y-m-d')*/ ?>" disabled />
 						</div>
 					<?php
 					}

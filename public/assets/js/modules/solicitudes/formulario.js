@@ -349,6 +349,7 @@ function OnloadFunction(valid, tablaTipo) {
                 var mes = dat[1];
                 var anio = dat[0];
                 inicio = dia + "-" + mes + "-" + anio ;
+
             }
 
             if (inicio != "") {
@@ -661,11 +662,13 @@ function OnloadFunction(valid, tablaTipo) {
             if ($('#polizaDeclarativa').prop('checked')) {
                 return true;
             }else{
-                if (parseFloat($("#prima_anual").val())>0) {
-                    return true;
-                }else{
-                    return false;
-                }
+                if ($("#estado").val() == "Aprobada") {
+                    if (parseFloat($("#prima_anual").val())>0 ) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } 
             }
         }
         catch (e) {
@@ -1535,22 +1538,22 @@ function inicializaCamposAcreedor(){
         var x = id.split('_');
         var final = $("#fechafin_"+x[1]).val();
 
-        /*if (vigini.indexOf("-") > -1) {
-            var dat = vigini.split("-");
+        /*if (vigini.indexOf('/') > -1) {
+            var dat = vigini.split('/');
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
             vigini = anio + '-' + mes + '-' + dia ;
         }
-        if (vigfin.indexOf("-") > -1) {
-            var dat = vigfin.split("-");
+        if (vigfin.indexOf('/') > -1) {
+            var dat = vigfin.split('/');
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
             vigfin = anio + '-' + mes + '-' + dia ;
         }
-        if (actual.indexOf("-") > -1) {
-            var dat = actual.split("-");
+        if (actual.indexOf('/') > -1) {
+            var dat = actual.split('/');
             var dia = dat[0];
             var mes = dat[1];
             var anio = dat[2];
@@ -1580,15 +1583,15 @@ function inicializaCamposAcreedor(){
         var x = id.split('_');
         var inicial = $("#fechainicio_"+x[1]).val();
 
-        /*if (vigini.indexOf("-") > -1) {
-            var dat = vigini.split("-");
+        /*if (vigini.indexOf('/') > -1) {
+            var dat = vigini.split('/');
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
             vigini = anio + '-' + mes + '-' + dia ;
         }
-        if (vigfin.indexOf("-") > -1) {
-            var dat = vigfin.split("-");
+        if (vigfin.indexOf('/') > -1) {
+            var dat = vigfin.split('/');
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];

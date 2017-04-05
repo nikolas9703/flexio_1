@@ -9,8 +9,8 @@
         </div>
     </div>
     <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
-        <label>Numero de caso <span required="" aria-required="true">*</span></label>
-        <input  value="{{reclamoInfo.numero_caso}}" name="camporeclamo[numero_caso]" type="text" id="numero_caso" class="form-control" data-rule-required="true" :disabled="reclamoInfo.estado == 'Cerrado' || reclamoInfo.estado == 'Anulado' || permiso_editar == '0'  ">
+        <label>Numero de caso</label>
+        <input  value="{{reclamoInfo.numero_caso}}" name="camporeclamo[numero_caso]" type="text" id="numero_caso" class="form-control" :disabled="reclamoInfo.estado == 'Cerrado' || reclamoInfo.estado == 'Anulado' || permiso_editar == '0'  ">
     </div>     
     <div class="col-xs-12 col-sm-6 col-md-3 col-lg-3">
         <label for="">Fecha de siniestro<span required="" aria-required="true">*</span></label>

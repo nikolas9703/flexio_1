@@ -67,7 +67,7 @@
         refresh: true,
         gridview: true,
         multiselect: true,
-        sortname: 'fecha',
+        sortname: 'fecha1',
         sortorder: "DESC",
         beforeProcessing: function(data, status, xhr){
 

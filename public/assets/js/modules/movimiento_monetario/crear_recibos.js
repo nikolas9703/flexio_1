@@ -312,7 +312,7 @@ $(document).ready(function () {
         if (typeof cliente_proveedor != 'undefined') {
 
             //Seleccionar categoria
-            //  $('#categoria').prop('disabled', 'disabled').find('option[value=' + cliente_proveedor + ']').attr('selected', 'selected');
+            //	$('#categoria').prop('disabled', 'disabled').find('option[value=' + cliente_proveedor + ']').attr('selected', 'selected');
             $('#categoria').trigger("chosen:updated");
 
             // $('#cancelarFormBoton').css('display', 'none');
@@ -532,7 +532,7 @@ $('.chekbox-incluir').change(function () {
 
 $('#permisosForm').append('<input type="hidden" name="campo[id_categoria]" class="id_categoria" style="display:none;" value="">');
 $('#permisosForm').append('<input type="hidden" name="campo[id_cliente_proveedor]" class="id_cliente_proveedor" style="display:none;" value="">');
-console.log(localStorage.getItem('ms-selected'));
+
 if(localStorage.getItem('ms-selected') == 'seguros'){
 
 

@@ -3,7 +3,7 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
       
     var tablaSolicitudesUbicacion = (function () {
 
-    var unico = $("#detalleunico").val();
+    var unico = $("input[name='detalleunico']").val();
     if(desde == "poliza" || desde == "endosos"){
         var id_poliza = $("#idPoliza").val();
         console.log(id_poliza);
@@ -32,7 +32,7 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
             mtype: "POST",
             datatype: "json",
             colNames: ['No. Interés', 'Nombre', 'Dirección', 'Edificio','Contenido,Mercancía','Maquinaria','Inventario','Acreedor','Estado','',''],
-            colModel: desde == "poliza" ?
+            colModel: desde == "poliza" || desde == "endosos" ?
             [
                 {name:'numero', index:'numero', width:30},
                 {name:'nombre', index:'nombre', width:40},
@@ -68,7 +68,8 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
                 detalle_unico: unico,
                 desde: vista,
                 erptkn: tkn,
-                id_poliza: id_poliza,
+                id_poliza: desde == "endosos" ? id_poliza_endoso : id_poliza,
+                renovar: window.vista=="renovar" ? 1 : 0
             },
             height: "auto",
             autowidth: true,
@@ -81,7 +82,7 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
             viewrecords: true,
             refresh: true,
             gridview: true,
-            sortname: desde ==  "poliza" ? "estado": "int_intereses_asegurados.estado",
+            sortname: desde ==  "poliza" || desde == "endosos" ? "estado": "int_intereses_asegurados.estado",
             sortorder: "ASC",
 
             beforeProcessing: function (data, status, xhr) {
@@ -97,13 +98,11 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
             beforeRequest: function (data, status, xhr) {},
             loadComplete: function (data, status, xhr) {
 
-                /*if (gridObj.getGridParam('records') === 0) {
-                    $('#gbox_' + gridId).hide();
-                    $('#' + gridId + 'NoRecords').empty().append('No se han agregado intereses asegurados.').css({"color": "#868686", "padding": "30px 0 0"}).show();
+               if (gridObj.getGridParam('records') === 0) {
+                   sendIndividualForm =false;
                 } else {
-                    $('#gbox_' + gridId).show();
-                    $('#' + gridId + 'NoRecords').empty();
-                }*/
+                   sendIndividualForm =true;
+                }
                 var DataGrid = gridObj;
 
                  //sets the grid size initially
@@ -188,6 +187,41 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
 
     };
 
+
+    /*var recargar = function () {
+
+        //Reload Grid
+        gridObj.setGridParam({
+            url: tablaUrl,
+            datatype: "json",
+            postData: {
+                numero: '',
+                chasis: '',
+                placa: '',
+                modelo: '',
+                marca: '',
+                unidad: '',
+                color: '',
+                operador: '',
+                prima: '',
+                fecha_inclusion: '',
+                estado: '',
+                erptkn: tkn
+            }
+        }).trigger('reloadGrid');
+
+    };*/
+    var redimencionar_tabla = function () {
+        $(window).resizeEnd(function () {
+            $(".ui-jqgrid").each(function () {
+                var w = parseInt($(this).parent().width()) - 6;
+                var tmpId = $(this).attr("id");
+                var gId = tmpId.replace("gbox_", "");
+                $("#" + gId).setGridWidth(w);
+            });
+        });
+    };
+
     
     //Boton de Cambiar estado InteresesAsegurados
     $(opcionesModal).on("click", ".quitarInteres", function (e) {
@@ -226,7 +260,19 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
             var selInteres = $(this).attr("data-int-id");
             $("#selInteres").val(selInteres);
             $("#selInteres").trigger('change'); 
-            formularioCrear.getInteres();       
+            if(window.vista=="renovar"){
+               selInteres = $(this).attr("data-interes-rev"); 
+               var selI = $(this).attr("data-int-id");
+               $("#idintertabla").val(selI); 
+               formularioCrear.getInteres(selInteres);  
+               setTimeout(function() {
+                    $("#selInteres").trigger('change');
+                }, 500);
+            } else{
+                $("#selInteres").trigger('change');
+                formularioCrear.getInteres(selInteres);  
+
+            }      
             $("#opcionesModalIntereses").modal("hide");
         }else{
             var selInteres = $(this).attr("data-int-id");
@@ -317,6 +363,68 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
         }
     });
 
+
+  $(opcionesModal).on("click", ".setIndividualCoverageUbcPoliza", function (e) {
+
+        e.preventDefault();
+        e.returnValue=false;
+        e.stopPropagation();
+        var poliza = vista==="crear"?vista:(desde == "endosos" ? id_poliza : poliza_id);
+        var planes = $("#planes");
+        if($(planes).val()!==""){
+            var id = $(this).attr("data-int-gr");
+            var idFromTable = $(this).attr("data-id");
+            var rowINFO = $.extend({}, gridObj.getRowData(idFromTable));
+            var options = rowINFO.link;
+            var numeroArticulo =rowINFO.numero;
+            //Init Modal data-int-gr 
+            $(opcionesModal).modal("hide");
+            showIndividualCoverageModal(numeroArticulo);
+            $.ajax({
+                type: "POST",
+                data: {
+                  detalle_unico: unico,
+                  id_interes :id,
+                  poliza :poliza,
+                  desde: "poliza",
+                  planId : $(planes).val(), 
+                  erptkn: tkn
+                },
+                url: phost() + 'polizas/ajax_get_invidualCoverage',
+                success: function(data){    
+                    if ($.isEmptyObject(data.session) == false) {
+                        window.location = phost() + "login?expired";
+                    }else{  
+
+                          var temporalArrayArt = [];
+                          temporalArrayArt.coberturas=constructJSONArray("cobertura","valor_cobertura",getValuesFromArrayInput("coverageName"),getValuesFromArrayInput("coverageValue"));
+                          temporalArrayArt.deducion  =constructJSONArray("deduccion","valor_deduccion",getValuesFromArrayInput("deductibleName"),getValuesFromArrayInput("deductibleValue"));    
+                          $(".coverageIntereses").remove();
+                          $(".deductibleIntereses").remove();
+                          if(data.coberturas.length || data.deducion.length){
+                                temporalArrayArt.coberturas = data.coberturas;
+                                temporalArrayArt.deducion = data.deducion;
+                            }    
+                        populateStoredCovergeData('indCoveragefieldsIntereses','coverageIntereses','removecoverageIntereses',temporalArrayArt.coberturas,"cobertura","valor_cobertura");
+                        populateStoredCovergeData('indDeductiblefieldsIntereses','deductibleIntereses','removeDeductibleIntereses',temporalArrayArt.deducion,"deduccion","valor_deduccion");
+
+                        $(".moneda").inputmask('currency',{
+                              prefix: "",
+                              autoUnmask : true,
+                              removeMaskOnSubmit: true
+                        }); 
+                    }
+                }
+            });  
+
+            $("#saveIndividualCoveragebtn").click(function(){
+                saveInvidualCoverage(id,numeroArticulo);  
+            });  
+        }else{
+            $(this).text("Seleccione un plan");
+        }
+    });
+
 	//Funciones para botones del grid de maritimo
 	
 	/*$("#"+gridId).on("click", ".linkCargaInfo", function(e){
@@ -346,39 +454,6 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
 	//Fin funciones para botones del grid de maritimo
 
 
-    var recargar = function () {
-
-        //Reload Grid
-        gridObj.setGridParam({
-            url: tablaUrl,
-            datatype: "json",
-            postData: {
-                numero: '',
-                chasis: '',
-                placa: '',
-                modelo: '',
-                marca: '',
-                unidad: '',
-                color: '',
-                operador: '',
-                prima: '',
-                fecha_inclusion: '',
-                estado: '',
-                erptkn: tkn
-            }
-        }).trigger('reloadGrid');
-
-    };
-    var redimencionar_tabla = function () {
-        $(window).resizeEnd(function () {
-            $(".ui-jqgrid").each(function () {
-                var w = parseInt($(this).parent().width()) - 6;
-                var tmpId = $(this).attr("id");
-                var gId = tmpId.replace("gbox_", "");
-                $("#" + gId).setGridWidth(w);
-            });
-        });
-    };
     return{
         init: function () {
             tabla();
@@ -411,7 +486,7 @@ if (desde=="solicitudes" || desde=="poliza" || desde == "endosos") {
 
 })();
 
-$(function () {
+$(document).ajaxStop (function() {  
     tablaSolicitudesUbicacion.init();
     $("#jqgh_tablaSolicitudesUbicacionGrid_cb span").removeClass("s-ico");
     $('#jqgh_tablaSolicitudesUbicacionGrid_options span').removeClass("s-ico");

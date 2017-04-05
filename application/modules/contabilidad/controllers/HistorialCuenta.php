@@ -63,6 +63,7 @@ trait HistorialCuenta {
         //Just Allow ajax request
         $this->load->model('pagos/Pagos_orm');
         $this->load->model('facturas_compras/Facturas_compras_orm');
+        $this->load->model('facturas_seguros/Factura_orm');
         $this->load->model('movimiento_monetario/Movimiento_retiros_orm');
 
         if(!$this->input->is_ajax_request()){

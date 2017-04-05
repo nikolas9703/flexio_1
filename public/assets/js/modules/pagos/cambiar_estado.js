@@ -11,6 +11,7 @@ var change_state_pagos = function(){
             //render
             var id = row.attr("data-id");
             var uuid = row.attr("data-uuid");
+            //console.log(row.attr());
             var rowINFO = $.extend({}, data.gridObj.getRowData(uuid));
             //Init Modal
             if(id){

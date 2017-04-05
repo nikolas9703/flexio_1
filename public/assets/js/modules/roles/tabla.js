@@ -15,6 +15,7 @@ $(function() {
 			'',
 			'',
 			'Acci&oacute;n',
+			'',
 			''
 		],
 	   	colModel:[
@@ -27,6 +28,7 @@ $(function() {
 			{name:'default', index:'default', hidden:true},
 			{name:'link', index:'link', width:50, align:"center", sortable:false, resizable:false},
 			{name:'options', index:'options', hidden:true},
+			{name:'opciones_menu', index:'opciones_menu', hidedlg:true, hidden: true}
 	   	],
 		mtype: "POST",
 	   	postData: {
@@ -311,5 +313,37 @@ $(function() {
 		    $('#optionsModal').modal('hide');
 		});
 	});
+
+
+	$('#optionsModal').on('click','#menuSuperior',function (e){
+
+		e.preventDefault();
+		e.returnValue=false;
+		e.stopPropagation();
+
+		var id = $(this).attr('data-rol');
+		var i = 0;
+		var rowINFO = $("#rolesGrid").getRowData(id);
+		var opciones = rowINFO["opciones_menu"];
+
+		$('#optionsModal').modal('hide');
+		$('#opcionesMenu').find('.modal-title').empty().html('Editar Menu');
+		$('#opcionesMenu').find('.modal-body').empty().append(opciones);
+		$('#opcionesMenu').find('.modal-footer').empty();
+		$('#opcionesMenu').modal('show');
+
+		$('#opcionesMenu').find('#tkn_menu_'+id).val(tkn);
+		$('#opcionesMenu').find('.menu2').each(function(){
+			$(this).attr('id',i);
+			i++;
+		});
+
+		$('#opcionesMenu').on('click','.cancelar_menu',function(){
+			$('#opcionesMenu').modal('hide');
+		});
+
+	});
+
+
 	
 });

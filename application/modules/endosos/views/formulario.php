@@ -41,7 +41,7 @@
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <label>Descripcion <span required="" aria-required="true">*</span></label>
-            <textarea class="form-control" id="descrpcion_endoso" name="campos[descripcion]" rows="8" style="resize:vertical;" data-rule-required="true">{{valor_descripcion}}</textarea>
+            <textarea class="form-control" id="descrpcion_endoso" name="campos[descripcion]" rows="8" style="resize:vertical;" data-rule-required="true"><?php echo $valor_descripcion?></textarea>
         </div>
     </div>
 </div>

@@ -6,7 +6,7 @@
   <table id="remesa_entrante" class="table table-striped"><!-- tree-table cuentas_config -->
     <thead>
       <tr>
-        <td width="50%">Cuenta: 2. Pasivo</td>
+        <td width="50%">Cuenta: 4. Ingresos</td>
         <td width="50%">Cuenta seleccionada</td>
       </tr>
     </thead>

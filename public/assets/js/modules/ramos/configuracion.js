@@ -56,7 +56,7 @@ bluapp.controller("configRamosController", function ($scope, $http) {
 
                         $('#descripcion').rules(
                                 "add", {required: true,
-                                    regex: '^[a-zA-Z0-9áéíóúñ ]+$',
+                                    //regex: '^[a-zA-Z0-9áéíóúñ ]+$',
                                 });
                         $('#has-error').hide();
 

@@ -618,5 +618,7 @@ $(document).ready(function () {
 
     });
 
-
+    if(regresar_poliza == 'si'){
+        $('#cancelar').attr('href', phost()+'polizas/editar/'+uuid_poliza);
+    }
 });

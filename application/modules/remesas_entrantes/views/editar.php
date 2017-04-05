@@ -46,7 +46,7 @@
                                     </select>
                                 </div>
                                 <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-4">
-                                    <label>Fecha de las facturas</label>
+                                    <label>Fecha de los cobros</label>
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-calendar"></i></span>    
                                         <input type="input" id="fecha_desde" name="fecha_desde" readonly="readonly" class="form-control" value="" data-rule-required="true">
@@ -57,6 +57,7 @@
                                 <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                     <label>Ramo</label>
                                     <select id="ramos" name="ramos" class="ramo chosen-select grouper" multiple="multiple" data-placeholder="Seleccione una opción">
+                                        <option value=""></option>
                                         <option value="todos">Todos</option>
 										<?php //  ng-untouched ng-valid ng-dirty ng-valid-parse
                                             $cont = 0;
@@ -106,10 +107,10 @@
                         <div class="row">
 							<div class="col-xs-0 col-sm-0 col-md-8 col-lg-8">&nbsp;</div>
 							<div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-								<input type="button" id="clearBtn" class="btn btn-success btn-block" value="Limpiar" @click="limpiarCamposRemesa()" />
+								<input type="button" id="clearBtn" class="btn btn-success btn-block" value="Limpiar" @click="getLimpiarComisiones()" />
                             </div>
 							<div class="form-group col-xs-12 col-sm-6 col-md-2 col-lg-2">
-								<input type="button" id="actualizar" class="btn btn-success btn-block" value="Actualizar" @click="getRemesas()" />
+								<input type="button" id="actualizar" class="btn btn-success btn-block" value="Actualizar" @click="getActualizarComisiones()" />
                             </div>
                         </div>
                     <?php echo form_close(); ?>

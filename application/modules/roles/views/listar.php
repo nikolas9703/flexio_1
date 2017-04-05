@@ -148,3 +148,9 @@
         </div>
     </div>
 </div>
+<?php
+echo Modal::config(array(
+    "id" => "opcionesMenu",
+    "size" => "md"
+))->html();
+?>

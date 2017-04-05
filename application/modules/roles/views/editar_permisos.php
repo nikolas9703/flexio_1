@@ -11,7 +11,7 @@ function findKey($keySearch, $array) {
 
 Template::cargar_vista('sidebar');
 ?>
-    <div id="page-wrapper" class="row">
+    <div id="page-wrapper" class="gray-bg row">
 
 	    <?php Template::cargar_vista('navbar'); ?>
 		<div class="row border-bottom"></div>
@@ -42,295 +42,160 @@ Template::cargar_vista('sidebar');
 
 					<!-- BEGIN ACORDEON -->
 					<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-		
-        <div id="navbar" ng-controller="navBarMenuCtrlPermisos">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" >
-			<ul class="nav nav-tabs">
-				<li ng-repeat="m in menus1 track by $index" class="{{menu_superior_seleccionado1 == m.grupo ? 'active' : ''}}"><a ng-href="#" ng-click="togglemenu1($event)" data-grupo="{{m.grupo}}" role="button" ng-cloak=""><i class="fa {{m.icono}}"></i> {{m.nombre}}</a></li>
-			</ul>
-	</div>
-            <div class="col-md-12">
-            <div class="col-md-3 ">
-                 <div class="sidebar-collapse ng-cloak" style="overflow: auto; position:relative; clear:both; width: auto; height: 100%;">
-		<ul class="nav show ng-cloak" id="side-menu" ng-controller="navBarMenuCtrlPermisos">
-			<li ng-repeat="nav in sidemenu1 track by $index" class="{{menu_lateral_navsecond == nav.nombre || menu_lateral_seleccionado == nav.nombre ? 'active' : ''}}">
-				<a  class="editarPermRoles" data-id="{{navthird.id}}" data-controlador="{{nav.controlador}}" data-href="{{nav.navsecond && '#' || nav.url}}" ng-click="collapse($event)" ng-cloak><i class="fa fa-sitemap hide"></i> {{nav.nombre}} <span class="fa arrow" ng-show="nav.navsecond"></span></a>
-				<ul class="nav nav-second-level {{menu_lateral_navsecond == nav.nombre || menu_lateral_seleccionado == nav.nombre ? 'in' : ''}}" ng-if="nav.navsecond">
-					<li ng-repeat="navsecond in nav.navsecond" class="{{menu_lateral_seleccionado == navsecond.nombre ? 'active' : ''}}">
-						<a class="editarPermRoles" data-href="{{navsecond.navthird && '#' || navsecond.url}}" ng-click="collapse($event)" ng-cloak data-id="{{navsecond.id}}" data-controlador="{{navsecond.controlador}}">{{navsecond.nombre}} <span class="fa arrow" ng-show="navsecond.navthird"></span></a>
-						<ul class="nav nav-third-level  {{menu_lateral_navsecond == navsecond.nombre || menu_lateral_seleccionado == navsecond.nombre ? 'in' : ''}}" ng-show="navsecond.navthird" ng-if="navsecond.navthird">
-							<li ng-repeat="navthird in navsecond.navthird"><a data-id="{{navthird.id}}" data-controlador="{{navthird.controlador}}" class="editarPermRoles" data-href="{{navthird.url}}" ng-click="collapse($event)" ng-cloak>{{navthird.nombre}}</a></li>
-						</ul>
-					</li>
-				</ul>
-			</li>
-		</ul>
-	</div>
-        <!--
-                <div class="sidebar-collapse ng-cloak" style="overflow: auto; position:relative; clear:both; width: auto; height: 100%;">
-		<ul class="nav show ng-cloak" id="side-menu" ng-controller="navBarMenuCtrlPermisos">
-			<li ng-repeat="nav in sidemenu1 track by $index" class="{{menu_lateral_navsecond == nav.nombre || menu_lateral_seleccionado == nav.nombre ? 'active' : ''}}">
-				<a data-id="{{navthird.id}}" data-controlador="{{nav.controlador}}" href="{{nav.navsecond && '#' || nav.url}}" ng-click="collapse($event)" ng-cloak><i class="fa fa-sitemap hide"></i> {{nav.nombre}} <span class="fa arrow" ng-show="nav.navsecond"></span></a>
-				<ul class="nav nav-second-level {{menu_lateral_navsecond == nav.nombre || menu_lateral_seleccionado == nav.nombre ? 'in' : ''}}" ng-if="nav.navsecond">
-					<li ng-repeat="navsecond in nav.navsecond" class="{{menu_lateral_seleccionado == navsecond.nombre ? 'active' : ''}}">
-						<a href="{{navsecond.navthird && '#' || navsecond.url}}" ng-click="collapse($event)" ng-cloak data-id="{{navsecond.id}}" data-controlador="{{navsecond.controlador}}">{{navsecond.nombre}} <span class="fa arrow" ng-show="navsecond.navthird"></span></a>
-						<ul class="nav nav-third-level  {{menu_lateral_navsecond == navsecond.nombre || menu_lateral_seleccionado == navsecond.nombre ? 'in' : ''}}" ng-show="navsecond.navthird" ng-if="navsecond.navthird">
-							<li ng-repeat="navthird in navsecond.navthird"><a data-id="{{navthird.id}}" data-controlador="{{navthird.controlador}}" href="{{navthird.url}}" ng-click="collapse($event)" ng-cloak>{{navthird.nombre}}</a></li>
-						</ul>
-					</li>
-				</ul>
-			</li>
-		</ul>
-	</div>
-        -->
-            </div><div class="col-md-9" id="divPermisos">
-            <div class="panel-body">
-                                                                    <h4><i class="fa fa-info-circle"></i>&nbsp;Permisos generales <small></small></h4>
-                                                                    <div class="table-responsive">
-                                                                        <table class="table table-bordered">
-                                                                            <thead>
-                                                                                <tr>
-                                                                                    <th>Listar </th>
-                                                                                    <th>Crear </th>
-                                                                                    <th>Ver </th>
-                                                                                    <th>Editar </th>
-                                                                                    <th>Exportar </th>
-                                                                                    <th>Imprimir </th>
-                                                                                </tr>
-                                                                            </thead>
-                                                                            <tbody>
-                                                                                <tr>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks" id="client_edit_selectall" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-                                                                    <br>
-                                                                    <h4><i class="fa fa-edit"></i>&nbsp;Campos del módulo <small>Seleccione los campos para ver &amp; editar</small></h4>
-                                                                    <div class="table-responsive">
-                                                                        <table class="table table-bordered">
-                                                                            <thead>
-                                                                                <tr>
-                                                                                    <th>Campo </th>
-                                                                                    <th>Ver </th>
-                                                                                    <th>Editar </th>
-                                                                                </tr>
-                                                                            </thead>
-                                                                            <tbody>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Nombre del cliente</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Saldo por cobrar</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked disabled" style="position: relative;"><input type="checkbox" class="i-checks" disabled="" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Crédito a favor</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked disabled" style="position: relative;"><input type="checkbox" class="i-checks" disabled="" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Identificación</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;" checked="">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Teléfono</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Correo electrónico</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Toma de contacto</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Tipo de cliente</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Categoría de cliente</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Límite de crédito de ventas</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td><h4>Observaciones</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Exonerado de impuesto</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Retiene impuesto</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Lista de precio de ventas</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Lista de precio de alquiler</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Términos de pago</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Línea de negocio o Centro contable</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Asignado a</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td>
-                                                                                        <h4>Centro de facturación</h4></td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green checked" style="position: relative;"><input type="checkbox" class="i-checks" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                    <td style="text-align: center; vertical-align: middle;">
-                                                                                        <div class="icheckbox_square-green" style="position: relative;"><input type="checkbox" class="i-checks edit_icheck" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
-                                                                </div>    
-            </div>
-            </div>
-		<button id="topSlideMenu" type="button" class="navbar-toggle" data-toggle="offcanvas" data-target="#myNavmenu"><i class="fa fa-tasks"></i></button>
-	</div>
+						<?php
+							if(!empty($grupo_modulos)):
+								$mod_counter = 0;
+								foreach ($grupo_modulos AS $nombre_grupo => $modulos):
+									$modulo_id = (!empty($modulo['modulo_id']) ? $modulo['modulo_id'] : "");
+									$suffix_nombre_grupo = strtolower(str_replace(" ", "_", $nombre_grupo)) . date('is');
+						?>
+						<div id="<?php echo $suffix_nombre_grupo; ?>" class="panel panel-blanco">
+							<div class="panel-heading panel-blanco-heading">
+								<h5 class="panel-title">
+									<a href="#collapse-<?php echo $suffix_nombre_grupo; ?>" data-parent="#<?php echo $suffix_nombre_grupo; ?>" data-toggle="collapse" class="collapsed"><?php echo str_replace(" De ", " de ", ucwords($nombre_grupo)); ?></a>
+								</h5>
+							</div>
+							<div class="panel-collapse collapse" id="collapse-<?php echo $suffix_nombre_grupo; ?>" style="height: 0px;">
+								<div class="panel-body">
+
+
+								<div class="panel-group" id="accordion-addons" role="tablist" aria-multiselectable="true">
+								  	<?php
+									foreach ($modulos AS $controller_name => $modulo):
+									
+										$modulo_id = (!empty($modulo['modulo_id']) ? $modulo['modulo_id'] : "");
+
+										$selectedModuleKey  = findKey($controller_name, (!empty($rol_info['modulos']) ? $rol_info['modulos'] : array()));
+										$selectedModule = !empty($rol_info['modulos']) && !empty($rol_info['modulos'][$selectedModuleKey]) && !empty($rol_info['modulos'][$selectedModuleKey][$controller_name]) ? $rol_info['modulos'][$selectedModuleKey][$controller_name] : array();
+									?>
+									<div class="panel panel-default">
+									    <div class="panel-heading" role="tab" id="heading-<?php echo $controller_name; ?>">
+											<h4 class="panel-title">
+										        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion-addons" href="#collapse-<?php echo $controller_name; ?>" aria-expanded="true" aria-controls="collapse-<?php echo $controller_name; ?>">
+										        M&oacute;dulo: <?php echo str_replace(" De ", " de ", ucwords($modulo['modulo_nombre'])); ?>
+										        </a>
+										    </h4>
+									    </div>
+									    <div id="collapse-<?php echo $controller_name; ?>" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading-<?php echo $controller_name; ?>">
+										    <div class="panel-body">
+
+										      	<?php echo (!empty($modulo['modulo_descripcion']) ? '<p>'.$modulo['modulo_descripcion'].'</p>' : ""); ?>
+
+												<?php if(!empty($modulo['resources'])): ?>
+
+												<div class="table-responsive">
+												<table class="table table-bordered">
+													<thead>
+														<tr>
+															<th rowspan="2" width="8%">Secci&oacute;n</th>
+                                                            <th align="center" colspan="<?php if(  !empty($modulo['permissions'])){ echo count($modulo['permissions']); } else { echo "0";} ?>" width="30%">Permisos</th>
+														</tr>
+														<tr>
+														<?php
+														if(!empty($modulo['permissions']))
+														{
+															foreach ($modulo['permissions'] AS $index => $permission_alias)
+															{
+																echo '<th align="center">'. $permission_alias .'</th>';
+															}
+														}
+														?>
+														</tr>
+													</thead>
+													<tbody>
+														<?php
+
+														$cntr = 0;
+														$total = count($modulo['resources']);
+                                                        if(!empty($modulo['permissions'])){
+                                                            $permissions = $modulo['permissions'];
+                                                        } else {
+                                                            $permissions= "";
+                                                        }
+
+
+														foreach ($modulo['resources'] AS $resource)
+														{
+															$resource_name  = $resource['resource_name'];
+
+															//No registrar url's ajax
+															if(preg_match("/ajax/i", $resource_name) || preg_match("/oculto/", $resource_name) || preg_match("/filtar/i", $resource_name) || preg_match("/subpanel/i", $resource_name)){
+																continue;
+															}
+
+															$resource_id    = $resource['id'];
+															$resource_name  = $resource_url = str_replace("/(:num)", "", $resource_name);
+															$resource_name  = $resource_url = str_replace("/(:any)", "", $resource_name);
+															$resource_name  = $resource_url = str_replace("(:an", "", $resource_name);
+															$resource_name  = str_replace($controller_name, "", $resource_name);
+															$resource_name  = $resourceName = str_replace("/", "", $resource_name);
+															$resource_name  = ucwords(str_replace("-", " ", $resource_name));
+
+															$selectedResource = (!empty($selectedModule['resources']) && !empty($selectedModule['resources'][$resource['resource_name']]) ? $selectedModule['resources'][$resource['resource_name']] : "");
+
+															$row = '<tr>
+																<td>'. $resource_name .'</td>';
+
+ 																if(!empty($permissions)){
+																	foreach ($permissions AS $index => $permission_alias)
+																	{
+																			$fieldId = uniqid(rand(), true); //Generate a random, unique, alphanumeric string.
+                                      $selectedPermission = (!empty($selectedResource) && in_array($index, $selectedResource) ? 'checked="checked"' : "");
+                                      $selectedPermissionClass = (!empty($selectedResource) && in_array($index, $selectedResource) ? 'remove_perm' : "");
+                                      $fieldName = "modulo[$modulo_id][recurso][$resource_id][$index]";
+																		//echo $selectedPermission."</BR>";
+																		//echo $selectedPermissionClass."</BR>"."</BR>"."</BR>";
+																		if (preg_match("/__/i", $index))
+                                    {
+                                       	if ($resourceName != "" && $index != "")
+																				{
+																						//Verficar si el nombre del route concuerda con el nombre de permiso
+																						if (preg_match("/".$resourceName."_/is", $index))
+																						{
+																							$row .= '<td align="center"><div class="checkbox checkbox-success"><input type="checkbox" name="'. $fieldName .'" id="'. $fieldId .'" class="'. $selectedPermissionClass .'" '. $selectedPermission .' /><label for="'. $fieldId .'">&nbsp;</label></div></td>';
+																						}
+																						else
+																						{
+																							$row .= '<td align="center" style="background-color: #fcfcfc;">&nbsp;</td>';
+																						}
+	                                      }else{
+	                                          $row .= '<td align="center" style="background-color: #fcfcfc;">&nbsp;</td>';
+	                                      	}
+	                                  }
+                                    else
+                                    {
+                                       $row .= '<td align="center"><div class="checkbox checkbox-success"><input type="checkbox" name="'. $fieldName .'" id="'. $fieldId .'" class="'. $selectedPermissionClass .'" '. $selectedPermission .' /><label for="'. $fieldId .'">&nbsp;</label></div></td>';
+                                    }
+																	}
+																}
+
+															$row .= '</tr>';
+															echo $row;
+
+															$cntr++;
+														}
+														?>
+													</tbody>
+												</table>
+												</div>
+
+
+												<?php endif; ?>
+
+										    </div>
+									    </div>
+									</div>
+									<?php endforeach; ?>
+								</div>
+
+								</div>
+							</div>
+						</div>
+						<?php
+							$mod_counter++;
+							endforeach;
+						endif;
+						?>
 					</div>
 
 					<!-- END ACORDEON -->

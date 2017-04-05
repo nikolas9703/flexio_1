@@ -19,8 +19,8 @@ var tablaInteresesAsegurados = (function () {
     var formularioBuscar = '';
     var grid_obj = $("#tablaInteresesAseguradosGrid");
 	
-	var uuid_poliza=$('input[name="campo[uuid]').val();
-	
+	var id_poliza = $('#nid_poliza').val();
+
     var botones = {
         opciones: ".viewOptions",
         exportar: "#exportarPBtn"
@@ -35,10 +35,10 @@ var tablaInteresesAsegurados = (function () {
             colModel: [
                 {name: 'id', index: 'id', width: 30, align: "center", sortable: false, hidden: true},
                 {name: 'numero', index: 'numero', width: 30},
-                {name: 'seg_ramos_tipo_interes.nombre', index: 'seg_ramos_tipo_interes.nombre', width: 35},
-                {name: 'int_intereses_asegurados_detalles.fecha_inclusion', index: 'int_intereses_asegurados_detalles.fecha_inclusion', sortable:true, width: 16 },
-                {name: 'int_intereses_asegurados_detalles.fecha_exclusion', index: 'int_intereses_asegurados_detalles.fecha_exclusion', sortable:true, width: 16 },
-                {name: 'usuarios.nombre', index: 'usuario.nombre', width: 35},
+                {name: 'nombre_interes', index: 'nombre_interes', width: 35, sortable:false},
+                {name: 'fecha_inclusion', index: 'fecha_inclusion', sortable:true, width: 16 },
+                {name: 'fecha_exclusion', index: 'fecha_exclusion', sortable:true, width: 16 },
+                {name: 'usuarios.nombre', index: 'usuarios.nombre', width: 35},
                 {name: 'estado', index: 'estado', width: 15, search:false },
                 {name: 'options', index: 'options', width: 30, align: "center", sortable: false, search:false},
                 {name: 'link', index: 'link', width: 30, align: "center", sortable: false, hidden: true},
@@ -47,7 +47,8 @@ var tablaInteresesAsegurados = (function () {
             ],
             postData: {
                 erptkn: tkn,
-				uuid_poliza: uuid_poliza
+				id_poliza: id_poliza,
+                id_tipo_int_asegurado: window.id_tipo_int_asegurado,
             },
             height: "auto",
             autowidth: true,
@@ -60,7 +61,7 @@ var tablaInteresesAsegurados = (function () {
             viewrecords: true,
             refresh: true,
             gridview: true,
-            sortname: "estado",
+            sortname: "numero",
             sortorder: "ASC",
             multiselect: true,
 

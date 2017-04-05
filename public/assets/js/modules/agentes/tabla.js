@@ -2,7 +2,7 @@ $(function(){
 	
 	//Init Usuarios Grid
 	$("#agentesGrid").jqGrid({
-	   	url: phost() + 'agentes/ajax-listar-agentes',
+	   	url: phost() + 'agentes/ajax_listar_agentes',
 	   	datatype: "json",
 	   	colNames:[
 			'Nombre',

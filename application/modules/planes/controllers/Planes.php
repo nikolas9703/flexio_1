@@ -1024,6 +1024,7 @@ function guardar() {
             'Desc Comision'
         ]);
         $csv->insertAll($csvdata);
+        $csv->setOutputBOM(Writer::BOM_UTF8);
         $csv->output("planes-". date('ymd') .".csv");
         exit();
     }

@@ -1,3 +1,4 @@
+var cobros_global = '';
 Vue.http.options.emulateJSON = true;
 var formularioCrear = new Vue({
 	el: ".wrapper-content",
@@ -23,6 +24,9 @@ var formularioCrear = new Vue({
             var id_remesa = vista == "editar" ? $('#id_remesa').val() : '';
             var cobros_eliminar = cobros_eliminar;
             var actualiza = actualizar;
+            if(actualiza == 1){
+                cobros_global = '';
+            }
 
             this.$http.post({
                 url: phost() + 'remesas/ajax_get_remesa_saliente',
@@ -66,14 +70,12 @@ var formularioCrear = new Vue({
                                 } 
                             }
                         }
-                        
-                        
                     }else{
                         $('#error').addClass('hidden');
                         $('#tabla_remesas').removeClass('hidden');
                         self.$set('informacionRemesas', response.data.inter);
                         self.$set('cobros',response.data.idCobros);
-                        
+                        self.$set('valor_cobro',response.data.valor_cobro);
                         $("#id_aseguradora").val(id_aseguradora);
                         $("#monto_remesa").val(response.data.monto);
                         $("#id_ramos").val(id_ramos);
@@ -140,20 +142,8 @@ $(document).ready(function(){
 
 $("#imprimirRemesaBtn").click(function(){
 
-    var codigo_remesa = $("#codigo_remesa").val();
-    var id_aseguradora = $("#aseguradora").val();
-    var fecha_desde =  $("#fecha_desde").val();
-    fecha_desde = fecha_desde.replace("/", "-").replace("/", "-");
-    var fecha_hasta = $("#fecha_hasta").val();
-    fecha_hasta = fecha_hasta.replace("/", "-").replace("/", "-");
-
-    console.log(codigo);
-    console.log(aseguradora);
-    console.log(fecha_desde);
-    console.log(fecha_hasta);
-    console.log(ramos);
-
-    window.open('../imprimirRemesa/'+codigo_remesa+'/'+id_aseguradora+'/'+fecha_desde+'/'+fecha_hasta); 
+    var id_remesa = $("#id_remesa").val();
+    window.open('../imprimirRemesa/'+id_remesa); 
 });
 
 $("#todos_recibos").click( function(){
@@ -172,8 +162,10 @@ $('#eliminarRemesaBtn').on('click',function(){
         }
     });
     if(ids_cobros != ''){
-
         ids_cobros = ids_cobros.split(',');
+        cobros_global += ids_cobros;
+        cobros_global = cobros_global.split(',');
+        console.log(cobros_global);
         if(vista == "editar"){
             $.post(phost()+'remesas/ajax_eliminar_cobro', {ids_cobros: ids_cobros, erptkn: window.tkn}, function(response){
                 console.log(response);
@@ -184,7 +176,7 @@ $('#eliminarRemesaBtn').on('click',function(){
                 }
             });
         }else if(vista == "crear"){
-          formularioCrear.getRemesas(3,ids_cobros);  
+          formularioCrear.getRemesas(3,cobros_global);  
         }
     }else{
         toastr.error("Debe seleccionar un recibo para eliminar");

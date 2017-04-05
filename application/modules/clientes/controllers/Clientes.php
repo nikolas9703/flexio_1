@@ -35,6 +35,7 @@ use Flexio\Modulo\Usuarios\Repository\UsuariosRepository;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados as AseguradosModel;
 use Flexio\Modulo\InteresesAsegurados\Models\InteresesPersonas as PersonasModel;
 use Flexio\Modulo\Agentes\Models\Agentes;
+use Flexio\Modulo\Agentes\Models\AgentesRamos;
 use Flexio\Modulo\Ramos\Models\Ramos;
 //utils
 use Flexio\Library\Util\FlexioAssets;
@@ -622,7 +623,7 @@ class Clientes extends CRM_Controller {
             "distritos" => Flexio\Modulo\Geo\Models\Distrito::orderBy('nombre', 'asc')->get(),
             "corregimientos" => Flexio\Modulo\Geo\Models\Corregimiento::orderBy('nombre', 'asc')->get(),
             "detalle_unico" => strtotime('now'),
-            "ramos" => Ramos::where('padre_id','<>','0')->select("id", "nombre")->get()
+            "ramos" => Ramos::where('padre_id','<>','0')->where('padre_id','<>','"id"')->where("empresa_id", $this->FlexioSession->empresaId())->select("id", "nombre")->get()
         ]);
         $this->load->view('formulario', $data);
     }
@@ -749,15 +750,69 @@ class Clientes extends CRM_Controller {
             $validaagente = 0;
         }
 
+        $clienteInfo = $this->clienteRepo->getCollectionClienteCampo($cliente);
+
+        //Obtener Los Agentes del Cliente
+        $agtramos = AgentesRamos::join("agt_agentes","agt_agentes.id","=","agt_agentes_ramos.id_agente")->where("id_cliente",$clienteInfo['id'])->groupBy("id_agente")->orderBy("agt_agentes_ramos.id_agente", "asc")->get();
+        $arrayagentes = array();
+        foreach ($agtramos as $agt) {
+            array_push($arrayagentes, ['agente_id'=>$agt->id_agente, 'id'=>$agt->id_agente, 'identificacion' => ucwords($agt->tipo_identificacion), 'no_identificacion'=>$agt->identificacion]);
+        }
+
+        $agtramosparti = AgentesRamos::join("agt_agentes","agt_agentes.id","=","agt_agentes_ramos.id_agente")->where("id_cliente",$clienteInfo['id'])->orderBy("agt_agentes_ramos.id_agente", "asc")->get();
+
+        $arrayagentesp = array();
+        $arrayagentesramos = array();
+        $arrayagentesparti = array();
+        $idant = "";
+        $partant = "";
+        $idram = "";
+        foreach ($agtramosparti as $val) {
+            if ($idant == "") {
+                array_push($arrayagentesramos, $val->id_ramo);
+            }else if($idant == $val->id_agente){
+                if($partant == $val->participacion){
+                    array_push($arrayagentesramos, $val->id_ramo);
+                }else{                    
+                    array_push($arrayagentesparti, ['ramos'=>$arrayagentesramos, 'porcentajes'=>$partant, 'id'=>'', 'requerido' => 'true']);
+                    $arrayagentesramos = array();
+                    array_push($arrayagentesramos, $val->id_ramo);
+                }                
+            }else{               
+                array_push($arrayagentesparti, ['ramos'=>$arrayagentesramos, 'porcentajes'=>$partant, 'id'=>'', 'requerido' => 'true']);
+                array_push($arrayagentesp, $arrayagentesparti);
+                $arrayagentesramos = array();
+                $arrayagentesparti = array();
+                array_push($arrayagentesramos, $val->id_ramo);
+            }
+            $idant = $val->id_agente;
+            $partant = $val->participacion;
+            $idram = $val->id_ramo;
+        }
+
+        if (!empty($arrayagentesramos)) {
+            array_push($arrayagentesparti, ['ramos'=>$arrayagentesramos, 'porcentajes'=>$partant, 'id'=>'', 'requerido' => 'true']);
+            array_push($arrayagentesp, $arrayagentesparti);
+        }
+        /*array_push($arrayagentesparti, ['ramos'=>$arrayagentesramos, 'porcentajes'=>$partant, 'id'=>'']);
+        array_push($arrayagentes, $arrayagentesparti);
+        $arrayagentesramos = array();
+        $arrayagentesparti = array();*/
+
+        $clienteInfo['agentesCliente'] = $arrayagentes;
+        $clienteInfo['agentesRamoCliente'] = $arrayagentesp;
+        //$clienteInfo['agentesRamoCliente'] = array(array(['ramos'=>'', 'porcentajes'=>'', 'id'=>'']));
+
         //assets
         $this->FlexioAssets->run();//css y js generales
         $this->FlexioAssets->add('css',['public/assets/css/modules/stylesheets/clientes.css']);
         $this->FlexioAssets->add('vars', [
             "vista" => 'ver',
             "acceso" => $acceso ? 1 : 0,
-            'cliente' => $this->clienteRepo->getCollectionClienteCampo($cliente),
+            'cliente' => $clienteInfo,
             "desde_modal_cliente" => $this->input->get("func") ? $this->input->get("func") : '0',
-            "validaagente" => $validaagente
+            "validaagente" => $validaagente,
+            "interes"=>'no'
         ]);
 
         $nombreModuloBr = "<script>var str =localStorage.getItem('ms-selected');
@@ -795,6 +850,11 @@ class Clientes extends CRM_Controller {
             'clientes_abonos' => ['cliente' => $cliente->id],
             'documentos' => ['cliente' => $cliente->id]
         ];
+
+        $this->assets->agregar_js(array(
+            //'public/assets/js/modules/clientes/validarcreacion.js',
+            //'public/assets/js/modules/clientes/agrupador.js'
+        ));
 
         //render
         $this->template->agregar_titulo_header('Editar Cliente');
@@ -1072,6 +1132,8 @@ class Clientes extends CRM_Controller {
         echo json_encode($response);
         exit;
     }
+
+    
 
 }
 

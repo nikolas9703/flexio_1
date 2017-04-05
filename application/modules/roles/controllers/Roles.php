@@ -1,5 +1,4 @@
-<?php
-
+ <?php
 /**
  * Roles Model
  *
@@ -14,26 +13,18 @@
  */
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon;
-
 class Roles extends CRM_Controller {
-
     /**
      * @var
      */
     private $cache;
-
     /**
      * @var int
      */
-    protected $moduloActual;
-    protected $response;
     protected $empresa_id;
     protected $empresa;
-    protected $modules_hidden = [];
-
     function __construct() {
         parent::__construct();
-        $this->load->model('roles/menu_orm');
         $this->load->model('roles_model');
         $this->load->model('Rol_orm');
         $this->load->model('Permiso_orm');
@@ -46,23 +37,28 @@ class Roles extends CRM_Controller {
         $this->load->dbutil();
         //Inicializar variable cache
         $this->cache = Cache::inicializar();
-    }
 
+        $this->load->model('Roles_menu_orm');
+        $this->load->model('menu_orm'); 
+
+    }
     public function listar() {
-        if (!in_array(2, $this->session->userdata('roles'))) {
+        if(!in_array(2,$this->session->userdata('roles' )))
+        {
             redirect('/');
         }
-        /* if($_POST){
-          var_dump($_POST);
-          $sesion = array();
-          $uuid = $this->input->post('uuid');
-          $sesion['uuid_empresa'] = $uuid;
-          $this->session->set_userdata($sesion);
-          $this->cache->delete("usuario-roles-". $this->session->userdata('huuid_usuario'));
-          } */
-
+        /*if($_POST){
+            var_dump($_POST);
+         $sesion = array();
+         $uuid = $this->input->post('uuid');
+         $sesion['uuid_empresa'] = $uuid;
+         $this->session->set_userdata($sesion);
+         $this->cache->delete("usuario-roles-". $this->session->userdata('huuid_usuario'));
+     }*/
 
         $data = array();
+        
+
         $this->assets->agregar_css(array(
             'public/assets/css/default/ui/base/jquery-ui.css',
             'public/assets/css/default/ui/base/jquery-ui.theme.css',
@@ -70,6 +66,7 @@ class Roles extends CRM_Controller {
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.bootstrap.css',
             'public/assets/css/plugins/jquery/jqgrid/ui.jqgrid.css',
             'public/assets/css/plugins/jquery/switchery.min.css',
+            'public/assets/css/plugins/jquery/awesome-bootstrap-checkbox.css',
         ));
         $this->assets->agregar_js(array(
             'public/assets/js/default/jquery-ui.min.js',
@@ -83,18 +80,28 @@ class Roles extends CRM_Controller {
             'public/assets/js/default/formulario.js',
             'public/assets/js/modules/roles/listar.js'
         ));
+
+
+        //$this->session->set_flashdata('mensaje', $mensaje);
+        //var_dump($this->session->set_flashdata('mensaje'));
+
+        if(!empty( $this->session->flashdata('mensaje')) ){
+            $mensaje = $this->session->flashdata('mensaje');
+        }else{
+            $mensaje = '';
+        }
         $data = array(
-            "estados" => field_enums('roles', 'estado')
+            "estados" => field_enums('roles', 'estado'),
+            "message" => $mensaje
         );
         $this->getSessionEmpresa();
         $this->template->agregar_titulo_header('Listado de Roles');
         $this->template->agregar_breadcrumb(array(
-            "titulo" => '<i class="fa fa-cogs"></i> Roles ' . $this->empresa->nombre,
+            "titulo" => '<i class="fa fa-cogs"></i> Roles '. $this->empresa->nombre,
         ));
         $this->template->agregar_contenido($data);
         $this->template->visualizar();
     }
-
     public function ajax_listar() {
         //Just Allow ajax request
         if (!$this->input->is_ajax_request()) {
@@ -151,6 +158,33 @@ class Roles extends CRM_Controller {
                     $link_option = "";
                     $hidden_options = "";
                 }
+
+                //var_dump($row);
+
+                $hidden_options .= '<a class="btn btn-block btn-outline btn-success" data-rol="'. $row['id'] .'" id="menuSuperior" >Menu</a>';
+
+                $menus_permisos = Roles_menu_orm::where(['id_rol' => $row['id']])->get();
+                $arraymenu = array();
+                $j = 0;
+                if(count($menus_permisos)){
+                    foreach ($menus_permisos as $key => $value) {
+                       $arraymenu[$j] = $value['nombre_menu'];
+                       $j++;
+                    }
+                }
+
+                $opciones_menu  = '<form action="'.base_url().'roles/menu_superior/" id="menuSuperior" method="POST" autocomplete="off"><input type="hidden" name="erptkn" id="tkn_menu_'.$row['id'].'" value=""><input type="hidden" name="empresa_id" id="empresa_id" value="'.$row['empresa_id'].'"><input type="hidden" name="rol_id" id="rol_id" value="'.$row['id'].'">';
+                $menus = Menu_orm::lista_menu_superior();
+                foreach ($menus as $key => $menu) {
+                    if(in_array($menu['grupo'], $arraymenu)){
+                        $opciones_menu .= '<div class="col-xs-12 col-sm-4 col-md-4"><div class="checkbox checkbox-primary"><input type="checkbox" name="menu[]" id="ventas" class="menu2" checked value="'.$menu['grupo'].'" /><label for="'.$key.'">'.$menu['grupo'].'</label></div></div>';
+                    }else{
+                        $opciones_menu .= '<div class="col-xs-12 col-sm-4 col-md-4"><div class="checkbox checkbox-primary"><input type="checkbox" name="menu[]" id="ventas" class="menu2" value="'.$menu['grupo'].'" /><label for="'.$key.'">'.$menu['grupo'].'</label></div></div>';
+                    }
+                    
+                }
+                $opciones_menu .= '<div class="form-group col-xs-12 col-sm-12 col-md-12" style="text-align: right;"> <a class="btn btn-w-m btn-default cancelar_menu">Cancelar</a> <button type="submit" class="btn btn-w-m btn-primary submit">&nbsp;Guardar</button> </div></form>';
+
                 $response->rows[$i]["id"] = $row['id'];
                 $response->rows[$i]["cell"] = array(
                     $row["id"],
@@ -161,7 +195,8 @@ class Roles extends CRM_Controller {
                     $row["superuser"],
                     $row["default"],
                     $link_option,
-                    $hidden_options
+                    $hidden_options,
+                    $opciones_menu
                 );
                 $i++;
             }
@@ -170,6 +205,44 @@ class Roles extends CRM_Controller {
         exit;
     }
 
+
+    public function menu_superior(){
+
+        $menu = $this->input->post('menu');
+        $id_empresa = $this->input->post('empresa_id');
+        $id_rol = $this->input->post('rol_id');
+        
+        if($menu != null){
+
+            $menus = Roles_menu_orm::where(['id_rol' => $id_rol])->get();
+            foreach ($menus as $key => $value) {
+               $value->delete();
+            }
+            
+            foreach ($menu as $key => $value) {
+                $arraymenu['id_empresa'] = $id_empresa;
+                $arraymenu['id_rol'] = $id_rol;
+                $arraymenu['nombre_menu'] = $value;
+                $menus = Roles_menu_orm::create($arraymenu);
+            }
+        }else{
+
+            $menus = Roles_menu_orm::where(['id_rol' => $id_rol])->get();
+            foreach ($menus as $key => $value) {
+               $value->delete();
+            }
+        }
+
+        if($menus != null){
+            $mensaje = '<b>¡&Eacute;xito!</b> Se ha guardado correctamente';
+        }else{
+            $mensaje = '<b>¡&Error!</b>No Se guardado correctamente'; 
+        }
+        
+        //$mensaje = array('estado' => 200, 'mensaje' => '<b>¡&Eacute;xito!</b> Se ha guardado correctamente', 'titulo' => 'Menu Superios ');
+        $this->session->set_flashdata('mensaje', $mensaje);
+        redirect(base_url('roles/listar'));  
+    }
     /**
      * Cargar Vista Parcial de Tabla
      *
@@ -181,7 +254,6 @@ class Roles extends CRM_Controller {
         ));
         $this->load->view('tabla');
     }
-
     public function ajax_crear_rol() {
         $rol_id = $this->input->post('rol_id', true);
         $nombre = $this->input->post('nombre', true);
@@ -220,8 +292,8 @@ class Roles extends CRM_Controller {
                                 $q->where('empresas_has_roles.empresa_id', '=', $empresa_id);
                             })->where('id', '<>', $rol->id)->get(array('id'))->toArray();
                     $roles_id = (!empty($roles) ? array_map(function($roles) {
-                                return $roles["id"];
-                            }, $roles) : "");
+                                        return $roles["id"];
+                                    }, $roles) : "");
                     Rol_orm::whereIn("id", $roles_id)->update(array('default' => '0'));
                 }
             } else {
@@ -232,8 +304,8 @@ class Roles extends CRM_Controller {
                                 $q->where('empresas_has_roles.empresa_id', '=', $empresa_id);
                             })->where('id', '<>', $rol_id)->get(array('id'))->toArray();
                     $roles_id = (!empty($roles) ? array_map(function($roles) {
-                                return $roles["id"];
-                            }, $roles) : "");
+                                        return $roles["id"];
+                                    }, $roles) : "");
                     Rol_orm::whereIn("id", $roles_id)->update(array('default' => '0'));
                 }
                 $rol->empresa_id = $this->empresa_id;
@@ -262,7 +334,6 @@ class Roles extends CRM_Controller {
         ));
         exit;
     }
-
     public function editar_permisos($id_rol = NULL) {
         if ($_POST && !empty($_POST['modulo'])) {
             $response = $this->roles_model->guardar_permisos();
@@ -272,14 +343,14 @@ class Roles extends CRM_Controller {
                 redirect(base_url() . 'roles/editar-permisos/' . $id_rol);
             }
         }
-
+			
         //Build the data array
         $data = array(
             "rol_id" => $id_rol,
             "grupo_modulos" => $this->modulos->comp_listar_modulos_activos(),
             "rol_info" => $this->roles_model->seleccionar_rol($id_rol)
         );
-
+        
         $this->assets->agregar_css(array(
             'public/assets/css/plugins/jquery/awesome-bootstrap-checkbox.css',
         ));
@@ -301,7 +372,6 @@ class Roles extends CRM_Controller {
         $this->template->agregar_contenido($data);
         $this->template->visualizar();
     }
-
     public function ajax_duplicar_rol() {
         //Just Allow ajax request
         if (!$this->input->is_ajax_request()) {
@@ -312,7 +382,6 @@ class Roles extends CRM_Controller {
         echo $json;
         exit;
     }
-
     public function ajax_eliminar_permiso() {
         //Just Allow ajax request
         if (!$this->input->is_ajax_request()) {
@@ -326,7 +395,6 @@ class Roles extends CRM_Controller {
         echo $json;
         exit;
     }
-
     public function ajax_activar_desactivar_rol() {
         //Just Allow ajax request
         if (!$this->input->is_ajax_request()) {
@@ -337,11 +405,9 @@ class Roles extends CRM_Controller {
         echo $json;
         exit;
     }
-
     /**
      * Functions to Share with other modules.
      */
-
     /**
      * Obtener los roles existentes
      *
@@ -351,149 +417,12 @@ class Roles extends CRM_Controller {
         return $this->roles_model->seleccionar_roles($clause);
     }
 
-    private function getSessionEmpresa() {
+    private function getSessionEmpresa(){
         //Obtener el id_empresa de session
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresa = Empresa_orm::findByUuid($uuid_empresa);
         $this->empresa = $empresa;
         $this->empresa_id = is_object($empresa) ? $empresa->id : "";
     }
-
-    /**
-     * Seleccionar Lista de Menu Superior
-     */
-    public function navbar() {
-       
-        $menus = Menu_orm::lista_menu_superior();
-        if (!empty($menus)) {
-            foreach ($menus AS $key => $menu) {
-
-                //verifica si se requiere ocultar el modulo
-                if ($this->modules_hidden && in_array($menu['grupo'], $this->modules_hidden)) {
-
-                    unset($menus[$key]);
-                } else if (!Auth::has_module_access($menu["modulos"])) {
-
-                    //Si no tiene permiso quitar el menu de la lista.
-                    unset($menus[$key]);
-                } else {
-
-                    //Eliminar indice modulos
-                    unset($menus[$key]["modulos"]);
-                }
-            }
-        }
-
-        $json = json_encode($menus);
-        echo $json;
-        exit;
-    }
-
-    /**
-     * Seleccionar Lista de Menu Lateral
-     */
-    public function sidebar() {
-        $menu = array();
-        $agrupador = $this->input->post('grupo', true);
-        $hashcache = str_replace(" ", "", $agrupador);
-        $menus = Menu_orm::lista_menu_lateralPermiso($agrupador);
-
-        if (empty($menus)) {
-            return false;
-        }
-
-        //Ordenar arreglo por el campo orden
-        usort($menus, function($a, $b) {
-            return $a['grupo_orden'] - $b['grupo_orden'];
-        });
-
-        $i = 0;
-        foreach ($menus AS $index => $menuarray) {
-            $grupo = !empty($menuarray["grupo"]) ? $menuarray["grupo"] : "";
-
-            if (!empty($menuarray["agrupar"]) && $menuarray["agrupar"] == 1) {
-                $menu[$i]["nombre"] = $grupo;
-                $menu[$i]["url"] = "#";
-                $menu[$i]["classnombre"] = "dropdown";
-
-                $j = 0;
-                foreach ($menuarray["link"] AS $key => $menudata) {
-
-                    if (is_string($key)) {
-                        continue;
-                    }
-
-                    $url = !empty($menudata["url"]) ? base_url($menudata["url"]) : base_url($menudata["controlador"] . "/index");
-
-                    //verificar si tiene permiso al menu
-                    if (!Auth::has_permission("acceso", $menudata["url"])) {
-                        continue;
-                    }
-
-                    $menu[$i]["navsecond"][$j]["nombre"] = $menudata["nombre"];
-                    $menu[$i]["navsecond"][$j]["url"] = $url;
-                    $menu[$i]["navsecond"][$j]["id"] = $menudata["id"];
-                    $menu[$i]["navsecond"][$j]["controlador"] = $menudata["controlador"];
-                    $menu[$i]["navsecond"][$j]["icono"] = $menudata["icono"];
-                    $j++;
-                }
-                /**
-                 * Solucion para no listar menu padres que los hijos no tengan permisos de listar
-                 */
-                if (isset($menu[$i]["classnombre"]) && $menu[$i]["classnombre"] == "dropdown" && !isset($menu[$i]["navsecond"])) {
-                    unset($menu[$i]);
-                }
-                $i++;
-            } else {
-                foreach ($menuarray["link"] AS $key => $menudata) {
-
-                    if (is_string($key)) {
-                        continue;
-                    }
-
-                    $url = !empty($menudata["url"]) ? base_url($menudata["url"]) : base_url($menudata["controlador"] . "/index");
-
-                    //verificar si tiene permiso al menu
-                    if (!Auth::has_permission("acceso", $menudata["url"])) {
-                        continue;
-                    }
-
-                    $menu[$i]["nombre"] = $menudata["nombre"];
-                    $menu[$i]["url"] = $url;
-                    $menu[$i]["id"] = $menudata["id"];
-                    $menu[$i]["controlador"] = $menudata["controlador"];
-                    $menu[$i]["icono"] = $menudata["icono"];
-                    $i++;
-                }
-            }
-        }
-
-        $json = json_encode($menu);
-        echo $json;
-        exit;
-    }
-
-    /*
-     * Cargar Permisos
-     */
-
-    public function listarPermisos() {
-        $menu = array();
-
-        $controlador = $this->input->post('controlador');
-        $modulo_id = $this->input->post('modulo_id');
-        $menu = Menu_orm::listarPermisos($controlador, $modulo_id);
-
-        /*
-         * select * from `modulos` as `m` inner join `recursos` as `re` on `m`.`id` = `re`.`modulo_id` inner join `permisos` as `p` on `p`.`recurso_id` = `re`.`id` inner join `roles_permisos` as `r` on `r`.`permiso_id` = `p`.`id` where `re`.`modulo_id` = ? and `re`.`nombre` LIKE ?
-         */
-        //$menu = Menu_orm::listarPermisos("anticipos", 816);
-
-        $json = json_encode($menu);
-        echo $json;
-        exit;
-    }
-
 }
-
 ?>

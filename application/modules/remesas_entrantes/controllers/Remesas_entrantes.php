@@ -121,13 +121,19 @@ class Remesas_entrantes extends CRM_Controller
         $this->load->view('tabla');
     }
 
-    public function listar(){
+    public function listar($mensaje_error = null){
 		
         if (is_null($this->session->flashdata('mensaje')) ) {
            $mensaje = []; 
         } else {
             $mensaje = $this->session->flashdata('mensaje');
         }
+
+        if(isset($mensaje_error) && $mensaje_error == 1){
+            $mensaje = array('tipo' => "error", 'mensaje' => '<b>¡Error!</b> No hay comisiones por liquidar', 'titulo' => 'Remesas Entrantes ');
+        }
+
+        
 
         $this->_css();
         $this->_js();
@@ -487,6 +493,7 @@ class Remesas_entrantes extends CRM_Controller
 			"codigo" => $codigo,
 			"borrador" => $borrador,
 			"estado_remesa"=>$Remesas->estado,
+            "id_remesa_entrante" => $Remesas->id,
 			"ver"=>$ver,
 			"no_recibo"=>$no_recibo,
 			"monto_recibo"=>$monto_recibo,
@@ -709,6 +716,7 @@ class Remesas_entrantes extends CRM_Controller
 		
 		$response = new stdClass();
         $response->inter = array();
+        $response->consulta = 0;
 		
 		$facturas_id=array();
 		$montos=array();
@@ -766,35 +774,26 @@ class Remesas_entrantes extends CRM_Controller
 			
 			$facturas = $this->FacturaSeguroRepository->getFacturasPrtocesadas($clause);
 			
-			foreach($facturas as $key => $value)
-			{
-				if(count($montos)>0)
-				{
-					if(in_array($value->id,$id_montos))
-					{
+			foreach($facturas as $key => $value){
+				if(count($montos)>0){
+					if(in_array($value->id,$id_montos)){
 						$key = array_keys($id_montos,$value->id);
 						$valor=$montos[$key[0]];
-					}
-					else
-					{
+					}else{
 						$valor=0;
 					}
-					if($value->estado=='cobrado_completo')
-					{
+					if($value->estado=='cobrado_completo'){
+
 						$valor_real=$value->total;
-					}
-					else
-					{
+
+					}else{
 						$valor_real=$valor;
 					}
-				}
-				else
-				{
+				}else{
 					$valor_real=0;
 				}
 				
-				if($value->estado!='cobrado_completo')
-				{
+				if($value->estado!='cobrado_completo'){
 					//Se inicializa el cobro
 					$accion = new FormGuardar();
 					$cobro=array();
@@ -995,16 +994,16 @@ class Remesas_entrantes extends CRM_Controller
 		
 		if($estado_remesa=='por_liquidar')
 		{
-			$consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa)->count();
+			$consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa,NULL)->count();
 			
-			$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa)->get();
+			$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesProcesar($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa,NULL)->get();
 			
 		}
 		else
 		{
-			$consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesLiquidada($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa)->count();
+			$consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesLiquidada($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa,NULL)->count();
 			
-			$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesLiquidada($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa)->get();
+			$consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesLiquidada($id_remesa_entrante,$aseguradora_id,$_POST['ramos_id'],$_POST['fecha_desde'],$_POST['fecha_hasta'],$this->id_empresa,NULL)->get();
 		}
 		
 		$var=0;
@@ -1031,7 +1030,8 @@ class Remesas_entrantes extends CRM_Controller
 		$ramo='';
 		$comision_esperada_comparar_total=0;
 		
-        foreach ($consultaComisiones as $key => $value) {			
+        foreach ($consultaComisiones as $key => $value) {	
+            $response->consulta	= 1;
 			//$prima_neta_final+=$value->facturasComisiones->subtotal;
 			$prima_neta_final+=$value->pago_sobre_prima;
 			
@@ -1046,13 +1046,21 @@ class Remesas_entrantes extends CRM_Controller
 			$comision_esperada=$value->monto_comision;
 			
 			//$com_esp_final+=$comision_esperada;
+
+            if($value->num_remesa_entrante == ''){
+                $comision_descontado = $value->comision_descontada;  
+                $sobcomision_descontada = $value->scomision_descontada; 
+            }else{
+                $comision_descontado = 0;   
+                $sobcomision_descontada = 0;
+            }
 			
 			$sobcomision_esperada=$value->monto_scomision;
 			
 			$scom_esp_final+=$sobcomision_esperada;
 			
-			$comision_descontado=$value->comision_descontada;
-			$sobcomision_descontada=$value->scomision_descontada;
+			//$comision_descontado=$value->comision_descontada;
+			//$sobcomision_descontada=$value->scomision_descontada;
 			
 			$com_des_final+=$comision_descontado;
 			$scom_des_final+=$sobcomision_descontada;
@@ -1064,8 +1072,7 @@ class Remesas_entrantes extends CRM_Controller
 			$url_poliza=base_url('polizas/editar/'.bin2hex($value->polizas->uuid_polizas));
 			$url_factura=base_url('comisiones_seguros/ver/'.bin2hex($value->uuid_comision));
             
-			if($var==0)
-			{
+			if($var==0){
 				$total_com_esperada+=$comision_esperada;
 				$total_com_descontada+=$comision_descontado;
 				$total_sob_esperada+=$sobcomision_esperada;
@@ -1341,6 +1348,7 @@ class Remesas_entrantes extends CRM_Controller
 			$comisionact['comision_pagada']=$com_pagada[$key];
 			$comisionact['comision_pendiente']=$com_pagada[$key]-$comision_pagada;
 			$comisionact['updated_at'] =date('Y-m-d H:i:s');
+            $comisionact['id_remesa'] = $id_remesa;
 			if(isset($_POST['liquidar']))
 			{
 				$valorcero=0;
@@ -1851,5 +1859,244 @@ class Remesas_entrantes extends CRM_Controller
                 //'public/assets/js/default/grid.js',
         ));
     }
+
+    public function ajax_actualizar_comisiones(){
+
+        $id_remesa = $this->input->post('id_remesa');
+        $estado_remesa = $this->input->post('estado_remesa');
+        $aseguradora_id = $this->input->post('aseguradora_id');
+        $fecha_inicial = $this->input->post('fecha_inicial');
+        $fecha_final = $this->input->post('fecha_final');
+        $ramos = $this->input->post('ramos');
+        $no_recibo = $this->input->post('no_recibo');
+
+        /*var_dump($estado_remesa,$aseguradora_id);
+        echo "<br><br>";
+        var_dump($fecha_inicial,$fecha_final);
+        echo "<br><br>";
+        var_dump($ramos,$no_recibo,$monto_recibo);*/
+
+        $response = new stdClass();
+        $response->inter = array();
+        $response->consulta = 0;
+
+        if($estado_remesa=='por_liquidar'){
+
+            $consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesProcesar(NULL,$aseguradora_id,$ramos,$fecha_inicial,$fecha_final,$this->id_empresa,$no_recibo)->count();
+            $consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesProcesar(NULL,$aseguradora_id,$ramos,$fecha_inicial,$fecha_final,$this->id_empresa,$no_recibo)->get();
+        }else{
+            $consultaComisionestotal=$this->COmisionesSegurosRepository->consultarComisionesLiquidada(NULL,$aseguradora_id,$ramos,$fecha_inicial,$fecha_final,$this->id_empresa,$no_recibo)->count();
+            $consultaComisiones=$this->COmisionesSegurosRepository->consultarComisionesLiquidada(NULL,$aseguradora_id,$ramos,$fecha_inicial,$fecha_final,$this->id_empresa,$no_recibo)->get();
+        }
+        
+        $var=0;
+        $total= $consultaComisionestotal;
+        $comision_pagada_total=0;
+        $total_com_esperada=0;
+        $total_com_descontada=0;
+        $total_sob_esperada=0;
+        $total_sob_descontada=0;
+        $valor_real=0;
+        $comision_descontado=0;
+        $sobcomision_descontada=0;
+        $comision_esperada=0;
+        $sobcomision_esperada=0;
+        $comision_pagada=0;
+        $prima_neta_final=0;
+        $pago_final=0;
+        $com_esp_final=0;
+        $com_des_final=0;
+        $scom_esp_final=0;
+        $scom_des_final=0;
+        $com_paga_final=0;
+        $sumamonto=0;
+        $ramo='';
+        $comision_esperada_comparar_total=0;
+        
+        foreach ($consultaComisiones as $key => $value) {    
+
+            $response->consulta = 1;       
+            //$prima_neta_final+=$value->facturasComisiones->subtotal;
+            $prima_neta_final+=$value->pago_sobre_prima;
+            
+            $url_poliza=base_url('polizas/editar/'.bin2hex($value->polizas->uuid_polizas));
+            $url_factura=base_url('comisiones_seguros/ver/'.bin2hex($value->facturasComisiones->uuid_comision));
+            
+            $valor_real=$value->monto_recibo;
+            
+            $sumamonto+=$valor_real;
+            
+            $pago_final+=$valor_real;
+            $comision_esperada=$value->monto_comision;
+            
+            //$com_esp_final+=$comision_esperada;
+            
+            $sobcomision_esperada=$value->monto_scomision;
+            
+            $scom_esp_final+=$sobcomision_esperada;
+
+            if($value->num_remesa_entrante == ''){
+                $comision_descontado = $value->comision_descontada;  
+                $sobcomision_descontada = $value->scomision_descontada; 
+            }else{
+                $comision_descontado = 0;   
+                $sobcomision_descontada = 0;
+            }
+            
+            $com_des_final+=$comision_descontado;
+            $scom_des_final+=$sobcomision_descontada;
+            
+            //-$value->comision_descontada+$value->monto_scomision-$value->scomision_descontada;
+           
+            $com_esp_final+=$value->monto_comision-$value->comision_descontada+$value->monto_scomision-$value->scomision_descontada;
+            
+            $url_poliza=base_url('polizas/editar/'.bin2hex($value->polizas->uuid_polizas));
+            $url_factura=base_url('comisiones_seguros/ver/'.bin2hex($value->uuid_comision));
+            
+            if($var == 0){
+
+                $comision_esperada_comparar_total+=$value->monto_comision;
+
+                $total_com_esperada+=$comision_esperada;
+                $total_com_descontada+=$comision_descontado;
+                $total_sob_esperada+=$sobcomision_esperada;
+                $total_sob_descontada+=$sobcomision_descontada;
+                $comision_pagada=$value->comision_pagada;
+                    
+                $comision_pagada_total+=$comision_pagada;
+                $ramo_anterior=$value->id_ramo;
+                
+                //$com_paga_final+=$comision_pagada;
+                
+                $comision_esperada_comparar=$value->monto_comision-$value->comision_descontada+$value->monto_scomision-$value->scomision_descontada;
+                
+                if($comision_esperada_comparar!=$comision_pagada){
+                    $estilo='font-weight: normal; color:#ff0000;';
+                }else{
+                    $estilo='font-weight: normal';
+                }
+
+                array_push($response->inter, array("remesa_creada"=>"","aseguradora_id"=>"","id" => $value->id, "final"=>0,"link_poliza"=>$url_poliza,"link_factura"=>$url_factura,"prima_neta_final"=>"","pago_final"=>"","com_esp_final"=>"","com_des_final"=>"","scom_esp_final"=>"","scom_des_final"=>"","com_paga_final"=>"","total_sob_descontada"=>number_format($total_sob_descontada, 2),"total_sob_esperada"=>number_format($total_sob_esperada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_esperada"=>number_format($comision_esperada_comparar_total,4),"comision_pagada_total"=>number_format($comision_pagada_total, 2),"comision_pagada"=>number_format($comision_pagada, 2),"sobcomision_descontada"=>number_format($sobcomision_descontada, 2),"sobcomision_esperada"=>number_format($sobcomision_esperada, 2),"porcentaje_sobre_comision"=>$value->sobre_comision,"comision_descontado"=>number_format($comision_descontado, 2),"comision_esperada"=>number_format($comision_esperada,4),"porcentaje_comision"=>$value->comision,"prima_neta"=>number_format($value->pago_sobre_prima,2),"fecha_operacion"=>date('Y-m-d'),"uuid_poliza"=>bin2hex($value->polizas->uuid_polizas),"uuid_factura"=>bin2hex($value->uuid_comision),"numero_factura" => $value->no_comision, "numero_poliza" => $value->polizas->numero , 'ramo_id'=>$value->id_ramo,'nombre_ramo' => $value->datosRamos->nombre, 'inicio_vigencia' => date($value->facturasComisiones->fecha_desde), 'fin_vigencia' => date($value->facturasComisiones->fecha_hasta), 'nombre_cliente' => $value->cliente->nombre, 'fecha_factura' => date($value->facturasComisiones->fecha_desde), 'monto' =>number_format($valor_real, 2),'estado' => $value->facturasComisiones->estado, 'estilos' => $estilo ));
+            }
+            $nombre_ramo_anterior=$this->Ramos->find($ramo_anterior)->nombre;
+
+            if($ramo_anterior!=$value->id_ramo){
+                 //var_dump($comision_esperada_comparar_total);
+                if($comision_esperada_comparar_total!=$comision_pagada_total)
+                {
+                    $estilo='font-weight: bold; background-color:#efefef; color:#ff0000;';
+                }
+                else
+                    $estilo='font-weight: bold; background-color:#efefef;';
+                
+                array_push($response->inter, array("remesa_creada"=>"","aseguradora_id"=>"","link_poliza"=>"","link_factura"=>"","id" => '', "final"=>0,"prima_neta_final"=>"","pago_final"=>"","com_esp_final"=>"","com_des_final"=>"","scom_esp_final"=>"","scom_des_final"=>"","com_paga_final"=>"","total_sob_descontada"=>number_format($total_sob_descontada, 2),"total_sob_esperada"=>number_format($total_sob_esperada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_esperada"=>number_format($comision_esperada_comparar_total,4),"comision_pagada_total"=>number_format($comision_pagada_total, 2),"comision_pagada"=>number_format($comision_pagada, 2),"sobcomision_descontada"=>"","sobcomision_esperada"=>"","porcentaje_sobre_comision"=>"","comision_descontado"=>"","comision_esperada"=>"","porcentaje_comision"=>"","prima_neta"=>"","fecha_operacion"=>'',"uuid_poliza"=>'',"uuid_factura"=>'',"numero_factura" => '', "numero_poliza" => '' , 'ramo_id'=>'','nombre_ramo' => $nombre_ramo_anterior, 'inicio_vigencia' => '', 'fin_vigencia' => '', 'nombre_cliente' => '', 'fecha_factura' => '', 'monto' => '' ,'estado' => '', 'estilos' => $estilo ));
+                
+                $total_com_esperada=0;
+                $total_com_descontada=0;
+                $total_sob_esperada=0;
+                $total_sob_descontada=0;
+                $comision_pagada_total=0;
+                $ramo_anterior=$value->id_ramo;
+                $comision_esperada_comparar_total=0;
+            }
+            
+            if($var!=0){
+                $comision_esperada_comparar_total+=$value->monto_comision;
+                
+                $total_com_esperada+=$comision_esperada;
+                $total_com_descontada+=$comision_descontado;
+                $total_sob_esperada+=$sobcomision_esperada;
+                $total_sob_descontada+=$sobcomision_descontada;
+                $comision_pagada=$value->comision_pagada;
+                
+                $comision_pagada_total+=$comision_pagada;
+                
+                $comision_esperada_comparar=$value->monto_comision-$value->comision_descontada+$value->monto_scomision-$value->scomision_descontada;
+                
+                if($comision_esperada_comparar!=$comision_pagada)
+                {
+                    $estilo='font-weight: normal; color:#ff0000;';
+                }
+                else
+                    $estilo='font-weight: normal;';
+
+                array_push($response->inter, array("remesa_creada"=>"","aseguradora_id"=>"","id" => $value->id, "link_poliza"=>$url_poliza,"link_factura"=>$url_factura,"final"=>0,"prima_neta_final"=>"","pago_final"=>"","com_esp_final"=>"","com_des_final"=>"","scom_esp_final"=>"","scom_des_final"=>"","com_paga_final"=>"","total_sob_descontada"=>number_format($total_sob_descontada, 2),"total_sob_esperada"=>number_format($total_sob_esperada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_esperada"=>number_format($comision_esperada_comparar_total,4),"comision_pagada_total"=>number_format($comision_pagada_total, 2),"comision_pagada"=>number_format($comision_pagada, 2),"sobcomision_descontada"=>number_format($sobcomision_descontada, 2),"sobcomision_esperada"=>number_format($sobcomision_esperada, 2),"porcentaje_sobre_comision"=>$value->sobre_comision,"comision_descontado"=>number_format($comision_descontado, 2),"comision_esperada"=>number_format($comision_esperada,4),"porcentaje_comision"=>$value->comision,"prima_neta"=>number_format($value->pago_sobre_prima,2),"fecha_operacion"=>date('Y-m-d'),"uuid_poliza"=>bin2hex($value->polizas->uuid_polizas),"uuid_factura"=>bin2hex($value->uuid_comision),"numero_factura" => $value->no_comision, "numero_poliza" => $value->polizas->numero , 'ramo_id'=>$value->id_ramo,'nombre_ramo' => $value->datosRamos->nombre, 'inicio_vigencia' => date($value->fecha_pago), 'fin_vigencia' => date($value->fecha_pago), 'nombre_cliente' => $value->cliente->nombre, 'fecha_factura' => date($value->facturasComisiones->fecha_desde), 'monto' => number_format($valor_real, 2) ,'estado' => $value->facturasComisiones->estado, 'estilos' => $estilo ));
+            }
+            
+            $com_paga_final+=$comision_pagada;
+            
+            $var=$var+1;
+            
+            $ramo=$value->id_ramo;
+        }
+        
+        $nombre_ramo_anterior='';
+        if($ramo!="")
+            $nombre_ramo_anterior=$this->Ramos->find($ramo)->nombre;
+        
+        if($comision_esperada_comparar_total!=$comision_pagada_total)
+            $estilo='font-weight: bold; background-color:#efefef; color:#ff0000;';
+        else
+            $estilo='font-weight: bold; background-color:#efefef;';
+        
+        array_push($response->inter, array("remesa_creada"=>"","aseguradora_id"=>"","link_poliza"=>"","link_factura"=>"","id" => '', "final"=>0,"prima_neta_final"=>"","pago_final"=>"","com_esp_final"=>"","com_des_final"=>"","scom_esp_final"=>"","scom_des_final"=>"","com_paga_final"=>"", "total_sob_descontada"=>number_format($total_sob_descontada, 2),"total_sob_esperada"=>number_format($total_sob_esperada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_descontada"=>number_format($total_com_descontada, 2),"total_com_esperada"=>number_format($comision_esperada_comparar_total,4),"comision_pagada_total"=>number_format($comision_pagada_total, 2),"comision_pagada"=>number_format($comision_pagada_total, 2),"sobcomision_descontada"=>"","sobcomision_esperada"=>"","porcentaje_sobre_comision"=>"","comision_descontado"=>"","comision_esperada"=>"","porcentaje_comision"=>"","prima_neta"=>"","fecha_operacion"=>'',"uuid_poliza"=>'',"uuid_factura"=>'',"numero_factura" => '', "numero_poliza" => '' , 'ramo_id'=>'','nombre_ramo' => $nombre_ramo_anterior, 'inicio_vigencia' => '', 'fin_vigencia' => '', 'nombre_cliente' => '', 'fecha_factura' => '', 'monto' => '' ,'estado' => '', 'estilos' => $estilo));
+        
+        if($com_paga_final!=$com_esp_final)
+            $estilo='font-weight: bold; background-color:#cccccc; color:#ff0000;';
+        else
+            $estilo='font-weight: bold; background-color:#cccccc;';
+        
+        $campoupdate["monto"] =$sumamonto;
+        $campoupdate["updated_at"] =date('Y-m-d H:i:s');
+        $actalizar_remesa=$this->RemesasEntrantes->where(['id' => $id_remesa])->update($campoupdate);
+        
+        $remesa=$this->RemesasEntrantes->find($id_remesa);
+        
+        $uuid_remesa=bin2hex($remesa->uuid_remesa_entrante);
+        
+        $response->uuid=$uuid_remesa;
+        
+        array_push($response->inter, array("remesa_creada"=>$uuid_remesa,"aseguradora_id"=>$aseguradora_id,"link_poliza"=>"","link_factura"=>"","id" => '', "final"=>1,"prima_neta_final"=>number_format($prima_neta_final, 2),"pago_final"=>number_format($pago_final, 2),"com_esp_final"=>number_format($com_esp_final, 4),"com_des_final"=>number_format($com_des_final, 2),"scom_esp_final"=>number_format($scom_esp_final, 2),"scom_des_final"=>number_format($scom_des_final, 2),"com_paga_final"=>number_format($com_paga_final, 2),"total_sob_descontada"=>"","total_sob_esperada"=>"","total_com_descontada"=>"","total_com_descontada"=>"","total_com_esperada"=>"","comision_pagada_total"=>"","comision_pagada"=>"","sobcomision_descontada"=>"","sobcomision_esperada"=>"","porcentaje_sobre_comision"=>"","comision_descontado"=>"","comision_esperada"=>"","porcentaje_comision"=>"","prima_neta"=>"","fecha_operacion"=>'',"uuid_poliza"=>'',"uuid_factura"=>'',"numero_factura" => '', "numero_poliza" => '' , 'ramo_id'=>'','nombre_ramo' => $nombre_ramo_anterior, 'inicio_vigencia' => '', 'fin_vigencia' => '', 'nombre_cliente' => '', 'fecha_factura' => '', 'monto' => '' ,'estado' => '', 'estilos' => $estilo ));
+                
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+        
+        exit;
+    }
+
+    public function ajax_get_remesas_sin_cobros(){
+
+
+        $aseguradora_id = $this->input->post('aseguradora_id');
+
+        if($_POST['codigo_remesa']==''){
+            $count = $this->RemesasEntrantes->where('empresa_id',$this->id_empresa)->count();
+            $codigo = Util::generar_codigo('REN'.$this->id_empresa, ($count+1) );
+            $campo["uuid_remesa_entrante"] = Capsule::raw("ORDER_UUID(uuid())");
+            $campo["pagos_remesados"] = 0 ;
+            $campo["aseguradora_id"] = $aseguradora_id;
+            $campo["no_remesa"] = $codigo;
+            $campo["fecha"] = date('Y-m-d');
+            $campo["usuario_id"] = $this->usuario_id;
+            $campo["estado"] = 'por_liquidar';
+            $campo["empresa_id"] = $this->id_empresa;
+            $campo["created_at"] = date('Y-m-d H:i:s');
+            $campo["updated_at"] = date('Y-m-d H:i:s');
+            if($_POST['fecha_desde']!="")
+                $campo["fecha_desde"] =date('Y-m-d', strtotime($_POST['fecha_desde']));
+            if($_POST['fecha_hasta']!="")
+                $campo["fecha_hasta"] =date('Y-m-d', strtotime($_POST['fecha_hasta']));
+            $campo["ramos_id"] =$arrayRamos = implode(",", $_POST['ramos_id']);
+            
+            //se crea la remesa entrante
+            $insertar_remesa=$this->RemesasEntrantes->create($campo);
+        }
+        $response = new stdClass();
+        $datosRemesaEntrante = $this->RemesasEntrantes->where(['id' => $insertar_remesa->id])->first();
+        $response->uuid = bin2hex($datosRemesaEntrante->uuid_remesa_entrante);
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+        exit;
+
+    }
+
     
 }

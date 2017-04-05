@@ -642,7 +642,7 @@ class Intereses_asegurados extends CRM_Controller {
         $data['uso'] = $this->SegCatalogoRepository->listar_catalogo('uso_vehiculo', 'orden');
         $data['condicion'] = $this->SegCatalogoRepository->listar_catalogo('condicion_vehiculo', 'orden');
         $clause['empresa_id'] = $this->empresa_id;
-        $clause['tipo_id'] = 1;
+        //$clause['tipo_id'] = 1;
         $data['acreedores'] = $this->AcreedoresRep->get($clause);
         $data['estado'] = $this->SegCatalogoRepository->listar_catalogo('estado2', 'orden');
 
@@ -1051,7 +1051,7 @@ class Intereses_asegurados extends CRM_Controller {
 
         //carga
         $clause['empresa_id'] = $this->empresa_id;
-        $clause['tipo'] = 2;
+        //$clause['tipo'] = 2;
 
         $data['tipo_empaque'] = $this->SegInteresesAseguradosRepository->listar_catalogo('tipo_empaque', 'orden');
         $data['condicion_envio'] = $this->SegInteresesAseguradosRepository->listar_catalogo('condicion_envio', 'orden');
@@ -1484,7 +1484,7 @@ class Intereses_asegurados extends CRM_Controller {
         $data['uso'] = $this->SegCatalogoRepository->listar_catalogo('uso_vehiculo', 'orden');
         $data['condicion'] = $this->SegCatalogoRepository->listar_catalogo('condicion_vehiculo', 'orden');
         $clause['empresa_id'] = $this->empresa_id;
-        $clause['tipo'] = 1;
+        //$clause['tipo'] = 1;
         $data['tipo_propuesta'] = $this->SegInteresesAseguradosRepository->listar_catalogo('tipo_propuesta', 'orden');
         $data['tipo_fianza'] = $this->SegInteresesAseguradosRepository->listar_catalogo('tipo_propuesta_proyecto', 'orden');
         $data['validez_fianza'] = $this->SegInteresesAseguradosRepository->listar_catalogo('validez_fianza', 'orden');
@@ -2295,7 +2295,7 @@ class Intereses_asegurados extends CRM_Controller {
         if (empty($data)) {
             $data["campos"] = array();
         }
-        $clause['tipo'] = 1;
+        //$clause['tipo'] = 1;
         //persona
         $clause['empresa_id'] = $this->empresa_id;
         $data['tipos'] = $this->SegInteresesAseguradosRepository->listar_catalogo('tipo_maritimo', 'orden');
@@ -2972,7 +2972,7 @@ class Intereses_asegurados extends CRM_Controller {
         if (empty($data)) {
             $data["campos"] = array();
         }
-        $clause['tipo'] = 1;
+        //$clause['tipo'] = 1;
         //persona
         $clause['empresa_id'] = $this->empresa_id;
         $data['acreedores'] = $this->AcreedoresRep->get($clause);
@@ -3565,7 +3565,7 @@ class Intereses_asegurados extends CRM_Controller {
         $data['estado_civil'] = $this->SegInteresesAseguradosRepository->listar_catalogo('Estado Civil', 'orden');
         $data['sexo'] = $this->SegInteresesAseguradosRepository->listar_catalogo('Sexo', 'orden');
         $clause['empresa_id'] = $this->empresa_id;
-        $clause['tipo_id'] = 1;
+        //$clause['tipo_id'] = 1;
         $data['acreedores'] = $this->AcreedoresRep->get($clause);
         $data['estado'] = $this->SegCatalogoRepository->listar_catalogo('estado2', 'orden');
 
@@ -3588,15 +3588,16 @@ class Intereses_asegurados extends CRM_Controller {
         if ($_POST) {
             unset($_POST["campo"]["guardar"]);
             $campo = Util::set_fieldset("campo");
-            $campodesde = Util::set_fieldset("campodesde");
+            $campodesde = $_POST["campodesde"];//Util::set_fieldset("campodesde");
             $campodetalle = Util::set_fieldset("campodetalle");
             $individual = 0;
             $interesId = "";
             $validarEditar = isset($campo['validar_editar']) ? $campo['validar_editar'] : '' ;
-            if (!empty($campo['pasaporte']) || $campo['letra'] == 'PAS') {
+            if (!empty($campo['pasaporte'])) { // || $campo['letra'] == 'PAS'
                 $cedula = $campo['pasaporte'];
                 $campo['ruc'] = $cedula;
-            }if ($campo['identificacion'] == 'cedula') {
+            }
+            if ($campo['identificacion'] == 'cedula') {
                 $provincia = !isset($campo['provincia'] ) ? "" : $campo['provincia'] . '-';
                 $letra = !isset($campo['letra']) ? "" : $campo['letra']."-";
                 $cedula = $provincia . $letra . $campo['tomo'] . "-" . $campo['asiento'];
@@ -3699,11 +3700,6 @@ class Intereses_asegurados extends CRM_Controller {
 
                             $prin = $detalle['detalle_relacion'];
 
-                            if ($individual == 1 || $individual == 'colectivo') {
-                                unset($detalle['detalle_int_asociado']);
-                                unset($detalle['detalle_relacion']);
-                            }
-
                             if ($det->detalle_relacion != $detalle['detalle_relacion']) {
                                 $comentario .= "<b>Campo: Relación</b><br>Valor Actual:" . $det->detalle_relacion . "<br>Valor Anterior: " . $detalle['detalle_relacion'] . "<br><br>";
                             }
@@ -3725,6 +3721,11 @@ class Intereses_asegurados extends CRM_Controller {
                             }
                             if ($det->detalle_deducible != $detalle['detalle_deducible']) {
                                 $comentario .= "<b>Campo: Deducible</b><br>Valor Actual:" . $det->detalle_deducible . "<br>Valor Anterior: " . $detalle['detalle_deducible'] . "<br><br>";
+                            }
+
+                            if ($individual == 1 || $individual == 'colectivo') {
+                                unset($detalle['detalle_int_asociado']);
+                                unset($detalle['detalle_relacion']);
                             }
 
                             if ($prin == 'Principal') {
@@ -4213,7 +4214,7 @@ class Intereses_asegurados extends CRM_Controller {
 
         //casco aereo
         $clause['empresa_id'] = $this->empresa_id;
-        $clause['tipo'] = 1;
+        //$clause['tipo'] = 1;
         $data['acreedores'] = $this->AcreedoresRep->get($clause);
         $data['estado'] = $this->SegCatalogoRepository->listar_catalogo('estado2', 'orden');
 

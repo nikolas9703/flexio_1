@@ -540,9 +540,9 @@ class Honorarios_seguros extends CRM_Controller
 				$link_aseguradora=base_url('aseguradoras/editar/'.bin2hex($value->datosComision->datosAseguradora->uuid_aseguradora));
 				$link_poliza=base_url('polizas/editar/'.bin2hex($value->datosComision->polizas->uuid_poliza));
 				
-				array_push($response->inter, array("id"=>$value->comision_id,"link_comision"=>$link_comision,"link_cliente"=>$link_cliente,"link_aseguradora"=>$link_aseguradora,"link_poliza"=>$link_poliza,"no_comision"=>$value->datosComision->no_comision,"fecha_comision"=>date_format(date_create($value->datosComision->created_at),'Y-m-d'),"no_recibo" => $value->datosComision->datosCobro->codigo, "cliente"=>$value->datosComision->cliente->nombre,"aseguradora"=>$value->datosComision->datosAseguradora->nombre,"ramo"=>$value->datosComision->datosRamos->nombre,"poliza"=>$value->datosComision->polizas->numero,"prima_neta"=>number_format($value->datosComision->facturasComisiones->subtotal,2),"pago"=>number_format($value->datosComision->pago_sobre_prima,2),"porcentaje_comision" => $value->datosComision->comision, "monto_comision" => number_format($value->datosComision->monto_comision,2),"total"=>'',"total_com"=>'','estilos' => 'font-weight: normal' ));
+				array_push($response->inter, array("id"=>$value->comision_id,"link_comision"=>$link_comision,"link_cliente"=>$link_cliente,"link_aseguradora"=>$link_aseguradora,"link_poliza"=>$link_poliza,"no_comision"=>$value->datosComision->no_comision,"fecha_comision"=>date_format(date_create($value->datosComision->created_at),'Y-m-d'),"no_recibo" => $value->datosComision->datosCobro->codigo, "cliente"=>$value->datosComision->cliente->nombre,"aseguradora"=>$value->datosComision->datosAseguradora->nombre,"ramo"=>$value->datosComision->datosRamos->nombre,"poliza"=>$value->datosComision->polizas->numero,"prima_neta"=>number_format($value->datosComision->facturasComisiones->subtotal,2),"pago"=>number_format($value->datosComision->pago_sobre_prima,2),"porcentaje_comision" => $value->porcentaje, "monto_comision" => $value->monto,"total"=>'',"total_com"=>'','estilos' => 'font-weight: normal' ));
 				
-				$monto_total+=$value->datosComision->monto_comision;
+				$monto_total+=$value->monto;
 				$total_comisiones++;
 			}
 		}
@@ -558,9 +558,9 @@ class Honorarios_seguros extends CRM_Controller
 				$link_aseguradora=base_url('aseguradoras/editar/'.bin2hex($value->datosComision->datosAseguradora->uuid_aseguradora));
 				$link_poliza=base_url('polizas/editar/'.bin2hex($value->datosComision->polizas->uuid_poliza));
 				
-				array_push($response->inter, array("id"=>$value->comision_id,"link_comision"=>$link_comision,"link_cliente"=>$link_cliente,"link_aseguradora"=>$link_aseguradora,"link_poliza"=>$link_poliza,"no_comision"=>$value->datosComision->no_comision,"fecha_comision"=>date_format(date_create($value->datosComision->created_at),'Y-m-d'),"no_recibo" => $value->datosComision->datosCobro->codigo, "cliente"=>$value->datosComision->cliente->nombre,"aseguradora"=>$value->datosComision->datosAseguradora->nombre,"ramo"=>$value->datosComision->datosRamos->nombre,"poliza"=>$value->datosComision->polizas->numero,"prima_neta"=>number_format($value->datosComision->facturasComisiones->subtotal,2),"pago"=>number_format($value->datosComision->pago_sobre_prima,2),"porcentaje_comision" => $value->datosComision->comision, "monto_comision" => number_format($value->datosComision->monto_comision,2),"total"=>'',"total_com"=>'','estilos' => 'font-weight: normal' ));
+				array_push($response->inter, array("id"=>$value->comision_id,"link_comision"=>$link_comision,"link_cliente"=>$link_cliente,"link_aseguradora"=>$link_aseguradora,"link_poliza"=>$link_poliza,"no_comision"=>$value->datosComision->no_comision,"fecha_comision"=>date_format(date_create($value->datosComision->created_at),'Y-m-d'),"no_recibo" => $value->datosComision->datosCobro->codigo, "cliente"=>$value->datosComision->cliente->nombre,"aseguradora"=>$value->datosComision->datosAseguradora->nombre,"ramo"=>$value->datosComision->datosRamos->nombre,"poliza"=>$value->datosComision->polizas->numero,"prima_neta"=>number_format($value->datosComision->facturasComisiones->subtotal,2),"pago"=>number_format($value->datosComision->pago_sobre_prima,2),"porcentaje_comision" => $value->porcentaje, "monto_comision" => $value->monto,"total"=>'',"total_com"=>'','estilos' => 'font-weight: normal' ));
 				
-				$monto_total+=$value->datosComision->monto_comision;
+				$monto_total+=$value->monto;
 				$total_comisiones++;
 			}
 		}
@@ -754,9 +754,8 @@ class Honorarios_seguros extends CRM_Controller
 		
 		$actpagohonorario=$this->HonorariosSeguros->find($crear_honorario->id)->update($acthono);
 		
-		$actparpago['no_recibo']=$guardado->id;
-		$actpagopart=SegComisionesParticipacion::where('agente_id',$id_agente)
-		->whereIn('comision_id',$comisiones_par)->update($actparpago);
+		//$actparpago['no_recibo']=$guardado->id;
+		//$actpagopart=SegComisionesParticipacion::where('agente_id',$id_agente)->whereIn('comision_id',$comisiones_par)->update($actparpago);
 		
 		$response['exito']='si';
 		

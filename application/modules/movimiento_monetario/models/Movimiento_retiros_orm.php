@@ -4,12 +4,13 @@ use \Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Flexio\Modulo\Catalogos\Models\Catalogo;
+use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 
 class Movimiento_retiros_orm extends Model
 {
 
     protected $table = 'mov_retiro_dinero';
-    protected $fillable = ['uuid_retiro_dinero', 'codigo', 'narracion', 'created_at', 'updated_at', 'fecha_inicio', 'empresa_id', 'cliente_id', 'proveedor_id', 'estado', 'cuenta_id', 'tipo_pago_id', 'incluir_narracion', 'numero_cheque', 'nombre_banco_cheque', 'numero_tarjeta', 'numero_recibo', 'banco_proveedor', 'numero_cuenta_proveedor'];
+    protected $fillable = ['uuid_retiro_dinero', 'codigo', 'narracion', 'created_at', 'updated_at', 'fecha_inicio', 'empresa_id', 'cliente_id', 'proveedor_id', 'aseguradora_id', 'estado', 'cuenta_id', 'tipo_pago_id', 'incluir_narracion', 'numero_cheque', 'nombre_banco_cheque', 'numero_tarjeta', 'numero_recibo', 'banco_proveedor', 'numero_cuenta_proveedor'];
     protected $guarded = ['id'];
 
     public function getTipoPagoAttribute() {
@@ -19,7 +20,7 @@ class Movimiento_retiros_orm extends Model
 
 
 public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NULL, $start=NULL){
-	$query = self::with(array('cliente', 'proveedor', 'items'))->where("empresa_id", $clause['id_empresa']);
+	$query = self::with(array('cliente', 'proveedor', 'aseguradora', 'items'))->where("empresa_id", $clause['id_empresa']);
 
     if($clause!=NULL && !empty($clause) && is_array($clause))
     {
@@ -30,18 +31,22 @@ public static function listar($clause=array(), $sidx=NULL, $sord=NULL, $limit=NU
 
              if($clause['cliente']=="1"){
 
-            $query->whereHas('proveedor',function($query) use($clause){
-            $query->where('id','=',$clause['nombre']);
-            })->get();
+              $query->whereHas('proveedor',function($query) use($clause){
+              $query->where('id','=',$clause['nombre']);
+              })->get();
 
 
-             }else{
+             }elseif($clause['cliente']=="2"){
 
-            $query->whereHas('cliente',function($query) use($clause){
-            $query->where('id','=',$clause['nombre']);
-            })->get();
+              $query->whereHas('cliente',function($query) use($clause){
+              $query->where('id','=',$clause['nombre']);
+              })->get();
 
 
+             }elseif($clause['cliente']=="3"){
+                $query->whereHas('aseguradora',function($query) use($clause){
+                $query->where('id','=',$clause['nombre']);
+                })->get();
              }
             }
 
@@ -88,6 +93,10 @@ public function proveedor()
 
     return $this->hasOne('Proveedores_orm', 'id', 'proveedor_id');
 
+}
+
+public function aseguradora(){
+    return $this->hasOne(Aseguradoras::class, 'id', 'aseguradora_id');
 }
 
 public function metodo_pago()

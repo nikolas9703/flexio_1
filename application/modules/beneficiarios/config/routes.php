@@ -39,7 +39,7 @@
 */
 
 //Formulario crear/editar
-$route['beneficiarios/crear'] = 'beneficiarios/crear';
+//$route['beneficiarios/crear'] = 'beneficiarios/crear';
 $route['beneficiarios/ajax-guardar-beneficiario'] = 'beneficiarios/ajax_guardar_beneficiario';
 
 

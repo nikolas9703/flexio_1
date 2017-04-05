@@ -3,43 +3,35 @@ $(function(){
          //Init Bootstrap Calendar Plugin
          //*********************************
          if(vigencia != '' && vigencia != 'undefined'  && prima != 'undefined' && prima != ''){
-            console.log(vigencia);
+            
             $('#vigencia_desde').daterangepicker({
-               locale: {
-                 format: 'DD-MM-YYYY',
-               },
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
-               startDate: (vigencia.vigencia_desde != "") ? vigencia.vigencia_desde : '' ,
-               singleDatePicker: true
+               singleDatePicker: true,
+               startDate: (vigencia.vigencia_desde != "") ? vigencia.vigencia_desde : ''
             }).val(vigencia.vigencia_desde);
 
             $('#vigencia_hasta').daterangepicker({
-               locale: {
-                 format: 'DD-MM-YYYY',
-               },
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
-               startDate: (vigencia.vigencia_hasta != "") ? vigencia.vigencia_hasta : '' ,
-               singleDatePicker: true
+               singleDatePicker: true,
+               startDate: (vigencia.vigencia_hasta != "") ? vigencia.vigencia_hasta : ''
             }).val(vigencia.vigencia_hasta);
 
             $('#fecha_primer_pago').daterangepicker({
-               locale: {
-                 format: 'DD-MM-YYYY',
-               },
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
-               startDate: (prima.fecha_primer_pago != "") ? prima.fecha_primer_pago : '' ,
-               singleDatePicker: true
+               singleDatePicker: true,
+               startDate: (prima.fecha_primer_pago != "") ? prima.fecha_primer_pago : '' 
             }).val(prima.fecha_primer_pago);
             $("#fecha_primerPago").val(prima.fecha_primer_pago);
          }else{
          
             $('#vigencia_desde,#vigencia_hasta,#fecha_primer_pago').daterangepicker({ //
-               locale: {
-                 format: 'DD-MM-YYYY',
-               },
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
                singleDatePicker: true
