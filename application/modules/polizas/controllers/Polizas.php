@@ -939,8 +939,16 @@ $vigencia = PolizasVigencia::where(['id_poliza' => $poliza->id])->first();
 if(count($vigencia) == 0){
  $vigencia = '';
 }
+if (count($vigencia) > 0) {
+    $vigencia['vigencia_desde'] = date("d-m-Y",strtotime($vigencia['vigencia_desde']));
+    $vigencia['vigencia_hasta'] = date("d-m-Y",strtotime($vigencia['vigencia_hasta']));
+}
+
 $prima = PolizasPrima::where(['id_poliza' => $poliza->id])->first();
 $centroFacturacion = centroModel::where(['id' => $prima->centro_facturacion])->first();
+if (count($prima) > 0) {
+    $prima['fecha_primer_pago'] = date("d-m-Y",strtotime($prima['fecha_primer_pago']));
+}
 if ($centroFacturacion == '') {
  $centroFacturacion = '';
 }
@@ -2585,7 +2593,9 @@ function ajax_get_intereses() {
         $tipointeres = str_replace("_actividad", "", $tipointeres);
         $response->inter ['uuid_' . $tipointeres] = "";
     }
+
     $response->inter ['tipointeres'] = $tipo;
+    $response->inter ['fecha_nacimiento'] = date("d-m-Y",strtotime($response->inter ['fecha_nacimiento']));
         //$response->inter ['uuid_intereses'] = bin2hex($response->inter ['uuid_intereses']);
 
     $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')

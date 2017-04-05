@@ -457,7 +457,7 @@ class Endosos extends CRM_Controller
             'tipo_endoso' => $datosEndosos->tipo,
             'id_motivo' => $datosEndosos->motivo,
             'modifica_prima' => $datosEndosos->modifica_prima,
-            'fecha_efectividad' => $datosEndosos->fecha_efectividad,
+            'fecha_efectividad' => date("d-m-Y",strtotime($datosEndosos->fecha_efectividad)),
             'valor_descripcion' => $datosEndosos->descripcion,
             'estado_endoso' => $datosEndosos->estado,
             'endoso_id' => $datosEndosos->id,

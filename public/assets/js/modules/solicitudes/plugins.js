@@ -3,32 +3,43 @@ $(function(){
          //Init Bootstrap Calendar Plugin
          //*********************************
          if(vigencia != '' && vigencia != 'undefined'  && prima != 'undefined' && prima != ''){
-            
+            console.log(vigencia);
             $('#vigencia_desde').daterangepicker({
-               format: 'DD/MM/YYYY',
+               locale: {
+                 format: 'DD-MM-YYYY',
+               },
                showDropdowns: true,
                defaultDate: '',
+               startDate: (vigencia.vigencia_desde != "") ? vigencia.vigencia_desde : '' ,
                singleDatePicker: true
             }).val(vigencia.vigencia_desde);
 
             $('#vigencia_hasta').daterangepicker({
-               format: 'DD/MM/YYYY',
+               locale: {
+                 format: 'DD-MM-YYYY',
+               },
                showDropdowns: true,
                defaultDate: '',
+               startDate: (vigencia.vigencia_hasta != "") ? vigencia.vigencia_hasta : '' ,
                singleDatePicker: true
             }).val(vigencia.vigencia_hasta);
 
             $('#fecha_primer_pago').daterangepicker({
-               format: 'DD/MM/YYYY',
+               locale: {
+                 format: 'DD-MM-YYYY',
+               },
                showDropdowns: true,
                defaultDate: '',
+               startDate: (prima.fecha_primer_pago != "") ? prima.fecha_primer_pago : '' ,
                singleDatePicker: true
             }).val(prima.fecha_primer_pago);
             $("#fecha_primerPago").val(prima.fecha_primer_pago);
          }else{
          
             $('#vigencia_desde,#vigencia_hasta,#fecha_primer_pago').daterangepicker({ //
-               format: 'YYYY-MM-DD',
+               locale: {
+                 format: 'DD-MM-YYYY',
+               },
                showDropdowns: true,
                defaultDate: '',
                singleDatePicker: true

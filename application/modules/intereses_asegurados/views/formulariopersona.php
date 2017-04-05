@@ -144,7 +144,7 @@
                                             <span class="input-group-addon"><i class="fa fa-calendar"></i></span><input type="input-left-addon" name="campo[fecha_nacimiento]"
                                             value="<?php
                                             if (!empty($campos["datos"]->fecha_nacimiento)) {
-                                                echo $campos["datos"]->fecha_nacimiento;
+                                                echo date('d-m-Y',strtotime($campos["datos"]->fecha_nacimiento));
                                             }
                                             ?>" class="form-control datepicker" id="fecha_nacimiento">
                                         </div></div>

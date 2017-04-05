@@ -5,7 +5,7 @@ $(function(){
 
   if(vista == "crear"){
     $('#fecha_reclamo,#fecha_siniestro,#fecha_notificacion, #fecha_cheque, #fecha_juicio, #fecha_salud').daterangepicker({ //
-      locale: { format: 'YYYY-MM-DD' },
+      locale: { format: 'DD-MM-YYYY' },
       showDropdowns: true,
       defaultDate: '',
       singleDatePicker: true
@@ -23,12 +23,12 @@ $(function(){
     if (typeof formularioCrear.reclamoInfo.fecha_cheque != "undefined") { fechacheque = formularioCrear.reclamoInfo.fecha_cheque; }
     if (typeof formularioCrear.reclamoInfo.fecha_juicio != "undefined") { fechajuicio = formularioCrear.reclamoInfo.fecha_juicio; }
     if (typeof formularioCrear.reclamoInfo.fecha_salud != "undefined") { fechasalud = formularioCrear.reclamoInfo.fecha_salud; }
-    $('#fecha_reclamo').daterangepicker({ locale: { format: 'YYYY-MM-DD' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechareclamo);
-    $('#fecha_siniesro').daterangepicker({ locale: { format: 'YYYY-MM-DD' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechasiniestro);
-    $('#fecha_notificacion').daterangepicker({ locale: { format: 'YYYY-MM-DD' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechanotificacion);
-    $('#fecha_cheque').daterangepicker({ locale: { format: 'YYYY-MM-DD' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechacheque);
-    $('#fecha_juicio').daterangepicker({ locale: { format: 'YYYY-MM-DD' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechajuicio);
-    $('#fecha_salud').daterangepicker({ locale: { format: 'YYYY-MM-DD' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechasalud);
+    $('#fecha_reclamo').daterangepicker({ locale: { format: 'DD-MM-YYYY' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechareclamo);
+    $('#fecha_siniesro').daterangepicker({ locale: { format: 'DD-MM-YYYY' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechasiniestro);
+    $('#fecha_notificacion').daterangepicker({ locale: { format: 'DD-MM-YYYY' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechanotificacion);
+    $('#fecha_cheque').daterangepicker({ locale: { format: 'DD-MM-YYYY' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechacheque);
+    $('#fecha_juicio').daterangepicker({ locale: { format: 'DD-MM-YYYY' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechajuicio);
+    $('#fecha_salud').daterangepicker({ locale: { format: 'DD-MM-YYYY' }, showDropdowns: true, defaultDate: '', singleDatePicker: true }).val(fechasalud);
   }
 
 
@@ -39,7 +39,7 @@ $(function(){
     var day  = hoy.getDate();
     if (month<10) {month="0"+month;}
     if (day<10) {day="0"+day;}
-    var today = year + '-' + month + '-' + day ;
+    var today = day + '-' + month + '-' + year ;
     $('#fecha_reclamo').val( today );
   }
          

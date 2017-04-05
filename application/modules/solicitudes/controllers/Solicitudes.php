@@ -388,9 +388,17 @@ class Solicitudes extends CRM_Controller {
         if (count($vigencias) == 0) {
             $vigencias = 'undefined';
         }
+        if (count($vigencias) > 0) {
+            $vigencias['vigencia_desde'] = date("d-m-Y",strtotime($vigencias['vigencia_desde']));
+            $vigencias['vigencia_hasta'] = date("d-m-Y",strtotime($vigencias['vigencia_hasta']));
+        }
+
         $prima = $this->solicitudesRepository->verPrima($solicitudes->id);
         if (count($prima) == 0) {
             $prima = 'undefined';
+        }
+        if (count($prima) > 0) {
+            $prima['fecha_primer_pago'] = date("d-m-Y",strtotime($prima['fecha_primer_pago']));
         }
         $acreedores = $this->solicitudesRepository->verAcreedores($solicitudes->id);
         if (count($acreedores) == 0) {

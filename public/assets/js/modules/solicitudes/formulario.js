@@ -1,7 +1,7 @@
 
 var colectivePeople = ['vida', 'salud', 'accidente', 'accidentes'],
 valid = 0,
-sendIdividualForm,
+sendIndividualForm,
 setting = {},
 ContVidaInd,
 tablaTipo;
@@ -313,7 +313,7 @@ function OnloadFunction(valid, tablaTipo) {
 
     $("#vigencia_desde").change(function () {
         var vig = $("#vigencia_desde").val();
-        var now = new Date(vig);
+        var now = new Date(vig.replace( /(\d{2})-(\d{2})-(\d{4})/, "$2/$1/$3"));
         now.setDate(now.getDate() + 364);
         var dat = now.getDate();
         var mon = now.getMonth() + 1;
@@ -324,7 +324,7 @@ function OnloadFunction(valid, tablaTipo) {
         if (dat < 10) {
             dat = "0" + dat;
         }
-        var fechafin = mon + "/" + dat + "/" + year;
+        var fechafin = dat + "-" + mon + "-" + year;
 
         $("#vigencia_hasta").val(fechafin);
 
@@ -336,7 +336,7 @@ function OnloadFunction(valid, tablaTipo) {
             var dia = dat[2];
             var mes = dat[1];
             var anio = dat[0];
-            vig = mes + '/' + dia + '/' + anio ;
+            vig = dia + "-" + mes + "-" + anio ;
         }
 
         $('.fechas_acreedores_inicio').each(function () {
@@ -348,7 +348,7 @@ function OnloadFunction(valid, tablaTipo) {
                 var dia = dat[2];
                 var mes = dat[1];
                 var anio = dat[0];
-                inicio = mes + '/' + dia + '/' + anio ;
+                inicio = dia + "-" + mes + "-" + anio ;
             }
 
             if (inicio != "") {
@@ -378,7 +378,7 @@ function OnloadFunction(valid, tablaTipo) {
             var dia = dat[2];
             var mes = dat[1];
             var anio = dat[0];
-            vigfin = mes + '/' + dia + '/' + anio ;
+            vigfin = dia + "-" + mes + "-" + anio ;
         }
 
         $('.fechas_acreedores_fin').each(function () {
@@ -390,7 +390,7 @@ function OnloadFunction(valid, tablaTipo) {
                 var dia = dat[2];
                 var mes = dat[1];
                 var anio = dat[0];
-                fin2 = mes + '/' + dia + '/' + anio ;
+                fin2 = dia + "-" + mes + "-" + anio ;
             }
 
             if (fin != "") {
@@ -699,25 +699,30 @@ function OnloadFunction(valid, tablaTipo) {
 
         var unico = $("#detalleunico").val();
         var val = {campos: {id_solicitudes: solicitud_id, detalle_unico: unico}};
+        
         var actualiza = InteresesEditar.actualizaunico(val);
         actualiza.done(function (response) {
-            if (id_tipo_int_asegurado == 1) {
-                tablaSolicitudesArticulo.recargar();
-            } else if (id_tipo_int_asegurado == 2) {
-                tablaSolicitudesCarga.recargar();
-            } else if (id_tipo_int_asegurado == 3) {
-                tablaSolicitudesAereo.recargar();
-            } else if (id_tipo_int_asegurado == 4) {
-                tablaSolicitudesMaritimo.recargar();
-            } else if (id_tipo_int_asegurado == 5) {
-                tablaSolicitudesPersonas.recargar();
-            } else if (id_tipo_int_asegurado == 6) {
-                tablaSolicitudesProyecto.recargar();
-            } else if (id_tipo_int_asegurado == 7) {
-                tablaSolicitudesUbicacion.recargar();
-            } else if (id_tipo_int_asegurado == 8) {
-                tablaSolicitudesVehiculo.recargar();
-            }
+            /*console.log(response);
+            if (id_tipo_poliza == 2 || id_tipo_int_asegurado == 5) {
+                if (id_tipo_int_asegurado == 1) {
+                    tablaSolicitudesArticulo.recargar();
+                } else if (id_tipo_int_asegurado == 2) {
+                    tablaSolicitudesCarga.recargar();
+                } else if (id_tipo_int_asegurado == 3) {
+                    tablaSolicitudesAereo.recargar();
+                } else if (id_tipo_int_asegurado == 4) {
+                    tablaSolicitudesMaritimo.recargar();
+                } else if (id_tipo_int_asegurado == 5) {
+                    tablaSolicitudesPersonas.recargar();
+                } else if (id_tipo_int_asegurado == 6) {
+                    tablaSolicitudesProyecto.recargar();
+                } else if (id_tipo_int_asegurado == 7) {
+                    tablaSolicitudesUbicacion.recargar();
+                } else if (id_tipo_int_asegurado == 8) {
+                    tablaSolicitudesVehiculo.recargar();
+                }  
+            }*/
+            
         });
 
         var InteresesAct = (function () {
@@ -1476,12 +1481,12 @@ function inicializaCamposAcreedor(){
             if (dat < 10) {
                 dat = "0" + dat;
             }
-            var fe = mon + "/" + dat + "/" + year;
+            var fe = dat + "-" + mon + "-" + year;
             $(this).val(fe);
             f = "";
         }
         $(this).daterangepicker({ 
-         locale: { format: 'MM/DD/YYYY' },
+         locale: { format: 'DD-MM-YYYY' },
          showDropdowns: true,
          defaultDate: '',
          singleDatePicker: true
@@ -1502,12 +1507,12 @@ function inicializaCamposAcreedor(){
             if (dat < 10) {
                 dat = "0" + dat;
             }
-            var fe = mon + "/" + dat + "/" + year;
+            var fe = dat + "-" + mon + "-" + year;
             $(this).val(fe);
             f = "";
         }
         $(this).daterangepicker({ 
-         locale: { format: 'MM/DD/YYYY' },
+         locale: { format: 'DD-MM-YYYY' },
          showDropdowns: true,
          defaultDate: '',
          singleDatePicker: true
@@ -1515,7 +1520,7 @@ function inicializaCamposAcreedor(){
     });
 
     $('#fechafin_1').daterangepicker({ 
-     locale: { format: 'MM/DD/YYYY' },
+     locale: { format: 'DD-MM-YYYY' },
      showDropdowns: true,
      defaultDate: '',
      singleDatePicker: true
@@ -1530,22 +1535,22 @@ function inicializaCamposAcreedor(){
         var x = id.split('_');
         var final = $("#fechafin_"+x[1]).val();
 
-        /*if (vigini.indexOf('/') > -1) {
-            var dat = vigini.split('/');
+        /*if (vigini.indexOf("-") > -1) {
+            var dat = vigini.split("-");
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
             vigini = anio + '-' + mes + '-' + dia ;
         }
-        if (vigfin.indexOf('/') > -1) {
-            var dat = vigfin.split('/');
+        if (vigfin.indexOf("-") > -1) {
+            var dat = vigfin.split("-");
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
             vigfin = anio + '-' + mes + '-' + dia ;
         }
-        if (actual.indexOf('/') > -1) {
-            var dat = actual.split('/');
+        if (actual.indexOf("-") > -1) {
+            var dat = actual.split("-");
             var dia = dat[0];
             var mes = dat[1];
             var anio = dat[2];
@@ -1575,15 +1580,15 @@ function inicializaCamposAcreedor(){
         var x = id.split('_');
         var inicial = $("#fechainicio_"+x[1]).val();
 
-        /*if (vigini.indexOf('/') > -1) {
-            var dat = vigini.split('/');
+        /*if (vigini.indexOf("-") > -1) {
+            var dat = vigini.split("-");
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
             vigini = anio + '-' + mes + '-' + dia ;
         }
-        if (vigfin.indexOf('/') > -1) {
-            var dat = vigfin.split('/');
+        if (vigfin.indexOf("-") > -1) {
+            var dat = vigfin.split("-");
             var dia = dat[1];
             var mes = dat[0];
             var anio = dat[2];
