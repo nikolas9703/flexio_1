@@ -24,19 +24,19 @@ var tablaContratosAlquiler = (function(){
             datatype: "json",
             colNames:['','No. contrato','Cliente','Centro de facturaci&oacute;n','Fecha de inicio','Fecha de vencimiento','Saldo por facturar','Total facturado', 'Centro contable', 'Creado por', 'Estado','', ''],
             colModel:[
-                {name:'uuid', index:'uuid', width:30,  hidedlg:true, hidden: true},
-                {name:'codigo', index:'codigo', width:55, sortable:true},
-                {name:'cliente_id', index:'cliente_id', width:50, sortable:true},
-                {name:'centro_facturacion_id', index:'centro_facturacion_id', width: 50,  sortable:false},
-                {name:'fecha_inicio', index:'fecha_inicio', width:40,  sortable:false, },
-                {name:'fecha_final', index:'fecha_final', width:40,  sortable:false, },
-                {name:'saldo_facturado', index:'saldo_facturado', width:50,  sortable:false, },
-                {name:'total_facturado', index:'total_facturado', width: 50,  sortable:false},
-                {name:'centro_contable_id', index:'centro_contable_id', width: 50,  sortable:false},
-                {name:'created_by', index:'created_by', width: 50,  sortable:false},
-                {name:'estado_id', index:'estado_id', width:35,  sortable:false },
-                {name:'options', index:'options',width: 40},
-                {name:'link', index:'link', width:50, align:"center", sortable:false, resizable:false,hidden: true, hidedlg:true},
+            {name:'uuid', index:'uuid', width:30,  hidedlg:true, hidden: true},
+            {name:'codigo', index:'codigo', width:55, sortable:true},
+            {name:'cliente_id', index:'cliente_id', width:50, sortable:true},
+            {name:'centro_facturacion_id', index:'centro_facturacion_id', width: 50,  sortable:false},
+            {name:'fecha_inicio', index:'fecha_inicio', width:40,  sortable:false, },
+            {name:'fecha_final', index:'fecha_final', width:40,  sortable:false, },
+            {name:'saldo_facturado', index:'saldo_facturado', width:50,  sortable:false, },
+            {name:'total_facturado', index:'total_facturado', width: 50,  sortable:false},
+            {name:'centro_contable_id', index:'centro_contable_id', width: 50,  sortable:false},
+            {name:'created_by', index:'created_by', width: 50,  sortable:false},
+            {name:'estado_id', index:'estado_id', width:35,  sortable:false },
+            {name:'options', index:'options',width: 40},
+            {name:'link', index:'link', width:50, align:"center", sortable:false, resizable:false,hidden: true, hidedlg:true},
             ],
             postData: {
                 erptkn: tkn
@@ -55,6 +55,10 @@ var tablaContratosAlquiler = (function(){
             multiselect: true,
             sortname: 'codigo',
             sortorder: "DESC",
+            subGrid : true,
+            subGridUrl: 'subgrid.php?q=2', 
+            subGridModel: [{ name : ['No','Item','Qty','Unit','Line Total'], width : [55,200,80,80,80] } ],
+            caption: "Subgrid Example",
             beforeProcessing: function(data, status, xhr){
                 if( $.isEmptyObject(data.session) === false){
                     window.location = phost() + "login?expired";
@@ -85,34 +89,34 @@ var tablaContratosAlquiler = (function(){
                 getWidthFrom: '.ui-jqgrid-view',
                 className:'jqgridHeader'
             });
-            },
-            onSelectRow: function(id){
-                $(this).find('tr#'+ id).removeClass('ui-state-highlight');
-            }
-        });
+        },
+        onSelectRow: function(id){
+            $(this).find('tr#'+ id).removeClass('ui-state-highlight');
+        }
+    });
     };
 
     var eventos = function(){
-		$("#cliente_id").select2({
-			theme: "bootstrap",
-			width:"100%"
-		});
-		$("#categoria").select2({
-			theme: "bootstrap",
-			width:"100%"
-		});
-		
-		$(".select2-search__field").css("height","27px");
-		
-		$('#fecha_desde, #fecha_hasta').daterangepicker({
-			locale: {
-				format: 'YYYY-MM-DD'
-			},
-			showDropdowns: true,
-			defaultDate: '',
-			singleDatePicker: true
-		}).val("");
-		
+      $("#cliente_id").select2({
+         theme: "bootstrap",
+         width:"100%"
+     });
+      $("#categoria").select2({
+         theme: "bootstrap",
+         width:"100%"
+     });
+
+      $(".select2-search__field").css("height","27px");
+
+      $('#fecha_desde, #fecha_hasta').daterangepicker({
+         locale: {
+            format: 'YYYY-MM-DD'
+        },
+        showDropdowns: true,
+        defaultDate: '',
+        singleDatePicker: true
+    }).val("");
+
         //Bnoton de Opciones
         gridObj.on("click", botones.opciones, function(e){
             e.preventDefault();
@@ -147,7 +151,7 @@ var tablaContratosAlquiler = (function(){
                     '<input type="hidden" name="erptkn" value="' + tkn + '">' +
                     '<input type="submit">' +
                     '</form>'
-                );
+                    );
                 $('body').append(form);
                 form.submit();
             }
@@ -160,9 +164,9 @@ var tablaContratosAlquiler = (function(){
             e.stopPropagation();
             formularioBuscar.find('input[type="text"]').prop("value", "");
             formularioBuscar.find('select').prop("value", "");
-			$("#cliente_id").select2("val", "");
-			$("#categoria").select2("val", "");
-			
+            $("#cliente_id").select2("val", "");
+            $("#categoria").select2("val", "");
+
             recargar();
         });
         //boton Buscar
@@ -216,14 +220,14 @@ var tablaContratosAlquiler = (function(){
           crearFacturaForm.append('<input type="hidden" name="contrato_alquiler_uuid" value="'+ contrato_alquiler_uuid +'" />');
           //Enviar formulario
           crearFacturaForm.submit();
-              $('body').trigger('click');
-        });
+          $('body').trigger('click');
+      });
 
         //Documentos Modal
-		$(opcionesModal).on("click", botones.subirArchivo, function(e){
-			e.preventDefault();
-			e.returnValue=false;
-			e.stopPropagation();
+        $(opcionesModal).on("click", botones.subirArchivo, function(e){
+         e.preventDefault();
+         e.returnValue=false;
+         e.stopPropagation();
 
 			//Cerrar modal de opciones
 			opcionesModal.modal('hide');
@@ -238,13 +242,13 @@ var tablaContratosAlquiler = (function(){
 			});
 			//documentosModal.modal.find('.modal-title').text('New message to');
 			var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
-		    scope.safeApply(function(){
-		    	scope.campos.contrato_id = contrato_id;
-		    });
-		    documentosModal.find('.modal-title').empty().append('Contrato Número: '+codigo);
+          scope.safeApply(function(){
+             scope.campos.contrato_id = contrato_id;
+         });
+          documentosModal.find('.modal-title').empty().append('Contrato Número: '+codigo);
 
-			documentosModal.modal('show');
-		});
+          documentosModal.modal('show');
+      });
     };
     var recargar = function(){
         //Reload Grid

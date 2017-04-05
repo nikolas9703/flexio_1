@@ -17,7 +17,7 @@
                 </select>
             </div>
              <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5 ">
-                <select id="selInteres" class="white-bg form-control select2" role="tablist" :disabled="disabledfechaInicio" v-model="interesId" onchange="formularioCrear.getInteres()">
+                <select id="selInteres" class="white-bg form-control select2" role="tablist" :disabled="disabledfechaInicio" v-model="interesId" onchange="formularioCrear.getInteres(undefined, 'selector')">
                     <option value="">Nuevo</option>
                     <option v-for="inter in sIntereses" v-bind:value="inter.id" :disabled="verificaInteres(inter.id)">{{inter.numero}}</option>
                 </select>
@@ -32,9 +32,16 @@
         <?php
         //foreach($campos['campos']['tipo_interes'] AS $tipo){
             ?>
-            <div class="tab-pane" id="<?=$campos['campos']['tipo_interes']?>Tab">
+            <div class="tab-pane tab_intereses_endosos" id="<?=$campos['campos']['tipo_interes']?>Tab">
                 <?php
-                echo modules::run("intereses_asegurados/" . $campos['campos']['tipo_interes']. "formularioparcial",$campos);
+                    if($campos['campos']['tipo_interes'] != ''){
+                        echo modules::run("intereses_asegurados/" . $campos['campos']['tipo_interes']. "formularioparcial",$campos);
+                    }else{
+                        $tabla = array(0 => "articulo", 1 => "carga", 2 => "casco_aereo", 3 => "casco_maritimo", 4 => "persona", 5 => "proyecto_actividad", 6 => "ubicacion", 7 => "vehiculo");
+                        foreach($tabla as $value){
+                            echo "<div class='endosos_".$value."' >  ".modules::run("intereses_asegurados/" . $value. "formularioparcial",$campos)."</div>";
+                        }                        
+                    }  
                 ?>
             </div>
             <?php

@@ -372,51 +372,70 @@ var formularioCrear = new Vue({
 				facturas_chequeadas[index]=(dato.value);
 			});
 			
-			if(estado_remesa=='en_proceso' || estado_remesa=='')
-			{
-				if(facturas_id.length==0 && facturas_chequeadas.length==0){
-				toastr.error('Por favor selecione una factura con estado cobro completado o coloque un monto mayor a cero para el restos de facturas');
-				
-				$("#procesar_remesa").attr('disabled',false);
-				$("#procesar_remesa").prop('disabled',false);
-			
-				return false;
-				}
-			}
-            
-            this.$http.post({
-                url: phost() + 'remesas_entrantes/ajax_get_remesa_entrantes_procesar',
-                method: 'POST',
-                data: {fecha_desde:fecha_inicio,fecha_hasta:fecha_final,ramos_id: id_ramos,codigo_remesa:codigo,aseguradora_id:aseguradora_id,facturas_id:facturas_id,facturas_chequeadas:facturas_chequeadas,montos:monto,id_monto:id_monto,erptkn: tkn} 
-            }).then(function (response) {
-                if (_.has(response.data, 'session')) {
-                    window.location.assign(phost());
-                }
+			if( (estado_remesa=='en_proceso' || estado_remesa=='')  ){
 
-                if (!_.isEmpty(response.data)) {
-					console.log(response.data);
-					$('#tabla_remesas').addClass('hidden');
-                    $('#tabla_remesas_procesadas').removeClass('hidden');
+				if(facturas_id.length==0 && facturas_chequeadas.length==0 && vista=='crear'){
+
+					$("#procesar_remesa").attr('disabled',false);
+					$("#procesar_remesa").prop('disabled',false);
+					$("#guardar_remesa").attr('disabled',false);
+
+					this.$http.post({
+		                url: phost() + 'remesas_entrantes/ajax_get_remesas_sin_cobros',
+		                method: 'POST',
+		                data: {fecha_desde:fecha_inicio,fecha_hasta:fecha_final,ramos_id:id_ramos,codigo_remesa:codigo,aseguradora_id:aseguradora_id,erptkn: tkn} 
+		            }).then(function (response) {
+		                if (_.has(response.data, 'session')) {
+		                    window.location.assign(phost());
+		                }
+		                if (!_.isEmpty(response.data)) {
+							if(vista=='crear'){
+								console.log(response.data.uuid);
+								window.location.assign(phost() + 'remesas_entrantes/editar/'+ response.data.uuid);
+							}
+		                }
+		            });
+					//toastr.error('Por favor selecione una factura con estado cobro completado o coloque un monto mayor a cero para el restos de facturas');
+					//return false;
+				}
+			}else{
+            
+	            this.$http.post({
+	                url: phost() + 'remesas_entrantes/ajax_get_remesa_entrantes_procesar',
+	                method: 'POST',
+	                data: {fecha_desde:fecha_inicio,fecha_hasta:fecha_final,ramos_id: id_ramos,codigo_remesa:codigo,aseguradora_id:aseguradora_id,facturas_id:facturas_id,facturas_chequeadas:facturas_chequeadas,montos:monto,id_monto:id_monto,erptkn: tkn} 
+	            }).then(function (response) {
+	                if (_.has(response.data, 'session')) {
+	                    window.location.assign(phost());
+	                }
+
+	                if (!_.isEmpty(response.data)) {
+						console.log(response.data);
+						if(vista=='crear'){
+							window.location.assign(phost() + 'remesas_entrantes/editar/'+ response.data.uuid);
+						}
+						
+						if(response.data.consulta == 0 && vista == "crear"){
+							var mensaje_error = 1;
+							window.location.assign(phost() + 'remesas_entrantes/listar/'+mensaje_error);
+						}else{
+							$('#tabla_remesas').addClass('hidden');
+	                    	$('#tabla_remesas_procesadas').removeClass('hidden');
+							self.$set('informacionRemesas', '');
+							self.$set('informacionRemesas', response.data.inter);
+						}
+	                }
 					
-					self.$set('informacionRemesas', '');
-					self.$set('informacionRemesas', response.data.inter);
-					
-					if(vista=='crear')
-					{
-						window.location.assign(phost() + 'remesas_entrantes/editar/'+ response.data.uuid);
-					}
-                }
-				
-				$('#aseguradora').prop("disabled",true);
-				$('#aseguradora').prop("disabled",true);
-				$('#fecha_desde').prop("disabled",true);
-				$('#fecha_hasta').prop("disabled",true);
-				$('#ramos').prop("disabled",true);
-				
-				$('#clearBtn').addClass('hidden');
-				$('#actualizar').addClass('hidden');
-					
-            });
+					$('#aseguradora').prop("disabled",true);
+					$('#aseguradora').prop("disabled",true);
+					//$('#fecha_desde').prop("disabled",true);
+					//$('#fecha_hasta').prop("disabled",true);
+					//$('#ramos').prop("disabled",true);
+					//$('#clearBtn').addClass('hidden');
+					//$('#actualizar').addClass('hidden');
+						
+	            });
+			}
         },
 		getRemesasProcesadasGuardar: function () {
 			
@@ -464,6 +483,48 @@ var formularioCrear = new Vue({
             }).then(function (response) {
                window.location.href = phost() + "remesas_entrantes/listar";
             });
+        },
+        getActualizarComisiones: function(){
+
+        	var self = this;
+
+        	var fecha_inicial = $('#fecha_desde').val();
+        	var fecha_final = $('#fecha_hasta').val();
+        	var ramos = $('#ramos').val();
+        	var no_recibo = $('#no_recibo').val();
+        	
+
+        	this.$http.post({
+                url: phost() + 'remesas_entrantes/ajax_actualizar_comisiones',
+                method: 'POST',
+                data: {id_remesa:id_remesa_entrante, estado_remesa:estado_remesa, aseguradora_id:aseguradora_id, fecha_inicial:fecha_inicial, fecha_final:fecha_final, ramos:ramos, no_recibo:no_recibo, erptkn: tkn} 
+            }).then(function (response) {
+
+                if (_.has(response.data, 'session')) {
+                    window.location.assign(phost());
+                }
+
+                if (!_.isEmpty(response.data)) {
+					console.log(response.data);
+					if(response.data.consulta == 0){
+						$('#tabla_remesas_procesadas').addClass('hidden');
+						toastr.error('No hay comisiones con las opciones de busqueda');
+					}else{
+						$('#tabla_remesas_procesadas').removeClass('hidden');
+						self.$set('informacionRemesas', '');
+						self.$set('informacionRemesas', response.data.inter);
+					}
+                }
+            });
+        },
+        getLimpiarComisiones:function(){
+
+        	$('#fecha_desde').val('');
+        	$('#fecha_hasta').val('');
+        	$('#ramos').val('').trigger("chosen:updated");
+        	$('#no_recibo').val('');
+        	$('#monto_recibo').val('');
+        	$('#tabla_remesas_procesadas').addClass('hidden');
         }
 		
 	}
@@ -532,8 +593,7 @@ $(document).ready(function(){
 		
 	   $('#codigo_remesa').val(codigo);
 	   
-		$('#actualizar').trigger('click');
-       
+		$('#actualizar').trigger('click'); 
     }
 	
 	if(vista == "editar" && borrador=='no'){
@@ -642,14 +702,11 @@ $(document).ready(function(){
 			facturas_no_chequeadas[index]=(dato.value);
 		});
 		
-		if(facturas_no_chequeadas.length==0)
-		{
+		if(facturas_no_chequeadas.length==0){
 			toastr.error('No se pueden eliminar todas las comisiones de la remesa, debe dejar por lo menos una');
 			return false;
-		}
-		else{
-			if(facturas_chequeadas.length>0)
-			{				
+		}else{
+			if(facturas_chequeadas.length>0){				
 				var remesa=$('#codigo_remesa_procesado').val();
 				  $.post(phost()+'remesas_entrantes/ajax_get_eliminar_comisiones', {comisiones: facturas_chequeadas, remesa: remesa, erptkn: window.tkn}, function(response){
 					console.log(response);
@@ -657,9 +714,7 @@ $(document).ready(function(){
 					formularioCrear.getRemesasProcesadas();
 						
 				});
-			}
-			else
-			{
+			}else{
 				toastr.error('Debe seleccionar por lo menos una comision para poder eliminarla');
 				return false;
 			}

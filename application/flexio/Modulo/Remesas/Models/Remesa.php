@@ -5,6 +5,7 @@ namespace Flexio\Modulo\Remesas\Models;
 use Illuminate\Database\Eloquent\Model as Model;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Empresa\Models\Empresa;
+use Flexio\Modulo\Remesas\Models\Remesas_cobros;
 
 class Remesa extends Model
 {
@@ -81,5 +82,9 @@ class Remesa extends Model
 
     public function datosEmpresa(){
       return $this->hasOne(Empresa::class, 'id', 'empresa_id');
+    }
+
+    public function remesas_cobros(){
+      return $this->hasmany(Remesas_cobros::class, 'id_remesa','id');
     }
   }

@@ -19,6 +19,7 @@ class AcreedoresRepository implements AcreedoresInterface{
 
         if($sidx!=NULL && $sord!=NULL){$acreedores->orderBy($sidx, $sord);}
         if($limit!=NULL){$acreedores->skip($start)->take($limit);}
+        //dd($acreedores->get());
         return $acreedores->get();
     }
 
@@ -54,9 +55,10 @@ class AcreedoresRepository implements AcreedoresInterface{
     }
 
     private function _create($usuario_id, $empresa_id, $post)
-    {
-        $aux = Acreedores::where("ruc", $post["campo"]["ruc"])->first();
-        if(count($aux)){return $aux;}
+    {   
+        
+        /*$aux = Acreedores::where("ruc", $post["campo"]["ruc"])->first();
+        if(count($aux)){return $aux;}*/
 
         $acreedor                   = new Acreedores;
         $acreedor->uuid_proveedor   = Capsule::raw("ORDER_UUID(uuid())");
@@ -85,6 +87,7 @@ class AcreedoresRepository implements AcreedoresInterface{
         $acreedor->referencia       = !empty($campo["identificacion"]) ? json_encode($campo["identificacion"]) : "";
 
         $acreedor->save();
+        
     }
 
     private function _setCategorias($acreedor, $campo)

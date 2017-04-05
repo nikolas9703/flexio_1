@@ -47,7 +47,8 @@
 												<?php foreach ($info['identificacion'] as $identificacion) { ?>
 													<option value="<?php if($identificacion->etiqueta=='natural'){ echo 'cedula'; }else if($identificacion->etiqueta=='juridico'){ echo 'ruc'; }  ?>"><?php echo $identificacion->valor ?></option>
 												<?php } ?>
-												<option value="pasaporte">Otro</option>
+												<option value="pasaporte">Pasaporte</option>
+												<option value="pasaporte">Otros</option>
 											</select>
 										</div>
 										<div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">

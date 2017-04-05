@@ -44,19 +44,11 @@ class ClienteRequest {
         $camposramos = FormRequest::data_formulario($this->request->input('ramos_agentes_h'));
         $camposporcentajes = FormRequest::data_formulario($this->request->input('porcentajes_agentes'));
 
-        print_r($camposagente);
-        print_r("<br>");
-        print_r($camposramos);
-        print_r("<br>");
-        print_r($camposporcentajes);
-        print_r("<br>");
-
         $cp_id = $this->request->input('id_cp');
         $centros = $this->setEmpresa($centros, $empresa_id);
-        return Capsule::transaction(function() use($campos, $centros, $empresa_id, $codigo, $asignados, $cp_id, $telefonos, $correos, $usuario_id){
+        return Capsule::transaction(function() use($campos, $centros, $empresa_id, $codigo, $asignados, $cp_id, $telefonos, $correos, $usuario_id, $camposagente, $camposramos, $camposporcentajes){
 
             if(!isset($campos['id'])){
-
                 //se pueden registrar varios clientes sin identificacion
                 //$clause = ['identificacion' => $campos['identificacion'], 'empresa_id' => $empresa_id];
                 //$cliente_duplicado = Cliente::getIdentificacionClientes($clause)->count();
@@ -68,38 +60,6 @@ class ClienteRequest {
                 $cliente = Cliente::registrar();
                 $cliente->fill($campos)->save();
 
-                $comentarios_duplicados =  $this->buscar_comentarios($cp_id);
-                $cliente->comentario_timeline()->saveMany($comentarios_duplicados);
-
-                foreach ($camposagente as $key => $value) {
-                  $agente = $value;
-                  foreach ($camposramos[$key] as $key1 => $value1) {
-                    $ramo = $value1;
-                    $ramo = trim($ramo, ",");
-                    $r = explode(",", $ramo);
-                    foreach ($r as $vramo) {
-                      $porcentaje = $camposporcentajes[$key][$key1];
-                      //echo $agente."-".$vramo."-".$porcentaje."%<br>";
-                      $agts = array();
-                      $agts['id_cliente'] = $cliente->id;
-                      $agts['id_agente'] = $agente;
-                      $agts['id_ramo'] = $vramo;
-                      $agts['participacion'] = $porcentaje;
-                      $agtram = AgentesRamos::create($agts);
-                    }            
-                  }          
-                }
-
-            }else{
-
-                $cliente = Cliente::find($campos['id']);
-                $cliente->update(array_merge($campos,['creado_por' => $usuario_id]));
-                (new CentroFacturableSync)->sync(array_pluck($centros, 'id'),$cliente->centro_facturable->lists('id')->toArray());
-                (new AsignadosSync)->sync(array_pluck($asignados, 'id'),$cliente->clientes_asignados->lists('id')->toArray());
-                (new TelefonosSync)->sync(array_pluck($telefonos, 'id'),$cliente->telefonos_asignados->lists('id')->toArray());
-                (new CorreosSync)->sync(array_pluck($correos, 'id'),$cliente->correos_asignados->lists('id')->toArray());
-
-                $cli = AgentesRamos::where("id_cliente", $campos['id'])->delete();
                 foreach ($camposagente as $key => $value) {
                   $agente = $value;
                   foreach ($camposramos[$key] as $key1 => $value1) {
@@ -117,7 +77,9 @@ class ClienteRequest {
                           $agts['id_agente'] = $agente;
                           $agts['id_ramo'] = $v->id;
                           $agts['participacion'] = $porcentaje;
-                          $agtram = AgentesRamos::create($agts);
+                          if ($agente!="") {
+                            $agtram = AgentesRamos::create($agts);
+                          }                          
                         }
                       }else{
                         $agts = array();
@@ -125,16 +87,68 @@ class ClienteRequest {
                         $agts['id_agente'] = $agente;
                         $agts['id_ramo'] = $vramo;
                         $agts['participacion'] = $porcentaje;
-                        //print_r($agts);
-                        //print_r("<br>");
-                        $agtram = AgentesRamos::create($agts);
+                        if ($agente!="") {
+                          $agtram = AgentesRamos::create($agts);
+                        } 
                       }                      
                     }            
                   }          
                 }
 
+                $comentarios_duplicados =  $this->buscar_comentarios($cp_id);
+                $cliente->comentario_timeline()->saveMany($comentarios_duplicados);
+
+                
+
+            }else{
+
+                $cliente = Cliente::find($campos['id']);
+                $cliente->update(array_merge($campos,['creado_por' => $usuario_id]));
+
+                $cli = AgentesRamos::where("id_cliente", $campos['id'])->delete();
+                foreach ($camposagente as $key => $value) {
+                  $agente = $value;
+                  foreach ($camposramos[$key] as $key1 => $value1) {
+                    $ramo = $value1;
+                    $ramo = trim($ramo, ",");
+                    $r = explode(",", $ramo);
+                    foreach ($r as $vramo) {
+                      $porcentaje = $camposporcentajes[$key][$key1];
+                      //echo $agente."-".$vramo."-".$porcentaje."%<br>";
+                      if ($vramo == "todos") {
+                        $nramos = Ramos::where("empresa_id", $empresa_id)->get();
+                        foreach ($nramos as $v) {
+                          $agts = array();
+                          $agts['id_cliente'] = $campos['id'];
+                          $agts['id_agente'] = $agente;
+                          $agts['id_ramo'] = $v->id;
+                          $agts['participacion'] = $porcentaje;
+                          if ($agente!="") {
+                            $agtram = AgentesRamos::create($agts);
+                          } 
+                        }
+                      }else{
+                        $agts = array();
+                        $agts['id_cliente'] = $campos['id'];
+                        $agts['id_agente'] = $agente;
+                        $agts['id_ramo'] = $vramo;
+                        $agts['participacion'] = $porcentaje;
+                        if ($agente!="") {
+                          $agtram = AgentesRamos::create($agts);
+                        } 
+                      }                      
+                    }            
+                  }          
+                }
+
+
+                (new CentroFacturableSync)->sync(array_pluck($centros, 'id'),$cliente->centro_facturable->lists('id')->toArray());
+                (new AsignadosSync)->sync(array_pluck($asignados, 'id'),$cliente->clientes_asignados->lists('id')->toArray());
+                (new TelefonosSync)->sync(array_pluck($telefonos, 'id'),$cliente->telefonos_asignados->lists('id')->toArray());
+                (new CorreosSync)->sync(array_pluck($correos, 'id'),$cliente->correos_asignados->lists('id')->toArray());               
+
             }
-            exit();
+
 
             $centro_facturable = new CentroFacturableTransform;
             $items = $centro_facturable->crearInstancia($centros);

@@ -28,141 +28,44 @@
         <tr>
             <td colspan=2 class="titulo1"><br></td>
         </tr>
-        <?php 
-            if($cliente->tipo_identificacion == 'natural'){
-        ?>
-            <tr>
-                <th class='columnasnombres'>Nombre del cliente :</th>
-                <td><?php echo strtoupper($cliente->nombre);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Identificación : </th>
-                <td><?php echo strtoupper($cliente->tipo_identificacion);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Provincia : </th>
-                <td>
-                <?php 
-                    $provincia = explode('-',$cliente->identificacion);
-                    foreach ($provincias as $key => $value) {
-                        if($value->id == $provincia[0]){
-                            echo strtoupper($value->valor);
-                        }
-                    }
-                ?>
-                </td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Letras : </th>
-                <td><?php echo strtoupper($cliente->letra);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Tomo: </th>
-                <td><?php $tomo = explode('-',$cliente->identificacion);echo strtoupper($tomo[1]);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Asiento : </th>
-                <td><?php echo strtoupper($tomo[2]);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Grupo : </th>
-                <td><?php if($grupo != false){echo strtoupper($grupo);}?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Telefono: </th>
-                <td><?php echo strtoupper($cliente->telefono);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Correo electronico : </th>
-                <td><?php echo strtoupper($cliente->correo);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Dirección : </th>
-                <td><?php echo strtoupper($cliente->direccion);?></td>
-            </tr>
-            <tr>
-                <th class='columnasnombres'>Exonerado de impuestos : </th>
-                <td><?php if($cliente->exonerado_impuesto != ''){ echo "SI";}else{echo "NO";}?></td>
-            </tr>
-        <?php 
-            }elseif($cliente->tipo_identificacion == 'juridico'){
-        ?>
-                <tr>
-                    <th class='columnasnombres'>Nombre del cliente :</th>
-                    <td><?php echo strtoupper($cliente->nombre);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Identificación : </th>
-                    <td><?php echo strtoupper($cliente->tipo_identificacion);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Tomo/Rollo : </th>
-                    <td><?php $rollo = explode('-',$cliente->identificacion);  echo strtoupper($rollo[0]);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Folio/Imagen/Documento : </th>
-                    <td><?php echo strtoupper($rollo[1]);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Asiento/Ficha : </th>
-                    <td><?php echo strtoupper($rollo[2]);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Digito verificador : </th>
-                    <td><?php echo strtoupper($rollo[3]);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Grupo : </th>
-                    <td><?php if($grupo != false){echo strtoupper($grupo);}?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Telefono : </th>
-                    <td><?php echo strtoupper($cliente->telefono);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Correo electronico : </th>
-                    <td><?php echo strtoupper($cliente->correo);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Dirección : </th>
-                    <td><?php echo strtoupper($cliente->direccion);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Exonerado de impuestos : </th>
-                    <td><?php if($cliente->exonerado_impuesto != ''){ echo "SI";}else{echo "NO";}?></td>
-                </tr>
-        <?php 
-            }elseif($cliente->tipo_identificacion == 'pasaporte'){ ?>
-                <tr>
-                    <th class='columnasnombres'>Nombre del cliente :</th>
-                    <td><?php echo strtoupper($cliente->nombre);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Identificación : </th>
-                    <td><?php echo strtoupper($cliente->tipo_identificacion);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Grupo : </th>
-                    <td><?php if($grupo != false){echo strtoupper($grupo);}?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Telefono : </th>
-                    <td><?php echo strtoupper($cliente->telefono);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Correo electronico : </th>
-                    <td><?php echo strtoupper($cliente->correo);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Dirección : </th>
-                    <td><?php echo strtoupper($cliente->direccion);?></td>
-                </tr>
-                <tr>
-                    <th class='columnasnombres'>Exonerado de impuestos : </th>
-                    <td><?php if($cliente->exonerado_impuesto != ''){ echo "SI";}else{echo "NO";}?></td>
-                </tr>
-        
-        <?php }?>
+        <tr>
+            <th class='columnasnombres'>Nombre del cliente :</th>
+            <td><?php echo strtoupper($cliente->nombre);?></td>
+        </tr>
+        <tr>
+            <th class='columnasnombres'>Identificación : </th>
+            <td><?php echo strtoupper($cliente->tipo_identificacion);?></td>
+        </tr>
+
+        <tr>
+            <th class='columnasnombres'>N° identificación : </th>
+            <td><?php echo strtoupper($cliente->identificacion);?></td>
+        </tr>
+
+        <tr>
+            <th class='columnasnombres'>Grupo : </th>
+            <td><?php echo strtoupper($datos->grupo); ?></td>
+        </tr>
+
+        <tr>
+            <th class='columnasnombres'>Telefono: </th>
+            <td><?php echo strtoupper($cliente->telefono);?></td>
+        </tr>
+
+        <tr>
+            <th class='columnasnombres'>Correo electronico : </th>
+            <td><?php echo strtoupper($cliente->correo);?></td>
+        </tr>
+
+        <tr>
+            <th class='columnasnombres'>Dirección : </th>
+            <td><?php echo strtoupper($datos->direccion);?></td>
+        </tr>
+
+        <tr>
+            <th class='columnasnombres'>Exonerado de impuestos : </th>
+            <td><?php echo $cliente->exonerado_impuesto;?></td>
+        </tr>
         <!--datos del plan  titulo1 -->
          <tr>
             <td colspan=2 class="titulo1"><br></td>
@@ -348,7 +251,7 @@
         ?>
         <tr>
             <th class='columnasnombres'>Total :</th>
-            <td><?php echo strtoupper($total);?></td>
+            <td><?php echo strtoupper(number_format($total , 2, ".", ""));?></td>
         </tr>
 
 

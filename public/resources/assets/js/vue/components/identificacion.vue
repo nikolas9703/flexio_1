@@ -8,7 +8,8 @@
 			<option value="ruc_nt">Jur&iacute;dica NT</option>
             <option value="cedula">Natural</option>
 			<option value="cedula_nt">Natural NT</option>
-            <option value="pasaporte">Otros</option>
+            <option value="pasaporte">Pasaporte</option>
+            <option value="otro">Otros</option>
         </select>
 		<input type="hidden" name="campo[identificacion]" v-model="getIdenticacion">
 	</div>
@@ -76,7 +77,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="form-group col-xs-12 col-sm-9 col-md-9 col-lg-9" v-if="detalle.tipo_identificacion == 'pasaporte'">
+	<div class="form-group col-xs-12 col-sm-9 col-md-9 col-lg-9" v-if="detalle.tipo_identificacion == 'pasaporte' || detalle.tipo_identificacion == 'otro'">
 		<!-- div oculto para enseñar campos pasaporte -->
 		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
 			<div class="form-group col-xs-12 col-sm-12 col-md-6 col-lg-4">

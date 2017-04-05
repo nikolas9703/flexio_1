@@ -5,30 +5,33 @@ $(function(){
          if(vigencia != '' && vigencia != 'undefined'  && prima != 'undefined' && prima != ''){
             
             $('#vigencia_desde').daterangepicker({
-               format: 'DD/MM/YYYY',
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
-               singleDatePicker: true
+               singleDatePicker: true,
+               startDate: (vigencia.vigencia_desde != "") ? vigencia.vigencia_desde : ''
             }).val(vigencia.vigencia_desde);
 
             $('#vigencia_hasta').daterangepicker({
-               format: 'DD/MM/YYYY',
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
-               singleDatePicker: true
+               singleDatePicker: true,
+               startDate: (vigencia.vigencia_hasta != "") ? vigencia.vigencia_hasta : ''
             }).val(vigencia.vigencia_hasta);
 
             $('#fecha_primer_pago').daterangepicker({
-               format: 'DD/MM/YYYY',
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
-               singleDatePicker: true
+               singleDatePicker: true,
+               startDate: (prima.fecha_primer_pago != "") ? prima.fecha_primer_pago : '' 
             }).val(prima.fecha_primer_pago);
             $("#fecha_primerPago").val(prima.fecha_primer_pago);
          }else{
          
             $('#vigencia_desde,#vigencia_hasta,#fecha_primer_pago').daterangepicker({ //
-               format: 'YYYY-MM-DD',
+               locale: { format: 'DD-MM-YYYY'},
                showDropdowns: true,
                defaultDate: '',
                singleDatePicker: true

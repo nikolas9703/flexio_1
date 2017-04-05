@@ -4,7 +4,7 @@
 	<div class="col-md-12">
 		<div class="ibox float-e-margins">
 			<div class="ibox-title">
-				<h5><i class="fa fa-briefcase"></i>&nbsp;Centro de facturación <small>Crear centros facturables</small></h5>
+				<h5><i class="fa fa-briefcase"></i>&nbsp;<tem id="centro_fact_dir">Centro de facturación </tem><small id="centro_fact_small">Crear centros facturables</small></h5>
 				<div class="ibox-tools">
 					<a class="collapse-link">
 						<i class="fa fa-chevron-up"></i>
@@ -17,7 +17,7 @@
 						<table class="table table-noline">
 							<thead>
 								<tr>
-									<th>Centro de facturación <span required="" aria-required="true">*</span></th>
+									<th><tem id="centro_fact_label">Centro de facturación </tem><span required="" aria-required="true">*</span></th>
 									<th>Provincia</th>
 									<th>Distrito</th>
 									<th>Corregimiento</th>

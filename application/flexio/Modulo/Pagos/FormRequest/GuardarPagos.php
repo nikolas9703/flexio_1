@@ -18,13 +18,20 @@ use Flexio\Modulo\Politicas\Models\Politicas;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
 use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
 use Flexio\Modulo\Pagos\Models\PagosPagables;
+use Flexio\Modulo\HonorariosSeguros\Models\HonorariosSeguros as HonorariosSeguros;
+use Flexio\Modulo\HonorariosSeguros\Models\SegHonorariosPart as SegHonorariosPart;
+use Flexio\Modulo\ComisionesSeguros\Models\SegComisionesParticipacion;
+use Flexio\Modulo\Remesas\Models\Remesa as Remesas;
+use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros as cobros;
+use Flexio\Modulo\Cobros_seguros\Models\CobroFactura as CobroFactura;
+use Flexio\Modulo\FacturasSeguros\Models\FacturaSeguro;
 
 class GuardarPagos{
     protected $request;
     protected $session;
     protected $tipo_deposito;
     protected $PagoValidator;
-    protected $states_validations = ['por_aplicar' => 'validatePorAplicar', 'aplicado' => 'validateAplicado'];
+    protected $states_validations = ['por_aplicar' => 'validatePorAplicar', 'aplicado' => 'validateAplicado', 'anulado' => 'validateAnulado'];
 
     function __construct(){
         $this->PagoValidator = new PagoValidator();
@@ -37,7 +44,104 @@ class GuardarPagos{
         $data['campo']['empresa_id'] = $this->session->empresaId();
 		
         if(array_get($data, 'campo.id', '') !=''){
-            return $this->actualizar($data);
+            $guardar_pago=$this->actualizar($data);
+			
+			if($guardar_pago->estado=='aplicado'){
+				if($guardar_pago->formulario == 'honorario'){
+					$datos_hon['estado']='pagada';
+                    $datos_hon['id_pago']=$guardar_pago->id;
+					$act_honorario=HonorariosSeguros::find($guardar_pago->empezable_id)->update($datos_hon);
+					
+					$participacionhonorarios=SegHonorariosPart::where('id_honorario',$guardar_pago->empezable_id)->get();
+					
+					foreach ($participacionhonorarios as $comisionpag)
+					{
+						$actparpago['id_pago']=$guardar_pago->id;
+						$actpagopart=SegComisionesParticipacion::where('agente_id',$guardar_pago->proveedor_id)->where('comision_id',$comisionpag->id_comision_part)->update($actparpago);
+					
+						$comision=ComisionesSeguros::find($comisionpag->id_comision_part);
+						
+						if($comision->estado!='pagada'){
+							$partcomision=SegComisionesParticipacion::where('comision_id',$comision->id)->whereNull('id_pago')->count();
+							
+							if($partcomision==0)
+							{
+								$datosupdate['estado']='pagada';
+								$comision->update($datosupdate);
+							}
+							else
+							{
+								$datosupdate['estado']='pagada_parcial';
+								$comision->update($datosupdate);
+							}
+						}
+					}
+				}elseif($guardar_pago->formulario == 'remesa'){
+
+                    $datosRemesas = Remesas::find($guardar_pago->empezable_id);
+                    $datosRemesas->update(['estado' => 'Pagada']);
+                    foreach ($datosRemesas->remesas_cobros as $key => $value) {
+                        cobros::find($value['id_cobro'])->update(['num_remesa' => $datosRemesas->remesa]);
+                        $id_factura = CobroFactura::where(['cobro_id' => $value['id_cobro']])->get(array('cobrable_id'));
+                        foreach ($id_factura as $key => $value) {
+                            
+                            if(($value->facturas->remesa_saliente == NULL || $value->facturas->remesa_saliente == '' ) && ($value->facturas->estado == 'cobrado_completo' || $value->facturas->estado == 'cobrado_parcial') ){//
+                                FacturaSeguro::where(['id' => $value->facturas->id])->update(['remesa_saliente' => $datosRemesas->remesa]);
+                            }elseif($value->facturas->remesa_saliente != NULL && !preg_match("/".$datosRemesas->remesa."/i",$value->facturas->remesa_saliente)){
+                                $numeroRemesa = $value->facturas->remesa_saliente.",".$datosRemesas->remesa;
+                                FacturaSeguro::where(['id' => $value->facturas->id])->update(['remesa_saliente' => $numeroRemesa]);
+                            }
+                        }
+                    }
+                }
+			}
+
+            if($guardar_pago->estado == 'anulado'){
+                if($guardar_pago->formulario == 'honorario'){
+
+                    $datos_hon['estado'] = 'en_proceso';
+                    $datos_hon['id_pago'] = NULL;
+                    $act_honorario = HonorariosSeguros::find($guardar_pago->empezable_id);
+                    $act_honorario->update($datos_hon);
+                    $participacionhonorarios = SegHonorariosPart::where('id_honorario',$guardar_pago->empezable_id)->get();
+                    foreach ($participacionhonorarios as $comisionpag){
+                        $actparpago['no_recibo'] = NULL;//$guardar_pago->id;
+                        SegComisionesParticipacion::where('agente_id',$act_honorario->agente_id/*$guardar_pago->proveedor_id*/)->where('comision_id',$comisionpag->id_comision_part)->update($actparpago);  
+                        $actpagopart = SegComisionesParticipacion::where('comision_id',$comisionpag->id_comision_part)->where('no_recibo','<>',NULL)->where('no_recibo','<>','')->get();
+                        if(count($actpagopart) == 0){
+                            $comiseguro['estado'] = 'liquidada';
+                            $comision = ComisionesSeguros::find($comisionpag->id_comision_part)->update($comiseguro);
+                        }elseif(count($actpagopart) > 1 ){
+                            $comiseguro['estado'] = 'pagada_parcial';
+                            $comision = ComisionesSeguros::find($comisionpag->id_comision_part)->update($comiseguro);
+                        }
+                    }
+                    
+
+                }elseif($guardar_pago->formulario == 'remesa'){
+
+                    $datosRemesas = Remesas::find($guardar_pago->empezable_id);
+                    $datosRemesas->update(['estado' => 'En Proceso']);
+                    foreach ($datosRemesas->remesas_cobros as $key => $value) {
+                        cobros::find($value['id_cobro'])->update(['num_remesa'=> NULL]);
+                        $id_factura = CobroFactura::where(['cobro_id' => $value['id_cobro']])->get(array('cobrable_id'));
+                        foreach ($id_factura as $key => $value) {
+
+                            if(preg_match("/,".$datosRemesas->remesa."/i",$value->facturas->remesa_saliente)){
+                                $datosFactura = str_replace(",".$datosRemesas->remesa, "", $value->facturas->remesa_saliente);
+                            }elseif(preg_match("/".$datosRemesas->remesa.",/i",$value->facturas->remesa_saliente)){
+                                $datosFactura = str_replace($datosRemesas->remesa.",","",$value->facturas->remesa_saliente);
+                            }else{
+                                $datosFactura = str_replace($datosRemesas->remesa,NULL,$value->facturas->remesa_saliente);
+                            }
+                            FacturaSeguro::where(['id' => $value->facturas->id])->update(['remesa_saliente' => $datosFactura]);   
+                        }
+                    }
+                    
+                }
+            }
+			
+			return  $guardar_pago;
         }
          return $this->crear($data,$metodo_pago_reg,$pagables);
     }
@@ -123,6 +227,7 @@ class GuardarPagos{
     private function update_validations($pago, $campo)
     {
         if($pago->estado != $campo['campo']['estado']){
+            //var_dump([$this, $this->states_validations[$campo['campo']['estado']]]);    
             call_user_func_array([$this, $this->states_validations[$campo['campo']['estado']]], [$pago, $campo]);
         }
     }
@@ -137,6 +242,12 @@ class GuardarPagos{
     {
         if($pago->estado != 'por_aplicar')throw new \Exception("El pago Nro. {$pago->codigo} requiere estar 'Por Aplicar' antes de cambiar el estado");
         if(!count($this->getPoliticas($pago, $campo['campo'])))throw new \Exception("No tiene permisos para cambiar el estado del pago Nro. {$pago->codigo}");
+    }
+
+    private function validateAnulado($pago, $campo){
+        //if($pago->estado == 'anulado')throw new \Exception("El pago Nro. {$pago->codigo} requiere estar 'Por Aplicar' antes de cambiar el estado");
+        //$pago->estado != 'por_aplicar' || $pago->estado != 'por_aprobar'|| $pago->estado != 'aplicado'
+        //if(!count($this->getPoliticas($pago, $campo['campo'])))throw new \Exception("No tiene permisos para cambiar el estado del pago Nro. {$pago->codigo}");
     }
 
     private function getPoliticas($pago, $campo)
@@ -194,6 +305,7 @@ class GuardarPagos{
     }
 
     private function _actualizarEstadoPagable($pago) {
+		
         $pagables = ($pago->formulario !== "planilla") ? $pago->facturas : $pago->planillas;
         foreach ($pagables as $pagable) {//facturas o planillas
 

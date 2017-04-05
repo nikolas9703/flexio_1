@@ -133,8 +133,7 @@ class Remesas extends CRM_Controller
         ->groupBy('usuarios.id')
         ->get();
 
-        $data['aseguradoras'] = Aseguradoras::where('empresa_id',$this->empresa_id)
-        ->where('estado','Activo')->get();
+        $data['aseguradoras'] = Aseguradoras::where('empresa_id',$this->empresa_id)->get(); //->where('estado','Activo')
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-archive"></i> Remesas Salientes',
             "ruta" => array(
@@ -199,7 +198,7 @@ class Remesas extends CRM_Controller
         $response->total    = $total_pages;
         $response->record  = $count;
         $i=0;
-        $estados = array("#f8ac59"=>"En Proceso","black"=>"Anulado",/*"#5cb85c"=>"Pagada",*/"#5bc0de"=>"Por pagar");
+        $estados = array("#f8ac59"=>"En Proceso","black"=>"Anulado","#5cb85c"=>"Pagada","#5bc0de"=>"Por pagar");
         
         if(!empty($cuentas)){
             foreach ($cuentas as  $row){
@@ -208,8 +207,10 @@ class Remesas extends CRM_Controller
                 $estado="";
                 foreach ($estados as $key => $value) {
                     $option = $value;
-                    if($row['estado'] != $option ){
-                        $estado .='<button class="btn btn-block  modal-std" data-id="'.$id.'" data-estado="'.$option.'" data-estado-anterior="'.$row['estado'].'" style="color:white;background-color:'.$key.'">'.$option.'</button>'; 
+                    if($row['estado'] != $option){
+                        if($option != 'Pagada'){
+                            $estado .='<button class="btn btn-block  modal-std" data-id="'.$id.'" data-estado="'.$option.'" data-estado-anterior="'.$row['estado'].'" style="color:white;background-color:'.$key.'">'.$option.'</button>'; 
+                        }
                     }else{
                         $updateState = $row['estado'] == "Pagada" ? "" : "updateState";
                         $labelClass='<button class="btn btn-xs btn-block '.$updateState.'" data-id="'.$id.'" data-estado="'.$option.'" style="color:white;background-color:'.$key.'">'.$option.'</button>';
@@ -453,13 +454,13 @@ public function ajax_get_remesa_saliente() {
 
             if( $vista == "crear"  ){
                 if($actualiza == 3){
-                    $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobro_facturas.id_ramo = ".$info."")->whereNotIn('cob_cobros.id',$cobros_eliminar)->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
+                    $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobros.num_remesa_entrante = '' AND cob_cobro_facturas.id_ramo = ".$info."")->whereNotIn('cob_cobros.id',$cobros_eliminar)->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
                 }else{
-                    $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();   
+                    $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobros.num_remesa_entrante = '' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();   
                 }
             }elseif($vista == "editar" ){
                 if($estado  == "En Proceso" && $actualiza == 2){
-                   $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
+                   $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '' AND cob_cobros.num_remesa_entrante = '' AND cob_cobro_facturas.id_ramo = ".$info."")->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();
                 }else{
                     $cobros = CobroFactura::whereIn('cob_cobro_facturas.cobro_id', $id_cobros)->where(['cob_cobro_facturas.id_ramo' => $info])->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();  
                 }
@@ -496,12 +497,12 @@ public function ajax_get_remesa_saliente() {
                         
                         $comision = $factura['comision'];
                         $sobre_comision = $factura['porcentaje_sobre_comision'];
+                        $valor_comision = number_format($valor_comision, 2, '.', '');
+                        $valor_sobreComision = number_format($valor_sobreComision, 2, '.', '');
                         $sub_total_comision = $sub_total_comision + $valor_comision;
                         $sub_total_valorSobre_comision = $sub_total_valorSobre_comision + $valor_sobreComision;
                         $sub_total_aseguradora = $sub_total_aseguradora + $total_aseguradora;
                         $nombre_ramo = $factura['ramo'];
-                        $valor_comision = number_format($valor_comision, 2, '.', '');
-                        $valor_sobreComision = number_format($valor_sobreComision, 2, '.', '');
                         $total_aseguradora = number_format($total_aseguradora, 2, '.', '');
                         array_push($response->valor_cobro, array('valor_cobro' =>$total_aseguradora));
 
@@ -694,29 +695,20 @@ public function editar($uuid = null){
 
 }
 
-public function imprimirRemesa($codigo_remesa = null, $id_aseguradora = null , $fecha_inicial = null, $fecha_final = null){
+public function imprimirRemesa($id_remesa = null){
 
-    $fecha_inicial = date('Y-d-m', strtotime($fecha_inicial));  
-    $fecha_final = explode("-", $fecha_final);
-    $fecha_final = $fecha_final[2]."-".$fecha_final[0]."-".$fecha_final[1];
-
-
-    $Remesas = Remesa::where(['remesa' => $codigo_remesa])->first();
+    $Remesas = Remesa::where(['id' => $id_remesa])->first();
+    $id_cobros = Remesas_cobros::where(['id_remesa' => $id_remesa])->select('id_cobro')->get(array('id_cobro'));
     $id_ramos = explode(",", $Remesas->ramos_id);
     $datosRemesa = array();
+    $id_aseguradora = $Remesas->aseguradora_id;
+    $fecha_inicial = date('d-m-Y',strtotime($Remesas->fecha_desde));
+    $fecha_final = date('d-m-Y',strtotime($Remesas->fecha_hasta));
     $total_pago = 0;
 
-    if($Remesas->estado == "Pagada"){
-        $estado = $Remesas->remesa;
-    }else{
-        $estado = '';
-    }
-
-    
     foreach ($id_ramos as $key => $value) {
 
-        $cobros = CobroFactura::whereRaw("DATE(cob_cobro_facturas.created_at) between '".$fecha_inicial."' AND '".$fecha_final."' AND cob_cobros.estado = 'aplicado' AND cob_cobros.num_remesa = '".$estado."' AND cob_cobro_facturas.id_ramo = ".$value)->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get(); 
-
+        $cobros = CobroFactura::whereIn('cob_cobro_facturas.cobro_id', $id_cobros)->where(['cob_cobro_facturas.id_ramo' => $value])->join("cob_cobros", "cob_cobros.id", "=", "cob_cobro_facturas.cobro_id")->get();  
         $sub_total_comision = 0;
         $sub_total_sobre_comision = 0;
         $sub_total_valorSobre_comision = 0;
@@ -764,7 +756,6 @@ public function imprimirRemesa($codigo_remesa = null, $id_aseguradora = null , $
     }
     array_push($datosRemesa, array("codigo" => '', "numero_poliza" => '', 'inicio_vigencia' => '', 'fin_vigencia' => '', 'prima_total' => 'Total ' , 'valor_descuento' => '', 'valor_sobreComision' => '', 'total_aseguradora' => '$ '.$total_pago, 'estilos' => 'font-weight: bold; background-color:#cccccc; text-align:center;'));
 
-    $Remesas = Remesa::where(['remesa' => $codigo_remesa])->first();
     $aseguradora = Aseguradoras::where(['id' => $id_aseguradora])->first();
     $clause = array('empresa_id' => $this->id_empresa);
     $GetRamos = $this->ramoRepository->listar_cuentas($clause);
@@ -775,7 +766,7 @@ public function imprimirRemesa($codigo_remesa = null, $id_aseguradora = null , $
         }
     }
 
-    $nombre = $codigo_remesa;
+    $nombre = $Remesas->remesa;
     $formulario = "formularioRemesa";
 
     $data = ['datos' => $Remesas, 'aseguradora' => $aseguradora, 'fecha_inicial' => $fecha_inicial, 'fecha_final' => $fecha_final, 'nombreRamos' => $nombreRamos, 'datosRemesa' => $datosRemesa];

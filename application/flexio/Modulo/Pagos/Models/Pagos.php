@@ -195,7 +195,13 @@ class Pagos extends Model
 	
 	public function honorario()
     {
-        return $this->belongsToMany('Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros', 'pag_pagos_pagables','pago_id','pagable_id')->select('seg_comisiones.no_comision', 'seg_comisiones.fecha', 'seg_comisiones.monto_recibo')
+        return $this->belongsToMany('Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros', 'pag_pagos_pagables','pago_id','pagable_id')->select('seg_comisiones.no_comision', 'seg_comisiones.fecha', 'seg_comisiones.monto_recibo','seg_comisiones.id')
+                ->withPivot('monto_pagado','pagable_id','pagable_type','empresa_id')->withTimestamps();
+    }
+	
+	public function cobrosseguros()
+    {
+        return $this->belongsToMany('Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros', 'pag_pagos_pagables','pago_id','pagable_id')->select('cob_cobros.codigo', 'cob_cobros.fecha_pago','cob_cobros.id')
                 ->withPivot('monto_pagado','pagable_id','pagable_type','empresa_id')->withTimestamps();
     }
 

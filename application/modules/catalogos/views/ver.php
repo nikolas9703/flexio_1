@@ -86,6 +86,7 @@
                       );
                      echo form_open(base_url(uri_string()), $formAttr);
                      ?>
+                    <div class="row">
                      <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                       <label for="">Ramo <span required="" aria-required="true">*</span></label>
                       <input ng-model="ramos.nombre" type="text" id="nombre" name="nombre" class="form-control"  placeholder="" autocomplete="off" data-rule-required="true">
@@ -108,6 +109,7 @@
                        </div>
                      </div>
                    </div>
+                  </div>
                    <div class="row">
                     <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                      <label for="">Descripci&oacute;n<span required="" aria-required="true">*</span></label>
@@ -121,7 +123,7 @@
                  <div class="row">
                   <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                    <label for="">Tipo de interés asegurado <span required="" aria-required="true">*</span></span></label>
-                   <select ng-model="ramos.tipo_interes_ramo" name="tipo_interes_ramo" id="tipo_interes_ramo" class="form-control  grouper">
+                   <select ng-model="ramos.tipo_interes_ramo" name="tipo_interes_ramo" id="tipo_interes_ramo" class="form-control  grouper selector">
                     <option value="">Seleccione una opción</option>
                     <?php foreach($tipo_intereses as $tipo) {?>
                     <option value="<?php echo $tipo->id?>"><?php echo $tipo->nombre?></option>
@@ -130,7 +132,7 @@
                 </div>
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                  <label for="">Tipo de póliza <span required="" aria-required="true">*</span></label>
-                 <select ng-model="ramos.tipo_poliza_ramo"  name="tipo_poliza_ramo" id="tipo_poliza_ramo"  class="form-control grouper" >
+                 <select ng-model="ramos.tipo_poliza_ramo"  name="tipo_poliza_ramo" id="tipo_poliza_ramo"  class="form-control grouper selector" >
                   <option value="">Seleccione una opción</option>
                   <?php foreach($tipo_poliza as $tipo) {?>
                   <option value="<?php echo $tipo->id?>"><?php echo $tipo->nombre?></option>
@@ -141,7 +143,7 @@
             <div class="row">
               <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6" style="">
                 <label for="">Rol(es)<span required="" aria-required="true"> *</label>
-                <select ng-model="ramos.rol" data-placeholder="Seleccione una opción" multiple="true" name="roles[]" id="rol" class="form-control chosen-select grouper" data-error="#error1">
+                <select ng-model="ramos.rol" data-placeholder="Seleccione una opción" multiple="true" name="roles[]" id="rol" class="form-control chosen-select grouper selector" data-error="#error1">
 
                  <option value="todos">Todos</option>
                  <?php foreach ($roles as $rol) {?>
@@ -154,7 +156,7 @@
              </div>
              <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
               <label for="">Usuario(s)<span required="" aria-required="true"> *</label>
-              <select ng-model="ramos.usuario" multiple="true"  data-placeholder="Seleccione una opción" name="usuarios[]" id="usuario"  class="form-control chosen-select  grouper" data-error="#error2">
+              <select ng-model="ramos.usuario" multiple="true"  data-placeholder="Seleccione una opción" name="usuarios[]" id="usuario"  class="form-control chosen-select  grouper selector" data-error="#error2">
                 <option value="todos">todos</option>
 <!--                 <?php foreach ($usuarios as $key => $value):
                 # code...

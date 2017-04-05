@@ -8,6 +8,9 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Documentos\Models\Documentos;
 use Carbon\Carbon as Carbon;
 use Flexio\Politicas\PoliticableTrait;
+use Flexio\Modulo\Cliente\Models\Cliente;
+use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
+use Flexio\Modulo\Agentes\Models\Agentes;
 
 
 class Pagos_orm extends Model {
@@ -117,6 +120,18 @@ class Pagos_orm extends Model {
 
     public function proveedor() {
         return $this->belongsTo('Proveedores_orm', 'proveedor_id');
+    }
+
+    public function cliente(){
+        return $this->belongsTo(Cliente::class, 'proveedor_id');
+    }
+
+    public function aseguradora(){
+        return $this->belongsTo(Aseguradoras::class, 'proveedor_id');
+    }
+
+    public function agentes(){
+        return $this->belongsTo(Agentes::class, 'proveedor_id');
     }
 
     public function scopeDeCodigo($query, $codigo) {

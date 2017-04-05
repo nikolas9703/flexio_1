@@ -9,33 +9,59 @@
 	    <?php Template::cargar_vista('breadcrumb'); //Breadcrumb ?>
 
     	<div class="col-lg-12">
-        	<div class="wrapper-content" id="movimiento_monetario_div">
-
-                <?php
-                $formAttr = [
-                    'method' => 'POST',
-                    'id' => 'movimiento_monetario_form',
-                    'autocomplete' => 'off'
-                ];
-                echo form_open(base_url('movimiento_monetario/guardar'), $formAttr);?>
-
-                <!--componente empezar desde-->
-                <empezar_desde :empezable.sync="empezable" :detalle.sync="detalle" :config="config"></empezar_desde>
-                <div class="ibox border-bottom">
-                    <div class="ibox-title">
-                        <h5><i class="fa fa-info-circle"></i> Datos del retiro de dinero <small></small></h5>
-                        <div class="ibox-tools">
-                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                        </div>
-                    </div>
-
-                    <div class="ibox-content" style="display:block;">
-          	            <?php
-                            echo modules::run('movimiento_monetario/ocultoformulario');
-                        ?>
-                    </div>
+        	<div class="wrapper-content">
+	            <div class="row">
+                <div id="mensaje_info"></div>
+                <?php $mensaje = self::$ci->session->flashdata('mensaje'); ?>
+	                <div class="alert alert-dismissable <?php echo !empty($mensaje) ? 'show '. $mensaje["clase"] : 'hide'  ?>">
+	                    <button aria-hidden="true" data-dismiss="alert" class="close" type="button">x</button>
+	                    <?php echo !empty($mensaje) ? $mensaje["contenido"] : ''  ?>
+	                </div>
+	            </div>
+                <div class="filtro-formularios" style="background-color: #D9D9D9; padding:6px 0 39px 10px">
+						
+						<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2" style="padding-top: 7px;">
+		            		<label>Retirar dinero para</label>
+						</div>
+			        	<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
+                                           
+                                            <select id="categoria" class="white-bg chosen-filtro" data-placeholder="Seleccione">
+								<option value=""></option>
+								<?php foreach($cliente_proveedor as $row) {?>
+                                                                <option value="<?php echo $row['id_cat']; ?>"><?php echo $row['etiqueta']; ?></option>
+                                                                <?php }?>
+							</select>
+						</div>
+					<div class="form-group col-xs-12 col-sm-3 col-md-2 col-lg-2">
+                                           
+                                            <select id="cliente_proveedor" class="white-bg select2" data-rule-required="true" aria-required="true">
+								<option value=""></option>
+							</select>
+						</div>	
+						<div class="form-group col-xs-12 col-sm-3 col-md-6 col-lg-6"></div>
+						
+						<!-- Hide Nav-Tabs -->
+						
+					</div>
+	            <div class="row">
+                	<?php
+                		$info = !empty($info) ? array("info" => $info) : array();
+                		echo modules::run('movimiento_monetario/ocultoformularioretiros', $info);
+                	?>
                 </div>
-                <?php  echo  form_close();?>
+				<div class="row">
+				
+                    <?php 
+					$retiro_id = !empty($retiro_id) ? array("retiro_id" => $retiro_id) : array();
+					Subpanel::visualizar_grupo_subpanel($retiro_id); ?>
+               </div>
+              <div class="row">
+                <?php
+                  $comentario = !empty($comentario) ? array("comentario" => $comentario) : array();
+                  if(!empty($info)){
+                    	echo modules::run('movimiento_monetario/ocultoformcomentarioretiro', $comentario);
+               }?>
+              </div>
 
         	</div>
 

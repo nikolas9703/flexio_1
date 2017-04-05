@@ -882,9 +882,7 @@ opcionesModal.on("click", "#confirmarAprobarPago", function(e){
                 })();
 $(function () {
   tablaPagos.init();
-  var rutaEjecuccionAjax = 
-  (localStorage['ms-selected'] == "seguros") ? 
-    "pagos/ajax_agentes_proovedores" : "proveedores/ajax_catalogo_proveedores" ;
+  var rutaEjecuccionAjax = localStorage['ms-selected'] == "seguros" ? "pagos/ajax_agentes_proovedores" : "proveedores/ajax_catalogo_proveedores" ;
   $("#proveedor3").select2({
     width:"100%",
     theme: "bootstrap",

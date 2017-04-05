@@ -13,6 +13,9 @@ $config['modulo_config'] = array(
         'Contabilidad' => array(
             "grupo_orden" => 2
         ),
+        'Seguros' => array(
+            "grupo_orden" => 5
+        ),
     ),
     'prefijo'		=> 'mov',
 	'menu' => 

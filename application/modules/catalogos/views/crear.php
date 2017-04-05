@@ -84,6 +84,7 @@
                   );
                  echo form_open(base_url(uri_string()), $formAttr);
                  ?>
+                <div class="row">
                  <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                   <label for="">Ramo <span required="" aria-required="true">*</span></label>
                   <input ng-model="ramos.nombre" type="text" id="nombre" name="nombre" class="form-control"  placeholder="" autocomplete="off" data-rule-required="true">
@@ -105,6 +106,7 @@
                    </div>
                  </div>
                </div>
+              </div>
                <div class="row">
                 <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
                  <label for="">Descripci&oacute;n<span required="" aria-required="true">*</span></label>

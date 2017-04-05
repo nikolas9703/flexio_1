@@ -4,6 +4,7 @@ namespace Flexio\Modulo\ContratosAlquiler\Repository;
 use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquiler;
 use Flexio\Modulo\Comentario\Models\Comentario;
 use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerHistorial;
+use Flexio\Modulo\ContratosAlquiler\Models\ContratosAlquilerItems;
 use Flexio\Modulo\ContratosAlquiler\Repository\ContratosAlquilerCatalogosRepository;
 //Para traer nombres
 use Flexio\Modulo\CentrosContables\Models\CentrosContables;
@@ -211,7 +212,15 @@ class ContratosAlquilerRepository
         ];
 
     }
+    public function getItemFromAlquiler($uuid){
 
+     $data= ContratosAlquilerItems::leftJoin("contratos_items","conalq_contratos_alquiler.id","=","contratos_items.contratable_id")
+     ->leftJoin("inv_categorias","inv_categorias.id","=","contratos_items.categoria_id")
+     ->leftJoin ("contratos_items","contratos_items.id","=","contratos_items.item_id") 
+     ->where("contratos_items.uuid_contrato_alquiler" ,hex2bin($uuid))
+     ->get();
+     return $data;
+   }
     public function getCollectionExportar($contratos_alquiler)
     {
         $aux = [];
@@ -358,6 +367,7 @@ class ContratosAlquilerRepository
    static function findByUuid($uuid) {
        return ContratosAlquiler::where('uuid_contrato_alquiler',hex2bin($uuid))->first();
    }
-
+   
+  
 
 }

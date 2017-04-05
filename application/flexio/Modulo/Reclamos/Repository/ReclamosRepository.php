@@ -54,7 +54,7 @@ class ReclamosRepository {
                             if (isset($clause['id'])) { $query->whereIn("rec_reclamos.id", $clause['id']); }                            
                         });
 
-        $reclamos->select("rec_reclamos.id","rec_reclamos.uuid_reclamos", "rec_reclamos.numero as recnumero", "rec_reclamos.fecha", "rec_reclamos.fecha_siniestro", "rec_reclamos.fecha_notificacion", "cli_clientes.nombre as clinombre", "rec_reclamos.estado as estado", "usuarios.nombre as usunombre", "usuarios.apellido as usuapellido","rec_reclamos.id_ramo", "pol_polizas.numero as polnumero", "pol_polizas.ramo", "pol_polizas.uuid_polizas", "cli_clientes.uuid_cliente", "rec_reclamos.numero_caso", "rec_reclamos.updated_at");
+        $reclamos->select("rec_reclamos.id","rec_reclamos.uuid_reclamos", "rec_reclamos.numero as recnumero", "rec_reclamos.fecha", "rec_reclamos.fecha_siniestro", "rec_reclamos.fecha_notificacion", "cli_clientes.nombre as clinombre", "rec_reclamos.estado as estado", "usuarios.nombre as usunombre", "usuarios.apellido as usuapellido","rec_reclamos.id_ramo", "pol_polizas.numero as polnumero", "pol_polizas.ramo", "pol_polizas.uuid_polizas", "cli_clientes.uuid_cliente", "rec_reclamos.numero_caso", "rec_reclamos.updated_at", "rec_reclamos.fecha_seguimiento");
         $reclamos->orderByRaw('FIELD(rec_reclamos.estado,"Pendiente doc.","En analisis","Legal","En pago","Cerrado", "Anulado")');
         $reclamos->orderBy('rec_reclamos.numero', 'DESC');
 

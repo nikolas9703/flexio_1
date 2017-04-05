@@ -271,7 +271,7 @@ var ramos = {
                             });
                     $('#has-error').hide();
 
-                    $('select').each(function () {
+                    $('.selector').each(function () {
                         $(this).rules('add', {
                             required: false,
 
@@ -454,7 +454,7 @@ $(document).ready(function () {
 
             $('#descripcion').rules(
                     "add", {required: true,
-                        regex: '^[a-zA-Z0-9áéíóúñ ]+$',
+                        //regex: '^[a-zA-Z0-9áéíóúñ ]+$',
                     });
             $('#has-error').show();
 
@@ -497,7 +497,7 @@ $(document).ready(function () {
             },
             descripcion: {
                 required: true,
-                regex: '^[a-zA-Z0-9áéíóúñ ]+$'
+                //regex: '^[a-zA-Z0-9áéíóúñ ]+$'
             },
 
         },

@@ -9,7 +9,7 @@ class Menu_orm extends Model
 	protected $fillable = ['nombre', 'tipo', 'grupo', 'agrupador'];
 	protected $guarded = ['id'];
 	public $timestamps = false;
-	
+
 	/**
 	 * Retorna listado de Estados
 	 */
@@ -19,13 +19,13 @@ class Menu_orm extends Model
 			->where('colcam.nombre_campo', '=', 'estado_id')
 			->get(array('colcat.id_cat', 'colcat.etiqueta'));
 	}*/
-	
+
 	/**
 	 * Retorna listado (Menu Superior)
-	 * 
+	 *
 	 * El menu superior se arma en base a la columna
 	 * agrupador.
-	 * 
+	 *
 	 */
 	public static function lista_menu_superior() {
 		$results = Capsule::table('modulos')
@@ -43,7 +43,7 @@ class Menu_orm extends Model
 				if(empty($result->menu)){
 					continue;
 				}
-				
+
 				$agrupadores = (array)json_decode($result->agrupador);
 
 				if(!empty($agrupadores["nombre"]) && is_array($agrupadores["nombre"]))
@@ -52,17 +52,17 @@ class Menu_orm extends Model
 					foreach($agrupadores["nombre"] AS $agrupador)
 					{
 						if(!is_string($agrupador)){
-	
+
 							foreach ((array)$agrupador AS $nombre_agrupador => $extra_info){
-							
+
 								$menuhash = trim(strtolower($nombre_agrupador));
 								$key = Util::multiarray_buscar_valor($menuhash, "grupo", $menu_agrupadores);
-									
+
 								if(!empty($menu_agrupadores[$key])){
-							
+
 									//insertar modulo en el arreglo
 									$menu_agrupadores[$key]["modulos"][] = $result->controlador;
-									
+
 								}else{
 									$menu_agrupadores[] = array(
 										"grupo" => $menuhash,
@@ -74,12 +74,12 @@ class Menu_orm extends Model
 							}
 						}
 						else{
-							
+
 							$menuhash = trim(strtolower($agrupador));
 							$key = Util::multiarray_buscar_valor($menuhash, "grupo", $menu_agrupadores);
-							
+
 							if(!empty($menu_agrupadores[$key])){
-							
+
 								//insertar modulo en el arreglo
 								$menu_agrupadores[$key]["modulos"][] = $result->controlador;
 							}else{
@@ -94,20 +94,19 @@ class Menu_orm extends Model
 					}
 				}
 			}
-			
+
 		}
-		
+
 		return $menu_agrupadores;
 	}
-	
+
 	/**
 	 * Retorna listado (Menu Lateral)
-	 * 
+	 *
 	 * El menu laterar se arma en base al nombre del modulo
 	 * y se agrupa en base a la columna grupo.
 	 */
 	public static function lista_menu_lateral($agrupador=NULL) {
-		error_log("pasa por hay");
 		if($agrupador==NULL){
 			return false;
 		}
@@ -120,19 +119,19 @@ class Menu_orm extends Model
 
 		$menu = array();
 		if(!empty($results))
-		{   
+		{
 			foreach($results AS $result)
 			{
 				$menu_data = (array)json_decode($result->menu, true);
-				
+
 				$grupo = $result->grupo;
 				$controlador = $result->controlador;
-				
+
 				if(empty($grupo) || empty($menu_data["link"])){
-                                        
+
 					continue;
 				}
-				
+
 				//Verificar si existen otros modulos con este agrupador
 				//si existe otros modulo, quiere decir que hay que agrupar
 				//el modulo, de lo contrario no va agrupado.
@@ -144,16 +143,15 @@ class Menu_orm extends Model
 
 				//Verificar si es un arreglo de links
 				if(Util::is_two_dimensional($menu_data["link"]))
-				{          
-					$posicion = 0;   
+				{
 					foreach($menu_data["link"] AS $menudata)
 					{
 						$nombre = !empty($menudata["nombre"]) ? $menudata["nombre"] : $result->nombre;
 						$url = !empty($menudata["url"]) && !empty($menudata["url"]) ? $menudata["url"] : "";
-						$orden = !empty($menudata["link"]) && !empty($menudata["orden"]) ? $menudata["orden"] : $posicion;
-							
+						$orden = !empty($menudata["link"]) && !empty($menudata["orden"]) ? $menudata["orden"] : 0;
+
 						$key = Util::multiarray_buscar_valor($controlador, "controlador", $menu);
-							
+
 						if(empty($menu[$key])){
 							$a[] = $key;
 							$menu[$grupo]["link"][] = array(
@@ -163,18 +161,18 @@ class Menu_orm extends Model
 								"orden" => $orden
 							);
 						}
-						$posicion++;
 					}
-					
+
 				}else {
+
 					$nombre = !empty($menu_data["link"]["nombre"]) && !empty($menu_data["link"]["nombre"]) ? $menu_data["link"]["nombre"] : $result->nombre;
 					$url = !empty($menu_data["link"]) && !empty($menu_data["link"]["url"]) ? $menu_data["link"]["url"] : "";
 					$orden = !empty($menu_data["link"]) && !empty($menu_data["link"]["orden"]) ? $menu_data["link"]["orden"] : 0;
-					
+
 					$key = Util::multiarray_buscar_valor($controlador, "controlador", $menu);
-					
+
 					if(!empty($menu[$key])){
-                        $a[] = $key;               
+                        $a[] = $key;
 						$menu[$grupo]["link"][$key] = array(
 							"nombre" => $nombre,
 							"controlador" => $controlador,
@@ -182,7 +180,7 @@ class Menu_orm extends Model
 							"orden" => $orden
 						);
 					}else{
-                                            
+
 						$menu[$grupo]["link"][] = array(
 							"nombre" => $nombre,
 							"controlador" => $controlador,
@@ -191,7 +189,7 @@ class Menu_orm extends Model
 						);
 					}
 				}
-				
+
 				//Obtener el orden del grupo
 				//Si tiene configurado un orden segun
 				//el agrupador donde se encuentra
@@ -209,12 +207,12 @@ class Menu_orm extends Model
 						}
 					}
 				}
-				
+
 				$menu[$grupo]["grupo_orden"] = $grupo_orden;
 				$menu[$grupo]["grupo"] = $grupo;
 				$menu[$grupo]["agrupar"] = trim($nombre)!=trim($grupo) ? 1 : 0;
-				
-				
+
+
 				//Ordenar Enlaces
 				$links = $menu[$grupo]["link"];
 				unset($menu[$grupo]["link"]);
@@ -224,8 +222,8 @@ class Menu_orm extends Model
 				$menu[$grupo]["link"] = $links;
 			}
 		}
-		
+
 		return $menu;
 	}
-	
+
 }

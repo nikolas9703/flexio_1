@@ -1,5 +1,9 @@
 
-
+<style type="text/css">
+    body {
+        padding-right: 0px !important;
+    }
+</style>
 <div id="datosdepoliza-5" class="tab-pane active col-lg-12 col-md-12">
 
     <input type="hidden" name="campo[uuid]" id="uuid" <?php if (isset($campos['uuid_polizas'])) { ?> value="<?php
@@ -42,19 +46,19 @@ echo $campos['creado_por'];
             <div class="row renewal">
              <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 renewal">
                  <label>N° Póliza</label>
-                 <input type="text" class="form-control" name="numeroPoliza" v-model="numeroPoliza">
+                 <input type="text" class="form-control" name="numeroPoliza" v-model="numeroPoliza" id="numeroPoliza">
              </div>
          </div>
          <div class="row">
              <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3"><label>Nombre del cliente <span required="" aria-required="true">*</span></label>
-                <input type="text" name="poliza_cliente_nombre" value="{{polizaCliente.nombre_cliente}}" class="form-control ncli" id="poliza_cliente_nombre" disabled />
+                <input type="text" name="poliza_cliente_nombre" value="{{polizaCliente.nombre_cliente}}" class="form-control ncli" id="poliza_cliente_nombre" disabled v-model="clienteNombre" />
             </div>
             <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3"><label>Identificación  </label>
-                <input type="text" name="poliza_cliente_tipo_identificacion" class="form-control" id="poliza_cliente_tipo_identificacion" value="{{polizaCliente.identificacion}}" disabled />
+                <input type="text" name="poliza_cliente_tipo_identificacion" class="form-control" id="poliza_cliente_tipo_identificacion" value="{{polizaCliente.identificacion}}" disabled v-model="clienteIdentificacion" />
             </div>
             <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                 <label>N° Identificación <span required="" aria-required="true">*</span></label>
-                <input type="text" id="numeroIdentificacion" value="{{polizaCliente.n_identificacion}}" id="poliza_cliente_n_identificacion" class="form-control" disabled />
+                <input type="text" id="numeroIdentificacion" value="{{polizaCliente.n_identificacion}}" id="poliza_cliente_n_identificacion" class="form-control" disabled v-model="clienteNoIdentificacion" />
             </div> 
             <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3">
                 <label>Grupo <span required="" aria-required="true">*</span></label>
@@ -95,8 +99,8 @@ echo $campos['creado_por'];
             <br/>
             <div class="input-group">
                 <span class="input-group-addon"><input type="checkbox"  name="impuesto_checkbox" id="impuesto_checkbox" :checked="polizaCliente.exonerado_impuesto != '' " :disabled="disabledfechaInicio" / v-model="checkExonerado"></span>
-                <input type="text" placeholder="Exonerado de impuesto" class="form-control" v-model="polizaCliente.exonerado_impuesto" v-bind:value="checkExonerado==false ? '' : valorExonerado " :disabled="!checkExonerado || disabledfechaInicio"
-                /><div id="divplan"></div>
+                <input type="text" placeholder="Exonerado de impuesto" id="exonerado_inpuesto_poliza" class="form-control" v-model="polizaCliente.exonerado_impuesto" v-bind:value="checkExonerado==false ? '' : valorExonerado " :disabled="!checkExonerado || disabledfechaInicio"/>
+                <div id="divplan"></div>
             </div>
         </div>
 
@@ -140,6 +144,8 @@ if (!isset($campo)) {
 
 <?php echo modules::run('polizas/formulariointereses', $campos); ?>  
 
+<input type="hidden" id="idintertabla" value="">
+
 <h5>Vigencia y detalle de solicitud</h5>
 <div class="ibox-content" style="display: block;">
     <div class="row">
@@ -147,7 +153,7 @@ if (!isset($campo)) {
             <label for="">Vigencia<span required="" aria-required="true">*</span></label>
             <div class="input-group">
                 <span class="input-group-addon"><i class="fa fa-calendar"></i></span>    
-                <input type="input-left-addon" id="poliza_vigencia_desde" name="poliza_vigencia_desde" class="form-control datepicker" value="{{polizaVigencia.vigencia_desde}}" :disabled="disabledfechaInicio"  v-model="fechaInicio" required />
+                <input type="input-left-addon" id="poliza_vigencia_desde" name="poliza_vigencia_desde" class="form-control datepicker polizavigdesde" value="{{polizaVigencia.vigencia_desde}}" :disabled="disabledfechaInicio"  v-model="fechaInicio" required />
                 <span class="input-group-addon">a</span>
                 <input type="input-left-addon" id="poliza_vigencia_hasta" name="poliza_vigencia_hasta" class="form-control datepicker2" value="{{polizaVigencia.vigencia_hasta}}" :disabled="disabledfechaExpiracion" v-model="fechaExpiracion" required @blur="renovationModal('11e7003e4d83e371b29dbc764e11d717')"  />
             </div>
@@ -359,12 +365,13 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     
     <div class="row">
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
-            <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosFrecuencia">
+            <label>Sitio de pago <span required="" aria-required="true">*</span> </label>
+            <select  name="campoprima[sitio_pago]" class="form-control" id="sitiopago" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosSitio">
                 <option value="">Seleccione</option>
-                <option v-for="frecuencia in catalogoFrecuenciaPagos" v-bind:value="frecuencia.valor" :selected="frecuencia.valor == polizaPrima.frecuencia_pago">{{frecuencia.etiqueta}}</option>
+                <option v-for="sitio in catalogoSitioPago" v-bind:value="sitio.valor" :selected="sitio.valor == polizaPrima.sitio_pago">{{{sitio.etiqueta}}}</option>
             </select>
         </div>
+        
         <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-4 plan">
             <label>M&eacute;todo de pago <span required="" aria-required="true">*</span> </label>
             <select  name="campoprima[metodo_pago]" class="form-control" id="metodopago" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosMetodo">
@@ -390,12 +397,13 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
         </div>
 
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
-            <label>Sitio de pago <span required="" aria-required="true">*</span> </label>
-            <select  name="campoprima[sitio_pago]" class="form-control" id="sitiopago" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosSitio">
+            <label>Frecuencia de pagos <span required="" aria-required="true">*</span> </label>
+            <select  name="campoprima[frecuencia_pago]" class="form-control" id="frecuenciapagos" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosFrecuencia">
                 <option value="">Seleccione</option>
-                <option v-for="sitio in catalogoSitioPago" v-bind:value="sitio.valor" :selected="sitio.valor == polizaPrima.sitio_pago">{{{sitio.etiqueta}}}</option>
+                <option v-for="frecuencia in catalogoFrecuenciaPagos" v-bind:value="frecuencia.valor" :selected="frecuencia.valor == polizaPrima.frecuencia_pago">{{frecuencia.etiqueta}}</option>
             </select>
         </div>
+        
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">
             <label>Centro de facturaci&oacute;n  </label>
             <select  name="campoprima[centro_facturacion]" class="form-control" id="centro_facturacion" @change="getClienteDireccion()" data-rule-required="true" :disabled="cambiarOpcionesPago" v-model="pagosCentroFac">
@@ -406,7 +414,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3 plan">  
             <label for="direccion">Dirección</label>
             <div id="participacion"></div>
-            <input name="campoprima[direccion_pago]" type="text" class="form-control" value="{{polizaPrima.direccion_pago}}" :disabled="cambiarOpcionesPago" v-model="pagosDireccion"/>
+            <input name="campoprima[direccion_pago]" id="poliza_direccion_pago" type="text" class="form-control" value="{{polizaPrima.direccion_pago}}" :disabled="cambiarOpcionesPago" v-model="pagosDireccion"/>
         </div>
     </div>
     <h5 style="font-size:14px">Distribuci&oacute;n de participaci&oacute;n</h5>
@@ -488,6 +496,7 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
                 } else if (isset($campos['estado']) && $campos['estado'] == "Facturada") {
                     $facturada = "selected";
                 }
+                
                 if ($campos['politicas_general'] > 0 && isset($campos['estado'])) {
                     if ($campos['estado'] == "Por Facturar") {
 
@@ -600,8 +609,50 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
     <div class="form-group col-xs-12 col-sm-6 col-md-6">
         <button id="closeModal" class="btn btn-w-m btn-default btn-block renewal" onclick="resetModalInputs()" type="button" >Cancelar</button>
     </div>
-    <div class="form-group col-xs-12 col-sm-6 col-md-6" onclick="setPlanValues()">
+    <div class="form-group col-xs-12 col-sm-6 col-md-6 endosos_coberturas" onclick="setPlanValues()">
         <button id="guardarCoberturas" class="btn btn-w-m btn-primary btn-block renewal" type="button">Guardar</button>
+    </div>
+</div>
+</div>
+
+<div class="form-group col-xs-12 col-sm-12 col-md-12 col-lg-12 div_coberturas_intereses" style="display:none;">
+ <div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+        <label>Coberturas</label>    
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+        <label>Valor</label>    
+    </div>
+    <div id="indCoveragefieldsIntereses">
+
+
+    </div>
+    <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1 renewal" id="btnAddCoverageIntereses">
+        <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indCoveragefieldsIntereses','btnAddCoverageIntereses','coverageIntereses','removecoverageIntereses')"><i class="fa fa-plus"></i></button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+        <label>Deducible</label>    
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+        <label>Valor</label>    
+    </div>
+    <br>
+    <div  id="indDeductiblefieldsIntereses">
+
+    </div>
+    <div class="col-xs-12 col-sm-3 col-md-6 col-lg-1 renewal" id="btnAddDeductibleIntereses">
+        <button class="btn btn-default btn-block addCobertura" onclick="drawInputsInCoverageInModal('indDeductiblefieldsIntereses','btnAddDeductibleIntereses','deductibleIntereses','removeDeductibleIntereses')"><i class="fa fa-plus"></i></button>
+    </div>
+
+</div>
+<div class="row botones_coberturas_intereses" style="display:none;">
+    <div class="form-group col-xs-12 col-sm-6 col-md-6">
+        <button id="closeModal" class="btn btn-w-m btn-default btn-block renewal" onclick="resetModalInputs()" type="button" >Cancelar</button>
+    </div>
+    <div class="form-group col-xs-12 col-sm-6 col-md-6" onclick="setPlanValues()">
+        <button id="saveIndividualCoveragebtn" class="btn btn-w-m btn-primary btn-block renewal" type="button">Guardar</button>
 
     </div>
 </div>
@@ -609,6 +660,10 @@ if (isset($campos['uuid_polizas']) && ($campos['uuid_polizas'] != "")) {
 <?php
 echo Modal::config(array(
     "id" => "verCoberturas",
+    "size" => "lg"
+    ))->html();
+echo Modal::config(array(
+    "id" => "IndCoberturas",
     "size" => "lg"
     ))->html();
 

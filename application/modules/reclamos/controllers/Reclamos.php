@@ -505,7 +505,8 @@ class Reclamos extends CRM_Controller {
             "permiso_asignar" => 1,
             "permiso_editar" => 1,
             "documentacionesgbd" => "",
-            "validasalud" => $salud
+            "validasalud" => $salud,
+            "regresar_poliza" => ""
         ));
 
 
@@ -821,7 +822,8 @@ class Reclamos extends CRM_Controller {
             "documentaciones" => $documentaciones,
             "documentacionesgbd" => $documentacionesgbd != "" ? $documentacionesgbd : "",
             "validasalud" => $salud,
-            "cliente" => "undefined"
+            "cliente" => "undefined",
+            "regresar_poliza" => ""
         ));
 
         $titulo = $reclamos->numero;
@@ -1265,6 +1267,8 @@ class Reclamos extends CRM_Controller {
                 $modalstatecerrado = '<a href="javascript:" data-estado-anterior="' . $row->estado . '" data-id="' . $row['id'] . '" data-estado="Cerrado" class="btn btn-block btn-outline massive" id="cerrado" style="background-color: #5cb85c; color: white;">Cerrado</a>';
                 $modalstateanulado = '<a href="javascript:" data-estado-anterior="' . $row->estado . '" data-id="' . $row['id'] . '" data-estado="Anulado" class="btn btn-block btn-outline massive" id="anulado" style="background-color: #000000; color: white;">Anulado</a>';
                 $modalstatelegal = '<a href="javascript:" data-estado-anterior="' . $row->estado . '" data-id="' . $row['id'] . '" data-estado="Legal" class="btn btn-block btn-outline massive" id="legal" style="background-color: #F8AD46; color: white;">Legal</a>';
+
+                $modalstate = "";
                 
                 $politicas_general = $this->politicas_general;
                 $politicas = $this->politicas;
@@ -1320,6 +1324,18 @@ class Reclamos extends CRM_Controller {
 
                 $actualizacion = explode(" ", $row->updated_at);
 
+                if ($row->estado != "Cerrado" && $row->estado != "Anulado") {
+                    $fecha_actual = strtotime(date("Y-m-d H:i:00",time()));
+                    $fecha_entrada = strtotime("".$row->fecha_seguimiento." 00:00:00");
+                    if ($fecha_actual > $fecha_entrada && $row->fecha_seguimiento != "" && $row->fecha_seguimiento != null) {
+                        $seguimiento = '<span style="color:white; background-color:red" class="btn btn-xs btn-block">' . $row->fecha_seguimiento . '</span>';
+                    }else{
+                        $seguimiento = $row->fecha_seguimiento;
+                    }
+                }else{
+                    $seguimiento = $row->fecha_seguimiento;
+                }
+
                 $response->rows[$i]["id"] = $row->id;
                 $response->rows[$i]["cell"] = array(
                     $row->id,
@@ -1333,6 +1349,7 @@ class Reclamos extends CRM_Controller {
                     $row->fecha_siniestro,
                     Util::verificar_valor($row->usunombre . " " . $row->usuapellido),
                     $actualizacion[0],
+                    $seguimiento,
                     !empty($row->estado) ? '<span style="color:white; ' . $estado_color . '" class="btn btn-xs btn-block estadoReclamos" data-id="' . $row['id'] . '" data-estado="' . $row->estado . '">' . ucwords($row->estado) . '</span>' : "",
                     $link_option,
                     $hidden_options,
@@ -3323,6 +3340,45 @@ public function ajax_listar_personas($grid = NULL) {
         }
         print_r(json_encode($response));
         exit;
+    }
+
+    public function actualizarclientes(){
+        $cli = clienteModel::where("empresa_id", 25)->where("tipo_identificacion", "cedula")->get();
+
+        $x = "";
+        foreach ($cli as $value) {
+            $iden = $value->identificacion;
+            $v = explode("-", $iden);
+            if (count($v)==4) {
+                $d=$v[0];
+                if ($v[0] == "01") {
+                    $d="1";
+                }else if ($v[0] == "02") {
+                    $d="2";
+                }else if ($v[0] == "03") {
+                    $d="3";
+                }else if ($v[0] == "04") {
+                    $d="4";
+                }else if ($v[0] == "05") {
+                    $d="5";
+                }else if ($v[0] == "06") {
+                    $d="6";
+                }else if ($v[0] == "07") {
+                    $d="7";
+                }else if ($v[0] == "08") {
+                    $d="8";
+                }else if ($v[0] == "09") {
+                    $d="9";
+                }
+                $x = $d.'-'.$v[1].'-'.$v[2].'-'.$v[3];
+
+                $arr = array();
+                $arr['identificacion'] = $x;
+                echo $x."<br>";
+                $ccc = clienteModel::where("empresa_id", 25)->where("id", $value->id)->update($arr);
+            }
+            
+        }
     }
 
 }

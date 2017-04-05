@@ -12,6 +12,9 @@ use Flexio\Modulo\Comentario\Models\Comentario;
 //repositories
 use Flexio\Modulo\Bancos\Repository\BancosRepository as bancosRep;
 use Flexio\Modulo\OrdenesCompra\Repository\OrdenesCompraRepository as ordenesCompraRep;
+use Flexio\Modulo\ComisionesSeguros\Models\SegComisionesParticipacion;
+use Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros;
+use Flexio\Modulo\ComisionesSeguros\Models\ComisionesSeguros;
 
 //utils
 use Flexio\Modulo\Pagos\Validators\PagoValidator;
@@ -164,12 +167,16 @@ class PagosRepository implements PagosInterface{
 		else if($pago->empezable_type == "participacion"){
             return $this->pago_participacion($pago);
         }
+		else if($pago->empezable_type == "remesas_salientes"){
+            return $this->pago_remesas_salientes($pago);
+        }
         $proveedor = is_null($pago->proveedor)? []: $this->formatProveedor($pago->proveedor);
         return collect(array_merge(
             $pago->toArray(),
             [   'proveedor' => $proveedor,
                 'pagables' => $pago->facturas->map(function($factura){
                     return [
+						'ruta_url'=>'',
                         'numero_documento' => $factura->codigo,
                         'fecha_emision' => $factura->fecha_desde,
                         'total' => $factura->total,
@@ -194,6 +201,7 @@ class PagosRepository implements PagosInterface{
                 'pagables' => $pago->movimientos_monetarios->map(function($movimiento){
                     $aux = $movimiento->items->sum('debito');
                     return [
+						'ruta_url'=>'',
                         'numero_documento' => $movimiento->codigo,
                         'fecha_emision' => $movimiento->created_at->format('d/m/Y'),
                         'total' => $aux,
@@ -217,6 +225,7 @@ class PagosRepository implements PagosInterface{
             [
                 'pagables' => $pago->facturas->map(function($factura){
                     return [
+						'ruta_url'=>'',
                         'numero_documento' => $factura->codigo,
                         'fecha_emision' => $factura->fecha_desde,
                         'total' => $factura->retencion,
@@ -354,6 +363,7 @@ class PagosRepository implements PagosInterface{
                 'pagables' => $pago->anticipo->map(function($anticipo) use($pagable_type) {
 
                     return [
+						'ruta_url'=>'',
                         'numero_documento' => $anticipo->codigo,
                         'fecha_emision' => $anticipo->fecha_anticipo,
                         'total' => $anticipo->monto,
@@ -377,14 +387,17 @@ class PagosRepository implements PagosInterface{
 		return collect(array_merge(
             $pago->toArray(),
             [   'proveedor' => $proveedor,
-                'pagables' => $pago->honorario->map(function($comision){
+                'pagables' => $pago->honorario->map(function($comision) use ($pago){
+					$monto_part=SegComisionesParticipacion::where('agente_id',$pago->proveedor_id)->where('comision_id',$comision->id)->first();
+					$comdatos=ComisionesSeguros::find($comision->id);
                     return [
+						'ruta_url'=>base_url('comisiones_seguros/ver/'.bin2hex($comdatos->uuid_comision)),
                         'numero_documento' => $comision->no_comision,
                         'fecha_emision' => $comision->fecha,
-                        'total' => $comision->monto_recibo,
-                        'pagado' => $comision->monto_recibo,
-                        'saldo' => $comision->monto_recibo,
-                        'monto_pagado' => $comision->pivot->monto_pagado,
+                        'total' => $monto_part->monto,
+                        'pagado' => number_format(0,2),
+                        'saldo' => number_format(0,2),
+                        'monto_pagado' => $monto_part->monto,
                         'pagable_id' => $comision->pivot->pagable_id,
                         'pagable_type' => $comision->pivot->pagable_type
                     ];
@@ -393,6 +406,34 @@ class PagosRepository implements PagosInterface{
             ]
         ));
     }
+	
+	function pago_remesas_salientes($pago)
+	{
+		$pagable_id = $pago->empezable_id;
+        $pagable_type = 'Flexio\Modulo\Cobros_seguros\Models\Cobros_seguros';
+        $proveedor = is_null($pago->proveedor)? []: $this->formatProveedor($pago->proveedor);
+		
+		return collect(array_merge(
+            $pago->toArray(),
+            [   'proveedor' => $proveedor,
+                'pagables' => $pago->cobrosseguros->map(function($cobros) use ($pago){
+					$link=Cobros_seguros::find($cobros->id);
+                    return [
+						'ruta_url'=>base_url('cobros_seguros/ver/'.$link->uuid_cobro),
+                        'numero_documento' => $cobros->codigo,
+                        'fecha_emision' => $cobros->fecha_pago,
+                        'total' => $cobros->pivot->monto_pagado,
+                        'pagado' => number_format(0,2),
+                        'saldo' => number_format(0,2),
+                        'monto_pagado' => $cobros->pivot->monto_pagado,
+                        'pagable_id' => $cobros->pivot->pagable_id,
+                        'pagable_type' => $cobros->pivot->pagable_type
+                    ];
+                }),
+                'metodos_pago' => $pago->metodo_pago
+            ]
+        ));
+	}
 
     function getLastEstadoHistory($id){
         return Capsule::table('revisions as i')

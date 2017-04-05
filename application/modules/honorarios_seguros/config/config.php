@@ -11,7 +11,7 @@ $config['modulo_config'] = array(
   	'prefijo'		=> 'hon',
   	'agrupador'		=> array(
         'Seguros' => array(
-            "grupo_orden" => 7
+            "grupo_orden" => 8
         ),
     ),
 	'menu' => array(

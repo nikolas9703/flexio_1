@@ -50,7 +50,7 @@ $(function(){
 
     $('.datepicker').datepicker({
     	
-    	maxDate: '+0d',
+    	minDate: '+0d',
     	endDate: '2010-12-31',
     	changeMonth: true,
     	changeYear: true
@@ -106,6 +106,8 @@ $(document).ready(function(){
                 $("#vigencia_vida_colectivo").hide();
             }
         }
+
+    
 
 });
 
@@ -202,6 +204,10 @@ var renovationForm = new Vue({
 
 });
 
+/*function actualizarPrima(){
+    var prima = 0 ;
+    $("#tablaSolicitudesVehiculo").find("tbody").find("")
+}*/
 
 function inicializaCamposAcreedor(){
 

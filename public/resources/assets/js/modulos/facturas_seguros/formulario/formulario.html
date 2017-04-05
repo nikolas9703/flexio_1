@@ -1,0 +1,123 @@
+<!-- Inicia formulario -->
+    <div class="ibox" style="margin-right: 15px;">
+        <div class="ibox-title">
+            <h5>Datos de la factura</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+            </div>
+        </div>
+        <div style="display: block; border: 0px" class="ibox-content m-b-sm">
+
+            <div class="row">
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>Cliente <span class="required">*</span></label>
+
+                    <select class="form-control" data-placeholder="Seleccione"  data-rule-required="true" name="campo[cliente_id]" id="cliente_id" v-model="formulario.cliente_id" v-select2-catalog="formulario.cliente_id" :config="select2_clients" :disabled="disabledPorModulo || disableCliente" ></select>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>T&eacute;rminos de pago <span class="required">*</span></label>
+                    <select data-rule-required="true"  class="form-control" id="termino_pago" name="campo[termino_pago]" v-model="formulario.termino_pago" v-select2="formulario.termino_pago" :config="{width:'100%'}" :disabled="disableCampo">
+                        <option value="">Seleccione</option>
+                        <option :value="termino_pago.etiqueta" v-for="termino_pago in getTerminosPagos" v-text="termino_pago.valor"></option>
+                    </select>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>&nbsp;</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span>
+                        <input type="text" disabled name="campo[saldo]" class="form-control debito" value="{{formulario.saldo_pendiente | currency ''}}" >
+                    </div>
+                    <label class="label-danger-text">Saldo por cobrar</label>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>&nbsp;</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span>
+                        <input type="input-left-addon" disabled name="campo[lcredito]" class="form-control debito" value="{{formulario.credito_favor | currency ''}}" >
+                    </div>
+                    <label class="label-success-text">Cr&eacute;dito a favor</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>Fecha de emisi&oacute;n <span class="required">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar-minus-o"></i></span>
+                        <input type="text" name="campo[fecha_desde]" class="form-control"  id="fecha_desde" v-datepicker="formulario.fecha_desde" v-model="formulario.fecha_desde" data-rule-required="true" :disabled="disableCampo">
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>V&aacute;lido hasta <span class="required">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar-plus-o"></i></span>
+                        <input type="text" name="campo[fecha_hasta]" class="form-control" id="fecha_hasta" v-datepicker="formulario.fecha_hasta" v-model="formulario.fecha_hasta" :disabled="disableCampo">
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>Vendedor <span class="required">*</span></label>
+                    <select class="form-control" data-rule-required="true"  id="vendedor" name="campo[created_by]" v-model="formulario.created_by" v-select2="formulario.created_by" :config="{width:'100%'}" :disabled="disabledVendedor">
+                        <option value="">Seleccione</option>
+                        <option :value="vendedor.id" v-for="vendedor in getUsuarios | orderBy 'nombre'" v-text="vendedor.nombre"></option>
+                    </select>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3" v-show="esVentas">
+                    <label>Lista de precio <span class="required">*</span></label>
+                    <select class="form-control" id="lista_precio_id" name="campo[item_precio_id]" @change="cambiarListaPrecio" v-model="formulario.item_precio_id" data-rule-requiredvalidation="true" v-select2="formulario.item_precio_id" :config="{width:'100%'}" :disabled="disableCampo">
+                        <option value="">Seleccione</option>
+                        <option value="{{precio.id}}" v-for="precio in catalogos.lista_precio | orderBy 'nombre'"  v-text="precio.nombre"></option>
+                    </select>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3" v-show="esAlquiler">
+                    <label for="vendedor_id">Lista de precio de alquiler <span required="" aria-required="true">*</span></label>
+                    <select name="campo[lista_precio_alquiler_id]" class="form-control" data-rule-required="true" v-model="formulario.lista_precio_alquiler_id" disabled>
+                        <option value="">Seleccione</option>
+                        <option value="{{option.id}}" v-for="option in catalogos.lista_precio_alquiler" track-by="$index" v-text="option.nombre"></option>
+                    </select>
+                    <input type="hidden" name="campo[formulario]" value="contrato_alquiler" v-if="esAlquiler" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>Centro Contable <span class="required">*</span></label>
+                    <select class="form-control" data-rule-required="true"  id="centro_contable_id" name="campo[centro_contable_id]" v-model="formulario.centro_contable_id" v-select2="formulario.centro_contable_id" :config="{width:'100%'}" :disabled="disableCampo">
+                        <option value="">Seleccione</option>
+                        <option :value="centro_contable.centro_contable_id" v-for="centro_contable in catalogos.centros_contables | orderBy 'nombre'" v-text="centro_contable.nombre"></option>
+                    </select>
+                </div>
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>Centro de facturaci&oacute;n <span class="required">*</span></label>
+                    <select  data-rule-required="true"  class="form-control" id="centro_facturacion_id" name="campo[centro_facturacion_id]" v-model="formulario.centro_facturacion_id" :disabled="getCentroFacturacion.length === 0" v-select2="formulario.centro_facturacion_id" :config="{width:'100%'}">
+                        <option value="">Seleccione</option>
+                        <option v-for="centro_facturable in getCentroFacturacion | orderBy 'nombre'" :value="centro_facturable.id" v-text="centro_facturable.nombre"></option>
+                    </select>
+                </div>
+
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-3">
+                    <label>Estado <span class="required">*</span></label>
+                    <select class="form-control" id="estado_id" name="campo[estado]" v-model="formulario.estado" data-rule-required="true" :disabled="disabledEstado">
+                        <option value="">Seleccione</option>
+                        <option value="{{estado.etiqueta}}" v-for="estado in getEstados" v-text="estado.valor"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                    <label>Observaciones </label>
+                    <textarea id="comentario" name="campo[comentario]" v-model="formulario.comentario" class="form-control"></textarea>
+                </div>
+            </div>
+
+        </div>
+        <input type="hidden" v-model="formulario.id" name="campo[id]" />
+    </div>
+
+<!-- Termina formulario -->

@@ -48,7 +48,6 @@
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Aseguradora</label>
                                             <select class="form-control chosen-select" id="aseguradora" multiple="" data-placeholder="Seleccione">
-
                                                 <?php
                                                 if (!empty($aseguradoras)) {
                                                     foreach ($aseguradoras AS $cli) {
@@ -57,7 +56,6 @@
                                                 }
                                                 ?>
                                             </select>
-
                                         </div>
                                         <div class="form-group col-xs-12 col-sm-6 col-md-3 col-lg-3">
                                             <label for="">Usuario</label>

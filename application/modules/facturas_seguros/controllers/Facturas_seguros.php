@@ -47,6 +47,8 @@ use Flexio\Modulo\Contabilidad\Repository\ImpuestosRepository;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\SegInteresesAsegurados\Repository\SegInteresesAseguradosRepository as SegInteresesAseguradosRepository;
 use Flexio\Modulo\CentroFacturable\Models\CentroFacturable as CentroFacturable;
+use Flexio\Modulo\Contabilidad\Models\CuentasCobrar;
+
 
 class Facturas_seguros extends CRM_Controller
 {
@@ -191,7 +193,7 @@ class Facturas_seguros extends CRM_Controller
 
         $data['sitio_pago'] = $sitio_pago;
         $data['ramo'] = $ramopoliza;
-        $data['clientes'] = Cliente_orm::where($clause)->get(array('id', 'nombre'));
+        $data['clientes'] = Cliente_orm::where($clause)->where("estado", "activo")->get(array('id', 'nombre'));
         $data['etapas'] = $this->facturaVentaCatalogoRepository->getEtapas();
         $data['vendedores'] = $vendedores;
         //$breadcrumb["menu"]["opciones"]["#cambiarEstadoFacturas"] = "Cambiar estados";
@@ -904,12 +906,18 @@ function editar($uuid) {
            ));
     }
 
+    $cuenta_transaccionales = Cuentas_orm::transaccionalesDeEmpresa($this->empresa_id)->activas()
+            ->get(array('id', 'nombre', 'codigo', Capsule::raw("HEX(uuid_cuenta) AS uuid")));
+    //$cuenta_transaccionales->uuid_cuenta = bin2hex($cuenta_transaccionales->uuid_cuenta);
+    $cuenta_transaccionales->toArray();
+
     $this->assets->agregar_var_js(array(
         "precio_id" => $precio_id[0]->id,
         "usuario_id" => $vendedor_user->id,
         "editar_precio" => $editar_precio,
 		"facturas_seguros_id" => $factura->id,
-		"data"=> $factura
+		"data"=> $factura,
+        "cuenta_transaccionales" => json_encode($cuenta_transaccionales),
     ));
 	
 	$data["subpanels"] = [];
@@ -1064,6 +1072,7 @@ private function _sync_items($factura, $items){
             $fecha_h = $fech[2]."-".$fech[1]."-".$fech[0];
             $fechas = array("fecha_desde" => $fecha_d, "fecha_hasta" => $fecha_h);
 
+        
            
            $salida = ['id' => $factura->id, 'type' => 'Factura_orm'];
            $this->assets->agregar_var_js(array(
@@ -2372,4 +2381,6 @@ function ocultoformulario($facturas = array()) {
         print json_encode($factura);
         exit;
     }
+
+    
 }

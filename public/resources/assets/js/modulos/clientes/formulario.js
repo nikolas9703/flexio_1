@@ -56,8 +56,10 @@ var form_crear_cliente = new Vue({
             lista_precio_venta_id:'',
             lista_precio_alquiler_id:'',
             termino_pago:'',
-            agentesCliente:[{agente_id:'', id:''}],
-            agentesRamoCliente:[{agente_id:'', ramos:'', porcentajes:'', id:''}],
+            agentesCliente:[{agente_id:'', id:'', identificacion:'', no_identificacion:''}],
+            ramosCliente:[{ramo_id:'', id:''}],
+            //porcentajeCliente:[{porcentaje:'', id:''}],
+            agentesRamoCliente: [[{ramos:'', porcentajes:'', id:''}]],
             centros_facturacion:[{direccion:'', nombre:'', provincia_id: '', distrito_id: '', corregimiento_id: '', id:''}]
         },
 
@@ -121,20 +123,25 @@ var form_crear_cliente = new Vue({
                 console.log(id, valorf);
             });*/
 
-            var num = 0;
-            $(".selAgente").each(function(){
-                var c = $(this).val();
-                console.log("valor="+c);
-                if (c != "" ) {
-                    num=1;
-                }
-            });
+            var moduloIn = localStorage.getItem("ms-selected");
+            if (moduloIn == "seguros" && validaagente == 1) {
+                var num = 0;
+                $(".selAgente").each(function(){
+                    var c = $(this).val();
+                    console.log("valor="+c);
+                    if (c != "" ) {
+                        num=1;
+                    }
+                });
 
-            if(num>0){
-                this.config.siguiente = !this.config.siguiente;
+                if(num>0){
+                    this.config.siguiente = !this.config.siguiente;
+                }else{
+                    toastr.error("Debe seleccionar al menos un Agente.");
+                } 
             }else{
-                toastr.error("Debe seleccionar al menos un Agente.");
-            }            
+                this.config.siguiente = !this.config.siguiente;
+            }                       
         },
 
         showAgregarCentroFacturacion: function(){
@@ -268,6 +275,9 @@ var form_crear_cliente = new Vue({
 			$('select[name="campo[tipo_identificacion]"] option[value="cedula_nt"]').remove();
 			$('select[name="campo[tipo_identificacion]"] option[value="ruc_nt"]').remove();
             $('#agentes_otros').remove();
+            $("#correo_cliente").removeAttr("data-rule-required");
+            $("#tipo_correo_cliente").removeAttr("data-rule-required");
+            $("#span_correo").remove();
 		}
         else
         {
@@ -277,7 +287,9 @@ var form_crear_cliente = new Vue({
 
         var context = this;
 
-
+        /*context.agentesRamoCliente = [];
+        context.agentesRamoCliente.push([{ramos:'', porcentajes:'', id:''}]);
+        console.log(context.agentesRamoCliente);*/
 
         if(context.config.vista == 'ver'){
 
@@ -293,8 +305,15 @@ var form_crear_cliente = new Vue({
             var x = context.detalle.agentesCliente;
 
             context.detalle = JSON.parse(JSON.stringify(window.cliente));
-            context.detalle.agentesCliente = [];
-            context.detalle.agentesCliente.push({agente_id:'', id:''});
+
+            console.log("Info  Cliente:");
+            console.log(window.cliente);
+            //context.detalle.agentesCliente = [];
+            if (window.cliente.agentesCliente.length == 0) {
+                context.detalle.agentesCliente = [{agente_id:'', id:'', identificacion:'', no_identificacion:''}];
+                context.detalle.agentesRamoCliente = [[{ramos:'', porcentajes:'', id:''}]]
+            }
+            
 
             Vue.nextTick(function(){                
 
@@ -341,13 +360,12 @@ var form_crear_cliente = new Vue({
 
         }else{
 
-
-
             if(window.desde_modal_cliente == 'cliente_potencial'){
                 context.populateClientePotencial(window.desde_modal_cliente_ref);
             }
         }
         setTimeout(function(){ 
+
             $(".selAgente").on('change', function () {
 
                 console.log("hola");

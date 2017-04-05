@@ -34,9 +34,11 @@ $('#formClienteCrear').validate({
                         var idx = id.split("_");
                         var valor = $(this).val();
                         var valorf = "";
-                        $.each(valor,function(index, value){
-                            valorf = valorf+value+",";
-                        });
+                        if(valor != null && valor != ""){
+                        	$.each(valor,function(index, value){
+	                            valorf = valorf+value+",";
+	                        });
+                        }                        
                         $("#ramos_h_"+idx[1]+"_"+idx[2]).val(valorf);
                         console.log(id, valorf);
                     });
@@ -105,6 +107,7 @@ $(window).load(function(){
 	{
 		$('select[name="campo[tipo_identificacion]"] option[value="cedula_nt"]').remove();
 		$('select[name="campo[tipo_identificacion]"] option[value="ruc_nt"]').remove();
+		
 	}
 	else 
 	{

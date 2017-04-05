@@ -10,7 +10,7 @@ $config['modulo_config'] = array(
     'grupo'			=> 'Beneficiarios',
     'agrupador'		=> 'Seguros',
     'prefijo'		=> 'ben',
-    'permisos'		=> array(
+    /*'permisos'		=> array(
         'acceso' => 'Acceso',
-    )
+    )*/
 );

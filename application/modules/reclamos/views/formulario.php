@@ -97,7 +97,14 @@ if (!isset($campo)) {
                                 <option value="">Seleccione</option>
                                 <option v-for="estado in catalogoEstado" v-bind:value="estado.etiqueta" :selected="(estado.etiqueta == reclamoInfo.estado && vista == 'editar') || (estado.etiqueta == 'En analisis' && vista == 'crear') ">{{estado.etiqueta}}</option>
                             </select>
-                        </div>                        
+                        </div>  
+                        <div class="form-group col-xs-12 col-sm-12 col-md-3 col-lg-3" >
+                            <label>Fecha de Seguimiento</label>
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span> 
+                                <input type="text" class="form-control" id="fecha_seguimiento" value="{{reclamoInfo.fecha_seguimiento}}" name="camporeclamo[fecha_seguimiento]">
+                            </div>
+                        </div>                      
                     </div>
 
                     <div class="row"> 

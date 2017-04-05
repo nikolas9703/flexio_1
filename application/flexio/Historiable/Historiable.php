@@ -1,6 +1,6 @@
-<?php namespace Flexio\Politicas;
+<?php 
+namespace Flexio\Historiable;
 
-use Flexio\Modulo\Politicas\Models\Politicas;
 use Flexio\Library\Util\AuthUser;
 
 /**
@@ -10,5 +10,8 @@ use Flexio\Library\Util\AuthUser;
 trait Historiable
 {
 
+	public function historial(){
+        return $this->morphMany('Flexio\Modulo\Historial\Models\Historial','historiable');
+    }
 
 }

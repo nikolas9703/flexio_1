@@ -660,6 +660,49 @@ class Configuracion_contabilidad extends CRM_Controller
         exit();
     }
 
+    function ajax_cuenta_ingresos()
+    {
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+        $condicion = array(
+            'empresa_id' => $this->empresa_id,
+            'tipo_cuenta_id' => 4
+        );
+        $cuentas = Cuentas_orm::misCuentas($condicion);
+        // $cuentas->load('config_cuenta_por_cobrar');
+        // dd($cuentas);
+        $response = new stdClass();
+        $response->plugins = [
+            //"contextmenu",
+            "wholerow"
+        ];
+        $response->core->check_callback [0] = true;
+
+        $i = 0;
+        if (!empty($cuentas)) {
+            foreach ($cuentas as $row) {
+                $response->core->data [$i] = array(
+                    'id' => (string)$row['id'],
+                    'parent' => $row ["padre_id"] == 0 ? "#" : (string)$row["padre_id"],
+                    'text' => $row["codigo"] . " " . $row ["nombre"],
+                    'icon' => $row["is_padre"] === true ? 'fa fa-folder fa-lg' : "fa fa-calculator fa-lg",
+                    'codigo' => $row["codigo"],
+                    'es_padre' => $row["is_padre"],
+                    'state' => array(
+                        'disabled' => $row["is_padre"] === true ? true : false,
+                        'opened' => $row["codigo"] == "2." ? true : false
+                    )
+                );
+
+                $i++;
+            }
+        }
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+        exit();
+    }
+
     public function ajax_guardar_cuenta_proveedor_por_pagar()
     {
         if (!$this->input->is_ajax_request()) {

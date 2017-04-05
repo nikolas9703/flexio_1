@@ -33,4 +33,8 @@ class RemesasEntrantes extends Model
 	public function datosCobro() {
         return $this->hasOne(Cobro::class, 'num_remesa_entrante', 'no_remesa');
     }
+	
+	public function datosEmpresa() {
+        return $this->hasOne(Empresa::class, 'id', 'empresa_id');
+    }
 }

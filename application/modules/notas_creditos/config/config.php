@@ -16,9 +16,9 @@ $config['modulo_config'] = array(
         'Alquileres' => array(
             "grupo_orden" => 6
         ),
-        'Seguros' => array(
+        /*'Seguros' => array(
             "grupo_orden" => 6
-        ),
+        ),*/
     ),
 	'prefijo'		=> 'ventas',
 	'menu' => array(

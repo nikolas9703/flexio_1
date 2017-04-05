@@ -1049,6 +1049,7 @@ class Catalogos extends CRM_Controller {
         'Usuarios'
         ]);
      $csv->insertAll($csvdata);
+     $csv->setOutputBOM(Writer::BOM_UTF8);
      $csv->output("Ramos-" . date('Y/m/d') . ".csv");
      exit();
  }

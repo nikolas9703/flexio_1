@@ -66,7 +66,7 @@ class CronCargosAlquiler {
 
 			//finalizar procesos
 			if($contador==count($entregados)){
-				exec("kill $(ps aux | grep '[p]hp' | awk '{print $2}')");
+				exec("sudo kill $(ps aux | grep '[p]hp' | awk '{print $2}')");
 			}
 		}
 	}

@@ -20,7 +20,7 @@ $(document).ready(function() {
 			}).on('apply.daterangepicker', function(ev, picker) {
 				$(this).val(picker.startDate.format('DD/MM/YYYY'));
 			});
-
+                        
                         $('#fecha_hasta').daterangepicker({
 				singleDatePicker: true,
 				autoUpdateInput: false,
@@ -61,26 +61,26 @@ var tablaRecibos = (function(){
 		buscar: "#searchBtn",
 		subirArchivo: ".subirArchivoBtn",
 	};
-
-
+	
+		
 	var tabla = function(){
-
+		
 		//inicializar jqgrid
 		grid_obj.jqGrid({
 		   	url: phost() + url,
 		   	datatype: "json",
 		   	colNames:[
-
+				
                     'No. Retiro',
-                    'Cliente/Proveedor',
+                    localStorage.getItem('ms-selected') == 'seguros' ? 'Cliente/Aseguradora' : 'Cliente/Proveedor',
                     'Nombre',
                     'Narraci&oacute;n',
                     'Fecha de recibo',
                     'D&eacute;bito',
                     '',
                     ''
-
-
+                               
+				
 			],
 		   	colModel:[
 		{name:'codigo',index:'codigo', sortable:true},
@@ -109,8 +109,8 @@ var tablaRecibos = (function(){
 		    refresh: true,
 		    gridview: true,
 		    multiselect: true,
-		    sortname: 'id',
-		    sortorder: "DESC",
+		    sortname: 'codigo',
+		    sortorder: "ASC",
 		    beforeProcessing: function(data, status, xhr){
 		    	//Check Session
 				if( $.isEmptyObject(data.session) == false){
@@ -118,10 +118,10 @@ var tablaRecibos = (function(){
 				}
 		    },
 		    loadBeforeSend: function () {$(this).closest("div.ui-jqgrid-view").find("table.ui-jqgrid-htable>thead>tr>th").css("text-align", "left");
-		        $(this).closest("div.ui-jqgrid-view").find("#descuentosgrid").css("text-align", "center");},
+		        $(this).closest("div.ui-jqgrid-view").find("#descuentosgrid").css("text-align", "center");}, 
 		    beforeRequest: function(data, status, xhr){},
 			loadComplete: function(data){
-
+				
 				//check if isset data
 				if( data['total'] == 0 ){
 					$('#gbox_'+ grid_id).hide();
@@ -137,26 +137,26 @@ var tablaRecibos = (function(){
 			},
 		});
 	};
-
-
-
+        
+        
+        
          //Boton de Exportar Descuento
 		$(botones.exportar).on("click", function(e){
-
+                    
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
 
 			if($('#tabla').is(':visible') == true){
-
+				
 				//Exportar Seleccionados del jQgrid
 				var ids = [];
-
+                                
 				ids = grid_obj.jqGrid('getGridParam','selarrrow');
-
+				
 				//Verificar si hay seleccionados
 				if(ids.length > 0){
-
+					
 					$('#ids').val(ids);
                                         console.log(ids);
 			        $('form#exportarDescuentos').submit();
@@ -164,43 +164,43 @@ var tablaRecibos = (function(){
 				}
 	        }
 		});
-
+	
 	//Inicializar Eventos de Botones
 	var eventos = function(){
-
+            
 		//Bnoton de Opciones
 		grid_obj.on("click", botones.opciones, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-
+			
 			var id = $(this).attr("data-id");
 			var rowINFO = grid_obj.getRowData(id);
 		    var options = rowINFO["options"];
-
-	 	    //Init Modal
+		    
+	 	    //Init Modal 
                     opcionesModal.find('.modal-title').empty().append('Opciones: ' + rowINFO["codigo"]);
 		    opcionesModal.find('.modal-body').empty().append(options);
 		    opcionesModal.find('.modal-footer').empty();
 		    opcionesModal.modal('show');
-
+                    
             $( ".anular" ).click(function() {
-
+                        
                                 var botones = [
                        '<button id="closeModal" class="btn btn-w-m btn-default" type="button" data-dismiss="modal">Cancelar</button>',
                        '<button type="button" class="btn btn-w-m btn-danger" id="eliminar_retiros">Eliminar</button>'
                     ].join('\n');
-
-
+    	
+    	 
                     //Init Modal
                     opcionesModal.find('.modal-title').empty().append('Confirmar');
                     opcionesModal.find('.modal-body').empty().append('&#191;Esta seguro que desea anular este retiro?');
                     opcionesModal.find('.modal-footer').empty().append(botones);
                     opcionesModal.modal('show');
-
-
+                    
+                    
                     $('#eliminar_retiros').on("click", function(e){
-
+            
                    var url2 = "movimiento_monetario/ajax_eliminar_retiros";
                      $.ajax({
                     url: phost() + url2,
@@ -215,17 +215,17 @@ var tablaRecibos = (function(){
                        console.log(textStatus, errorThrown);
                     }
 
-
+ 
                     });
-                });
-
-
-
-
-
-                    });
-
-
+                });     
+                    
+                
+                    
+                    
+                    
+                    });        
+                    
+                    
 		});
 
 		//Documentos Modal
@@ -234,75 +234,75 @@ var tablaRecibos = (function(){
 			e.returnValue=false;
 			e.stopPropagation();
 			//Cerrar modal de opciones
-			opcionesModal.modal('hide');
+			opcionesModal.modal('hide');			
 			var retiro_id = $(this).attr("data-id");
 			//Inicializar opciones del Modal
 			documentosModal.modal({
 				backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
 				show: false
 			});
-
+			
 			var scope = angular.element('[ng-controller="subirDocumentosController"]').scope();
 		    scope.safeApply(function(){
-		    	scope.campos.retiro_id = retiro_id;
+		    	scope.campos.retiro_id = retiro_id;		    	
 		    });
 			documentosModal.modal('show');
 		});
-
+		
 		//Boton de Descargar de Entrega de Inventario
 		opcionesModal.on("click", botones.descargar, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-
+			
 			var entrega_id = $(this).attr("data-id");
 			var rowINFO = grid_obj.getRowData(entrega_id);
-
+			
 			var archivo_nombre = rowINFO["archivo_nombre"];
 	    	var archivo_ruta = rowINFO["archivo_ruta"];
 	    	var fileurl = phost() + archivo_ruta +'/'+ archivo_nombre;
-
+	    	
 	    	if(archivo_nombre == '' || archivo_nombre == undefined){
 	    		return false;
 	    	}
-
+                
                 if($('#tabla').is(':visible') == true){
-
+				
 				//Exportar Seleccionados del jQgrid
 				var descuentos = [];
 					descuentos = grid_obj.jqGrid('getGridParam','selarrrow');
-
+				
 				//Verificar si hay seleccionados
 				if(descuentos.length > 0){
 					//Cambiar Estado
 					toggleColaborador({descuentos: descuentos, estado_id: 1});
-
+                                        
                                         console.log("legggass");
 				}
 	        }
-
-
-
+                
+               
+	    	
 	    	//Descargar archivo
 	    	downloadURL(fileurl, archivo_nombre);
-
+			
 		    //Ocultar modal
 			opcionesModal.modal('hide');
 		});
-
+		
 		//Boton de Editar Entrega de Inventario
 		opcionesModal.on("click", botones.editar, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-
+			
 			//Cerrar modal de opciones
 			opcionesModal.modal('hide');
-
+			
 			var entrega_id = $(this).attr("data-id");
 			var rowINFO = grid_obj.getRowData(colaborador_id);
 		   // var departamento_id = rowINFO["departamento_id"];
-
+			
 			//Inicializar opciones del Modal
 			formularioInventarioModal.modal({
 				backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
@@ -318,20 +318,20 @@ var tablaRecibos = (function(){
 			formularioInventarioModal.find('#departamento_id, #categoria_id, #item_id').removeAttr("disabled");
 			formularioInventarioModal.modal('show');
 		});
-
+		
 		//Boton de Editar Entrega de Inventario
 		opcionesModal.on("click", botones.reemplazar, function(e){
 			e.preventDefault();
 			e.returnValue=false;
 			e.stopPropagation();
-
+			
 			//Cerrar modal de opciones
 			opcionesModal.modal('hide');
-
+			
 			var entrega_id = $(this).attr("data-id");
 			var rowINFO = grid_obj.getRowData(colaborador_id);
 		    var departamento_id = rowINFO["departamento_id"];
-
+			
 			//Inicializar opciones del Modal
 			formularioInventarioModal.modal({
 				backdrop: 'static', //specify static for a backdrop which doesnt close the modal on click.
@@ -348,29 +348,29 @@ var tablaRecibos = (function(){
 			formularioInventarioModal.modal('show');
 		});
 	};
-
+	
 	//Boton de Buscar Evaluacion
 	$(botones.buscar).on("click", function(e){
 		e.preventDefault();
 		e.returnValue=false;
 		e.stopPropagation();
-
+		
 		buscarRecibos();
 	});
-
+	
 	//Boton de Reiniciar jQgrid
 	$(botones.limpiar).on("click", function(e){
 		e.preventDefault();
 		e.returnValue=false;
 		e.stopPropagation();
-
+		
 		recargar();
 		limpiarCampos();
 	});
-
+	
 	//Reload al jQgrid
 	var recargar = function(){
-
+		
 		//Reload Grid
 		grid_obj.setGridParam({
 			url: phost() + url,
@@ -383,16 +383,16 @@ var tablaRecibos = (function(){
                                 monto_hasta: '',
 				fecha_desde: '',
                                 fecha_hasta: '',
-
-
+				
+				
 			}
 		}).trigger('reloadGrid');
-
+		
 	};
-
+	
 	//Buscar Entrega de Inventario en jQgrid
 	var buscarRecibos = function(){
-
+            
            // console.log("llegaste");
 
 		var cliente 	        = $('#cliente').val();
@@ -402,7 +402,7 @@ var tablaRecibos = (function(){
 		var monto_hasta         = $('#monto_hasta').val();
 		var fecha_desde         = $('#fecha_desde').val();
 		var fecha_hasta         = $('#fecha_hasta').val();
-
+		
 		if(cliente != "" || nombre != "" || narracion != "" || monto_desde != "" || monto_hasta != "" || fecha_desde != "" || fecha_hasta != "")
 		{
                     //console.log(tipo_descuento);
@@ -418,15 +418,15 @@ var tablaRecibos = (function(){
 					monto_hasta: monto_hasta,
                                         fecha_desde: fecha_desde,
                                         fecha_hasta: fecha_hasta
-
+					
 				}
 			}).trigger('reloadGrid');
 		}
 	};
-
+	
 	//Limpiar campos de busqueda
 	var limpiarCampos = function(){
-
+            
            // console.log("llegastelimpiando");
 		$('input[type="text"]').prop("value", "");
 		$('#cliente').val('').trigger('chosen:updated');
@@ -434,7 +434,7 @@ var tablaRecibos = (function(){
 
 	};
 
-	return{
+	return{	    
 		init: function() {
 			tabla();
 		//	init();
@@ -468,23 +468,23 @@ var cliente_proveedor = $('#cliente').val();
     },
     dataType:"json",
     success: function(data){
-
+           
          $.each(data.result, function(index, element) {
-         $('#nombre').empty();
+         $('#nombre').empty(); 
          setTimeout(function(){
 	 $('#nombre').append('<option value='+ element.id +'>'+ element.nombre +'</option>').trigger('chosen:updated');
 		}, 50);
-
-
-
-        });
-
+         
+        
+          
+        });   
+         
     }
-
-    });
-
-
-
+    
+    });      
+    
+             
+    
 });
 
  $('#cliente_proveedor').removeClass("chosen-filtro").addClass("form-control").select2({
@@ -522,5 +522,25 @@ var cliente_proveedor = $('#cliente').val();
         $('.guardar1').removeAttr('disabled');
     });
 
-
+    
 tablaRecibos.init();
+
+if(localStorage.getItem('ms-selected') == 'seguros'){
+
+	$('div .border-bottom').find('label').each(function(){
+		if($(this).attr('for') == "Cliente"){
+			$(this).empty().append('Cliente/Aseguradora');
+		}
+		console.log($(this).val());
+	});
+
+	$('div .border-bottom').find('select').each(function(){
+		if($(this).attr('id') == "cliente"){
+			console.log($(this).attr('id'));
+			$(this).empty().append('<option value="">Seleccione</option><option value="2">Cliente</option><option value="3">Aseguradora</option>');/*.append('Cliente/Aseguradora'); */
+		}
+	});
+}
+/*else{
+	$('.breadcrumb').empty();
+}*/

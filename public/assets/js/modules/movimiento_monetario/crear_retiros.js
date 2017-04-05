@@ -264,6 +264,12 @@ $(document).ready(function () {
     }).on("change", function () {
         $('.id_cliente_proveedor').val($(this).val());
         $('.guardar1').removeAttr('disabled');
+        $.post(phost() + "movimiento_monetario/ajax-cuenta-contable", {cliente_aseguradora: $('#categoria').val(), erptkn: window.tkn}, function(response){
+            if(response.length > 0 ){
+                $('#cuenta_id0').val(response[0].cuenta_id).trigger("chosen:updated");  
+                $('#cuenta_id0').prop('disabled', true).trigger("chosen:updated");
+            }
+        });
     });
 
     //Inicializar Chosen plugin
@@ -580,3 +586,25 @@ $('#tipo_pago_id').change(function() {
 });
 }    
 });
+
+if(localStorage.getItem('ms-selected') == 'seguros'){
+    $('div .filtro-formularios').find('select').each(function(){
+        if($(this).attr('id') == "categoria"){
+            console.log($(this).attr('id'));
+            $(this).empty().append('<option value="">Seleccione</option><option value="2">Cliente</option><option value="3">Aseguradora</option>');/*.append('Cliente/Aseguradora'); */
+        }
+    });  
+    if(vista == 'ver'){
+        $('#categoria').prop('disabled','disabled').trigger("chosen:updated");
+    }else if(vista == 'crear'){
+        $('.guardar1').on('click',function(){
+            $('#cuenta_id0').prop('disabled', false).trigger("chosen:updated");;
+            $('#permisosForm').submit();
+        })
+    }
+
+}
+/*else{
+    $('.breadcrumb').empty();
+}*/
+

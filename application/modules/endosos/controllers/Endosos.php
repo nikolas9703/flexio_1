@@ -11,17 +11,23 @@ use Dompdf\Dompdf;
 use League\Csv\Writer as Writer;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Flexio\Modulo\Usuarios\Models\Usuarios;
+use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 use Flexio\Modulo\Cliente\Models\Cliente;
-use Flexio\Modulo\Usuarios\Models\RolesUsuario;
 use Flexio\Modulo\Ramos\Models\Ramos;
 use Flexio\Modulo\Ramos\Models\RamosUsuarios;
-use Flexio\Modulo\Ramos\Repository\RamoRepository as RamoRepository;
-use Flexio\Modulo\SegCatalogo\Repository\SegCatalogoRepository;
-use Flexio\Modulo\Endosos\Models\Endoso;
-use Flexio\Modulo\Polizas\Models\Polizas;
-use Flexio\Modulo\Documentos\Repository\DocumentosRepository as DocumentosRepository;
 use Flexio\Modulo\SegCatalogo\Models\SegCatalogo;
+use Flexio\Modulo\Endosos\Models\Endoso;
+use Flexio\Modulo\Endosos\Models\EndososBitacora;
+use Flexio\Modulo\Endosos\Models\EndosoCliente;
+use Flexio\Modulo\Endosos\Models\EndosoVigencia;
+use Flexio\Modulo\Endosos\Models\EndosoPrima;
+use Flexio\Modulo\Endosos\Models\EndosoPoliza;
+use Flexio\Modulo\Endosos\Models\EndosoParticipacion;
+use Flexio\Modulo\Endosos\Models\EndosoCoberturas;
+use Flexio\Modulo\Endosos\Models\EndosoDeducciones;
+use Flexio\Modulo\Endosos\Models\EndosoAgentePrin;
+use Flexio\Modulo\Polizas\Models\Polizas;
 use Flexio\Modulo\Polizas\Models\PolizasPrima;
 use Flexio\Modulo\Polizas\Models\PolizasVigencia;
 use Flexio\Modulo\Polizas\Models\PolizasCobertura;
@@ -29,13 +35,17 @@ use Flexio\Modulo\Polizas\Models\PolizasDeduccion;
 use Flexio\Modulo\Polizas\Models\PolizasParticipacion;
 use Flexio\Modulo\Polizas\Models\PolizasCliente;
 use Flexio\Modulo\Polizas\Models\PolizasAcreedores;
-use Flexio\Modulo\Planes\Models\Planes;
-use Flexio\Modulo\CentroFacturable\Models\CentroFacturable as centroModel;
-use Flexio\Modulo\Agentes\Models\Agentes as Agente;
-use Flexio\Modulo\SegInteresesAsegurados\Repository\SegInteresesAseguradosRepository as SegInteresesAseguradosRepository;
+use Flexio\Modulo\Polizas\Models\SegPolizasAgentePrin;
 use Flexio\Modulo\Polizas\Models\PolizasBitacora;
+use Flexio\Modulo\Planes\Models\Planes;
+use Flexio\Modulo\Agentes\Models\Agentes as Agente;
 use Flexio\Modulo\CentrosContables\Models\CentrosContables;
-use Flexio\Modulo\Cliente\Models\Cliente as clienteModel;
+use Flexio\Modulo\SegCatalogo\Repository\SegCatalogoRepository;
+use Flexio\Modulo\Ramos\Repository\RamoRepository as RamoRepository;
+use Flexio\Modulo\CentroFacturable\Models\CentroFacturable as centroModel;
+use Flexio\Modulo\Documentos\Repository\DocumentosRepository as DocumentosRepository;
+use Flexio\Modulo\SegInteresesAsegurados\Repository\SegInteresesAseguradosRepository as SegInteresesAseguradosRepository;
+
 
 
 class Endosos extends CRM_Controller
@@ -161,6 +171,8 @@ class Endosos extends CRM_Controller
         $clause = array('empresa_id' => $this->empresa_id);
 
         $data = array();
+        $data['subpanels'] = [];
+        $data['data'] = array('valor_descripcion' => '');
         $clientes = Cliente::where(['empresa_id' => $this->empresa_id, 'estado' => 'activo'])
         ->orderBy('nombre','asc')
         ->select('id','nombre', 'identificacion','tipo_identificacion','detalle_identificacion')
@@ -236,6 +248,7 @@ class Endosos extends CRM_Controller
 
         $this->assets->agregar_var_js(array(
             'vista' => 'crear',
+            'desde' => 'endosos',
             'poliza' => $polizas,
             'motivos_endosos' => $motivos_endosos,  
             'estadosEndosos' => $estadosEndosos,
@@ -246,15 +259,57 @@ class Endosos extends CRM_Controller
             'id_ramo' => $id_ramo,
             'clientes' => $clientes,
             'ramos' => json_encode($ramos),
+
+
+
+            "estado_solicitud" => '',
+            "estado_pol" => '',
+            "cliente" => '',
+            "aseguradora" => '',
+            "plan" => '',
+            "coberturas" => '',
+            "deducciones" => '',
+            "comision" => '',
+            "vigencia" => '',
+            "prima" => '',
+            "participacion" => '',
+            "totalParticipacion" => '',
+            "centroFacturacion" => '',
+            "agtPrincipal" => '',
+            "agtPrincipalporcentaje" => '',
+            "id_centroContable" => '',
+            "nombre_centroContable" => '',
+            "cantidadPagos" => '',
+            "frecuenciaPagos" => '',
+            "sitioPago" => '',
+            "metodoPago" => '',
+            "centrosFacturacion" => '',
+            "id_tipo_int_asegurado" => '',
+            "tipo_ramo" => '',
+            "ramo" => '',
+            "nombre_ramo" => '', 
+            "centrosContables" => '',
+            "grupo" => '',
+            "acreedores" => '',
+            "categoria_poliza" => '',
+            "id_tipo_poliza" => '',
+            "validavida" => '',
+            "poliza_declarativa" => '',
+            "permiso_editar" => '',
+            "pagador" => '' ,
+
+
         ));
 
         $this->assets->agregar_js(array(
             'public/assets/js/modules/endosos/crear.vue.js',
             'public/assets/js/modules/endosos/funciones.js',
+            'public/assets/js/modules/polizas/crear.vue.js',
         ));
 
         $this->_css();
         $this->_js();
+        $this->tablasIntereses();
 
         $breadcrumb = array(
             "titulo" => '<i class="fa fa-archive"></i> Endosos Crear',
@@ -297,7 +352,8 @@ class Endosos extends CRM_Controller
         $data['subpanels'] = [];
         $data['id_ramo_endoso'] = $datosEndosos->id_ramo;
         $data['id_cliente_endoso'] = $datosEndosos->cliente_id;
-
+        $data['data'] = array('valor_descripcion' => $datosEndosos->descripcion);
+        $data['campos'] = array('uuid_endoso' => $uuid);
         $dataPoliza = Polizas::where(['id' => $datosEndosos->id_poliza])->first();
         $data['uuid_poliza'] = bin2hex($dataPoliza->uuid_polizas);
 
@@ -321,6 +377,7 @@ class Endosos extends CRM_Controller
                 $data['clientes'][$key]["identificacion"] = 'null';
             }
         }
+
         $polizas = Polizas::where(['empresa_id' => $this->empresa_id])->where('estado','<>','Expirada')->orderBy('numero','asc')->get(array('id','numero'));
         $data['menu_crear'] = $this->ramoRepository->listar_cuentas($clause);
         $ramosRoles = RolesUsuario::with(array('ramos'))->where(['usuario_id' => $this->usuario_id, 'empresa_id' => $this->empresa_id])->get();
@@ -408,7 +465,7 @@ class Endosos extends CRM_Controller
                 $centroContable = ''; 
             }
         }
-        $group = clienteModel::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_cliente', '=', 'cli_clientes.uuid_cliente')
+        $group = cliente::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_cliente', '=', 'cli_clientes.uuid_cliente')
         ->join('grp_grupo', 'grp_grupo.id', '=', 'grp_grupo_clientes.grupo_id')
         ->where(['cli_clientes.empresa_id' =>  $this->empresa_id, 'cli_clientes.id' => $datosEndosos->id_poliza])
         ->where('grp_grupo_clientes.deleted_at', '=', NULL)
@@ -457,8 +514,7 @@ class Endosos extends CRM_Controller
             'tipo_endoso' => $datosEndosos->tipo,
             'id_motivo' => $datosEndosos->motivo,
             'modifica_prima' => $datosEndosos->modifica_prima,
-            'fecha_efectividad' => $datosEndosos->fecha_efectividad,
-            'valor_descripcion' => $datosEndosos->descripcion,
+            'fecha_efectividad' => $datosEndosos->fecha_efectividad !=  "0000-00-00" ? date('d-m-Y',strtotime($datosEndosos->fecha_efectividad)) : $datosEndosos->fecha_efectividad,
             'estado_endoso' => $datosEndosos->estado,
             'endoso_id' => $datosEndosos->id,
             'uuid_endoso' => bin2hex($datosEndosos->uuid_endoso),
@@ -498,7 +554,6 @@ class Endosos extends CRM_Controller
             "id_tipo_poliza" => $dataPoliza->tipo_ramo == "colectivo" ? 2 : 1,
             "validavida" => $validavida,
             "poliza_declarativa" => $dataPoliza->poliza_declarativa,
-
             "permiso_editar" => 1,
 
         ));
@@ -507,6 +562,7 @@ class Endosos extends CRM_Controller
             'public/assets/js/modules/endosos/crear.vue.js',
             'public/assets/js/modules/endosos/funciones.js',
             'public/assets/js/modules/endosos/plugins.js',
+            'public/assets/js/modules/endosos/formulario_comentario.js',
             'public/assets/js/modules/polizas/crear.vue.js',
         ));
 
@@ -536,6 +592,8 @@ class Endosos extends CRM_Controller
         $this->template->agregar_breadcrumb($breadcrumb);
         $this->template->agregar_contenido($data);
         $this->template->visualizar($breadcrumb);
+
+        
 
     }
 
@@ -673,13 +731,13 @@ class Endosos extends CRM_Controller
         exit;
     }
 
-    public function ocultoformulario(){
+    public function ocultoformulario($data = NULL){
 
         $this->assets->agregar_js(array(
             'public/assets/js/modules/endosos/plugins.js',
         ));
 
-        $this->load->view('formulario');
+        $this->load->view('formulario',$data);
     }
 
     public function guardar(){
@@ -693,7 +751,9 @@ class Endosos extends CRM_Controller
 
                 if(empty($campo['uuid'])){
 
-                    var_dump($campo);
+                    $detalle_unico = $campo['detalle_unico_endoso'];
+                    unset($campo['detalle_unico_endoso']);
+
                     $codigo = Endoso::getLastCodigo(array('empresa_id' => $this->empresa_id));
                     $campo['endoso'] = $codigo;
 
@@ -722,6 +782,14 @@ class Endosos extends CRM_Controller
                     $modeloInstancia = Endoso::find($endosos->id);
                     $this->documentos->subir($modeloInstancia);
 
+                    EndosoCoberturas::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoDeducciones::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoParticipacion::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoAgentePrin::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoPoliza::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoCliente::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoVigencia::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
+                    EndosoPrima::where('id_endoso',$detalle_unico)->update(['id_endoso' => $endosos->id]);
 
                     $tipo = "Endosos_seguros";
                     $fecha_creado = date('Y-m-d H:i:s');
@@ -729,7 +797,6 @@ class Endosos extends CRM_Controller
                     $comment = ['comentario'=> $comentario ,'usuario_id'=>$this->usuario_id, 'comentable_id' =>$endosos->id_poliza, 'comentable_type'=>$tipo, 'created_at'=>$fecha_creado, 'empresa_id'=>$this->empresa_id ];
                     $Bitacora = new PolizasBitacora;
                     $Bitacora->create($comment);
-
 
                 }else{
 
@@ -750,6 +817,14 @@ class Endosos extends CRM_Controller
                     }
 
                     $datosEndosos = Endoso::find($campo['id_endosos']);
+                    if($datosEndosos->estado != $campo['estado']){
+                        $tipo = "Endosos_seguros";
+                        $fecha_creado = date('Y-m-d H:i:s');
+                        $comentario = "N° endoso: ".$datosEndosos->endoso."<br>Estado anterior: ".$datosEndosos->estado."<br>Estado actual: ".$campo['estado']."<br>Fecha cambio: ".date('d/m/Y');
+                        $comment = ['comentario'=> $comentario ,'usuario_id'=>$this->usuario_id, 'comentable_id' =>$datosEndosos->id_poliza, 'comentable_type'=>$tipo, 'created_at'=>$fecha_creado, 'empresa_id'=>$this->empresa_id ];
+                        $Bitacora = new PolizasBitacora;
+                        $Bitacora->create($comment);
+                    }
                     $datosEndosos->update($campo);
                     $codigo =  $datosEndosos->endoso;
 
@@ -1018,7 +1093,414 @@ class Endosos extends CRM_Controller
         $this->load->view('formularioModalDocumentoEditar');
     }
 
-    private function _css() {
+    public function ajax_get_uuid_poliza(){
+        $id_poliza = $this->input->post('id_poliza');
+        $response = new stdClass();
+        $response->uuid = '';
+        $datosPoliza = Polizas::where(['id' =>$id_poliza ])->first();
+        $response->uuid = bin2hex($datosPoliza->uuid_polizas);
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+        exit;
+    }
+    
+    public function ocultoGetPoliza($uuid_poliza = NULL){
+
+        $uuid_poliza = $this->input->post('uuid_poliza');
+
+        $dataPoliza = Polizas::where(['uuid_polizas' => hex2bin($uuid_poliza)])->first();
+
+        $estado = $this->SegCatalogoRepository->listar_catalogo('estado_p', 'orden');
+        $estado = $estado->whereIn('key', array('polizas_pf', 'polizas_f'));
+        $estado_pol = $dataPoliza->estado;
+        $cliente = PolizasCliente::where(['id_poliza' => $dataPoliza->id])->first();
+        if(count($cliente) == 0){
+            $cliente = '';
+        }
+        $aseguradora = Aseguradoras::where(['id' => $dataPoliza->aseguradora_id])->get(array('id', 'nombre'));
+        if (count($aseguradora) == 0) {
+            $aseguradora = '';
+        }
+        $plan = Planes::where(['id' => $dataPoliza->plan_id])->get(array('nombre'));
+        $coberturas = PolizasCobertura::where('id_poliza',$dataPoliza->id)->where('id_poliza_interes','')->get();
+        $deducciones = PolizasDeduccion::where('id_poliza',$dataPoliza->id)->where('id_poliza_interes','')->get();
+        $comision = $dataPoliza->comision;
+        $vigencia = PolizasVigencia::where(['id_poliza' => $dataPoliza->id])->first();
+        if(count($vigencia) == 0){
+            $vigencia = '';
+        }
+        $prima = PolizasPrima::where(['id_poliza' => $dataPoliza->id])->first();
+        $centroFacturacion = centroModel::where(['id' => $prima->centro_facturacion])->first();
+        if ($centroFacturacion == '') {
+            $centroFacturacion = '';
+        }
+        $participacion = PolizasParticipacion::where(['id_poliza' => $dataPoliza->id])->get();
+        $totalParticipacion = PolizasParticipacion::where(['id_poliza' => $dataPoliza->id])->sum('porcentaje_participacion');
+        if ($totalParticipacion == '') {
+            $totalParticipacion = '';
+        }
+
+        $agenteprincipaltotal=Agente::where('principal',1)->where('id_empresa',$this->empresa_id)->count();
+        if($agenteprincipaltotal>0){
+
+            $agenteprincipal=Agente::where('id_empresa',$this->empresa_id)->where('principal',1)->first();
+            $agenteprincipalnombre=$agenteprincipal->nombre;
+            $totalparticipacion=PolizasParticipacion::where('id_poliza',$dataPoliza->id)->sum('porcentaje_participacion');
+            $agtPrincipalporcentaje=number_format((100-$totalparticipacion),2);
+        }else{
+
+            $agenteprincipalnombre="";
+            $agtPrincipalporcentaje=0;
+        }
+
+        if($dataPoliza->centros != null){
+            $id_centroContable = $dataPoliza->centros->id;
+            $nombre_centroContable = $dataPoliza->centros->nombre;
+        }else{
+            $id_centroContable = 0;
+            $nombre_centroContable = '';
+        }
+        $cantidad_pagos =    $this->SegInteresesAseguradosRepository->listar_catalogo('cantidad_pagos', 'orden');
+        $frecuencia_pagos = $this->SegInteresesAseguradosRepository->listar_catalogo('frecuencia_pagos', 'orden');
+        $metodo_pago = $this->SegInteresesAseguradosRepository->listar_catalogo('metodo_pago', 'orden');
+        $sitio_pago =$this->SegInteresesAseguradosRepository->listar_catalogo('sitio_pago', 'orden');
+        $centrosFacturacion = centroModel:: where("cliente_id",$dataPoliza->cliente)->where("empresa_id",$this->empresa_id)->get();
+        $datosUsuarios = Usuarios::where(['id' => $this->usuario_id])->first();
+        if($datosUsuarios->filtro_centro_contable == "todos"){
+            $centroContable = CentrosContables::where(['empresa_id' => $this->empresa_id])->get();
+        }else{
+            $centrosContables = CentrosUsuario::where(['usuarios_has_centros.usuario_id' => $this->usuario_id, 'usuarios_has_centros.empresa_id' => $this->empresa_id])->join('cen_centros','cen_centros.id','=','usuarios_has_centros.centro_id')->get(array('cen_centros.id','cen_centros.nombre'));
+            if(count($centrosContables) > 0){
+                $centroContable = $centrosContables;
+            }else{
+                $centroContable = ''; 
+            }
+        }
+        $group = cliente::join('grp_grupo_clientes', 'grp_grupo_clientes.uuid_cliente', '=', 'cli_clientes.uuid_cliente')
+        ->join('grp_grupo', 'grp_grupo.id', '=', 'grp_grupo_clientes.grupo_id')
+        ->where(['cli_clientes.empresa_id' =>  $this->empresa_id, 'cli_clientes.id' => $dataPoliza->cliente])
+        ->where('grp_grupo_clientes.deleted_at', '=', NULL)
+        ->select('grp_grupo.nombre')
+        ->get();
+        $acreedores = PolizasAcreedores::where("id_poliza", $dataPoliza->id)->get();
+        if (count($acreedores) == 0) {
+            $acreedores = 'undefined';
+        }
+        
+
+        $solicitudes_titulo = Ramos::find($dataPoliza->ramo_id);
+        $ramo = $solicitudes_titulo->nombre;
+        $id_ramo = $solicitudes_titulo->id;
+        $idpadre = $solicitudes_titulo->padre_id;
+        $tipo_solicitud=Ramos::find($id_ramo)->first();
+        $indcolec = $tipo_solicitud->id_tipo_poliza;
+        $ramocadena=$ramo;
+
+        while ($idpadre != 0) {
+            $ram = Ramos::where('id', $idpadre)->first();
+            $id_ramo = $ram->id;
+            $idpadre = $ram->padre_id;
+            $ramocadena = $ram->nombre . "/" . $ramocadena;
+        }
+
+        $ram1 = Ramos::where('id', $id_ramo)->first();
+        $nombrepadre = $ram1->nombre;
+
+        if (strpos($ramocadena, "Vida")>-1) {
+            $validavida = 1;
+        }else{
+            $validavida = 0;
+        }
+
+        $pagador = $this->SegInteresesAseguradosRepository->listar_catalogo('pagador_seguros', 'orden');
+        if($dataPoliza->id_tipo_int_asegurado !=5){
+            unset($pagador[1]);
+        }
+        $agentes = Agente::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')->where('id_ramo', '=', $dataPoliza->ramo_id)->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
+
+        $catego = "nueva";
+
+        if($dataPoliza->id_tipo_int_asegurado == 1){
+            $tabla = "articulo";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 2){
+            $tabla = "carga";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 3){
+            $tabla = "casco_aereo";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 4){
+            $tabla = "casco_maritimo";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 5){
+            $tabla = "persona";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 6){
+            $tabla = "proyecto_actividad";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 7){
+            $tabla = "ubicacion";
+        }elseif($dataPoliza->id_tipo_int_asegurado == 8){
+            $tabla = "vehiculo";
+        }
+
+        
+
+        $response = new stdClass();
+        $response->id_poliza = $dataPoliza->id;
+        $response->tabla = $tabla;
+        $response->estado_solicitud = $estado;
+        $response->estado_pol = $estado_pol;
+        $response->cliente = $cliente;
+        $response->aseguradora = $aseguradora;
+        $response->plan = $plan;
+        $response->coberturas = $coberturas;
+        $response->deducciones = $deducciones;
+        $response->comision = $comision;
+        $response->vigencia = $vigencia;
+        $response->prima = $prima;
+        $response->participacion = $participacion;
+        $response->totalParticipacion = $totalParticipacion;
+        $response->centroFacturacion = $centroFacturacion;
+        $response->agtPrincipal =$agenteprincipalnombre;
+        $response->agtPrincipalporcentaje = $agtPrincipalporcentaje;
+        $response->id_centroContable = $id_centroContable;
+        $response->nombre_centroContable = $nombre_centroContable;
+        $response->cantidadPagos = $cantidad_pagos;
+        $response->frecuenciaPagos = $frecuencia_pagos;
+        $response->sitioPago = $sitio_pago;
+        $response->metodoPago = $metodo_pago;
+        $response->centrosFacturacion = $centrosFacturacion;
+        $response->id_tipo_int_asegurado = $dataPoliza->id_tipo_int_asegurado;
+        $response->tipo_ramo = $dataPoliza->tipo_ramo;
+        $response->ramo = $dataPoliza->ramo;
+        $response->nombre_ramo = $dataPoliza->ramo; 
+        $response->centrosContables = $centroContable;
+        $response->grupo = $group;
+        $response->acreedores = $acreedores;
+        $response->categoria_poliza = $catego;
+        $response->id_tipo_poliza = $dataPoliza->tipo_ramo == "colectivo" ? 2 : 1;
+        $response->validavida = $validavida;
+        $response->poliza_declarativa = $dataPoliza->poliza_declarativa;
+        $response->pagador = $pagador;
+        $response->agentes = $agentes;
+        $response->permiso_editar = 1;
+
+        $this->output->set_status_header(200)->set_content_type('application/json', 'utf-8')->set_output(json_encode($response))->_display();
+        exit;
+    }
+
+    public function ocultotablaPrueba(){
+
+        $this->load->view('formularioPoliza');
+    }
+
+    public function comentaformulario($data){
+
+        $uuid = $data["uuid_endoso"];
+        $endoso = Endoso::findByUuid($uuid);
+
+        $data = array();
+        $Bitacora = new Flexio\Modulo\Endosos\Models\EndososBitacora;
+        $data["Bitacora"] = $Bitacora;
+        $data["nid_endoso"] = $endoso->id;
+        $data["historial"] = $Bitacora->where(array("comentable_id" => $endoso->id, "comentable_type" => "Comentario"))->with(array('usuario'))->orderBy("created_at", "desc")->get(array("comentario", "created_at", "usuario_id"))->toArray();
+
+        $this->load->view('comentarios', $data);
+
+    }
+
+    function ajax_guardar_comentario() {
+
+        if (!$this->input->is_ajax_request()) {
+            return false;
+        }
+
+        try {
+            $Bitacora = new Flexio\Modulo\Endosos\Models\EndososBitacora;
+
+            $tipo = "Comentario";
+            $id_endoso = $this->input->post('nid_endoso');
+            $comentario = $this->input->post('comentario');
+            $usuario = $this->usuario_id;
+            $fecha_creado = date('Y-m-d H:i:s');
+
+            $comment = ['comentario' => $comentario, 'usuario_id' => $usuario, 'comentable_id' => $id_endoso, 'comentable_type' => $tipo, 'created_at' => $fecha_creado, 'empresa_id' => $this->empresa_id];
+
+            $bus = Endoso::where('id',$id_endoso);
+            if ($bus->count() != 0) {
+                $msg = $Bitacora->create($comment);
+                exit;
+            }
+        } catch (\Exception $e) {
+            $msg = log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+        }
+
+        die(json_encode($msg));
+    }
+
+    function ajax_carga_comentarios_poliza() {
+        $html = '';
+        try {
+            $id_endoso = $_POST["id_endoso"];
+
+            $Bitacora = new EndososBitacora();
+            $historial = $Bitacora->where(array("comentable_id" => $id_endoso, "comentable_type" => "Comentario"))->with(array('usuario'))->orderBy("created_at", "desc")->get(array("comentario", "created_at", "usuario_id"))->toArray();
+            foreach ($historial as $item) {
+                    //var_dump($item["created_at"]);die;
+                $html .= '<div class="vertical-timeline-block">
+                <div class="vertical-timeline-icon blue-bg">
+                    <i class="fa fa-comments-o"></i>
+                </div>
+                <div class="vertical-timeline-content" >
+                    <h2>Coment&oacute;</h2>
+                    <div>
+                      ' . $item["comentario"] . '
+                  </div>
+                  <span class="vertical-date">
+                      ' . $Bitacora->getCuantoTiempo($item["created_at"]) . '
+                      <br>
+                      <small>' . $item["created_at"] . '</small>
+                      <div><small>' . $item["usuario"]["nombre"] . " " . $item["usuario"]["apellido"] . " " . $Bitacora->getHora($item["created_at"]) . '</small></div>
+                  </span>
+              </div>
+          </div>';
+        }
+            $data = array();
+            $data["nid_endoso"] = $id_endoso;
+        } catch (\Exception $e) {
+            $msg = log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+            die("error " . $e->getMessage());
+        }
+        die($html);
+    }
+
+    public function guardarPoliza(){
+        $inf = array();
+        $inf["msg"] ='error';
+        //$error = false;
+        try {
+
+            $detalleUnico = $this->input->post('detalleUnico');
+            $id_poliza = $this->input->post('id_poliza');
+
+            $polizaData = Polizas::where('id',$id_poliza)->first();
+            $datosPoliza['id_endoso'] = $detalleUnico;
+            $datosPoliza['id_aseguradora'] = $polizaData->aseguradora_id;
+            $datosPoliza['id_plan'] = $polizaData->plan_id;
+            $datosPoliza['comision'] = $this->input->post('comision');
+            $datosPoliza['centro_contable'] = $polizaData->centro_contable;
+            $datosPoliza['estado'] = $polizaData->estado;
+            EndosoPoliza::create($datosPoliza);
+
+            $coberturas = json_decode($this->input->post('planesCoberturas'),true);
+            if($coberturas != NULL){
+                
+                for ($i = 0; $i < count($coberturas['coberturas']['nombre']); $i++) {
+                    $solCoberturas = [
+                        'cobertura' => $coberturas['coberturas']["nombre"][$i],
+                        'valor_cobertura' => $coberturas['coberturas']["valor"][$i],
+                        'id_endoso' => $detalleUnico
+                    ];
+                    EndosoCoberturas::create($solCoberturas);
+                }
+                
+                
+                for ($i=0;$i<count($coberturas['deducibles']['nombre']);$i++) {
+                    $solDeducion = [
+                        'deduccion' => $coberturas['deducibles']['nombre'][$i],
+                        'valor_deduccion' => $coberturas['deducibles']['valor'][$i],
+                        'id_endoso' => $detalleUnico
+                    ];
+                    EndosoDeducciones::create($solDeducion);
+                }
+            }else{
+
+                $coberturas = PolizasCobertura::where('id_poliza',$id_poliza)->where('id_poliza_interes',0)->get();
+                $deducciones = PolizasDeduccion::where('id_poliza',$id_poliza)->where('id_poliza_interes',0)->get();
+
+                foreach ($coberturas as $key => $value) {
+                    $solCoberturas = [
+                        'cobertura' => $value["cobertura"],
+                        'valor_cobertura' => $value["valor_cobertura"],
+                        'id_endoso' => $detalleUnico
+                    ];
+                    EndosoCoberturas::create($solCoberturas);
+                }
+                foreach ($deducciones as $key => $value) {
+                    $solDeducion = [
+                        'deduccion' => $value['deduccion'],
+                        'valor_deduccion' => $value['valor_deduccion'],
+                        'id_endoso' => $detalleUnico
+                    ];
+                    EndosoDeducciones::create($solDeducion);
+                }
+            }   
+            
+            $participacion = $this->input->post('participacion');
+            if(!empty($participacion) && $participacion != '' ){
+                for ($i=0; $i <count($participacion['nombre']) ; $i++) { 
+                    $solParticipacion = [
+                        'id_endoso' => $detalleUnico,
+                        'agente' => $participacion['nombre'][$i], 
+                        'porcentaje_participacion' => $participacion['valor'][$i]
+                    ];
+                    EndosoParticipacion::create($solParticipacion);    
+                }
+            }
+
+            $agentePrin = SegPolizasAgentePrin::where('poliza_id',$id_poliza)->first();
+            $AgentePrin['id_endoso'] = $detalleUnico;
+            $AgentePrin['agente_id'] = $agentePrin->agente_id;
+            $AgentePrin['comision'] = $this->input->post('porcAgentePrincipal');
+            EndosoAgentePrin::create($AgentePrin);
+            
+            $Cliente['id_endoso'] = $detalleUnico;
+            $Cliente['nombre_cliente'] = $this->input->post('clienteNombre');
+            $Cliente['identificacion'] = $this->input->post('clienteIdentificacion');
+            $Cliente['n_identificacion'] = $this->input->post('clienteNoIdentificacion');
+            $Cliente['grupo'] = $this->input->post('clienteGrupo');
+            $Cliente['telefono'] = $this->input->post('clienteTelefono');
+            $Cliente['correo_electronico'] = $this->input->post('clienteCorreo');
+            $Cliente['direccion'] = $this->input->post('clienteDireccion');
+            $Cliente['exonerado_impuesto'] = $this->input->post('clienteExoneradoImp');
+            EndosoCliente::create($Cliente);
+
+            $vigencia['id_endoso'] = $detalleUnico;
+            $vigencia['vigencia_desde'] = $this->input->post('vigenciaDesde');
+            $vigencia['vigencia_hasta'] = $this->input->post('vigenciaHasta');
+            $vigencia['suma_asegurada'] = $this->input->post('vigenciaSuma') != '' ? $this->input->post('vigenciaSuma') : '0.00';
+            $vigencia['tipo_pagador'] = $this->input->post('vigenciaPagador');
+            $vigencia['pagador'] = $this->input->post('vigenciaNombrePagador');
+            if($this->input->post('vigenciaDeclarativa') == 'true'){
+                $vigencia['poliza_declarativa'] = 'si';
+            }else{
+              $vigencia['poliza_declarativa'] = 'no';
+            }
+            EndosoVigencia::create($vigencia);
+
+            $prima['id_endoso'] = $detalleUnico;
+            $prima['prima_anual'] = $this->input->post('primaAnual');
+            $prima['impuesto'] = $this->input->post('primaImpuesto');
+            $prima['otros'] = $this->input->post('primaOtros');
+            $prima['descuentos'] = $this->input->post('primaDescuentos');
+            $prima['total'] = $this->input->post('primaTotal');
+            $prima['frecuencia_pago'] = $this->input->post('pagosFrecuencia');
+            $prima['metodo_pago'] = $this->input->post('pagosMetodo');
+            $prima['fecha_primer_pago'] = $this->input->post('pagosPrimerPago');
+            $prima['cantidad_pagos'] = $this->input->post('pagosCantidad');
+            $prima['sitio_pago'] = $this->input->post('pagosSitio');
+            $prima['centro_facturacion'] = $this->input->post('pagosCentroFac');
+            $prima['direccion_pago'] = $this->input->post('pagosDireccion');
+            EndosoPrima::create($prima);
+
+            $inf["msg"] ='ok';
+
+        } catch (\Exception $e) {
+            $msg = log_message('error', __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n");
+            print  $inf["msg"] = 'error'. __METHOD__ . " -> Linea: " . __LINE__ . " --> " . $e->getMessage() . "\r\n";
+        }
+        print json_encode($inf);
+        exit;
+
+    }
+
+
+     private function _css() {
         $this->assets->agregar_css(array(
             'public/assets/css/default/ui/base/jquery-ui.css',
             'public/assets/css/default/ui/base/jquery-ui.theme.css',
@@ -1065,6 +1547,21 @@ class Endosos extends CRM_Controller
         ));
     }
 
+
+    public function tablasIntereses() {
+
+        $this->assets->agregar_js(array(
+            'public/assets/js/modules/intereses_asegurados/tablaarticulo.js',
+            'public/assets/js/modules/intereses_asegurados/tablacarga.js',
+            'public/assets/js/modules/intereses_asegurados/tablaaereo.js',
+            'public/assets/js/modules/intereses_asegurados/tablamaritimo.js',
+            'public/assets/js/modules/intereses_asegurados/tablapersonas.js',
+            'public/assets/js/modules/intereses_asegurados/tablaproyecto.js',
+            'public/assets/js/modules/intereses_asegurados/tablaubicacion.js',
+            'public/assets/js/modules/intereses_asegurados/tablavehiculo.js',
+        ));
+    
+    }
 
 
 }

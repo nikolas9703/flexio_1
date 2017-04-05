@@ -433,6 +433,7 @@ class Agentes extends CRM_Controller
             'Participacion'
         ]);                
         $csv->insertAll($csvdata);
+        $csv->setOutputBOM(Writer::BOM_UTF8);
         $csv->output("agentes-". date('ymd') .".csv");
         exit();
     }
@@ -656,7 +657,7 @@ class Agentes extends CRM_Controller
             if(!isset($campo['uuid'])){
                 $campo['id_empresa'] = $campo['empresa_id'];
                 $campo['fecha_creacion'] = date('Y-m-d H:i:s');
-                $campo['estado'] = 'Por Aprobar';
+                $campo['estado'] = 'Activo';
             }
             
             Capsule::beginTransaction();
@@ -788,7 +789,7 @@ class Agentes extends CRM_Controller
             $agenteObj2  = new Buscar(new AgentesModel,'uuid_agente');
             $agente2 = $agenteObj2->findByUuid($campo['uuid']);
 
-            $agt = AgentesModel::where('id', $agente2->id)->where('identificacion',$campo['identificacion'])->count();
+            $agt = AgentesModel::where('id', $agente2->id)->where('identificacion',$campo['identificacion'])->where("id_empresa", $this->empresa_id)->count();
 
             if ($agt==0) {
                 $agenteObj  = new Buscar(new AgentesModel(),'identificacion');

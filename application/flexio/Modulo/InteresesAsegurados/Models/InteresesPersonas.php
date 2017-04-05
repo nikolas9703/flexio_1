@@ -6,6 +6,7 @@ use Flexio\Modulo\InteresesAsegurados\Models\InteresesAsegurados;
 use Illuminate\Database\Eloquent\Model as Model;
 use Carbon\Carbon as Carbon;
 use Flexio\Modulo\Documentos\Models\Documentos;
+use Flexio\Modulo\Catalogos\Models\CatalogoMod;
 
 class InteresesPersonas extends Model
 {
@@ -99,6 +100,10 @@ class InteresesPersonas extends Model
     
     public function interesesAsegurados() {
 		return $this->hasMany(InteresesAsegurados::class, 'interesestable_id');
+    }
+
+    public function estado_catalogo(){
+        return $this->hasOne(CatalogoMod::class, 'id_cat','estado_civil');
     }
     
     function documentos() {

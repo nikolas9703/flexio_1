@@ -72,7 +72,7 @@
 								<option :value="row.id" v-for="row in catalogos.categorias_cliente" v-html="row.nombre"></option>
                             </select>
 						</div>
-						<div class="col-md-3">
+						<div class="col-md-3" id="div_limite_ventas">
 							<label>Límite de crédito de ventas</label>
 							<div class="input-group m-b">
 								<span class="input-group-addon">$</span>
@@ -90,7 +90,7 @@
 						</div>
 						<div class="col-md-3">
 							<label>Estado <span required="" aria-required="true">*</span></label>
-							<select class="form-control" name="campo[estado]" aria-required="true" data-rule-required="true" v-select2="detalle.estado" :config="config.select2">
+							<select class="form-control" name="campo[estado]" id="campo_estado" aria-required="true" data-rule-required="true" v-select2="detalle.estado" :config="config.select2">
                             	<option value="">Seleccione</option>
 								<option :value="row.etiqueta" v-for="row in catalogos.estados_cliente" v-html="row.valor"></option>
                             </select>

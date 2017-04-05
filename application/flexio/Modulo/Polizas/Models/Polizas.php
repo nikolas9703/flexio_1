@@ -94,9 +94,9 @@ class Polizas extends Model
 			$okSQL = 1;
 		}
 		
-		$query->join('seg_ramos_usuarios', 'seg_ramos_usuarios.id_ramo', '=', 'pol_polizas.ramo_id');
+		/*$query->join('seg_ramos_usuarios', 'seg_ramos_usuarios.id_ramo', '=', 'pol_polizas.ramo_id');
         $query->where("seg_ramos_usuarios.id_usuario", $clause['usuario_id']);  
-		$query->groupBy('pol_polizas.id');
+		$query->groupBy('pol_polizas.id');*/
 		unset($clause['usuario_id']);
 		
 		if(isset($clause['ramo']) AND count($clause['ramo'])>0 AND $okSQL==1){
@@ -262,23 +262,29 @@ class Polizas extends Model
     }
 
     public static function saldo_pendiente($pol) {
-    	$total = FacturaSeguro::where("id_poliza", $pol)->sum("total");
+    	//$total = FacturaSeguro::where("id_poliza", $pol)->sum("total");
+    	$estados = array("por_cobrar", "cobrado_parcial");
+
+    	$total_cobrado = FacturaSeguro::where("id_poliza", $pol)->whereIn("estado", $estados)->sum("saldo");
 		
-		$todosempezable_id=array();
-		array_push($todosempezable_id, $pol);
+		//$todosempezable_id=array();
+		//array_push($todosempezable_id, $pol);
 		
 		//traigo todas las facturas que tienen esa poliza asignada
-		$facturaspolizas = FacturaSeguro::where("id_poliza", $pol)->get();
+		//$facturaspolizas = FacturaSeguro::where("id_poliza", $pol)->get();
 		
-		foreach($facturaspolizas as $facpoliza)
+		/*foreach($facturaspolizas as $facpoliza)
 		{
 			array_push($todosempezable_id, $facpoliza->id);
 			array_push($todosempezable_id, $facpoliza->cliente_id);
 		}
-		$cobrado = Cobro::whereIn("empezable_id", $todosempezable_id)->sum('monto_pagado');
+		$cobrado = Cobro::whereIn("empezable_id", $todosempezable_id)->sum('monto_pagado');*/
 		
+		//esta linea no quitar lo documentado
     	/*$cobrado = Cobro::where("empezable_id", $pol)->where('empezable_type',"Flexio\Modulo\Polizas\Models\Polizas")->sum('monto_pagado');*/
-    	$saldo = $total - $cobrado ;
+
+    	//$saldo = $total - $cobrado ;
+    	$saldo = $total_cobrado;
     	return '<label class="label-outline outline-danger">$' . FormatoMoneda::numero($saldo) . '</label>';
     }
 

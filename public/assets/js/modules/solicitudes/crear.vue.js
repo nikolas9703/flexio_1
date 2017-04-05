@@ -192,7 +192,7 @@ var formularioCrear = new Vue({
             this.$http.post({
                 url: phost() + 'solicitudes/ajax-get-cliente',
                 method: 'POST',
-                data: {cliente_id: cliente_id, erptkn: tkn}
+                data: {cliente_id: cliente_id, id_ramo: ramo_id, erptkn: tkn}
             }).then(function (response) {
                 if (_.has(response.data, 'session')) {
                     window.location.assign(phost());
@@ -202,7 +202,9 @@ var formularioCrear = new Vue({
                     if (response.data.tipo_identificacion == 'pasaporte' && response.data.identificacion == '') {
                         response.data.identificacion = response.data.detalle_identificacion.pasaporte;
                     }
+                    console.log(response.data.agentes);
                     self.$set('clienteInfo', response.data);
+                    self.$set('agentesList', response.data.agentes);
 
 
                     //self.$set('exoneradoImpuestos', response.data.exonerado_impuesto);
@@ -923,11 +925,14 @@ coberturasModal: function (e) {
             var self = this;
             var agente_id = $('#agentes_' + index).val();
             var id_ramo = $('#ramo_id').val();
+            var id_cliente = $('#cliente_seleccionado').val();
             this.$http.post({
                 url: phost() + 'solicitudes/ajax-get-porcentaje',
                 method: 'POST',
-                data: {agente_id: agente_id, ident_ramo: id_ramo, erptkn: tkn}
+                data: {agente_id: agente_id, ident_ramo: id_ramo, cliente_id: id_cliente, erptkn: tkn}
             }).then(function (response) {
+
+                console.log(response.data);
                 if (_.has(response.data, 'session')) {
                     window.location.assign(phost());
                 }
@@ -1377,7 +1382,6 @@ function verificaagente(){
 
 
 $(document).ready(function () {
-
     $("#cliente_seleccionado").select2({
         ajax: {
             url: phost() + "solicitudes/ajax-get-clientes",
@@ -1510,7 +1514,7 @@ $(document).ready(function () {
             f = "";
         }
         $(this).daterangepicker({ //
-         locale: { format: 'MM/DD/YYYY' },
+         locale: { format: 'DD-MM-YYYY' },
          showDropdowns: true,
          defaultDate: '',
          singleDatePicker: true
@@ -1535,7 +1539,7 @@ $(document).ready(function () {
             f = "";
         }
         $(this).daterangepicker({ //
-         locale: { format: 'MM/DD/YYYY' },
+         locale: { format: 'DD-MM-YYYY' },
          showDropdowns: true,
          defaultDate: '',
          singleDatePicker: true
@@ -1557,7 +1561,7 @@ $(document).ready(function () {
          singleDatePicker: true
      }).val('');*/
     $('#fechafin_1').daterangepicker({ //
-       locale: { format: 'MM/DD/YYYY' },
+       locale: { format: 'DD-MM-YYYY' },
        showDropdowns: true,
        defaultDate: '',
        singleDatePicker: true
@@ -1854,14 +1858,41 @@ $(document).ready(function () {
         $("#vigencia_vida_individual").remove();
         $("#vigencia_vida_colectivo").remove();
     }
-        //-------------------------------------------------------------------------------
+    
+    //-------------------------------------------------------------------------------
 
-        if (vista == "editar") {
-            verificaagente();
+    if (vista == "editar") {
+        verificaagente();
+    }
+
+    //--------------------------------------------------------------------------------
+
+    if ($("#estado").val() != "Aprobado" ) {
+        $("#prima_anual").removeAttr("data-rule-required");
+        $("#vigencia_desde").removeAttr("data-rule-required");
+        $("#vigencia_hasta").removeAttr("data-rule-required");
+        $("#fecha_primer_pago").removeAttr("data-rule-required");
+        $("#fecha_primerPago").removeAttr("data-rule-required");    
+    }
+
+    $("#estado").change(function(){
+        if ($(this).val() == "Aprobada") {
+            $("#prima_anual").attr("data-rule-required", "true");
+            $("#vigencia_desde").attr("data-rule-required", "true");
+            $("#vigencia_hasta").attr("data-rule-required", "true");
+            $("#fecha_primer_pago").attr("data-rule-required", "true");
+            $("#fecha_primerPago").attr("data-rule-required", "true");                    
+        }else{
+            $("#prima_anual").removeAttr("data-rule-required");
+            $("#vigencia_desde").removeAttr("data-rule-required");
+            $("#vigencia_hasta").removeAttr("data-rule-required");
+            $("#fecha_primer_pago").removeAttr("data-rule-required");
+            $("#fecha_primerPago").removeAttr("data-rule-required");    
         }
+    });
         
 
-    });
+});
 
 
 
@@ -1879,13 +1910,13 @@ function agregaracre(){
         $(".porcentaje_cesion_acreedor").inputmask('Regex', { regex: "^[1-9][0-9][.][0-9][0-9]?$|^100[.]00?$|^[0-9][.][0-9][0-9]$" });
         //$(".porcentaje_cesion_acreedor").inputmask('decimal',{min:0, max:100});
         $('#fechainicio_'+counter_acre2+'').daterangepicker({ //
-           locale: { format: 'MM/DD/YYYY' },
+           locale: { format: 'DD-MM-YYYY' },
            showDropdowns: true,
            defaultDate: '',
            singleDatePicker: true
        }).val('');
         $('#fechafin_'+counter_acre2+'').daterangepicker({ //
-           locale: { format: 'MM/DD/YYYY' },
+           locale: { format: 'DD-MM-YYYY' },
            showDropdowns: true,
            defaultDate: '',
            singleDatePicker: true

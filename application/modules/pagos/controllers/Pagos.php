@@ -39,12 +39,17 @@ use Flexio\Modulo\HonorariosSeguros\Models\HonorariosSeguros as HonorariosSeguro
 use Flexio\Modulo\Remesas\Models\Remesa as Remesas;
 use Flexio\Modulo\Contabilidad\Repository\CuentasRepository;
 use Flexio\Modulo\Pagos\Validators\PagoValidator;
-//utils
+//utilsproveedores
 use Flexio\Library\Util\FlexioAssets;
 use Flexio\Library\Util\FlexioSession;
 use Flexio\Library\Toast;
 //otros
 use Dompdf\Dompdf;
+use Flexio\Modulo\Usuarios\Models\RolesUsuario;
+use Flexio\Modulo\Politicas\Models\Politicas;
+use Flexio\Modulo\Politicas\Models\PoliticasCatalogo;
+use Flexio\Modulo\Agentes\Models\Agentes;
+use Flexio\Modulo\aseguradoras\Models\Aseguradoras;
 
 class Pagos extends CRM_Controller
 {
@@ -91,7 +96,6 @@ class Pagos extends CRM_Controller
         $this->load->model('roles/Rol_orm');
 
         $this->load->model('proveedores/Proveedores_orm');
-
         $this->load->model('ordenes/Ordenes_orm');
 
         $this->load->model('bancos/Bancos_orm');
@@ -113,9 +117,10 @@ class Pagos extends CRM_Controller
         $uuid_empresa = $this->session->userdata('uuid_empresa');
         $empresaObj = new Buscar(new Empresa_orm(), 'uuid_empresa');
         $this->empresaObj = $empresaObj->findByUuid($uuid_empresa);
+        $this->empresa_id = $this->empresaObj->id;
+
         $this->id_usuario = $this->session->userdata('huuid_usuario');
         $this->usuarioId = $this->session->userdata('id_usuario');
-        $this->empresa_id = $this->empresaObj->id;
 
         $this->load->library('Repository/Pagos/Guardar_pago');
         $this->load->library('Repository/Pagos/Lista_pago');
@@ -178,6 +183,23 @@ class Pagos extends CRM_Controller
             $mensaje = array('estado' => 500, 'mensaje' => '<b>¡Error!</b> Usted no cuenta con permiso para esta solicitud');
             $this->session->set_flashdata('mensaje', $mensaje);
         }
+
+        /*$politicaEstadoAplicado = 0;
+        $Roles = RolesUsuario::where(['empresa_id' => $this->empresa_id, 'usuario_id' => $this->usuarioId])->get();
+        foreach ($Roles as $key => $value) {
+            $politicas = Politicas::where(['role_id' => $value['role_id'], 'empresa_id' => $this->empresa_id, 'modulo' => 'pago', 'estado_id' => 1])->get();
+           if(count($politicas) > 0){
+                foreach ($politicas as $key => $value) {
+                    $transaccionPolitica = PoliticasCatalogo::where(['id' => $value->politica_estado, 'tipo' => 'pago', 'valor' => 'aplicado - anulado'])->first();
+                    if( $transaccionPolitica != null){
+                        $politicaEstadoAplicado = 1;
+                        break; 
+                        //array_push($PoliticasArray, array('id' => $transaccionPolitica->id, 'key' => $transaccionPolitica->key, 'valor' => $transaccionPolitica->valor, 'tipo' => $transaccionPolitica->tipo));   
+                    }
+                }
+            }
+        }*/
+        
 
 
         $this->_Css();
@@ -308,7 +330,7 @@ class Pagos extends CRM_Controller
         if (!empty($campo)) {
             $pagos->deFiltro($campo);
         }
-        if (!empty($categoria)) {
+        if (!empty($categoria) && $categoria != "undefined") {
             $pagos->deCategoria($categoria);
         }
         if (!empty($codigo)) {
@@ -399,7 +421,16 @@ class Pagos extends CRM_Controller
                     $link_planilla = '<a href="'.$row->empezable->enlace.'" class="link">'.$row->empezable->codigo.'</a>';
                 } elseif ($row->formulario == 'movimiento_monetario') {
                     $retiro = $row->retiros->first();
-                    $link_planilla = '<a href="'.base_url('movimiento_monetario/ver_retiros/'.$retiro->uuid_retiro_dinero).'" class="link">'.$retiro->codigo.'</a>';
+                    $link_planilla = '<a href="'.base_url('movimiento_monetario/ver_retiros/'.bin2hex($retiro['uuid_retiro_dinero'])).'" class="link">'.$retiro['codigo'].'</a>';
+
+                    $pago_a = "";
+                    if($retiro['proveedor_id'] != NULL){
+                        $pago_a = ('<a class="link">'.$proveedor->nombre.'</a>');
+                    }elseif($retiro['cliente_id'] != NULL){
+                        $pago_a = ('<a class="link">'.$row->cliente->nombre.'</a>');
+                    }elseif($retiro['aseguradora_id'] != NULL){
+                        $pago_a = ('<a class="link">'.$row->aseguradora->nombre.'</a>');
+                    }
                 }
                 $hidden_options = '';
                 $link_option = '<button class="viewOptions btn btn-success btn-sm" type="button" data-id="'.$row->uuid_pago.'"><i class="fa fa-cog"></i> <span class="hidden-xs hidden-sm hidden-md">Opciones</span></button>';
@@ -450,7 +481,7 @@ class Pagos extends CRM_Controller
                 $proveedor = $row->proveedor;
                 $etapa = $row->catalogo_estado;
 
-                if ($row->formulario != 'planilla' && count($row->facturas)) {
+                if ( $row->formulario != 'planilla' && count($row->facturas) ) {
                     $facturas = $row->facturas->filter(function ($value, $key) {
                         return (int) $value->pivot->monto_pagado > 0;
                     });
@@ -458,25 +489,25 @@ class Pagos extends CRM_Controller
                 } else {
                     $no_documento = $link_planilla;
                 }
-				
-				if($row->formulario == 'honorario')
-				{
+
+				if($row->formulario == 'movimiento_monetario'){
+                    $no_documento = $link_planilla;                
+                }
+				elseif($row->formulario == 'honorario'){
+
 					$datoshonorario=HonorariosSeguros::find($row->empezable_id);
-					$pago_a='<a class="link">'.$datoshonorario->no_honorario.'</a>';
-					$no_documento=$datoshonorario->no_honorario;
-				}
-				else if($row->formulario == 'remesa')
-				{
+					$pago_a='<a class="link">'.$row->agentes->nombre.'</a>';
+					$no_documento= '<a href="'.base_url('honorarios_seguros/editar/'.bin2hex($datoshonorario->uuid_honorario)).'" class="link">'.$datoshonorario->no_honorario.'</a>';
+
+				}else if($row->formulario == 'remesa'){
+
 					$datosRemesa=Remesas::find($row->empezable_id);
-					$pago_a=('<a class="link">'.$datosRemesa->remesa.'</a>');
-					$no_documento=$datosRemesa->remesa;
-				}
-				else if($row->formulario != 'transferencia' && $row->formulario != 'planilla' && $row->formulario != 'pago_extraordinario')
-				{
+					$pago_a=('<a class="link">'.$row->aseguradora->nombre.'</a>');
+					$no_documento='<a href="'.base_url('remesa/editar/'.bin2hex($datosRemesa->uuid_remesa)).'" class="link">'.$datosRemesa->remesa.'</a>'; ;
+
+				}else if($row->formulario != 'transferencia' && $row->formulario != 'planilla' && $row->formulario != 'pago_extraordinario' ){
 					$pago_a=('<a class="link">'.$proveedor->nombre.'</a>');
-				}
-				else
-				{
+				}else{
 					$pago_a=$link_colaborador;
 				}
 				
@@ -1867,4 +1898,51 @@ class Pagos extends CRM_Controller
         ));
         exit;
     }
+
+    public function ajax_agentes_proovedores()
+    {
+        //Just Allow ajax request
+        if ($this->input->is_ajax_request()) {
+            //Para aplicar filtros
+
+            //$proveedor = new Proveedores_orm;
+            $agentes = new Agentes;
+            $aseguradoras = new Aseguradoras;
+            if (!empty($this->input->get("q",true))) {
+                $nombreBuscar = $this->input->get("q",true);
+                /*$proveedor = $proveedor->where("nombre","like","%".$nombreBuscar."%");*/
+                $agentes = $agentes->where("nombre","like","%".$nombreBuscar."%");
+                $aseguradoras = $aseguradoras->where("nombre","like","%".$nombreBuscar."%");
+            }
+
+            $parametrosRestriccion = array("estado", "LIKE","activo");
+            $camposConsulta = array("nombre","id as proveedor_id");
+            $agentes = $agentes->where($parametrosRestriccion[0],$parametrosRestriccion[1],$parametrosRestriccion[2])->get($camposConsulta);
+            $aseguradoras = $aseguradoras->where('empresa_id',$this->empresa_id)->where('estado','Activo')->get(array('nombre','id as proveedor_id'));
+            $arregloFinal = array();
+
+            //$proveedor = $proveedor->where($parametrosRestriccion[0],$parametrosRestriccion[1],$parametrosRestriccion[2])->get($camposConsulta);
+            /*foreach ($proveedor AS $llave => $valor) {
+                $valor['tipo'] = "Proveedores";
+                $arregloFinal[] = $valor;
+            }*/
+
+            foreach ($agentes AS $llave => $valor) {
+                $valor['tipo'] = "Agentes";
+                $arregloFinal[] = $valor;
+            }
+            foreach ($aseguradoras AS $llave => $valor) {
+                $valor['tipo'] = "Aseguradoras";
+                $arregloFinal[] = $valor;
+            }
+
+            natcasesort($arregloFinal);
+            $arregloFinalOrdenado = array();
+            foreach ($arregloFinal AS $llave => $valor) {
+                $arregloFinalOrdenado[] = $valor;
+            }
+            echo json_encode($arregloFinalOrdenado);
+        }
+    }
+
 }

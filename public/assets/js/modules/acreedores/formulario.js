@@ -133,7 +133,15 @@ $(function(){
     });
 
 
-
+    //Para el Modulo de Seguros se aprueba que el Telefono y Categoria no sean requeridas
+    if (localStorage.getItem('ms-selected') == "seguros") {
+        $(".telefono").removeAttr("data-rule-required");
+        $(".categorias").removeAttr("data-rule-required");
+        $(".span_requerido").remove();
+        $('a[href="#tablaColaboradores"]').hide();
+        $("#tablaColaboradores").hide();
+    }
+    
 
 
 });

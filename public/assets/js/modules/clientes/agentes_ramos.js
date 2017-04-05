@@ -49,6 +49,9 @@ function deshabilita2 (index){
         }     
     });
 
+    console.log(index);
+    console.log(num);
+
     $(".select_ramo_"+index+"").each(function(){
         var valor = $(this).val();
         $("option", this).each(function(){
@@ -68,6 +71,53 @@ function deshabilita2 (index){
 $(document).ready(function(){
 	$(".iniramo").select2();
 
+	$(".agtramosdiv").each(function(){
+		$(this).find(".select2-container").each(function(){
+			$(this).find(".select2-selection").css({"overflow": "scroll", "height": "100px", "overflow-x": "hidden"}); 
+		});
+	});
+	
+
+
+	if (localStorage.getItem("ms-selected") == "seguros") {
+
+		if (vista == "crear") {
+			$("#campo_estado").val("activo").trigger("change");
+			$("#centro_fact_dir").text("Direcciones");
+			$("#centro_fact_small").text("");
+			$("#centro_fact_label").text("Nombre de referencia");
+		}else if(vista == "ver"){
+			$("#tab_Clientes").text("Direcciones");
+			$("#agregarCentroFacturacionBtn").text("Agregar Direcciones");
+			$("#centro_fact_dir").text("Direcciones");
+			$("#centro_fact_small").text("");
+			$("#centro_fact_label").text("Nombre de referencia");
+			$("#tab_Oportunidades").hide();
+			$("#tab_Cotizaciones").hide();
+			$("#tab_Anticipos").hide();
+		}
+
+		$("#correo_cliente").removeAttr("data-rule-required");
+        $("#tipo_correo_cliente").removeAttr("data-rule-required");
+        $("#span_correo").remove();
+
+		$("#div_lista_precio_venta").hide();
+		$("#div_lista_precio_alquiler").hide();
+		$("#div_lista_terminos_pago").hide();
+		$("#info_pago_small").hide();
+		$("#div_limite_ventas").hide();
+		
+	}
+
+	$("#coll_agt").click(function(){
+		$('.iniramo').select2();
+		$(".agtramosdiv").each(function(){
+			$(this).find(".select2-container").each(function(){
+				$(this).find(".select2-selection").css({"overflow": "scroll", "height": "100px", "overflow-x": "hidden"}); 
+			});
+		});
+		
+	});
 
 });
 
