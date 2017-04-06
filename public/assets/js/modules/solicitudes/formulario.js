@@ -656,25 +656,50 @@ function OnloadFunction(valid, tablaTipo) {
         }
 
     });
+    
+    jQuery.validator.addMethod('validarPrimerPago', function (e) {
+        try {
+            if ($("#estado").val() == "Aprobada") {
+                if ($("#fecha_primer_pago").val() != "") 
+                    return true;
+                else 
+                    return false;
+            } else { return true; }
+        }
+        catch (e) {
+            console.error(e);
+        }
+    }, 'Este campos es obligatorio.');
 
     jQuery.validator.addMethod('validaPrima', function (e) {
         try {
-            if ($('#polizaDeclarativa').prop('checked')) {
-                return true;
-            }else{
-                if ($("#estado").val() == "Aprobada") {
+            if ($("#estado").val() == "Aprobada") {
+                if ($('#polizaDeclarativa').prop('checked')) {
+                    return true;
+                }else{
                     if (parseFloat($("#prima_anual").val())>0 ) {
                         return true;
                     } else {
                         return false;
                     }
-                } 
+                }
+            }
+            else
+            {
+                return true;
             }
         }
         catch (e) {
             console.log(e);
         }
     }, 'El valor de la prima anual debe ser mayor a cero.');
+
+    $("#fecha_primer_pago").rules(
+        "add",{ 
+            required: false, 
+            validarPrimerPago: true,
+        }
+    );
 
     $('#prima_anual').rules(
         "add",{ 

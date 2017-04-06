@@ -2016,7 +2016,7 @@ function ajax_get_cliente() {
     ->where('empresa_id', $this->empresa_id)
     ->get();
     $agentes = Agentes::join('agt_agentes_ramos', 'agt_agentes.id', '=', 'agt_agentes_ramos.id_agente')
-        ->where('id_cliente', '=', $_POST['cliente_id'])->distinct("agt_agentes.nombre", "agt_agentes.id")
+        /*->where('id_cliente', '=', $_POST['cliente_id'])*/->distinct("agt_agentes.nombre", "agt_agentes.id")
         ->orderBy("nombre")->get(array('agt_agentes.id', 'nombre'));
     $agtclinum = $agentes->count();
 

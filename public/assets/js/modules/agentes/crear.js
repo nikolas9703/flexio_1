@@ -70,7 +70,9 @@ $('.tipo_identificacion').on("change", function(){
         $('.PAS').hide();
         $('.RUC').hide();
         $('.noPAS').show();
-
+        $("select[name='campo[letra]'] > option[value='']").attr('selected', 'selected');
+        $("select[name='campo[letra]']").children('option').hide();
+        $("select[name='campo[letra]']").children("option[value^='E'],option[value^='PE'],option[value^='N'],option[value='']").show();
     }else{
         $(".PAS").hide();
         $(".noPAS").hide();
@@ -78,6 +80,16 @@ $('.tipo_identificacion').on("change", function(){
     }
 });
 
+$("select[name='campo[provincia]']").on("change", function() {//captura el clcik
+    var selectProvincia = $(this);
+    $("select[name='campo[letra]']").children('option').hide();//oculto todas las opcioes 
+    if (selectProvincia.val() == "") {//según la opcion muestra campos especifico 
+        $("select[name='campo[letra]']").children("option[value^='E'],option[value^='PE'],option[value^='N'],option[value='']").show();
+    }
+    else {
+        $("select[name='campo[letra]']").children("option[value^='cero'],option[value^='PI'],option[value='']").show();
+    }
+});
 
 
 

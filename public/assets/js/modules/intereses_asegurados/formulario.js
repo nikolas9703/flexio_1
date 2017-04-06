@@ -596,6 +596,10 @@ $(function(){
 
 
 $(document).ready(function () {
+    var fecha_nacimiento = $("#fecha_nacimiento").val().split("-");
+    year = new Date().getFullYear();
+    $("#edad").val(year-fecha_nacimiento[2]);
+
     $('#crearSolicitudLnk').click(function(e){
         
         var opcionesModal = $('#optionsModal');

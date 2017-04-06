@@ -1255,6 +1255,7 @@ class Reclamos extends CRM_Controller {
 
                 $hidden_options = '<a href="' . $url . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success" >Ver Reclamo</a>';
                 $hidden_options .= '<a href="' . $urlpolizas . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success" >Ver Póliza</a>';
+                $hidden_options .= '<a data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success eliminar-reclamo" >Eliminar</a>';
                 //$hidden_options .= '<a href="' . $urlbitacora . '" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success bitacora_solicitud" data-type="' . $row['id'] . '" >Bitácora</a>';
                 //$hidden_options .= '<a href="" data-id="' . $row['id'] . '" class="btn btn-block btn-outline btn-success subir_archivos_solicitudes" data-type="' . $row['id'] . '" >Subir Archivos</a>';
 
